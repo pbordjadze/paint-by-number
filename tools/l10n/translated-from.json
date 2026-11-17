@@ -1267,5 +1267,26 @@
     "NSCameraUsageDescription": {"de":"03aae313bc","es":"03aae313bc","fr":"03aae313bc","it":"03aae313bc","ja":"03aae313bc","ko":"03aae313bc","nl":"03aae313bc","pt-BR":"03aae313bc","zh-Hans":"03aae313bc","zh-Hant":"03aae313bc"},
     "NSPhotoLibraryAddUsageDescription": {"de":"de7350560f","es":"de7350560f","fr":"de7350560f","it":"de7350560f","ja":"de7350560f","ko":"de7350560f","nl":"de7350560f","pt-BR":"de7350560f","zh-Hans":"de7350560f","zh-Hant":"de7350560f"},
     "Paint by Moonlight Painting": {"de":"f373818c14","es":"f373818c14","fr":"f373818c14","it":"f373818c14","ja":"f373818c14","ko":"f373818c14","nl":"f373818c14","pt-BR":"f373818c14","zh-Hans":"f373818c14","zh-Hant":"f373818c14"}
+  },
+  "widgets": {
+    "%@ painted": {"de":"cc500d9153","es":"cc500d9153","fr":"cc500d9153","it":"cc500d9153","ja":"cc500d9153","ko":"cc500d9153","nl":"cc500d9153","pt-BR":"cc500d9153","zh-Hans":"cc500d9153","zh-Hant":"cc500d9153"},
+    "Finish a painting and it hangs here.": {"de":"b8c18384f7","es":"b8c18384f7","fr":"b8c18384f7","it":"b8c18384f7","ja":"b8c18384f7","ko":"b8c18384f7","nl":"b8c18384f7","pt-BR":"b8c18384f7","zh-Hans":"b8c18384f7","zh-Hant":"b8c18384f7"},
+    "Finished Paintings": {"de":"00a86d0157","es":"00a86d0157","fr":"00a86d0157","it":"00a86d0157","ja":"00a86d0157","ko":"00a86d0157","nl":"00a86d0157","pt-BR":"00a86d0157","zh-Hans":"00a86d0157","zh-Hant":"00a86d0157"},
+    "Next: %lld · %@": {"de":"7db1ad5dfd","es":"7db1ad5dfd","fr":"7db1ad5dfd","it":"7db1ad5dfd","ja":"7db1ad5dfd","ko":"7db1ad5dfd","nl":"7db1ad5dfd","pt-BR":"7db1ad5dfd","zh-Hans":"7db1ad5dfd","zh-Hant":"7db1ad5dfd"},
+    "Next: paint %lld": {"de":"197b51cf1f","es":"197b51cf1f","fr":"197b51cf1f","it":"197b51cf1f","ja":"197b51cf1f","ko":"197b51cf1f","nl":"197b51cf1f","pt-BR":"197b51cf1f","zh-Hans":"197b51cf1f","zh-Hant":"197b51cf1f"},
+    "One of your finished paintings, a new one each day.": {"de":"ce775c628a","es":"ce775c628a","fr":"ce775c628a","it":"ce775c628a","ja":"ce775c628a","ko":"ce775c628a","nl":"ce775c628a","pt-BR":"ce775c628a","zh-Hans":"ce775c628a","zh-Hant":"ce775c628a"},
+    "Open to keep painting": {"de":"4f451e0feb","es":"4f451e0feb","fr":"4f451e0feb","it":"4f451e0feb","ja":"4f451e0feb","ko":"4f451e0feb","nl":"4f451e0feb","pt-BR":"4f451e0feb","zh-Hans":"4f451e0feb","zh-Hant":"4f451e0feb"},
+    "Open to paint the last area": {"de":"1e70d8e8ff","es":"1e70d8e8ff","fr":"1e70d8e8ff","it":"1e70d8e8ff","ja":"1e70d8e8ff","ko":"1e70d8e8ff","nl":"1e70d8e8ff","pt-BR":"1e70d8e8ff","zh-Hans":"1e70d8e8ff","zh-Hant":"1e70d8e8ff"},
+    "Paint One Area": {"de":"e5ccce94d6","es":"e5ccce94d6","fr":"e5ccce94d6","it":"e5ccce94d6","ja":"e5ccce94d6","ko":"e5ccce94d6","nl":"e5ccce94d6","pt-BR":"e5ccce94d6","zh-Hans":"e5ccce94d6","zh-Hant":"e5ccce94d6"},
+    "Paint by Moonlight": {"de":"3117fc12d7","es":"3117fc12d7","fr":"3117fc12d7","it":"3117fc12d7","ja":"3117fc12d7","ko":"3117fc12d7","nl":"3117fc12d7","pt-BR":"3117fc12d7","zh-Hans":"3117fc12d7","zh-Hant":"3117fc12d7"},
+    "Paint one area, %lld, %@": {"de":"c7e75200d0","es":"c7e75200d0","fr":"c7e75200d0","it":"c7e75200d0","ja":"c7e75200d0","ko":"c7e75200d0","nl":"c7e75200d0","pt-BR":"c7e75200d0","zh-Hans":"c7e75200d0","zh-Hant":"c7e75200d0"},
+    "Paint one area, paint %lld": {"de":"58245a17cb","es":"58245a17cb","fr":"58245a17cb","it":"58245a17cb","ja":"58245a17cb","ko":"58245a17cb","nl":"58245a17cb","pt-BR":"58245a17cb","zh-Hans":"58245a17cb","zh-Hant":"58245a17cb"},
+    "Painting in Progress": {"de":"603c65ecb7","es":"603c65ecb7","fr":"603c65ecb7","it":"603c65ecb7","ja":"603c65ecb7","ko":"603c65ecb7","nl":"603c65ecb7","pt-BR":"603c65ecb7","zh-Hans":"603c65ecb7","zh-Hant":"603c65ecb7"},
+    "Paints the next area of your painting in progress.": {"de":"342ff6c55a","es":"342ff6c55a","fr":"342ff6c55a","it":"342ff6c55a","ja":"342ff6c55a","ko":"342ff6c55a","nl":"342ff6c55a","pt-BR":"342ff6c55a","zh-Hans":"342ff6c55a","zh-Hant":"342ff6c55a"},
+    "Start a painting and it waits for you here.": {"de":"85a34db957","es":"85a34db957","fr":"85a34db957","it":"85a34db957","ja":"85a34db957","ko":"85a34db957","nl":"85a34db957","pt-BR":"85a34db957","zh-Hans":"85a34db957","zh-Hant":"85a34db957"},
+    "Your painting as it stands. Paint One Area fills in the next area, right here.": {"de":"ae0baf0d5e","es":"ae0baf0d5e","fr":"ae0baf0d5e","it":"ae0baf0d5e","ja":"ae0baf0d5e","ko":"ae0baf0d5e","nl":"ae0baf0d5e","pt-BR":"ae0baf0d5e","zh-Hans":"ae0baf0d5e","zh-Hant":"ae0baf0d5e"}
+  },
+  "stickers": {
+    "Finish a painting in Paint by Moonlight and its stickers appear here.": {"de":"09b46000ca","es":"09b46000ca","fr":"09b46000ca","it":"09b46000ca","ja":"09b46000ca","ko":"09b46000ca","nl":"09b46000ca","pt-BR":"09b46000ca","zh-Hans":"09b46000ca","zh-Hant":"09b46000ca"}
   }
 }

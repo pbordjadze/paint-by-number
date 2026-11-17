@@ -3,7 +3,69 @@
   "strings" : {
     "Finish a painting in Paint by Moonlight and its stickers appear here." : {
       "comment" : "Stickers in Messages, with no finished painting to make stickers of",
-      "extractionState" : "manual"
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mal ein Bild in Paint by Moonlight fertig, dann erscheinen hier seine Sticker."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Termina una pintura en Paint by Moonlight y sus stickers aparecerán aquí."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminez une peinture dans Paint by Moonlight et ses autocollants apparaîtront ici."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finisci un dipinto in Paint by Moonlight e i suoi sticker appariranno qui."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlightで作品を仕上げると、ここにステッカーが表示されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight에서 그림을 완성하면 여기에 스티커가 나타나요."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maak een schilderij af in Paint by Moonlight en de stickers ervan verschijnen hier."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Termine uma pintura no Paint by Moonlight e as figurinhas dela aparecem aqui."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Paint by Moonlight 中完成一幅画，它的贴纸就会出现在这里。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Paint by Moonlight 中完成一幅畫，它的貼圖就會出現在這裡。"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

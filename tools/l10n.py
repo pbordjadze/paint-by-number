@@ -56,6 +56,8 @@ CATALOGS = OrderedDict([
     ("app", ("App/PaintByNumber/Resources/Localizable.xcstrings", " : ")),
     ("mosaic", ("App/RavennaResources/Localizable.xcstrings", ": ")),
     ("infoplist", ("App/PaintByNumber/Resources/InfoPlist.xcstrings", " : ")),
+    ("widgets", ("App/MoonlightWidgets/Localizable.xcstrings", " : ")),
+    ("stickers", ("App/MoonlightStickers/Localizable.xcstrings", " : ")),
 ])
 SOURCES = "tools/l10n/translated-from.json"
 

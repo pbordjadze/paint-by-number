@@ -1320,7 +1320,8 @@ Paintings, the frame, a painting a day, which StandBy shows too) and `App/Moonli
 - **Demo and test launches lay nothing out** (`OutsideDesk.shelf` is nil); `OutsideTests` hand
   the desk, the plan and the sticker maker a shelf in a temporary folder.
 - **Words** are each extension's own `Localizable.xcstrings` (its literals are looked up in its
-  own bundle), written by hand as the app's; `tools/strings_check.py` doesn't read them.
+  own bundle), written by hand as the app's and translated into the same ten languages through
+  `tools/l10n.py` (catalogs `widgets` and `stickers`); `tools/strings_check.py` doesn't read them.
 - Paint by Mosaic's mosaics aren't on the shelf.
 
 ## Sharing and exports
