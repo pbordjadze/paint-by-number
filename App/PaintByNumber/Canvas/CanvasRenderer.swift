@@ -97,7 +97,10 @@ final class CanvasRenderer {
             targets: RenderContext.Targets(color: drawable.texture, multisample: multisample, outlines: outlines),
             content: content)
         let once = onPresented.map(Self.once)
+        #if !targetEnvironment(simulator)
+        // The simulator has no presented handlers: there the tenth of a second alone tells.
         if let once { drawable.addPresentedHandler(Self.presented(then: once)) }
+        #endif
         commands.addCompletedHandler(Self.signal(inFlight, then: once))
         commands.present(drawable)
         commands.commit()
@@ -116,12 +119,14 @@ final class CanvasRenderer {
         pending[k].removeAll(keepingCapacity: true)
     }
 
+    #if !targetEnvironment(simulator)
     /// Built outside the main actor, as `signal` is: the system calls it on a thread of its own.
     nonisolated private static func presented(then action: @escaping @Sendable () -> Void) -> MTLDrawablePresentedHandler {
         // A drawable the system dropped reports too, never shown (`presentedTime` 0): the
         // fallback after the GPU covers it.
         { drawable in if drawable.presentedTime > 0 { action() } }
     }
+    #endif
 
     nonisolated private static func once(_ action: @escaping @Sendable () -> Void) -> @Sendable () -> Void {
         let done = OSAllocatedUnfairLock(initialState: false)
