@@ -84,7 +84,7 @@ struct GalleryView: View {
                     let active = library.inProgress(matching: query)
                     if !active.isEmpty {
                         section("In Progress") {
-                            ForEach(active) { card($0) }
+                            ForEach(active) { card($0, leads: $0.id == active.first?.id && shownDraft == nil) }
                         }
                     }
                     let ready = library.readyToPaint(matching: query)
@@ -92,13 +92,13 @@ struct GalleryView: View {
                     if !ready.isEmpty || !preparing.isEmpty {
                         section("Ready to Paint", tip: .shelfStarter) {
                             ForEach(preparing) { PlaceholderCard(placeholder: $0) }
-                            ForEach(ready) { card($0) }
+                            ForEach(ready) { card($0, leads: $0.id == ready.first?.id && preparing.isEmpty && (!active.isEmpty || shownDraft == nil)) }
                         }
                     }
                     let finished = library.finished(matching: query)
                     if !finished.isEmpty {
                         section("Finished") {
-                            ForEach(finished) { card($0) }
+                            ForEach(finished) { card($0, leads: $0.id == finished.first?.id) }
                         }
                     }
                     if !query.isActive {
@@ -334,17 +334,18 @@ struct GalleryView: View {
         }
     }
 
-    private func card(_ artwork: Artwork) -> some View {
+    private func card(_ artwork: Artwork, leads: Bool = false) -> some View {
         link(artwork)
         .buttonStyle(PressableCardStyle())
         #if UNRELEASED
         .comesOut(after: StarsComeOut.delay(for: artwork.id, among: shownIDs))
         .setsDown(count: settledCards[artwork.id] ?? 0)
         #endif
-        // The first card's tips hang above it in their small form on a phone (`TipForm.beside`),
-        // over the pages' title and the section's: below, the card's words reach past the row's
-        // gap over the next row's picture (painting-company row 240).
-        .cardTip(tips(of: artwork), besideEdge: shownIDs.first == artwork.id ? .bottom : nil)
+        // A section's first card (`leads`: nothing but titles above it, no draft or preparing
+        // card) has its tips hang above it in their small form on a phone (`TipForm.beside`):
+        // below, the card's words reach past the row's gap over the next row's picture
+        // (painting-company row 240).
+        .cardTip(tips(of: artwork), besideEdge: leads ? .bottom : nil)
         .contextMenu { menu(for: artwork) }
         // A confirmation dialog is a popover on the view that carries it, so each card carries the
         // two its menu asks for and the popover points at it, where one on the whole gallery

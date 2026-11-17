@@ -2,7 +2,7 @@
 """A still of the way back from Paint by Mosaic (App/PaintByNumber/App/EraDoor.swift, `EraWayBack`
 and `EraPassage.drawWayBack`), to judge its look off the device, as `passage_preview.py` does the
 way in's. It mirrors the timings, the night, the crescent and the tiles' fall with Pillow, with
-its own random draws (not the app's) and plain four-point stars, so it shows the shape and the
+its own random draws (not the app's), plain four-point stars and no glow round the crescent, so it shows the shape and the
 light, not the exact tiles. `--at` is seconds from the passage's start (the demos hold 1.495 and
 2.35); the gallery beneath is a flat paper.
 
