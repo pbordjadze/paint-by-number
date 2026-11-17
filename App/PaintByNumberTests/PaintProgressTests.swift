@@ -14,10 +14,9 @@ struct PaintProgressTests {
     @Test func unpaintTakesOneFillFromAnywhereInTheLog() throws {
         var p = PaintProgress(regionCount: 5)
         for r in [0, 3, 1] { p.paint(r) }
-        #expect(p.unpaint(3))
-        #expect(!p.unpaint(3))
-        #expect(!p.unpaint(4))
-        #expect(!p.unpaint(99))
+        // A mutating call can't sit inside #expect.
+        let first = p.unpaint(3), again = p.unpaint(3), never = p.unpaint(4), outside = p.unpaint(99)
+        #expect(first && !again && !never && !outside)
         #expect(p.log.map(\.region) == [0, 1])
         #expect(!p.isPainted(3))
         #expect(try PaintProgress(encoded: p.encoded()) == p)
