@@ -5,7 +5,7 @@ import SwiftUI
 import UIKit
 
 /// What Print… hands the system's print dialog (painting-company row 240): the printable
-/// template, the very PDF Print Template… shares (`PDFExporter.document`: the template, on
+/// template's PDF (`PDFExporter.document`: the template, on
 /// several sheets when it is detailed, then the color key), and the name of its print job.
 /// Printing makes no painting, so it takes no free painting, and a painting someone sent prints
 /// as any other.

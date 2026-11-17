@@ -1,7 +1,7 @@
 import UIKit
 import XCTest
 
-/// Settings › Preview on Line Art: the create flow's comparison shows the drawing alone, and a
+/// The create flow's preview showing its line art: the comparison shows the drawing alone, and a
 /// phone tunes it one slider at a time, in the card and in the enlarged preview.
 final class LineArtPreviewUITests: XCTestCase {
     /// The comparison's trailing side is the drawing on blank paper: captioned Line Art, with
@@ -135,11 +135,11 @@ final class LineArtPreviewUITests: XCTestCase {
 
     // MARK: - Helpers
 
-    /// The Great Wave's preview with Settings › Preview on Line Art, once its settings are chosen.
+    /// The Great Wave's preview showing its line art, once its settings are chosen.
     @MainActor
     private func launchPreview() -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", "create-preview", "-demoFixedPictures", "YES", "-previewStyle", "lineArt"]
+        app.launchArguments = ["-demo", "create-line-art", "-demoFixedPictures", "YES"]
         app.launch()
         let start = app.buttons["Start Painting"]
         XCTAssertTrue(start.waitForExistence(timeout: 30), "The preview didn't open")

@@ -181,7 +181,7 @@ final class RefineModel {
         #if DEBUG
         if let demo = ShellDemo.current {
             let opens: RefineTool? =
-                demo.picksColorPaint ? .editPaint : demo.opensColors ? .looks : demo.selectsCell || demo.opensCard ? .select : nil
+                demo.opensColors ? .editPaint : demo.selectsCell || demo.opensCard ? .select : nil
             if let opens {
                 tool = opens
                 group = RefineGroup.of(opens)
@@ -412,7 +412,7 @@ final class RefineModel {
         // A fill is a tap, and so are selecting, painting a cell and picking a paint: a drag
         // does nothing.
         case .bendLine, .moveEdge, .moveNumber: drag(touch, at: point)
-        case .fill, .select, .bucket, .eyedropper, .editPaint, .looks, .tryPainting: break
+        case .fill, .select, .bucket, .eyedropper, .editPaint, .tryPainting: break
         }
     }
 
@@ -695,7 +695,7 @@ final class RefineModel {
         tinyMarked = nil
         revealLayer()
         switch tool {
-        case .pen, .cellEdge, .merge, .looks, .bendLine, .moveEdge, .moveNumber, .tryPainting:
+        case .pen, .cellEdge, .merge, .bendLine, .moveEdge, .moveNumber, .tryPainting:
             break
         case .brush:
             // A dab, of the brush's own reach.

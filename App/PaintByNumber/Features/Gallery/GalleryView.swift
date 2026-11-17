@@ -474,11 +474,9 @@ struct GalleryView: View {
                 shareTimelapse(artwork)
             }
         }
-        let template = PrintableTemplateFile(
-            store: library.store, artwork: artwork, paper: .default(for: Locale.current.region))
-        Button("Print Template…", systemImage: "printer") { share { try await template.export() } }
-        // Paint by Moonlight opens it as a new painting, blank, refinements and all; the PDF above
-        // is for whoever hasn't the app.
+        // Paint by Moonlight opens it as a new painting, blank, refinements and all; Print… (beside
+        // Share) is for whoever hasn't the app. Print Template… left this submenu on November 17,
+        // 2026: one way to print per menu (painting-company process/design-budget.md).
         Button("Send Template…", systemImage: "paperplane") {
             PaintTips.used(.shelfHold)
             sending = artwork
@@ -508,7 +506,7 @@ struct GalleryView: View {
         }
     }
 
-    /// Print…: makes the template's PDF, the one Print Template… shares, then opens the print
+    /// Print…: makes the template's PDF, then opens the print
     /// dialog on it from the painting's card. One at a time: asked again while a PDF is being
     /// made, it does nothing.
     private func printTemplate(of artwork: Artwork) {

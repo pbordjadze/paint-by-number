@@ -55,8 +55,8 @@ import UIKit
 /// The tools are laid out as the Toolbox, a drawing app's:
 /// Ink, Cells, Paint, Numbers and See, every tool in a rail on iPad and in group tabs on iPhone; a
 /// Pen of ink alone with Snap and Color from Photo, Bend Line, Select, Cell Edge, Merge, Move Edge,
-/// a palette with a current paint, the Bucket, the Paint Brush, the Eyedropper, Edit Paint and
-/// Looks, Move Number, Try Painting; Start From until the first edit
+/// a palette with a current paint, the Bucket, the Paint Brush, the Eyedropper, Edit Paint,
+/// Move Number, Try Painting; Start From until the first edit
 /// (the generator's template, or the photo as one area to draw and paint everything on); an area's
 /// card from Select's Change Color, sparkles where a line closes off an area and a badge for numbers
 /// near their floor (`RefineStudio.swift`, `RefineToolbox.swift`, App/CLAUDE.md › Create flow › The
