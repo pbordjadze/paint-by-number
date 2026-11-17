@@ -62,7 +62,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已塗 %@"
+            "value" : "已上色 %@"
           }
         }
       }
@@ -80,25 +80,25 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Termina una pintura y quedará colgada aquí."
+            "value" : "Termina un cuadro y quedará colgado aquí."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Terminez une peinture et elle sera accrochée ici."
+            "value" : "Terminez un tableau et il sera accroché ici."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Finisci un dipinto e resterà appeso qui."
+            "value" : "Finisci un quadro e resterà appeso qui."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "作品を仕上げると、ここに飾られます。"
+            "value" : "絵を仕上げると、ここに飾られます。"
           }
         },
         "ko" : {
@@ -122,13 +122,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "完成一幅画，它就会挂在这里。"
+            "value" : "完成一幅画作，它就会挂在这里。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "完成一幅畫，它就會掛在這裡。"
+            "value" : "完成一幅畫作，它就會掛在這裡。"
           }
         }
       }
@@ -146,25 +146,25 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pinturas terminadas"
+            "value" : "Cuadros terminados"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Peintures terminées"
+            "value" : "Tableaux terminés"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dipinti finiti"
+            "value" : "Quadri finiti"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "完成した作品"
+            "value" : "完成した絵"
           }
         },
         "ko" : {
@@ -176,7 +176,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Klare schilderijen"
+            "value" : "Voltooide schilderijen"
           }
         },
         "pt-BR" : {
@@ -188,13 +188,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已完成的画"
+            "value" : "已完成的画作"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已完成的畫"
+            "value" : "已完成的畫作"
           }
         }
       }
@@ -206,7 +206,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Als Nächstes: %lld · %@"
+            "value" : "Nächste: %lld · %@"
           }
         },
         "es" : {
@@ -218,7 +218,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ensuite : %lld · %@"
+            "value" : "Suivant : %lld · %@"
           }
         },
         "it" : {
@@ -272,7 +272,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Als Nächstes: Farbe %lld"
+            "value" : "Nächste: Farbe %lld"
           }
         },
         "es" : {
@@ -284,7 +284,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ensuite : peinture %lld"
+            "value" : "Suivant : peinture %lld"
           }
         },
         "it" : {
@@ -344,25 +344,25 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Una de tus pinturas terminadas, cada día una distinta."
+            "value" : "Uno de tus cuadros terminados, cada día uno distinto."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Une de vos peintures terminées, une nouvelle chaque jour."
+            "value" : "Un de vos tableaux terminés, un nouveau chaque jour."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uno dei tuoi dipinti finiti, ogni giorno uno nuovo."
+            "value" : "Uno dei tuoi quadri finiti, ogni giorno uno nuovo."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "完成した作品から、毎日ひとつ。"
+            "value" : "完成した絵から、毎日ひとつ。"
           }
         },
         "ko" : {
@@ -374,7 +374,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Een van je klare schilderijen, elke dag een ander."
+            "value" : "Een van je voltooide schilderijen, elke dag een ander."
           }
         },
         "pt-BR" : {
@@ -386,13 +386,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "从你完成的画中，每天换一幅。"
+            "value" : "从你完成的画作中，每天换一幅。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "從你完成的畫中，每天換一幅。"
+            "value" : "從你完成的畫作中，每天換一幅。"
           }
         }
       }
@@ -458,7 +458,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "打開繼續塗色"
+            "value" : "打開繼續上色"
           }
         }
       }
@@ -524,7 +524,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "打開塗最後一個區塊"
+            "value" : "打開為最後一個區塊上色"
           }
         }
       }
@@ -542,7 +542,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pinta una zona"
+            "value" : "Pintar una zona"
           }
         },
         "fr" : {
@@ -578,7 +578,7 @@
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pinte uma área"
+            "value" : "Pintar uma área"
           }
         },
         "zh-Hans" : {
@@ -590,7 +590,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "塗一個區塊"
+            "value" : "為一個區塊上色"
           }
         }
       }
@@ -674,7 +674,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pinta una zona, %lld, %@"
+            "value" : "Pintar una zona, %lld, %@"
           }
         },
         "fr" : {
@@ -710,7 +710,7 @@
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pinte uma área, %lld, %@"
+            "value" : "Pintar uma área, %lld, %@"
           }
         },
         "zh-Hans" : {
@@ -722,7 +722,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "塗一個區塊，%lld，%@"
+            "value" : "為一個區塊上色，%lld，%@"
           }
         }
       }
@@ -740,7 +740,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pinta una zona, pintura %lld"
+            "value" : "Pintar una zona, pintura %lld"
           }
         },
         "fr" : {
@@ -776,7 +776,7 @@
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pinte uma área, tinta %lld"
+            "value" : "Pintar uma área, tinta %lld"
           }
         },
         "zh-Hans" : {
@@ -788,7 +788,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "塗一個區塊，顏料 %lld"
+            "value" : "為一個區塊上色，顏料 %lld"
           }
         }
       }
@@ -806,25 +806,25 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pintura en curso"
+            "value" : "Cuadro en curso"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Peinture en cours"
+            "value" : "Tableau en cours"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dipinto in corso"
+            "value" : "Quadro in corso"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "塗っている途中の作品"
+            "value" : "塗っている途中の絵"
           }
         },
         "ko" : {
@@ -848,13 +848,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "进行中的画"
+            "value" : "进行中的画作"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "進行中的畫"
+            "value" : "進行中的畫作"
           }
         }
       }
@@ -872,25 +872,25 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pinta la siguiente zona de tu pintura en curso."
+            "value" : "Pinta la siguiente zona de tu cuadro en curso."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Peint la zone suivante de votre peinture en cours."
+            "value" : "Peint la zone suivante de votre tableau en cours."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dipinge la prossima area del tuo dipinto in corso."
+            "value" : "Dipinge la prossima area del tuo quadro in corso."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "塗っている途中の作品の、次のエリアを塗ります。"
+            "value" : "塗っている途中の絵の、次のエリアを塗ります。"
           }
         },
         "ko" : {
@@ -914,13 +914,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "为你进行中的画涂下一个区域。"
+            "value" : "为你进行中的画作涂下一个区域。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "為你進行中的畫塗下一個區塊。"
+            "value" : "為你進行中的畫作的下一個區塊上色。"
           }
         }
       }
@@ -938,25 +938,25 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Empieza una pintura y te esperará aquí."
+            "value" : "Empieza un cuadro y te esperará aquí."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Commencez une peinture et elle vous attendra ici."
+            "value" : "Commencez un tableau et il vous attendra ici."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inizia un dipinto e ti aspetterà qui."
+            "value" : "Inizia un quadro e ti aspetterà qui."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "作品を始めると、ここで待っています。"
+            "value" : "絵を始めると、ここで待っています。"
           }
         },
         "ko" : {
@@ -980,13 +980,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "开始一幅画，它会在这里等你。"
+            "value" : "开始一幅画作，它会在这里等你。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "開始一幅畫，它會在這裡等你。"
+            "value" : "開始一幅畫作，它會在這裡等你。"
           }
         }
       }
@@ -1004,55 +1004,55 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tu pintura tal como está. Pinta una zona rellena la siguiente zona, aquí mismo."
+            "value" : "Tu cuadro tal como está. «Pintar una zona» rellena la siguiente zona, aquí mismo."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Votre peinture telle qu’elle est. Peindre une zone remplit la zone suivante, ici même."
+            "value" : "Votre tableau tel qu’il est. « Peindre une zone » remplit la zone suivante, ici même."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Il tuo dipinto così com’è. Dipingi un’area riempie la prossima area, proprio qui."
+            "value" : "Il tuo quadro così com’è. “Dipingi un’area” riempie la prossima area, proprio qui."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "いまの作品の様子です。「ひとつ塗る」で次のエリアをここで塗れます。"
+            "value" : "いまの絵の様子です。「ひとつ塗る」で次のエリアをここで塗れます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "지금 그대로의 그림이에요. 한 영역 칠하기로 다음 영역을 바로 여기서 채워요."
+            "value" : "지금 그대로의 그림이에요. ‘한 영역 칠하기’로 다음 영역을 바로 여기서 채워요."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Je schilderij zoals het nu is. Schilder één vlak vult het volgende vlak, hier meteen."
+            "value" : "Je schilderij zoals het nu is. “Schilder één vlak” vult het volgende vlak, hier meteen."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sua pintura como está agora. Pinte uma área preenche a próxima área, aqui mesmo."
+            "value" : "Sua pintura como está agora. “Pintar uma área” preenche a próxima área, aqui mesmo."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你的画现在的样子。“涂一个区域”会在这里直接涂好下一个区域。"
+            "value" : "你的画作现在的样子。“涂一个区域”会在这里直接涂好下一个区域。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你的畫現在的樣子。「塗一個區塊」會在這裡直接塗好下一個區塊。"
+            "value" : "你的畫作現在的樣子。「為一個區塊上色」會在這裡直接為下一個區塊上色。"
           }
         }
       }
