@@ -135,8 +135,10 @@ struct PrintPreviewSheet: View {
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            // A page a hand's width on the iPad, where the sheet has the room.
-            .frame(height: sizeClass == .regular ? 560 : 340)
+            // A page a hand's width on the iPad, where the sheet has the room; on a phone short
+            // enough that every choice, Size's printed size too, stands above Print (the critic,
+            // painting-company row 357: at 340 Print lay over Size).
+            .frame(height: sizeClass == .regular ? 560 : 230)
             .overlay {
                 if pages == nil { ProgressView() }
             }
