@@ -271,7 +271,17 @@ struct StickerMakerTests {
         #expect(pixels.alpha(x: cut.width / 2, y: cut.height / 2) == 255)
         // Inside the white edge; its outermost pixels are soft, as the mask is scaled up.
         #expect(pixels.alpha(x: cut.width / 2, y: cut.height / 10) == 255)
-        expectShadowBeforeTheWhiteEdge(pixels)
+        // The scaled-up mask is soft on every side; the shadow, drawn a little down, makes the
+        // band below the subject's white edge the heavier one.
+        let x = cut.width / 2
+        let column = (0..<cut.height).filter { pixels.alpha(x: x, y: $0) == 255 }
+        if let top = column.first, let bottom = column.last {
+            let above = (max(0, top - 10)..<top).reduce(0) { $0 + pixels.alpha(x: x, y: $1) }
+            let below = ((bottom + 1)..<min(cut.height, bottom + 11)).reduce(0) { $0 + pixels.alpha(x: x, y: $1) }
+            #expect(below > above)
+        } else {
+            Issue.record("No opaque pixel in the middle column")
+        }
 
         var speck = [Bool](repeating: false, count: width * height)
         speck[0] = true

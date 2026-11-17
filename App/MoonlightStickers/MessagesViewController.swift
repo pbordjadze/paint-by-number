@@ -54,11 +54,15 @@ final class MessagesViewController: MSMessagesAppViewController {
         }
     }
 
-    /// The title as a sticker's description, which Messages limits to 150 Unicode characters.
+    /// The title as a sticker's description, which Messages limits to 150 Unicode characters:
+    /// whole characters only, so an emoji or a flag is never cut in half.
     static func stickerDescription(_ title: String) -> String {
-        var scalars = String.UnicodeScalarView()
-        scalars.append(contentsOf: title.unicodeScalars.prefix(150))
-        return String(scalars)
+        var kept = ""
+        for character in title {
+            guard kept.unicodeScalars.count + character.unicodeScalars.count <= 150 else { break }
+            kept.append(character)
+        }
+        return kept
     }
 }
 
