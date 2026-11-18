@@ -288,11 +288,17 @@ struct ArtworkPaintingView: View {
     }
 
     /// The doors after Finished the painting screen will show, as it counts them (`PaintView`'s
-    /// `onChange` is `changeAction`, its library picture the artwork's).
+    /// `onChange` is `changeAction`, its library picture the artwork's). Before the painting has
+    /// loaded, whether it has a photo to change it over isn't known (`sourcePhotoLoader`): every
+    /// painting made here has one, and only one someone sent may not, so the door is counted
+    /// unless it came that way (counted otherwise, the thumbnail moved as the painting loaded).
     private func finishedDoors(_ artwork: Artwork) -> PaintingLayout.Doors? {
         #if UNRELEASED
-        PaintingLayout.Doors(
-            count: FinishedDoor.shown(changes: changeAction != nil, original: OriginalWork.of(artwork.sampleName) != nil).count,
+        let changes = autosaver == nil
+            ? artwork.sampleName != nil || artwork.receivedDigest == nil
+            : changeAction != nil
+        return PaintingLayout.Doors(
+            count: FinishedDoor.shown(changes: changes, original: OriginalWork.of(artwork.sampleName) != nil).count,
             compactHeight: verticalSizeClass == .compact)
         #else
         nil

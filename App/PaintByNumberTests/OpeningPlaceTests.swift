@@ -148,35 +148,50 @@ struct OpeningPlaceTests {
     /// The page a canvas laid out as `PaintView` lays it on `screen`, its status bar gone, fits
     /// for `session`, in the whole screen's coordinates.
     #if UNRELEASED
-    /// A finished painting's panel, its doors under its row, is never taller than the painting
-    /// screen counts on before measuring it (`CompletionBar.panelHeight`): taller, the page moved
-    /// up as a finished painting opened. Four doors (a painter's photo) and five (a library
-    /// picture), on a phone, a phone on its side and an iPad both ways.
-    @Test func theDoorsPanelIsNoTallerThanTheLayoutCountsOn() throws {
+    /// A finished painting's panel, its doors under its row, is as tall as the painting screen
+    /// counts on before building it (`CompletionBar.panelHeight`): taller, the page moved up as a
+    /// finished painting opened. Four doors (a painter's photo) and five (a library picture), on
+    /// every screen above that has room for them, in English at the Large size and in German at
+    /// the largest the panel allows; a long unnamed title's second line may reach no further than
+    /// the canvas's margin round the page.
+    @Test func theDoorsPanelIsAsTallAsTheLayoutCountsOn() throws {
         let template = Fixtures.stripes()
         let session = try PaintingSession(template: template, progress: ArtworkFactory.progress(painting: 1, of: template))
         try #require(session.isComplete)
+        let cases: [(locale: String, size: DynamicTypeSize, title: String, named: Bool, slack: CGFloat)] = [
+            ("en", .large, "October 6", true, 0.5),
+            ("de", .xxLarge, "6. Oktober", true, 0.5),
+            ("en", .large, "Morning Glories at the Old Mill, No. 2", false, CanvasView.margin),
+        ]
         for screen in Self.screens where !screen.name.contains("bar down the side") {
             for count in [4, 5] {
-                let doors = PaintingLayout.Doors(count: count, compactHeight: screen.size.height < 500)
-                let safe = screen.hidden
-                let inside = CGSize(
-                    width: screen.size.width - safe.leading - safe.trailing,
-                    height: screen.size.height - safe.top - safe.bottom)
-                let inputs = PaintingLayout.screen(
-                    size: inside, safe: safe, regularWidth: screen.regular, dynamicTypeSize: .large, rows: .auto,
-                    colors: 2, isComplete: true, doors: doors, foldPlace: nil, rightToLeft: false)
-                guard let metrics = PaintingLayout.doorMetrics(doors, inputs: inputs) else { continue }
-                let bar = CompletionBar(
-                    session: session, title: "October 6", share: CompletionShare(), sealBounces: 0, onReplay: {},
-                    onStopReplay: {}, onShareTimelapse: {}, onClose: {}, doors: metrics,
-                    onChange: count == 5 ? {} : nil, original: count == 5 ? OriginalWork.all.values.first : nil)
-                let host = UIHostingController(rootView: bar)
-                let width = inside.width - 2 * PaintingLayout.edge
-                let measured = host.sizeThatFits(in: CGSize(width: width, height: .greatestFiniteMagnitude)).height
-                let counted = CompletionBar.panelHeight(metrics, dynamicTypeSize: .large)
-                #expect(measured <= counted + 0.5, "\(screen.name), \(count) doors: measured \(measured), counted \(counted)")
-                #expect(inputs.completionHeight == counted, "\(screen.name): the layout counts on the panel's height")
+                for test in cases {
+                    let doors = PaintingLayout.Doors(count: count, compactHeight: screen.size.height < 500)
+                    let safe = screen.hidden
+                    let inside = CGSize(
+                        width: screen.size.width - safe.leading - safe.trailing,
+                        height: screen.size.height - safe.top - safe.bottom)
+                    let inputs = PaintingLayout.screen(
+                        size: inside, safe: safe, regularWidth: screen.regular, dynamicTypeSize: test.size,
+                        rows: .auto, colors: 2, isComplete: true, completionHeight: 1, doors: doors, foldPlace: nil,
+                        rightToLeft: false)
+                    guard let metrics = PaintingLayout.doorMetrics(doors, inputs: inputs) else { continue }
+                    let counted = CompletionBar.panelHeight(metrics, dynamicTypeSize: test.size)
+                    #expect(inputs.completionHeight == counted, "\(screen.name): the layout counts on the panel, never on a measurement")
+                    let bar = CompletionBar(
+                        session: session, title: test.title, share: CompletionShare(), sealBounces: 0, onReplay: {},
+                        onStopReplay: {}, onShareTimelapse: {}, onName: test.named ? nil : {}, isNamed: test.named,
+                        onClose: {}, doors: metrics, onChange: count == 5 ? {} : nil,
+                        original: count == 5 ? OriginalWork.all.values.first : nil)
+                        .environment(\.locale, Locale(identifier: test.locale))
+                        .environment(\.dynamicTypeSize, test.size)
+                    let host = UIHostingController(rootView: bar)
+                    let width = inside.width - 2 * PaintingLayout.edge
+                    let measured = host.sizeThatFits(in: CGSize(width: width, height: .greatestFiniteMagnitude)).height
+                    #expect(
+                        measured <= counted + test.slack,
+                        "\(screen.name), \(count) doors, \(test.locale) \(test.size), \(test.title): measured \(measured), counted \(counted)")
+                }
             }
         }
     }

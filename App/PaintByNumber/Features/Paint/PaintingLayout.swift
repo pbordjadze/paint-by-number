@@ -288,28 +288,29 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
     /// nothing moves as the painting takes its place (painting-company row 364).
     ///
     /// A finished painting's panel with its doors (SideStore and Debug builds) is counted at the
-    /// height it will have (`CompletionBar.panelHeight`), not only once it has been measured
-    /// (`completionHeight`): measured after the screen was built, it moved the page up and made it
-    /// smaller as a finished painting opened. A panel measured taller still counts as measured.
+    /// height it is laid out to have (`CompletionBar.panelHeight`), never as measured: measured
+    /// after the screen was built, it moved the page up and made it smaller as a finished painting
+    /// opened. The bar alone counts as measured (`completionHeight`).
     @MainActor
     static func screen(
         size: CGSize, safe: EdgeInsets, regularWidth: Bool, dynamicTypeSize: DynamicTypeSize, rows: PaletteRows,
         colors: Int, isComplete: Bool, completionHeight: CGFloat? = nil, doors: Doors? = nil, foldPlace: FoldPlace?,
         rightToLeft: Bool
     ) -> Inputs {
-        var inputs = Inputs(
+        let base = Inputs(
             size: size, safe: safe, regularWidth: regularWidth, dynamicTypeSize: dynamicTypeSize, rows: rows,
             colors: colors, isComplete: isComplete, completionHeight: isComplete ? completionHeight : nil,
             fold: foldPlace == nil
                 ? FoldWatch.shared.windowFold(rightToLeft: rightToLeft)
                 : fold(foldPlace, rightToLeft: rightToLeft, safe: safe))
         #if UNRELEASED
-        if isComplete, let doors, let metrics = doorMetrics(doors, inputs: inputs) {
-            inputs.completionHeight = max(
-                CompletionBar.panelHeight(metrics, dynamicTypeSize: dynamicTypeSize), completionHeight ?? 0)
+        if isComplete, let doors, let metrics = doorMetrics(doors, inputs: base) {
+            var counted = base
+            counted.completionHeight = CompletionBar.panelHeight(metrics, dynamicTypeSize: dynamicTypeSize)
+            return counted
         }
         #endif
-        return inputs
+        return base
     }
 
     #if UNRELEASED
