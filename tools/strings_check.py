@@ -96,7 +96,6 @@ WRAPPERS = {
     "SettingSlider": "title",   # TemplatePreviewView
     "SectionTitle": "",         # PhotoSourceView
     "GlassIconButton": "label", # GlassIconButton.swift
-    "choice": "",               # PrintPreviewSheet
 }
 # How often each file mentions the `LocalizedStringKey` type (a parameter or property of a
 # wrapper above). A new wrapper changes a count, which fails the check until WRAPPERS lists it.
@@ -105,7 +104,6 @@ KEY_TYPE_DECLARATIONS = {
     "Features/Paint/GlassIconButton.swift": 1,
     "Features/Create/TemplatePreviewView.swift": 1,
     "Features/Create/PhotoSourceView.swift": 2,
-    "Export/PrintPreview.swift": 1,
 }
 # Calls that never carry user-facing text: logging, assertions, decoding diagnostics, file and
 # asset names.
