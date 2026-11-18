@@ -480,7 +480,9 @@ quiet; a screen entering in front calls off the covered screen's moment and tip)
   presents one, so its view is one view whatever the width, and `TipPassthrough` serves both;
   TipKit counts no display of it, so the desk says it once, `TipDesk.drewBeside`). A card over
   the screen becomes `.margin`: the same card on the opaque surface, the page's three just under
-  the bar, in the margin over the page, instead of on it. The gallery's inline cards stay. Compare
+  the bar, in the margin over the page, instead of on it. The gallery's inline cards stay, and
+  Settings' Worth a Look Here becomes one, among the rows under New Paintings' title (in a form
+  every side of a row is another row's label). Compare
   Photo and Page has a place for each form (`.gentleTip(…, only:)`): the handle for TipKit's, the
   picture's foot for the small one (`CompareView.DividerTipFoot`, under the divider), which
   hangs under the picture. No small tip lies over a picture: where its usual side would, it
