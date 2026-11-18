@@ -916,7 +916,8 @@ struct PaintView: View {
                 session: session, title: title, showsTitle: !badgeShowsTitle, share: completionShare,
                 sealBounces: sealBounces, onReplay: replay, onStopReplay: controller.stopReplay,
                 onShareTimelapse: shareTimelapse, onName: onName, isNamed: isNamed, onClose: onClose,
-                doors: doors, onChange: onChange, original: OriginalWork.of(libraryPicture), onOriginal: { about = $0 })
+                doors: doors, onChange: onChange, original: OriginalWork.of(libraryPicture), onOriginal: { about = $0 },
+                onPrint: offersPrint ? { printTemplate() } : nil)
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { completionHeight = $0 }
                 .transition(transition)
             #else

@@ -307,8 +307,10 @@ below name both alike.
   bar's row that fits). In SideStore and Debug builds (`#if UNRELEASED`, painting-company row 332)
   the bar grows into a panel with the doors after Finished under its row (`FinishedDoors`: Another
   One paints the next night's library picture the gallery doesn't hold through the shell's
-  `\.paintPicture`, Change It is `onChange`, On Paper and Send It share the template's PDF and the
-  finished PNG from their own door), laid by `DoorMetrics` in at most `PaintingLayout.doorsShare`
+  `\.paintPicture`, Change It is `onChange`, On Paper opens Print's preview (`PaintView.printTemplate`; where
+  the device can't print, it shares the template's PDF) and Send It shares the painting's
+  time-lapse, `PaintView.shareTimelapse`; the panel's row has no Share, the gallery's card shares
+  the picture), laid by `DoorMetrics` in at most `PaintingLayout.doorsShare`
   of the screen; `PaintView` measures the panel and the canvas makes room for it
   (`PaintingLayout.Inputs.completionHeight`). `paint-complete` (with `-dark`) is its screenshot.
   A painting made from a library picture (`Artwork.sampleName`, handed on as
@@ -595,7 +597,7 @@ Conventions).
   The painting keeps the choice (`Artwork.hidesLines`, an optional field of `meta.json` every
   build round-trips; only `paintsWithoutLines`, false in the release, draws by it), and its
   gallery thumbnail (`Library.setHidesLines`), Share Painting and the Finished bar's Share
-  Picture (`CompletionShare.withoutLines`) and the doors' Send It picture follow it. The time-lapse
+  Picture (`CompletionShare.withoutLines`) and the doors' glimpse of Send It follow it. The time-lapse
   and feedback's captures keep the lines, and so does the canvas while feedback marks it up. `paint-book-complete` and
   `paint-book-complete-no-lines` are the pair to look at; `FinishedWithoutLinesTests`.
 - Settings › Line Weight (`LineWeight`: Fine, Regular, Bold) is the one thing about a book's lines
@@ -1298,7 +1300,7 @@ Paintings, the frame, a painting a day, which StandBy shows too) and `App/Moonli
   shelf out when a painting is closed and whenever the app leaves the foreground (`OutsideComings` on the shell;
   `ArtworkPaintingView` for an open painting, after its save) and holds the app awake for it
   (`BackgroundSaving`): the painting in progress as it stands and after each of the next areas
-  (`OutsideFills.plan`: the paint in hand's largest areas first, so a tap shows, drawn fainter unpainted, `TemplateRasterizer.Style.widget`; at most `OutsideFills.most`, never the last area,
+  (`OutsideFills.plan`: the largest areas left, of any paint, so a tap shows, drawn fainter unpainted, `TemplateRasterizer.Style.widget`; at most `OutsideFills.most`, never the last area,
   whose finish is the app's), the finished paintings' pictures, and their stickers
   (`StickerMaker`: a print with a white edge, and where Vision finds a subject in the photo, the
   subject cut out of the finished painting, each on a clear square of Messages' sizes, its white
