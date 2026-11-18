@@ -368,9 +368,7 @@ struct RefineView: View {
         .animation(reduceMotion ? nil : .snappy, value: model.note)
         .onGeometryChange(for: CGSize.self) { $0.size } action: { refine.canvasSize = $0 }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(String(
-            localized: "refine.canvas", defaultValue: "Painting to refine",
-            comment: "VoiceOver label of the Refine screen's picture, where lines are drawn and erased; its value counts the changes")))
+        .accessibilityLabel(Text(Self.canvasLabel))
         .accessibilityValue(Self.changes(model.shownChangeCount))
         .accessibilityActions {
             if model.canRedo { Button("Redo", action: refine.redo) }
@@ -460,6 +458,17 @@ struct RefineView: View {
         model.isScratch ? Text("Blank Page") : Text("Edit")
         #else
         model.isScratch ? Text("Blank Page") : Text("Change")
+        #endif
+    }
+
+    /// VoiceOver's name for the picture; Edit is 1.3's name for Refine (painting-company row 331).
+    private static var canvasLabel: String {
+        #if UNRELEASED
+        String(localized: "refine.canvas.edit", defaultValue: "Painting to edit",
+               comment: "VoiceOver label of the Edit screen's picture (SideStore builds' name for Refine), where lines are drawn and erased; its value counts the changes")
+        #else
+        String(localized: "refine.canvas", defaultValue: "Painting to refine",
+               comment: "VoiceOver label of the Refine screen's picture, where lines are drawn and erased; its value counts the changes")
         #endif
     }
 
