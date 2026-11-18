@@ -26,7 +26,9 @@ synchronized folder would bundle it into the app.
   the painting screen rendered at each frame (hundreds of renders) stopped CI's simulator
   answering UI tests for up to half a minute. The painting Start Painting makes is pushed the
   usual way, its zoom unseen under the create flow's cover (with no animation at all the edge
-  swipe back never worked), and shows without fading (`StartHandoff`).
+  swipe back never worked), and shows without fading (`StartHandoff`); it is built at once there,
+  not after the push (`isBuilt`, `builtUnderCover`: the unseen zoom cost Start 0.8 s on an iPad,
+  painting-company row 361).
 - What SwiftUI can't hand Core Animation as a layer of its own (a picture clipped to a rounded
   shape under a shadow, as a gallery card's is) it draws with CoreGraphics on the main thread, and
   draws again at every frame of an animation that moves or fades it, seen or not. While Start
@@ -347,22 +349,7 @@ below name both alike.
   view as little as it can (`PaletteBar.shaken`, `reveal`), so the shake is seen; the next fill
   or undo of the color in hand brings its swatch back (`selectedRemaining`). The palette's
   lines are counted from the painting's colors, not those left (`PaintingLayout.Inputs.colors`),
-  so they never change as colors finish. In SideStore and Debug builds the palette stays put
-  (painting-company row 293; `PaintingLayout.paletteKeepsPlaces`, `PaletteBar.keepsPlaces`,
-  `placedColors`): every color of the painting keeps its place from the first fill to the last,
-  on a bar of several lines (one scrolling line, a phone's, packs as the release does: wells from
-  its start would keep the colors to come out of sight), and a finished one that is no longer in
-  hand becomes a spent well there
-  (`SwatchButton.isSpent`: what is left of its paint, a thinner wash set well in inside a thin rim, no
-  numeral, check or progress ring; a cross-fade, a cut under Reduce Motion), so nothing
-  ever moves and the wells are a small picture of progress. A well selects nothing (a tap does
-  nothing; a hold still shows the paint's details); VoiceOver reads it in the palette's order as
-  its color, "finished", with no button trait or hint, and UI tests find it as `well-N`, so
-  `swatch-N` stays the colors there are to paint. The selection moves on to the next color left
-  and the bar scrolls it into view past the wells; an undo puts the paint back in its well. Not
-  under Nearly Done or Most Left, which re-sort by the painter's choice; the release lets a
-  finished color leave and packs the rest, as 1.1 did. `paint-palette`, `paint-palette-number`
-  and `paint-progress` (with `paint-dark`) show the wells.
+  so they never change as colors finish.
 - `PaintCommands` is the Paint menu (iPadOS menu bar, single-key shortcuts: `]` `[` H N P Z for
   Zen Mode, R for Replay or Stop on a finished painting; ⌘[ is Back) fed by the focused
   `PaintingFocus`; fills are registered with the window's `UndoManager` (⌘Z/⇧⌘Z, Edit menu,
@@ -1155,7 +1142,8 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   (`startPainting`: the usual push and its zoom, unseen behind the opaque cover; a push with
   animations off left the edge swipe back dead), and `ArtworkPaintingView` mounts without its fades
   (`isUnderCover`). The canvas notes when its first frame is on screen
-  (`CanvasView.hasShownFirstFrame`: a tenth of a second after the GPU finished it), and
+  (`CanvasView.hasShownFirstFrame`: as its drawable is shown, at the latest a tenth of a second
+  after the GPU finished it), and
   `PaintView.reportTemplate` then tells the hand-off where the page is, in the window's coordinates
   as UIKit has the canvas (`CanvasController.templateFrameInWindow`; SwiftUI's global frame of the
   pushed canvas put it a safe area's height too low, October 25), and again should it move (a
