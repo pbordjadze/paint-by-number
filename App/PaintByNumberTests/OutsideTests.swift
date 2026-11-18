@@ -112,25 +112,24 @@ struct OutsideDeskTests {
             title: "Mosaic", template: Fixtures.mosaic, settings: GenerationSettings(colorCount: 12), photo: nil, sampleName: nil, progress: nil))
     }
 
-    /// The plan keeps to one paint until it is finished, its largest areas first, takes no area
-    /// twice and never the last.
-    @Test func thePlanFollowsAPaintAndLeavesTheLastArea() {
+    /// The plan paints the largest areas left, of any paint, so a widget's tap shows; it takes
+    /// no area twice and never the last.
+    @Test func thePlanPaintsTheLargestAreasAndLeavesTheLast() {
         let template = Fixtures.mosaic
         let count = template.regions.count
         var progress = PaintProgress(regionCount: count)
         let plan = OutsideFills.plan(template: template, progress: progress)
         #expect(plan.count == OutsideFills.most && Set(plan).count == plan.count)
-        let first = template.regions[plan[0]].colorIndex
-        let ofFirst = template.regions.count(where: { $0.colorIndex == first })
-        #expect(plan.prefix(ofFirst).allSatisfy { template.regions[$0].colorIndex == first })
-        // Largest first, so each tap shows in a widget's small picture.
-        let areas = plan.prefix(ofFirst).map { template.regions[$0].area }
+        let areas = plan.map { template.regions[$0].area }
         #expect(areas == areas.sorted(by: >))
-        #expect(areas.first == template.regions.filter { $0.colorIndex == first }.map(\.area).max())
+        let rest = template.regions.indices.filter { !plan.contains($0) }.map { template.regions[$0].area }
+        #expect(rest.allSatisfy { $0 <= areas.last! })
 
-        progress.inHand = Int(template.regions[count - 1].colorIndex)
-        #expect(OutsideFills.plan(template: template, progress: progress, limit: 1).map { template.regions[$0].colorIndex } == [template.regions[count - 1].colorIndex])
+        // Painted areas are left out.
+        progress.paint(plan[0])
+        #expect(!OutsideFills.plan(template: template, progress: progress).contains(plan[0]))
 
+        progress = PaintProgress(regionCount: count)
         for region in 0..<(count - 3) { progress.paint(region) }
         #expect(OutsideFills.plan(template: template, progress: progress).count == 2)
         progress.paint(count - 3)
