@@ -19,6 +19,8 @@ struct SettingsView: View {
     @Environment(UnlimitedPaintings.self) private var paintings
     @State private var path: [Destination] = []
     @State private var isUnlocking = false
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dynamicTypeSize) private var textSize
 
     private let appInfo = AppInfo()
     /// iPad and the simulator have no haptics: nothing to switch, and the header says Sound alone.
@@ -26,6 +28,12 @@ struct SettingsView: View {
 
     private enum Destination: Hashable { case acknowledgements }
     private static let paintingLengthRow = "painting-length"
+    /// Worth a Look Here has the turn and lies among the rows (`TipForm.inline`), not in a popover.
+    private var showsDrawerTipInline: Bool {
+        PaintTips.desk.turn == .drawerWorthALook
+            && TipForm.of(.drawerWorthALook, isCompact: sizeClass == .compact,
+                          isAccessibilitySize: textSize.isAccessibilitySize) == .inline
+    }
     @State private var tipsReset = false
     /// The secret door's year setter is out under the Year row (`EraDoor`): tapped, the row brings it.
     @State private var showsClock = false
@@ -139,6 +147,14 @@ struct SettingsView: View {
                     }
 
                     Section {
+                        // On a phone Worth a Look Here lies here, under the section's title, and the
+                        // rows make room: every popover's place covered some row's label (painting-company row 240).
+                        if showsDrawerTipInline {
+                            GentleTipView(id: .drawerWorthALook)
+                                .listRowInsets(EdgeInsets())
+                                .listRowBackground(Color.clear)
+                                .transition(.opacity)
+                        }
                         Picker(selection: $paintingLength) {
                             ForEach(PaintingLength.allCases, id: \.self) { length in
                                 Text(length.name).tag(length)
@@ -155,7 +171,7 @@ struct SettingsView: View {
                         // from Painting Length's row it covered the Making-of row (hung below) or the
                         // Preview row and this title (hung above).
                         Text("New Paintings")
-                            .gentleTip(.drawerWorthALook, arrowEdge: .bottom)
+                            .gentleTip(.drawerWorthALook, arrowEdge: .bottom, only: .popover)
                     } footer: {
                         Text(paintingLength.footer)
                             .accessibilityIdentifier("painting-length-footer")

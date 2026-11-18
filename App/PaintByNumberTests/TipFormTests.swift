@@ -43,13 +43,14 @@ struct TipFormTests {
         #endif
     }
 
-    /// The rule itself, whatever the build: a popover becomes the small one beside its subject, a
-    /// card over the screen moves to its margin, and a card among the content stays.
+    /// The rule itself, whatever the build: a popover becomes the small one beside its subject (but
+    /// Settings', which lies among its rows), a card over the screen moves to its margin, and a
+    /// card among the content stays.
     @Test func keepingOffTurnsPopoversSmallAndCardsToTheMargin() {
         for id in TipID.allCases {
             let kept = TipForm.of(id, isCompact: true, isAccessibilitySize: false, keepsOff: true)
             switch TipForm.usual(id) {
-            case .popover: #expect(kept == .beside, "\(id)")
+            case .popover: #expect(kept == (id == .drawerWorthALook ? .inline : .beside), "\(id)")
             case .card: #expect(kept == .margin, "\(id)")
             case .inline: #expect(kept == .inline, "\(id)")
             case .beside, .margin: Issue.record("\(id) is usually \(TipForm.usual(id))")
