@@ -1351,9 +1351,10 @@ per menu: painting-company `process/design-budget.md`); Paint by Mosaic's card k
 painting-company row 357) Print… opens Print's preview first (`PrintPreviewSheet`,
 `Export/PrintPreview.swift`): the pages as they will print, drawn from the PDF itself
 (`PrintPages`), a Blank / Painted switch (`PDFExporter.Layout.painted`: the template's pages
-painted in, never printed), and the layout's choices, `PDFExporter.Layout`: Paper, Orientation,
-Size (`PDFExporter.sizes`: the fewest legible sheets, then the picture across more, with its
-printed size) and Color Key; its Print hands that layout's blank PDF to the dialog and closes once
+painted in, never printed), and two of `PDFExporter.Layout`'s choices: Size (`PDFExporter.sizes`:
+the fewest legible sheets, then the picture across more, with its printed size) and Color Key
+(the paper is the region's and the page turns the picture's way: the system's dialog asks for
+both after); its Print hands that layout's blank PDF to the dialog and closes once
 it has printed (`PrintSheet.onPrinted`). `Layout(paper:)` is the PDF as it always was.
 `print-preview` (with `-dark`, `-long-text`), `-painted` and `-sheets` are its screenshots,
 `PrintLayoutTests` its tests.

@@ -30,17 +30,17 @@ nonisolated struct PrintPreviewRequest: Identifiable, Sendable {
 }
 
 /// Print (painting-company row 357): the pages as they will come out of the printer, on paper,
-/// with the few layout choices a painter needs (the paper, which way it turns, how big the
-/// picture prints, the color key), every one starting where Print… has always printed
-/// (`PDFExporter.Layout(paper:)`). Painted shows the template's pages painted in, what the
-/// painter will make; it never prints. Print hands the system's dialog the PDF the preview
-/// shows, blank, and the preview closes once it has printed. SideStore and Debug builds, until
-/// 1.3; the release's Print… opens the dialog straight away.
+/// with the two layout choices a painter needs (how big the picture prints, the color key),
+/// starting where Print… has always printed (`PDFExporter.Layout(paper:)`): the region's paper,
+/// turned the picture's way. The system's dialog that follows asks for paper and orientation
+/// already, so the preview doesn't (the critic, painting-company row 357). Painted shows the
+/// template's pages painted in, what the painter will make; it never prints. Print hands the
+/// system's dialog the PDF the preview shows, blank, and the preview closes once it has printed.
+/// SideStore and Debug builds, until 1.3; the release's Print… opens the dialog straight away.
 struct PrintPreviewSheet: View {
     let request: PrintPreviewRequest
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var layout: PDFExporter.Layout
     @State private var showsPainted = false
@@ -79,12 +79,6 @@ struct PrintPreviewSheet: View {
                         .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
                 }
                 Section {
-                    choice("Paper", selection: $layout.paper, options: PDFExporter.Paper.allCases.map { ($0, paperName($0)) })
-                        .accessibilityIdentifier("print-paper")
-                    choice("Orientation", selection: orientation, options: [
-                        (.portrait, Text("Portrait")), (.landscape, Text("Landscape")),
-                    ])
-                    .accessibilityIdentifier("print-orientation")
                     sizePicker
                     Toggle(isOn: $layout.colorKey) {
                         Text("Color Key")
@@ -103,9 +97,6 @@ struct PrintPreviewSheet: View {
             .safeAreaInset(edge: .bottom) { printButton }
         }
         .task(id: key) { await draw(key) }
-        // Another paper or orientation has sizes of its own: back to the smallest.
-        .onChange(of: layout.paper) { layout.across = nil }
-        .onChange(of: layout.resolvedOrientation(for: request.template)) { layout.across = nil }
     }
 
     // MARK: The pages
@@ -137,8 +128,9 @@ struct PrintPreviewSheet: View {
             .tabViewStyle(.page(indexDisplayMode: .never))
             // A page a hand's width on the iPad, where the sheet has the room; on a phone short
             // enough that every choice, Size's printed size too, stands above Print (the critic,
-            // painting-company row 357: at 340 Print lay over Size).
-            .frame(height: sizeClass == .regular ? 560 : 230)
+            // painting-company row 357: at 340 Print lay over Size with Paper and Orientation
+            // still above it; with the two choices left, 300 keeps them clear of Print).
+            .frame(height: sizeClass == .regular ? 560 : 300)
             .overlay {
                 if pages == nil { ProgressView() }
             }
@@ -179,33 +171,6 @@ struct PrintPreviewSheet: View {
     }
 
     // MARK: The choices
-
-    private var orientation: Binding<PDFExporter.Layout.Orientation> {
-        Binding(get: { layout.resolvedOrientation(for: request.template) }, set: { layout.orientation = $0 })
-    }
-
-    private func paperName(_ paper: PDFExporter.Paper) -> Text {
-        switch paper {
-        case .letter: Text("Letter")
-        case .a4: Text("A4")
-        }
-    }
-
-    /// Two choices: side by side, or a menu at the accessibility sizes, where they don't fit
-    /// beside their name.
-    @ViewBuilder
-    private func choice<Value: Hashable>(_ title: LocalizedStringKey, selection: Binding<Value>, options: [(Value, Text)]) -> some View {
-        let picker = Picker(title, selection: selection) {
-            ForEach(options.indices, id: \.self) { index in options[index].1.tag(options[index].0) }
-        }
-        if typeSize.isAccessibilitySize {
-            picker.pickerStyle(.menu)
-        } else {
-            LabeledContent(title) {
-                picker.pickerStyle(.segmented).labelsHidden().fixedSize()
-            }
-        }
-    }
 
     private var sizes: [PDFExporter.Size] { PDFExporter.sizes(for: request.template, layout: layout) }
 
