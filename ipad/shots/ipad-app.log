@@ -1,0 +1,446 @@
+----- the app's own lines -----
+349:2026-11-18 05:26:59.654 Df PaintByNumber[2873:3e2f9] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+351:2026-11-18 05:27:00.858 Df PaintByNumber[2873:3e2f9] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.123883459 seconds
+557:2026-11-18 05:27:01.555 Df PaintByNumber[2873:3e2fb] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.320867084 seconds
+900:2026-11-18 05:27:08.829 Df PaintByNumber[2936:3e704] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+902:2026-11-18 05:27:10.003 Df PaintByNumber[2936:3e704] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.122778334 seconds
+1088:2026-11-18 05:27:10.678 Df PaintByNumber[2936:3e70e] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.304212709 seconds
+2005:2026-11-18 05:27:18.143 Df PaintByNumber[3832:3eb56] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+2742:2026-11-18 05:27:19.307 Df PaintByNumber[3832:3eb56] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.124201792 seconds
+3089:2026-11-18 05:27:19.927 Df PaintByNumber[3832:3eb51] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.272834458 seconds
+3736:2026-11-18 05:27:21.421 Df PaintByNumber[3832:3eb32] [com.pbordjadze.paintbynumber:tips] forced: benchFind
+3737:2026-11-18 05:27:21.423 Df PaintByNumber[3832:3eb32] [com.pbordjadze.paintbynumber:tips] turn: benchFind
+4096:2026-11-18 05:27:30.751 Df PaintByNumber[4748:3f30f] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+4098:2026-11-18 05:27:31.927 Df PaintByNumber[4748:3f30f] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.111218167 seconds
+4284:2026-11-18 05:27:32.610 Df PaintByNumber[4748:3f30b] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.324860292 seconds
+4626:2026-11-18 05:27:39.887 Df PaintByNumber[5851:3fb73] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+4628:2026-11-18 05:27:41.081 Df PaintByNumber[5851:3fb73] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.125641625 seconds
+4792:2026-11-18 05:27:41.929 Df PaintByNumber[5851:3fb72] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.511919167 seconds
+5133:2026-11-18 05:27:49.596 Df PaintByNumber[6326:4012b] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+5135:2026-11-18 05:27:50.825 Df PaintByNumber[6326:4012b] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.128342667 seconds
+5299:2026-11-18 05:27:51.534 Df PaintByNumber[6326:4012c] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.366555583 seconds
+5653:2026-11-18 05:28:00.101 Df PaintByNumber[7212:40719] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+5655:2026-11-18 05:28:01.479 Df PaintByNumber[7212:40719] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.131636084 seconds
+5840:2026-11-18 05:28:02.213 Df PaintByNumber[7212:4071b] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.318954083 seconds
+6190:2026-11-18 05:28:09.440 Df PaintByNumber[7984:40e91] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+6192:2026-11-18 05:28:10.595 Df PaintByNumber[7984:40e91] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.113227333 seconds
+6381:2026-11-18 05:28:11.271 Df PaintByNumber[7984:40e98] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.307203292 seconds
+6460:2026-11-18 05:28:30.971 Df PaintByNumber[7984:40d71] [com.pbordjadze.paintbynumber:demo] demo paint-book-moon-dark: painted 171, fill 13.853811 s
+9232:2026-11-18 05:30:17.445 Df PaintByNumber[15353:44eba] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+9243:2026-11-18 05:30:17.598 Df PaintByNumber[15353:44f18] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.154917167 seconds
+9328:2026-11-18 05:30:17.989 Df PaintByNumber[15353:44eba] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.08056375 seconds
+9338:2026-11-18 05:30:18.110 Df PaintByNumber[15353:44eba] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+9339:2026-11-18 05:30:18.310 Df PaintByNumber[15353:44eba] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.321265375 seconds
+9340:2026-11-18 05:30:18.339 Df PaintByNumber[15353:44eba] [com.pbordjadze.paintbynumber:tips] offer in shelf: shelfStarter, wanted shelfStarter
+9364:2026-11-18 05:30:18.716 Df PaintByNumber[15353:44eba] [com.pbordjadze.paintbynumber:tips] turn: shelfStarter
+9668:2026-11-18 05:30:29.994 Df PaintByNumber[16292:456c3] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+9682:2026-11-18 05:30:30.125 Df PaintByNumber[16292:456e9] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.133165083 seconds
+9759:2026-11-18 05:30:30.504 Df PaintByNumber[16292:456c3] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.004620292 seconds
+9770:2026-11-18 05:30:30.629 Df PaintByNumber[16292:456c3] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+9778:2026-11-18 05:30:30.842 Df PaintByNumber[16292:456c3] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.337668875 seconds
+9779:2026-11-18 05:30:30.873 Df PaintByNumber[16292:456c3] [com.pbordjadze.paintbynumber:tips] offer in shelf: shelfStarter, wanted shelfStarter
+9803:2026-11-18 05:30:31.355 Df PaintByNumber[16292:456c3] [com.pbordjadze.paintbynumber:tips] turn: shelfStarter
+10101:2026-11-18 05:30:43.286 Df PaintByNumber[17207:45ea2] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+10112:2026-11-18 05:30:43.436 Df PaintByNumber[17207:45ed7] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.151702708 seconds
+10190:2026-11-18 05:30:43.901 Df PaintByNumber[17207:45ea2] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.227233708 seconds
+10200:2026-11-18 05:30:44.020 Df PaintByNumber[17207:45ea2] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+10201:2026-11-18 05:30:44.200 Df PaintByNumber[17207:45ea2] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.299002 seconds
+10202:2026-11-18 05:30:44.222 Df PaintByNumber[17207:45ea2] [com.pbordjadze.paintbynumber:tips] offer in shelf: shelfStarter, wanted shelfStarter
+10233:2026-11-18 05:30:44.682 Df PaintByNumber[17207:45ea2] [com.pbordjadze.paintbynumber:tips] turn: shelfStarter
+10506:2026-11-18 05:30:54.939 Df PaintByNumber[17839:46425] [com.pbordjadze.paintbynumber:tips] offer in shelf: , wanted
+10523:2026-11-18 05:30:55.093 Df PaintByNumber[17839:4666b] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.156903 seconds
+10610:2026-11-18 05:30:55.526 Df PaintByNumber[17839:46425] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.347009 seconds
+10618:2026-11-18 05:30:55.676 Df PaintByNumber[17839:46425] [com.pbordjadze.paintbynumber:tips] offer in shelf: shelfNewPainting, shelfSettings, shelfTimeLapse, wanted shelfNewPainting, shelfSettings, shelfTimeLapse
+10704:2026-11-18 05:30:56.163 Df PaintByNumber[17839:46425] [com.pbordjadze.paintbynumber:tips] turn: shelfSettings
+10993:2026-11-18 05:31:05.572 Df PaintByNumber[18179:467d4] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.172423375 seconds
+11182:2026-11-18 05:31:08.855 Df PaintByNumber[18179:4677b] [com.pbordjadze.paintbynumber:create] Draft #1 started for 38 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+11184:2026-11-18 05:31:09.253 Df PaintByNumber[18179:4677b] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+11185:2026-11-18 05:31:09.278 Df PaintByNumber[18179:4677b] [com.pbordjadze.paintbynumber:create] Full #2 started for 38 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+11187:2026-11-18 05:31:11.505 Df PaintByNumber[18179:4677b] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+11188:2026-11-18 05:31:11.514 Df PaintByNumber[18179:4677b] [com.pbordjadze.paintbynumber:tips] offer in preview: newPaintingDivider, newPaintingSuggested, newPaintingSliders, newPaintingRefine, wanted newPaintingDivider, newPaintingSuggested, newPaintingSliders, newPaintingRefine
+11267:2026-11-18 05:31:11.977 Df PaintByNumber[18179:4677b] [com.pbordjadze.paintbynumber:tips] turn: newPaintingSuggested
+11622:2026-11-18 05:31:22.945 Df PaintByNumber[19280:47221] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.263879375 seconds
+12067:2026-11-18 05:31:31.235 Df PaintByNumber[19523:475bc] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.177403666 seconds
+12078:2026-11-18 05:31:31.754 Df PaintByNumber[19523:473c6] [com.pbordjadze.paintbynumber:tips] offer in drawer: drawerWorthALook, wanted drawerWorthALook
+12223:2026-11-18 05:31:32.682 Df PaintByNumber[19523:473c6] [com.pbordjadze.paintbynumber:tips] turn: drawerWorthALook
+12556:2026-11-18 05:31:44.018 Df PaintByNumber[20450:47bad] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.181379708 seconds
+13470:2026-11-18 05:31:45.644 Df PaintByNumber[20450:47b82] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.460940042 seconds
+13590:2026-11-18 05:31:46.159 Df PaintByNumber[20450:47b82] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.514511084 seconds
+13747:2026-11-18 05:31:46.625 Df PaintByNumber[20450:47b82] [com.pbordjadze.paintbynumber:library] Seeded wheat-field in 0.465983916 seconds
+14132:2026-11-18 05:31:47.308 Df PaintByNumber[20450:47b82] [com.pbordjadze.paintbynumber:library] Seeded hawksbill-turtle in 0.683144625 seconds
+14438:2026-11-18 05:31:47.964 Df PaintByNumber[20450:47b82] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.655562917 seconds
+14973:2026-11-18 05:31:48.623 Df PaintByNumber[20450:47b82] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.657790458 seconds
+14998:2026-11-18 05:31:50.319 Df PaintByNumber[20450:47b82] [com.pbordjadze.paintbynumber:tips] forced: shelfNewPainting
+14999:2026-11-18 05:31:50.322 Df PaintByNumber[20450:47b82] [com.pbordjadze.paintbynumber:tips] turn: shelfNewPainting
+15312:2026-11-18 05:32:01.175 Df PaintByNumber[21385:483ef] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.208879417 seconds
+15476:2026-11-18 05:32:01.640 Df PaintByNumber[21385:483c2] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.261516167 seconds
+15563:2026-11-18 05:32:01.925 Df PaintByNumber[21385:483c2] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.28521625 seconds
+15730:2026-11-18 05:32:02.326 Df PaintByNumber[21385:483c2] [com.pbordjadze.paintbynumber:library] Seeded wheat-field in 0.400694875 seconds
+15914:2026-11-18 05:32:02.673 Df PaintByNumber[21385:483c2] [com.pbordjadze.paintbynumber:library] Seeded hawksbill-turtle in 0.346757833 seconds
+17713:2026-11-18 05:32:03.947 Df PaintByNumber[21385:483c2] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 1.273323334 seconds
+17715:2026-11-18 05:32:04.084 Df PaintByNumber[21385:483c2] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.136960083 seconds
+17739:2026-11-18 05:32:05.835 Df PaintByNumber[21385:483c2] [com.pbordjadze.paintbynumber:tips] forced: shelfHold
+17740:2026-11-18 05:32:05.838 Df PaintByNumber[21385:483c2] [com.pbordjadze.paintbynumber:tips] turn: shelfHold
+18053:2026-11-18 05:32:15.218 Df PaintByNumber[22306:48bc8] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.14683375 seconds
+19527:2026-11-18 05:32:16.783 Df PaintByNumber[22306:48b9c] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 2.161954667 seconds
+19899:2026-11-18 05:32:17.454 Df PaintByNumber[22306:48b9c] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.671204167 seconds
+20329:2026-11-18 05:32:18.160 Df PaintByNumber[22306:48b9c] [com.pbordjadze.paintbynumber:library] Seeded wheat-field in 0.705948 seconds
+20452:2026-11-18 05:32:18.481 Df PaintByNumber[22306:48b9c] [com.pbordjadze.paintbynumber:library] Seeded hawksbill-turtle in 0.321010583 seconds
+20455:2026-11-18 05:32:18.769 Df PaintByNumber[22306:48b9c] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.287233208 seconds
+20457:2026-11-18 05:32:18.956 Df PaintByNumber[22306:48b9c] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.18664075 seconds
+20488:2026-11-18 05:32:20.690 Df PaintByNumber[22306:48b9c] [com.pbordjadze.paintbynumber:tips] forced: shelfTimeLapse
+20489:2026-11-18 05:32:20.693 Df PaintByNumber[22306:48b9c] [com.pbordjadze.paintbynumber:tips] turn: shelfTimeLapse
+20797:2026-11-18 05:32:29.800 Df PaintByNumber[23234:494ef] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.168054584 seconds
+21393:2026-11-18 05:32:32.434 Df PaintByNumber[23234:493ab] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+21427:2026-11-18 05:32:32.844 Df PaintByNumber[23234:493ab] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+21429:2026-11-18 05:32:32.867 Df PaintByNumber[23234:493ab] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+21766:2026-11-18 05:32:35.188 Df PaintByNumber[23234:493ab] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+23277:2026-11-18 05:32:36.702 Df PaintByNumber[23234:493ab] [com.pbordjadze.paintbynumber:tips] forced: newPaintingDivider
+23278:2026-11-18 05:32:36.705 Df PaintByNumber[23234:493ab] [com.pbordjadze.paintbynumber:tips] turn: newPaintingDivider
+23600:2026-11-18 05:32:47.195 Df PaintByNumber[24535:49f34] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.207814708 seconds
+24277:2026-11-18 05:32:49.964 Df PaintByNumber[24535:49f11] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+24334:2026-11-18 05:32:50.343 Df PaintByNumber[24535:49f11] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+24336:2026-11-18 05:32:50.369 Df PaintByNumber[24535:49f11] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+24704:2026-11-18 05:32:52.423 Df PaintByNumber[24535:49f11] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+26140:2026-11-18 05:32:54.159 Df PaintByNumber[24535:49f11] [com.pbordjadze.paintbynumber:tips] forced: newPaintingSliders
+26141:2026-11-18 05:32:54.162 Df PaintByNumber[24535:49f11] [com.pbordjadze.paintbynumber:tips] turn: newPaintingSliders
+26460:2026-11-18 05:33:04.335 Df PaintByNumber[25475:4a73f] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.143639125 seconds
+27272:2026-11-18 05:33:07.043 Df PaintByNumber[25475:4a71a] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+27328:2026-11-18 05:33:07.414 Df PaintByNumber[25475:4a71a] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+27330:2026-11-18 05:33:07.438 Df PaintByNumber[25475:4a71a] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+27572:2026-11-18 05:33:09.561 Df PaintByNumber[25475:4a71a] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+27574:2026-11-18 05:33:09.601 Df PaintByNumber[25475:4a71a] [com.pbordjadze.paintbynumber:create] Settings changed to 22 colors, detail 0.98, lines 0.5 [adjusting false, full under way true, final false, phase generating]
+27764:2026-11-18 05:33:09.890 Df PaintByNumber[25475:4a71a] [com.pbordjadze.paintbynumber:create] Full #3 started for 22 colors, detail 0.98, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+28287:2026-11-18 05:33:12.294 Df PaintByNumber[25475:4a71a] [com.pbordjadze.paintbynumber:create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+28970:2026-11-18 05:33:14.063 Df PaintByNumber[25475:4a71a] [com.pbordjadze.paintbynumber:tips] forced: newPaintingReset
+28971:2026-11-18 05:33:14.066 Df PaintByNumber[25475:4a71a] [com.pbordjadze.paintbynumber:tips] turn: newPaintingReset
+29275:2026-11-18 05:33:23.747 Df PaintByNumber[26406:4af7c] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.192991417 seconds
+29822:2026-11-18 05:33:26.412 Df PaintByNumber[26406:4af2e] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+29867:2026-11-18 05:33:26.775 Df PaintByNumber[26406:4af2e] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+29868:2026-11-18 05:33:26.798 Df PaintByNumber[26406:4af2e] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+30188:2026-11-18 05:33:28.764 Df PaintByNumber[26406:4af2e] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+31795:2026-11-18 05:33:31.130 Df PaintByNumber[26406:4af2e] [com.pbordjadze.paintbynumber:tips] forced: newPaintingRefine
+31796:2026-11-18 05:33:31.135 Df PaintByNumber[26406:4af2e] [com.pbordjadze.paintbynumber:tips] turn: newPaintingRefine
+32088:2026-11-18 05:33:41.615 Df PaintByNumber[27331:4b7d1] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.184513458 seconds
+32831:2026-11-18 05:33:44.266 Df PaintByNumber[27331:4b762] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+32877:2026-11-18 05:33:44.811 Df PaintByNumber[27331:4b762] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+32879:2026-11-18 05:33:44.849 Df PaintByNumber[27331:4b762] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+33219:2026-11-18 05:33:46.964 Df PaintByNumber[27331:4b762] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+34687:2026-11-18 05:33:50.410 Df PaintByNumber[27331:4b762] [com.pbordjadze.paintbynumber:tips] forced: refineFill
+34688:2026-11-18 05:33:50.414 Df PaintByNumber[27331:4b762] [com.pbordjadze.paintbynumber:tips] turn: refineFill
+34992:2026-11-18 05:34:02.100 Df PaintByNumber[28618:4c30e] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.182923542 seconds
+35714:2026-11-18 05:34:04.728 Df PaintByNumber[28618:4c2d4] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+35742:2026-11-18 05:34:05.093 Df PaintByNumber[28618:4c2d4] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+35749:2026-11-18 05:34:05.112 Df PaintByNumber[28618:4c2d4] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+36115:2026-11-18 05:34:07.069 Df PaintByNumber[28618:4c2d4] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+37590:2026-11-18 05:34:10.301 Df PaintByNumber[28618:4c2d4] [com.pbordjadze.paintbynumber:tips] forced: refineDraw
+37591:2026-11-18 05:34:10.304 Df PaintByNumber[28618:4c2d4] [com.pbordjadze.paintbynumber:tips] turn: refineDraw
+39099:2026-11-18 05:34:20.686 Df PaintByNumber[29548:4cadd] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.18219175 seconds
+39341:2026-11-18 05:34:22.064 Df PaintByNumber[29548:4cadf] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.890792625 seconds
+40350:2026-11-18 05:34:23.355 Df PaintByNumber[29548:4caba] [com.pbordjadze.paintbynumber:tips] forced: benchZoom
+40351:2026-11-18 05:34:23.357 Df PaintByNumber[29548:4caba] [com.pbordjadze.paintbynumber:tips] turn: benchZoom
+41436:2026-11-18 05:34:33.299 Df PaintByNumber[30454:4d2e2] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.15816325 seconds
+41654:2026-11-18 05:34:34.079 Df PaintByNumber[30454:4d2f2] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.363828084 seconds
+43175:2026-11-18 05:34:35.550 Df PaintByNumber[30454:4d2c0] [com.pbordjadze.paintbynumber:tips] forced: benchDrag
+43176:2026-11-18 05:34:35.552 Df PaintByNumber[30454:4d2c0] [com.pbordjadze.paintbynumber:tips] turn: benchDrag
+44305:2026-11-18 05:34:45.430 Df PaintByNumber[31360:4dad1] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.136709708 seconds
+44594:2026-11-18 05:34:46.101 Df PaintByNumber[31360:4dacd] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.297145292 seconds
+45984:2026-11-18 05:34:47.586 Df PaintByNumber[31360:4da8e] [com.pbordjadze.paintbynumber:tips] forced: benchPencil
+45985:2026-11-18 05:34:47.588 Df PaintByNumber[31360:4da8e] [com.pbordjadze.paintbynumber:tips] turn: benchPencil
+47044:2026-11-18 05:34:57.780 Df PaintByNumber[32228:4e29e] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.133464209 seconds
+47277:2026-11-18 05:34:58.497 Df PaintByNumber[32228:4e29d] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.334324292 seconds
+48828:2026-11-18 05:35:00.219 Df PaintByNumber[32228:4e22f] [com.pbordjadze.paintbynumber:tips] forced: benchFind
+48829:2026-11-18 05:35:00.222 Df PaintByNumber[32228:4e22f] [com.pbordjadze.paintbynumber:tips] turn: benchFind
+49887:2026-11-18 05:35:11.242 Df PaintByNumber[32996:4eb89] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.138806833 seconds
+50134:2026-11-18 05:35:12.094 Df PaintByNumber[32996:4eba1] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.461951542 seconds
+51644:2026-11-18 05:35:13.421 Df PaintByNumber[32996:4e99c] [com.pbordjadze.paintbynumber:tips] forced: benchShowPhoto
+51645:2026-11-18 05:35:13.424 Df PaintByNumber[32996:4e99c] [com.pbordjadze.paintbynumber:tips] turn: benchShowPhoto
+52877:2026-11-18 05:35:23.185 Df PaintByNumber[33612:4ef7e] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.131648375 seconds
+53151:2026-11-18 05:35:23.991 Df PaintByNumber[33612:4ef83] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.436293167 seconds
+54484:2026-11-18 05:35:25.548 Df PaintByNumber[33612:4ef40] [com.pbordjadze.paintbynumber:tips] forced: benchReplay
+54485:2026-11-18 05:35:25.550 Df PaintByNumber[33612:4ef40] [com.pbordjadze.paintbynumber:tips] turn: benchReplay
+55476:2026-11-18 05:35:36.709 Df PaintByNumber[34538:4f7b3] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.135207542 seconds
+55792:2026-11-18 05:35:37.392 Df PaintByNumber[34538:4f7b4] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.305861875 seconds
+57335:2026-11-18 05:35:39.109 Df PaintByNumber[34538:4f78c] [com.pbordjadze.paintbynumber:tips] forced: benchZen
+57336:2026-11-18 05:35:39.111 Df PaintByNumber[34538:4f78c] [com.pbordjadze.paintbynumber:tips] turn: benchZen
+58312:2026-11-18 05:35:50.259 Df PaintByNumber[35463:4ffd2] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.136926875 seconds
+58599:2026-11-18 05:35:50.954 Df PaintByNumber[35463:4ffcb] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.306535083 seconds
+60179:2026-11-18 05:35:52.428 Df PaintByNumber[35463:4ffb0] [com.pbordjadze.paintbynumber:tips] forced: benchFeedback
+60180:2026-11-18 05:35:52.430 Df PaintByNumber[35463:4ffb0] [com.pbordjadze.paintbynumber:tips] turn: benchFeedback
+60508:2026-11-18 05:36:01.578 Df PaintByNumber[36376:507b6] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.173867125 seconds
+61027:2026-11-18 05:36:12.690 Df PaintByNumber[36792:50d5c] [com.pbordjadze.paintbynumber:ravenna.canvas] Making the render context took 0.804890833 seconds
+61028:2026-11-18 05:36:19.387 Df PaintByNumber[36792:50b42] [com.pbordjadze.paintbynumber:ravenna.library] Seeded young-woman-in-red in 7.2623978750000004 seconds
+61031:2026-11-18 05:36:22.530 Df PaintByNumber[36792:50b42] [com.pbordjadze.paintbynumber:ravenna.library] Seeded william in 3.142564917 seconds
+61317:2026-11-18 05:36:30.121 Df PaintByNumber[37734:51669] [com.pbordjadze.paintbynumber:ravenna.canvas] Making the render context took 0.135514875 seconds
+61411:2026-11-18 05:36:30.817 Df PaintByNumber[37734:5142d] [com.pbordjadze.paintbynumber:ravenna.create] Full #1 started [adjusting false, full under way false, final false, phase ready]
+61453:2026-11-18 05:36:32.764 Df PaintByNumber[37734:5142d] [com.pbordjadze.paintbynumber:ravenna.create] Full #1 shown [adjusting false, full under way true, final true, phase generating]
+61766:2026-11-18 05:36:40.122 Df PaintByNumber[38635:51bc1] [com.pbordjadze.paintbynumber:ravenna.canvas] Making the render context took 0.135339375 seconds
+61878:2026-11-18 05:36:40.730 Df PaintByNumber[38635:51ba0] [com.pbordjadze.paintbynumber:ravenna.create] Full #1 started [adjusting false, full under way false, final false, phase ready]
+61901:2026-11-18 05:36:42.685 Df PaintByNumber[38635:51ba0] [com.pbordjadze.paintbynumber:ravenna.create] Full #1 shown [adjusting false, full under way true, final true, phase generating]
+61902:2026-11-18 05:36:42.724 Df PaintByNumber[38635:51ba0] [com.pbordjadze.paintbynumber:ravenna.create] Recipe changed: pieces 0.3868528072345416, eyes asTheyLook, mouth asInThePhoto, ground picture, panel whole [adjusting false, full under way false, final false, phase ready]
+61904:2026-11-18 05:36:42.738 Df PaintByNumber[38635:51ba0] [com.pbordjadze.paintbynumber:ravenna.create] Draft #2 started [adjusting false, full under way false, final false, phase ready]
+61932:2026-11-18 05:36:46.126 Df PaintByNumber[38635:51bc1] [com.pbordjadze.paintbynumber:ravenna.create] Faces: 1, with 2 eyes, from the bench
+61933:2026-11-18 05:36:46.974 Df PaintByNumber[38635:51ba0] [com.pbordjadze.paintbynumber:ravenna.create] Draft #2 shown [adjusting false, full under way false, final false, phase generating]
+61934:2026-11-18 05:36:46.981 Df PaintByNumber[38635:51ba0] [com.pbordjadze.paintbynumber:ravenna.create] Full #3 started [adjusting false, full under way false, final false, phase ready]
+61936:2026-11-18 05:36:50.536 Df PaintByNumber[38635:51ba0] [com.pbordjadze.paintbynumber:ravenna.create] Full #3 shown [adjusting false, full under way true, final true, phase generating]
+63072:2026-11-18 05:37:13.290 Df PaintByNumber[40510:52ba6] [com.pbordjadze.paintbynumber:ravenna.canvas] Making the render context took 0.134737084 seconds
+63531:2026-11-18 05:37:21.612 Df PaintByNumber[41299:53424] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.170215916 seconds
+63883:2026-11-18 05:37:31.017 Df PaintByNumber[41835:5387d] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.17077975 seconds
+64251:2026-11-18 05:37:40.289 Df PaintByNumber[42738:53f18] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.177483292 seconds
+64678:2026-11-18 05:37:50.888 Df PaintByNumber[43644:546bd] [com.pbordjadze.paintbynumber:ravenna.canvas] Making the render context took 0.221203125 seconds
+65139:2026-11-18 05:38:00.073 Df PaintByNumber[43711:54a19] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.146004583 seconds
+65304:2026-11-18 05:38:00.999 Df PaintByNumber[43711:54a1b] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.53578225 seconds
+65577:2026-11-18 05:38:09.834 Df PaintByNumber[44626:54fa5] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.14425425 seconds
+65662:2026-11-18 05:38:10.255 Df PaintByNumber[44626:54f7f] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 0.287856916 seconds
+65680:2026-11-18 05:38:10.587 Df PaintByNumber[44626:54f7f] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.332116416 seconds
+65683:2026-11-18 05:38:10.856 Df PaintByNumber[44626:54f7f] [com.pbordjadze.paintbynumber:library] Seeded wheat-field in 0.268696166 seconds
+65685:2026-11-18 05:38:11.065 Df PaintByNumber[44626:54f7f] [com.pbordjadze.paintbynumber:library] Seeded hawksbill-turtle in 0.209062042 seconds
+65688:2026-11-18 05:38:11.284 Df PaintByNumber[44626:54f7f] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.218226458 seconds
+65690:2026-11-18 05:38:11.459 Df PaintByNumber[44626:54f7f] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.174974125 seconds
+66030:2026-11-18 05:38:19.330 Df PaintByNumber[45530:55729] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.138719916 seconds
+66195:2026-11-18 05:38:20.267 Df PaintByNumber[45530:55726] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.561568666 seconds
+66460:2026-11-18 05:38:27.735 Df PaintByNumber[45595:55b9d] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.172733875 seconds
+66913:2026-11-18 05:38:39.437 Df PaintByNumber[46818:563da] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.175086625 seconds
+67047:2026-11-18 05:38:42.291 Df PaintByNumber[46818:5633b] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+67049:2026-11-18 05:38:42.725 Df PaintByNumber[46818:5633b] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+67050:2026-11-18 05:38:42.760 Df PaintByNumber[46818:5633b] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+67055:2026-11-18 05:38:44.820 Df PaintByNumber[46818:5633b] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+67346:2026-11-18 05:38:53.339 Df PaintByNumber[47556:56bd5] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.164039 seconds
+67480:2026-11-18 05:38:55.988 Df PaintByNumber[47556:56a03] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+67482:2026-11-18 05:38:56.378 Df PaintByNumber[47556:56a03] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+67483:2026-11-18 05:38:56.404 Df PaintByNumber[47556:56a03] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+67488:2026-11-18 05:38:58.323 Df PaintByNumber[47556:56a03] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+67857:2026-11-18 05:39:09.026 Df PaintByNumber[48148:571d5] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.18076025 seconds
+67999:2026-11-18 05:39:11.567 Df PaintByNumber[48148:56fb5] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+68001:2026-11-18 05:39:11.932 Df PaintByNumber[48148:56fb5] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+68002:2026-11-18 05:39:11.957 Df PaintByNumber[48148:56fb5] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+68027:2026-11-18 05:39:13.867 Df PaintByNumber[48148:56fb5] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+68145:2026-11-18 05:39:16.341 Df PaintByNumber[48148:56fb5] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: merge
+68428:2026-11-18 05:39:24.371 Df PaintByNumber[48774:575dd] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.168418334 seconds
+68565:2026-11-18 05:39:27.130 Df PaintByNumber[48774:57599] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+68567:2026-11-18 05:39:27.423 Df PaintByNumber[48774:57599] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+68568:2026-11-18 05:39:27.446 Df PaintByNumber[48774:57599] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.83, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+68573:2026-11-18 05:39:29.255 Df PaintByNumber[48774:57599] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+68919:2026-11-18 05:39:37.277 Df PaintByNumber[49685:57dc5] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.244835334 seconds
+69647:2026-11-18 05:39:56.158 Df PaintByNumber[51020:589ba] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.160624583 seconds
+69725:2026-11-18 05:39:56.591 Df PaintByNumber[51020:5899b] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 0.29623025 seconds
+69742:2026-11-18 05:39:56.859 Df PaintByNumber[51020:5899b] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.267669959 seconds
+69745:2026-11-18 05:39:57.103 Df PaintByNumber[51020:5899b] [com.pbordjadze.paintbynumber:library] Seeded wheat-field in 0.243861833 seconds
+69747:2026-11-18 05:39:57.315 Df PaintByNumber[51020:5899b] [com.pbordjadze.paintbynumber:library] Seeded hawksbill-turtle in 0.211695959 seconds
+69750:2026-11-18 05:39:57.522 Df PaintByNumber[51020:5899b] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.206913875 seconds
+69752:2026-11-18 05:39:57.696 Df PaintByNumber[51020:5899b] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.173063375 seconds
+70092:2026-11-18 05:40:05.944 Df PaintByNumber[51730:59135] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.122576459 seconds
+70257:2026-11-18 05:40:06.819 Df PaintByNumber[51730:59134] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.529354125 seconds
+70517:2026-11-18 05:40:13.859 Df PaintByNumber[51987:5924b] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.141094542 seconds
+70657:2026-11-18 05:40:16.537 Df PaintByNumber[51987:59229] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+70659:2026-11-18 05:40:16.964 Df PaintByNumber[51987:59229] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+70660:2026-11-18 05:40:16.995 Df PaintByNumber[51987:59229] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+70685:2026-11-18 05:40:18.940 Df PaintByNumber[51987:59229] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+71051:2026-11-18 05:40:29.146 Df PaintByNumber[52769:59a44] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.181735875 seconds
+71192:2026-11-18 05:40:31.725 Df PaintByNumber[52769:5991c] [com.pbordjadze.paintbynumber:create] Draft #1 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase generating]
+71194:2026-11-18 05:40:32.095 Df PaintByNumber[52769:5991c] [com.pbordjadze.paintbynumber:create] Draft #1 shown [adjusting false, full under way false, final false, phase generating]
+71195:2026-11-18 05:40:32.119 Df PaintByNumber[52769:5991c] [com.pbordjadze.paintbynumber:create] Full #2 started for 22 colors, detail 0.73, lines 0.5 [adjusting false, full under way false, final false, phase ready]
+71220:2026-11-18 05:40:34.041 Df PaintByNumber[52769:5991c] [com.pbordjadze.paintbynumber:create] Full #2 shown [adjusting false, full under way true, final true, phase generating]
+71334:2026-11-18 05:40:36.484 Df PaintByNumber[52769:5991c] [com.pbordjadze.paintbynumber:create] Tool Guide page shown: merge
+71673:2026-11-18 05:40:45.782 Df PaintByNumber[53582:5a23d] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.190172417 seconds
+----- tail -----
+2026-11-18 05:41:52.079 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.079 Df PaintByNumber[58030:5c723] [com.apple.TipKit:TipKit • Datastore] <compose failure [shared UUID]>
+2026-11-18 05:41:52.079 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.080 Df PaintByNumber[58030:5c6e4] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-18 05:41:52.080 Df PaintByNumber[58030:5c6e4] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-18 05:41:52.080 Df PaintByNumber[58030:5c726] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-18 05:41:52.080 Df PaintByNumber[58030:5c6e4] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-18 05:41:52.080 Df PaintByNumber[58030:5c6e4] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-18 05:41:52.080 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:KeyboardFocusAssistant] <compose failure [shared UUID]>
+2026-11-18 05:41:52.080 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:KeyboardSceneDelegate] <compose failure [shared UUID]>
+2026-11-18 05:41:52.081 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:KeyboardArbiterClientLog] <compose failure [shared UUID]>
+2026-11-18 05:41:52.081 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:KeyboardArbiterClientLog] <compose failure [shared UUID]>
+2026-11-18 05:41:52.081 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.082 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.082 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.082 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.082 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.082 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.082 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.082 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:KeyboardScene] <compose failure [shared UUID]>
+2026-11-18 05:41:52.083 Df PaintByNumber[58030:5c6e4] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-18 05:41:52.083 Df PaintByNumber[58030:5c6e4] [com.apple.FrontBoard:Common] <compose failure [shared UUID]>
+2026-11-18 05:41:52.083 Df PaintByNumber[58030:5c6e4] [com.apple.FrontBoard:Common] <compose failure [shared UUID]>
+2026-11-18 05:41:52.089 A  PaintByNumber[58030:5c726] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-18 05:41:52.090 Df PaintByNumber[58030:5c725] [com.apple.FrontBoard:Common] <compose failure [shared UUID]>
+2026-11-18 05:41:52.090 Df PaintByNumber[58030:5c725] [com.apple.FrontBoard:Common] <compose failure [shared UUID]>
+2026-11-18 05:41:52.095 Df PaintByNumber[58030:5c726] [com.apple.FrontBoard:SceneExtension] <compose failure [shared UUID]>
+2026-11-18 05:41:52.095 Df PaintByNumber[58030:5c726] [com.apple.FrontBoard:SceneExtension] <compose failure [shared UUID]>
+2026-11-18 05:41:52.116 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:PointerLockState] <compose failure [shared UUID]>
+2026-11-18 05:41:52.117 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:KeyWindow] <compose failure [shared UUID]>
+2026-11-18 05:41:52.117 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:KeyWindow] <compose failure [shared UUID]>
+2026-11-18 05:41:52.117 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:KeyWindow] <compose failure [shared UUID]>
+2026-11-18 05:41:52.117 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:KeyWindow] <compose failure [shared UUID]>
+2026-11-18 05:41:52.117 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:EventDeferring] <compose failure [shared UUID]>
+2026-11-18 05:41:52.118 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:EventDeferring] <compose failure [shared UUID]>
+2026-11-18 05:41:52.118 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:EventDeferring] <compose failure [shared UUID]>
+2026-11-18 05:41:52.119 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.120 Df PaintByNumber[58030:5c726] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-18 05:41:52.120 Df PaintByNumber[58030:5c726] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-18 05:41:52.120 Df PaintByNumber[58030:5c726] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-18 05:41:52.120 Df PaintByNumber[58030:5c726] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-18 05:41:52.120 Df PaintByNumber[58030:5c726] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-18 05:41:52.120 Df PaintByNumber[58030:5c726] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-18 05:41:52.120 Df PaintByNumber[58030:5c726] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-18 05:41:52.120 Df PaintByNumber[58030:5c726] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-18 05:41:52.120 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:AppLifecycle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.121 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:Application] <compose failure [shared UUID]>
+2026-11-18 05:41:52.121 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:Application] <compose failure [shared UUID]>
+2026-11-18 05:41:52.121 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:Application] <compose failure [shared UUID]>
+2026-11-18 05:41:52.121 Df PaintByNumber[58030:5c6e4] [com.apple.FrontBoard:SceneExtension] <compose failure [shared UUID]>
+2026-11-18 05:41:52.121 Df PaintByNumber[58030:5c724] [com.apple.UIIntelligenceSupport:xpc] <compose failure [shared UUID]>
+2026-11-18 05:41:52.121 Df PaintByNumber[58030:5c724] [com.apple.xpc:session] <compose failure [shared UUID]>
+2026-11-18 05:41:52.121 Df PaintByNumber[58030:5c724] [com.apple.xpc:session] <compose failure [shared UUID]>
+2026-11-18 05:41:52.121 Df PaintByNumber[58030:5c724] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-18 05:41:52.122 Df PaintByNumber[58030:5c724] [com.apple.xpc:session] <compose failure [shared UUID]>
+2026-11-18 05:41:52.122 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.122 Df PaintByNumber[58030:5c6e4] [com.apple.FrontBoard:SceneExtension] <compose failure [shared UUID]>
+2026-11-18 05:41:52.122 Df PaintByNumber[58030:5c726] [com.apple.UIIntelligenceSupport:xpc] <compose failure [shared UUID]>
+2026-11-18 05:41:52.122 Df PaintByNumber[58030:5c6e4] [com.apple.FrontBoard:SceneExtension] <compose failure [shared UUID]>
+2026-11-18 05:41:52.123 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:ScenePostSettingsUpdateResponse] <compose failure [shared UUID]>
+2026-11-18 05:41:52.123 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.124 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:ScenePostSettingsUpdateResponse] <compose failure [shared UUID]>
+2026-11-18 05:41:52.124 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.129 A  PaintByNumber[58030:5c6e4] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-18 05:41:52.146 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.146 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.146 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.146 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.147 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.148 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.148 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.157 Df PaintByNumber[58030:5c723] [com.apple.TipKit:TipKit • Core] <compose failure [shared UUID]>
+2026-11-18 05:41:52.162 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.162 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.162 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.162 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.163 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.163 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.163 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.184 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:UIFocus] <compose failure [shared UUID]>
+2026-11-18 05:41:52.187 A  PaintByNumber[58030:5c726] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-18 05:41:52.187 Df PaintByNumber[58030:5c6e4] [com.apple.network:activity] <compose failure [shared UUID]>
+2026-11-18 05:41:52.187 Df PaintByNumber[58030:5c6e4] [com.apple.network:activity] <compose failure [shared UUID]>
+2026-11-18 05:41:52.187 Df PaintByNumber[58030:5c6e4] [com.apple.network:activity] <compose failure [shared UUID]>
+2026-11-18 05:41:52.187 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.187 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.188 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.190 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.193 Df PaintByNumber[58030:5c725] [com.apple.CoreAnalytics:client] <compose failure [shared UUID]>
+2026-11-18 05:41:52.198 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:EventDeferring] <compose failure [shared UUID]>
+2026-11-18 05:41:52.198 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:KeyWindow] <compose failure [shared UUID]>
+2026-11-18 05:41:52.198 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:KeyboardFocusAssistant] <compose failure [shared UUID]>
+2026-11-18 05:41:52.199 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:AppLifecycle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.199 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.200 Df PaintByNumber[58030:5c6e4] [com.apple.FrontBoard:SceneExtension] <compose failure [shared UUID]>
+2026-11-18 05:41:52.202 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.202 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.203 A  PaintByNumber[58030:5c726] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-18 05:41:52.203 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:AppLifecycle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.203 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:Application] <compose failure [shared UUID]>
+2026-11-18 05:41:52.203 Df PaintByNumber[58030:5c6e4] [com.apple.KeyboardArbiter:Client] <compose failure [shared UUID]>
+2026-11-18 05:41:52.203 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:Application] <compose failure [shared UUID]>
+2026-11-18 05:41:52.204 Df PaintByNumber[58030:5c6e4] [com.apple.KeyboardArbiter:Client] <compose failure [shared UUID]>
+2026-11-18 05:41:52.204 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:ScenePostSettingsUpdateResponse] <compose failure [shared UUID]>
+2026-11-18 05:41:52.204 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.205 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:DisplayLink] <compose failure [shared UUID]>
+2026-11-18 05:41:52.205 Df PaintByNumber[58030:5c725] (5827BB56-52E1-3D0B-AC02-7A3201246563) <compose failure [shared UUID]>
+2026-11-18 05:41:52.206 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:UIScreen] <compose failure [shared UUID]>
+2026-11-18 05:41:52.206 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:UIScreen] <compose failure [shared UUID]>
+2026-11-18 05:41:52.206 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.206 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.207 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.207 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:HomeAffordanceObservation] <compose failure [shared UUID]>
+2026-11-18 05:41:52.207 Df PaintByNumber[58030:5c6e4] [com.apple.BacklightServices:scenes] <compose failure [shared UUID]>
+2026-11-18 05:41:52.207 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.207 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:EventDeferring] <compose failure [shared UUID]>
+2026-11-18 05:41:52.208 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.208 Df PaintByNumber[58030:5c6e4] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-18 05:41:52.208 Df PaintByNumber[58030:5c6e4] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-18 05:41:52.208 Df PaintByNumber[58030:5c6e4] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-18 05:41:52.209 Df PaintByNumber[58030:5c6e4] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-18 05:41:52.209 Df PaintByNumber[58030:5c6e4] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-18 05:41:52.209 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.209 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.209 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.209 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.209 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.209 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.210 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.210 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.210 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.211 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.211 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:AppLifecycle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.211 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.212 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:KeyboardScene] <compose failure [shared UUID]>
+2026-11-18 05:41:52.212 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.212 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:ScenePostSettingsUpdateResponse] <compose failure [shared UUID]>
+2026-11-18 05:41:52.212 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.212 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.213 Df PaintByNumber[58030:5c724] [com.apple.BackBoard:EventDelivery] <compose failure [shared UUID]>
+2026-11-18 05:41:52.213 Df PaintByNumber[58030:5c6e4] [com.apple.KeyboardArbiter:Client] <compose failure [shared UUID]>
+2026-11-18 05:41:52.213 Df PaintByNumber[58030:5c6e4] [com.apple.KeyboardArbiter:Client] <compose failure [shared UUID]>
+2026-11-18 05:41:52.216 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:AppLifecycle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.216 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:AppLifecycle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.216 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.216 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:InterfaceStyle] <compose failure [shared UUID]>
+2026-11-18 05:41:52.217 Df PaintByNumber[58030:5c6e4] [com.apple.KeyboardArbiter:Client] <compose failure [shared UUID]>
+2026-11-18 05:41:52.218 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:KeyboardScene] <compose failure [shared UUID]>
+2026-11-18 05:41:52.218 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:KeyboardScene] <compose failure [shared UUID]>
+2026-11-18 05:41:52.218 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:KeyboardSceneDelegate] <compose failure [shared UUID]>
+2026-11-18 05:41:52.218 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:KeyboardSceneDelegate] <compose failure [shared UUID]>
+2026-11-18 05:41:52.218 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:KeyboardSceneDelegate] <compose failure [shared UUID]>
+2026-11-18 05:41:52.222 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.222 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.222 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.223 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.223 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.223 Df PaintByNumber[58030:5c723] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.236 Df PaintByNumber[58030:5c725] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-18 05:41:52.236 Df PaintByNumber[58030:5c725] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-18 05:41:52.237 Df PaintByNumber[58030:5c725] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-18 05:41:52.239 E  PaintByNumber[58030:5c725] [com.apple.corevideo:] <compose failure [shared UUID]>
+2026-11-18 05:41:52.239 E  PaintByNumber[58030:5c725] [com.apple.corevideo:] <compose failure [shared UUID]>
+2026-11-18 05:41:52.248 Df PaintByNumber[58030:5c6e4] [com.apple.network:] <compose failure [shared UUID]>
+2026-11-18 05:41:52.248 Df PaintByNumber[58030:5c6e4] [com.apple.network:] <compose failure [shared UUID]>
+2026-11-18 05:41:52.248 Df PaintByNumber[58030:5c6e4] [com.apple.network:activity] <compose failure [shared UUID]>
+2026-11-18 05:41:52.248 Df PaintByNumber[58030:5c6e4] [com.apple.network:activity] <compose failure [shared UUID]>
+2026-11-18 05:41:52.248 Df PaintByNumber[58030:5c6e4] [com.apple.network:activity] <compose failure [shared UUID]>
+2026-11-18 05:41:52.249 Df PaintByNumber[58030:5c6e4] [com.apple.network:activity] <compose failure [shared UUID]>
+2026-11-18 05:41:52.249 Df PaintByNumber[58030:5c6e4] [com.apple.app_launch_measurement:ApplicationLaunch] <compose failure [shared UUID]>
+2026-11-18 05:41:52.310 A  PaintByNumber[58030:5c725] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-18 05:41:52.333 A  PaintByNumber[58030:5c6e4] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-18 05:41:52.335 Df PaintByNumber[58030:5c6e4] [com.apple.containermanager:xpc] <compose failure [shared UUID]>
+2026-11-18 05:41:52.335 A  PaintByNumber[58030:5c6e4] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-18 05:41:52.335 Df PaintByNumber[58030:5c6e4] [com.apple.containermanager:xpc] <compose failure [shared UUID]>
+2026-11-18 05:41:52.337 A  PaintByNumber[58030:5c6e4] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-18 05:41:52.337 Df PaintByNumber[58030:5c6e4] [com.apple.containermanager:unspecified] <compose failure [shared UUID]>
+2026-11-18 05:41:52.337 Df PaintByNumber[58030:5c6e4] [com.apple.ManagedConfiguration:MC] <compose failure [shared UUID]>
+2026-11-18 05:41:52.350 Df PaintByNumber[58030:5c724] [com.apple.xpc:connection] <compose failure [shared UUID]>
+2026-11-18 05:41:52.433 Df PaintByNumber[58030:5c6e4] [PrototypeTools:domain] <compose failure [shared UUID]>
+2026-11-18 05:41:52.440 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:PointerLockState] <compose failure [shared UUID]>
+2026-11-18 05:41:52.441 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:Orientation] <compose failure [shared UUID]>
+2026-11-18 05:41:52.567 Df PaintByNumber[58030:5c725] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.567 Df PaintByNumber[58030:5c725] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.567 Df PaintByNumber[58030:5c725] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.567 Df PaintByNumber[58030:5c725] [com.apple.UIKit:BackgroundTask] <compose failure [shared UUID]>
+2026-11-18 05:41:52.706 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:_UIVisualStyleRegistry] <compose failure [shared UUID]>
+2026-11-18 05:41:52.706 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:_UIVisualStyleRegistry] <compose failure [shared UUID]>
+2026-11-18 05:41:52.870 E  PaintByNumber[58030:5c6e4] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-18 05:41:52.870 E  PaintByNumber[58030:5c6e4] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-18 05:41:52.870 E  PaintByNumber[58030:5c6e4] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-18 05:41:52.887 E  PaintByNumber[58030:5c6e4] [com.apple.BoardServices:XPCErrors] <compose failure [shared UUID]>
+2026-11-18 05:41:52.888 Df PaintByNumber[58030:5c6e4] [com.apple.Accessibility:AXCommon] <compose failure [shared UUID]>
+2026-11-18 05:41:53.114 A  PaintByNumber[58030:5c71f] (5827BB56-52E1-3D0B-AC02-7A3201246563) 
+2026-11-18 05:41:53.400 E  PaintByNumber[58030:5c6e4] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-18 05:41:53.400 E  PaintByNumber[58030:5c6e4] [com.apple.coreanimation:API] <compose failure [shared UUID]>
+2026-11-18 05:41:53.581 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:UIFocus] <compose failure [shared UUID]>
+2026-11-18 05:41:53.627 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:UIFocus] <compose failure [shared UUID]>
+2026-11-18 05:41:53.729 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:UIFocus] <compose failure [shared UUID]>
+2026-11-18 05:41:53.828 Df PaintByNumber[58030:5c6e4] [com.apple.UIKit:UIFocus] <compose failure [shared UUID]>
