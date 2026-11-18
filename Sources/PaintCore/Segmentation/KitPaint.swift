@@ -15,8 +15,8 @@ public enum PaintMix: String, Sendable, Hashable, Codable, CaseIterable {
     /// hues spread further and mixed bolder (`LivelyPaint.Strength.rich`).
     case rich
     /// Rich paint mixed for beauty over likeness (`BeautyPaint`, painting-company row 360): no
-    /// muddy greys, more color where there is little, the subject a little forward. Its faces
-    /// are split as rich paint's are.
+    /// muddy greys, more color where there is little, the subject a little forward, a face kept
+    /// near the photo's colors (row 363). Its faces are split as rich paint's are.
     case beauty
 
     /// `palette` (the regions' colors) mixed this way, never closer than `minDistance` where
@@ -48,7 +48,8 @@ public enum PaintMix: String, Sendable, Hashable, Codable, CaseIterable {
             let share = palette.indices.map { k in faces.map { $0.share.count == palette.count ? $0.share[k] : 0 } ?? 0 }
             let hold = palette.indices.map { KitPaint.skinHold(palette[$0], face: share[$0]) }
             return BeautyPaint.mix(
-                rich, shares: shares, hold: hold, faceShare: share, importance: importance, space: space, minDistance: minDistance)
+                rich, shares: shares, hold: hold, faceShare: share, importance: importance, photo: palette, space: space,
+                minDistance: minDistance)
         }
     }
 }
