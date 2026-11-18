@@ -2,7 +2,8 @@
 /// painting rather than a faithful one. Only the paints move, as with every mix.
 ///
 /// The beauty spike (painting-company `factory/pieces/beauty-paint/`) tried eleven ways on 22
-/// pictures; the one chosen is three steps on rich paint's colors:
+/// pictures; the one chosen is three steps on rich paint's colors, and a fourth holds a face
+/// near the photo:
 ///
 /// 1. **No mud** (`clean`): a black with no hue of its own (below `neutralChroma`, darker than
 ///    `darkLightness`) is mixed from a touch of indigo, as a painter mixes black, never from
@@ -25,7 +26,8 @@
 /// 4. **A face held near the photo** (`faceGain`): a paint whose pixels lie mostly on a face
 ///    (`faceHeldShare`) is mixed at most `faceGain` times as colorful as the photo's (`photo`,
 ///    the regions' means), and a greyish one `faceLift` more (`faceLiftFade`), so a pale face's
-///    lit side and a dark face's warm shadows keep what kit and rich paint gave them. Kit, rich
+///    lit side and a dark face's warm shadows keep what kit and rich paint gave them (a paint
+///    stepped all the way back is rich paint's, unheld). Kit, rich
 ///    and beauty paint each add chroma, and skin's hold ends at a lip's red, so a man's pink lips
 ///    in a dim selfie came out crimson and his cheeks apricot (painting-company row 363).
 ///

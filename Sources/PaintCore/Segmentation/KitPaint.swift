@@ -15,8 +15,8 @@ public enum PaintMix: String, Sendable, Hashable, Codable, CaseIterable {
     /// hues spread further and mixed bolder (`LivelyPaint.Strength.rich`).
     case rich
     /// Rich paint mixed for beauty over likeness (`BeautyPaint`, painting-company row 360): no
-    /// muddy greys, more color where there is little, the subject a little forward. Its faces
-    /// are split as rich paint's are.
+    /// muddy greys, more color where there is little, the subject a little forward, a face kept
+    /// near the photo's colors (row 363). Its faces are split as rich paint's are.
     case beauty
 
     /// `palette` (the regions' colors) mixed this way, never closer than `minDistance` where
