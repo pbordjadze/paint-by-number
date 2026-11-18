@@ -16,8 +16,8 @@ nonisolated enum TipForm: Equatable, Sendable {
     /// A card laid over the screen, with no arrow: at the top of the page (`TipDesk.pageTip`) or
     /// of the screen, under its bar (`barTips`).
     case card
-    /// A card among the screen's own content, which makes room for it (the gallery's,
-    /// `GentleTipView`).
+    /// A card among the screen's own content, which makes room for it (the gallery's, and on a
+    /// phone Settings', `GentleTipView`).
     case inline
     /// A small popover of the app's own beside its subject, pointing at it, no wider than
     /// `besideWidth`, on the card's opaque surface (`TipCard`).

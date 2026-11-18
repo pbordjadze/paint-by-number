@@ -785,7 +785,8 @@ extension View {
 }
 
 /// A tip inline, where a popover has nothing to point at (Ready to Paint on the shelf, and the
-/// gear's and the +'s atop it). The caller shows it only while it is the tip's turn.
+/// gear's and the +'s atop it) or would cover a neighbour (Settings' on a phone, among its rows).
+/// The caller shows it only while it is the tip's turn.
 struct GentleTipView: View {
     let id: TipID
 
