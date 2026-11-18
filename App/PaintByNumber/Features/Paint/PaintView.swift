@@ -329,7 +329,7 @@ struct PaintView: View {
         let controls = Self.padding(layout.controls, within: geo.safeAreaInsets)
         let controlsWidth = max(0, geo.size.width - controls.leading - controls.trailing)
         #if UNRELEASED
-        let doors = session.isComplete ? PaintingLayout.doorMetrics(finishedDoors, inputs: inputs(in: geo)) : nil
+        let doors = session.isComplete ? finishedDoors.flatMap { PaintingLayout.doorMetrics($0, inputs: inputs(in: geo)) } : nil
         #else
         let doors: Never? = nil
         #endif
