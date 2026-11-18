@@ -17,7 +17,7 @@ What it counts, from the sources (so it runs on Linux in a second, before any si
   together (Replay or Stop) both count: an upper bound.
 - choice.options: the cases of each enum a picker offers.
 - screen.controls: Edit's tool rail (one control per `RefineTool`) and the Finished panel (its bar's
-  four controls plus one per `FinishedDoor`).
+  three controls plus one per `FinishedDoor`).
 - gates.unreleased: `#if UNRELEASED` lines under App/, engineering's count of two builds to keep.
 """
 

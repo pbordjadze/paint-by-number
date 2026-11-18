@@ -53,8 +53,9 @@ struct CompletionBar: View {
     nonisolated static let doorsInset: CGFloat = 16
 
     #if UNRELEASED
-    /// The panel's widest with so many doors: a fifth door (The Original) widens it by a door, so
-    /// a row of five on an iPad keeps the arches of a row of four, and their captions one line.
+    /// The panel's widest with so many doors: four fit `panelWidth`; a fifth would widen it by a
+    /// door, so a row of five on an iPad would keep the arches of a row of four and their captions
+    /// one line.
     nonisolated static func widestPanel(doors: Int) -> CGFloat {
         let door = (panelWidth - 2 * doorsInset - 3 * DoorMetrics.gap) / 4
         return max(panelWidth, 2 * doorsInset + CGFloat(doors) * door + CGFloat(doors - 1) * DoorMetrics.gap)

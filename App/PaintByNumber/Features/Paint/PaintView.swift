@@ -841,8 +841,12 @@ struct PaintView: View {
             #if UNRELEASED
             // Where a phone's bar keeps Hint over Edit (`topBar`).
             if !barShowsEdit, let onChange {
-                Button(action: onChange) { Label("Edit", systemImage: "pencil") }
+                // Locked as the bar's ✎ is (`changeButton`): the tap opens the purchase.
+                let locked = paintings?.locksRefine == true
+                Button(action: onChange) { Label("Edit", systemImage: locked ? "lock.fill" : "pencil") }
                     .disabled(session.isReplaying)
+                    .accessibilityHint(Text("Draw or erase lines in this painting"))
+                    .accessibilityValue(locked ? Text("Comes with Unlimited Paintings") : Text(verbatim: ""))
                     .accessibilityIdentifier("change-painting-menu")
             }
             Divider()

@@ -315,8 +315,8 @@ below name both alike.
   (`PaintingLayout.Inputs.completionHeight`). `paint-complete` (with `-dark`) is its screenshot.
   A painting made from a library picture (`Artwork.sampleName`, handed on as
   `PaintView.libraryPicture`; a painter's own photo never) has a last door, The Original
-  (painting-company row 120), five doors standing three over two on a phone upright and in one
-  row on an iPad, whose panel widens by a door for them (`CompletionBar.widestPanel(doors:)`;
+  (painting-company row 120), four doors standing two over two on a phone upright and in one
+  row on an iPad (a fifth would widen the panel by a door: `CompletionBar.widestPanel(doors:)`;
   `doorsWidth` keeps the panel and `PaintView.doorMetrics` in step). It opens
   `AboutPainting`, a sheet of the same name, the wall label the door draws (`OriginalWork`,
   read from `library.json` alone): the picture, and under it one small placard, its title,
@@ -1198,8 +1198,8 @@ a length already cut while the painting is open is made again as it was, `cuts`)
 - Compact windows (iPhone) show one slider at a time in the card, Colors first, under a
   segmented chooser (`TemplatePreviewView.settingChooser`; Paul's calmer menus, October 18); the
   iPad's card shows all four. In SideStore and Debug builds (`#if UNRELEASED`) the card folds them away until
-  Adjust shows them, and keeps them shown for whoever opened it (`TemplatePreviewView.foldsSettings`,
-  `SettingsKey.previewShowsSettings`; Adjust alone folds them, the chip keeping Reset to Suggested);
+  Fine-Tune shows them, and keeps them shown for whoever opened it (`TemplatePreviewView.foldsSettings`,
+  `SettingsKey.previewShowsSettings`; Fine-Tune alone folds them, the chip keeping Reset to Suggested);
   UI tests open them with `openPreviewSettings`, and find them as an earlier test left them. They enlarge the preview from the toolbar (Shrink Preview, in Enlarge
   Preview's place, goes back; a checkmark there read as accepting the painting): the comparison
   fills the page (`CompareView.fillsSpace`: the picture fitted in the space, and zoomed in, all
