@@ -508,7 +508,11 @@ struct RefineView: View {
             .accessibilityIdentifier("refine-cancel")
             .confirmationDialog(Text("Discard Your Changes?"), isPresented: $confirmsCancel, titleVisibility: .visible) {
                 Button("Discard Changes", role: .destructive, action: cancel)
+                #if UNRELEASED
+                Button("Keep Editing", role: .cancel) {}
+                #else
                 Button("Keep Refining", role: .cancel) {}
+                #endif
             }
     }
 
