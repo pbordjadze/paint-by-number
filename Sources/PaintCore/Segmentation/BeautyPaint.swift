@@ -22,14 +22,12 @@
 ///    painting whose subject (above the `subjectCut` share of the importance) is bolder
 ///    (`subjectGain`) and whose background recedes into a soft blue haze (`haze`), a dark
 ///    background by losing color rather than into grey, a vivid one (`vividChroma`) not at all.
-///
 /// 4. **A face held near the photo** (`faceGain`): a paint whose pixels lie mostly on a face
-///    (`faceHeldShare`) is mixed no more colorful than the photo's (`photo`, the regions'
-///    means) by `faceGain` times its chroma or `faceLift` added, whichever is more, so a pale
-///    face's lit side and a dark face's warm shadows keep what kit and rich paint gave them.
-///    Kit, rich and beauty paint each add chroma, and skin's hold ends at a lip's red and an
-///    ear's flush, so a man's lips came out lipstick red and an ear orange-red, at twice the
-///    photo's chroma (painting-company row 363).
+///    (`faceHeldShare`) is mixed at most `faceGain` times as colorful as the photo's (`photo`,
+///    the regions' means), and a greyish one `faceLift` more (`faceLiftFade`), so a pale face's
+///    lit side and a dark face's warm shadows keep what kit and rich paint gave them. Kit, rich
+///    and beauty paint each add chroma, and skin's hold ends at a lip's red, so a man's pink lips
+///    in a dim selfie came out crimson and his cheeks apricot (painting-company row 363).
 ///
 /// Rich paint's colors go in, so a face keeps its own paints (`FacePaints`). Two paints the
 /// steps bring closer than `minDistance` step back toward rich paint's until they are apart.
@@ -76,10 +74,12 @@ public enum BeautyPaint {
     static let haze = SIMD3<Float>(0.86, -0.0125, -0.021_651)
     static let hazeMost: Float = 0.2
     static let vividChroma: ClosedRange<Float> = 0.08...0.14
-    /// A face's paint: at most `faceGain` times the photo's chroma, or `faceLift` more,
-    /// whichever is more, held fully once `faceHeldShare` of its pixels lie on a face.
-    static let faceGain: Float = 1.3
+    /// A face's paint: at most `faceGain` times the photo's chroma, and `faceLift` more for a
+    /// greyish one (fading out over `faceLiftFade`), held fully once `faceHeldShare` of its
+    /// pixels lie on a face.
+    static let faceGain: Float = 1.1
     static let faceLift: Float = 0.03
+    static let faceLiftFade: ClosedRange<Float> = 0.03...0.08
     static let faceHeldShare: ClosedRange<Float> = 0.2...0.5
 
     /// `rich` (rich paint's colors) mixed as beauty paint. `shares`: the share of the painting
@@ -175,7 +175,7 @@ public enum BeautyPaint {
             let lab = photo[i].oklab
             let C = length(SIMD2(lab.y, lab.z))
             guard C.isFinite else { return nil }
-            return (max(C * faceGain, C + faceLift), KitPaint.smoothstep(faceHeldShare, face[i]))
+            return (C * faceGain + faceLift * (1 - KitPaint.smoothstep(faceLiftFade, C)), KitPaint.smoothstep(faceHeldShare, face[i]))
         }
         // Scaled with the strength, so a paint stepped all the way back is rich paint's again.
         func limited(_ i: Int, _ lab: SIMD3<Float>, strength: Float) -> SIMD3<Float> {
