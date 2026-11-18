@@ -74,7 +74,8 @@ nonisolated enum PDFExporter {
 
     /// How the pages are laid out: the paper, which way it is turned, how big the picture
     /// prints and whether the color key follows. `Layout(paper:)` is the document Print Template…
-    /// has always made; Print's preview (`PrintPreviewSheet`) changes the rest.
+    /// has always made; Print's preview (`PrintPreviewSheet`) changes only the size (`across`)
+    /// and the color key, with the paper the region's and the page turned the picture's way.
     struct Layout: Equatable, Sendable {
         enum Orientation: String, Sendable, CaseIterable { case portrait, landscape }
 
