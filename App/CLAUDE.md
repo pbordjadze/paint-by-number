@@ -307,7 +307,7 @@ below name both alike.
   bar's row that fits). In SideStore and Debug builds (`#if UNRELEASED`, painting-company row 332)
   the bar grows into a panel with the doors after Finished under its row (`FinishedDoors`: Another
   One paints the next night's library picture the gallery doesn't hold through the shell's
-  `\.paintPicture`, Change It is `onChange`, On Paper opens Print's preview (`PaintView.printTemplate`; where
+  `\.paintPicture`, On Paper opens Print's preview (`PaintView.printTemplate`; where
   the device can't print, it shares the template's PDF) and Send It shares the painting's
   time-lapse, `PaintView.shareTimelapse`; the panel's row has no Share, the gallery's card shares
   the picture), laid by `DoorMetrics` in at most `PaintingLayout.doorsShare`
@@ -327,10 +327,11 @@ below name both alike.
   link in the words' color (the accent is gold in dark appearance); both open in the browser,
   and the app sends nothing. `about-painting` (with `-dark`)
   and `about-photograph` are its screenshots, `AboutPaintingTests` its tests. During a replay
-  the bar's ring and
-  percentage follow the canvas, not the finished painting (`CanvasView.replay` tells the session
-  how many areas are on screen, `PaintingSession.replayed`, by `ReplayProgress`; `isComplete` and
-  the saved progress stay whole). While it plays (`PaintingSession.isReplaying`) Undo is off (the
+  the release's ring and percentage follow the canvas, not the finished painting
+  (`CanvasView.replay` tells the session how many areas are on screen, `PaintingSession.replayed`,
+  by `ReplayProgress`; `isComplete` and the saved progress stay whole); SideStore builds keep them
+  at 100% under Finished! (`badgePaintedCount`), and leave Replay and Print… to ▶ and On Paper
+  once the Finished panel shows. While it plays (`PaintingSession.isReplaying`) Undo is off (the
   canvas offers no `undoManager`, so ⌘Z and three-finger undo wait too) and Replay's slot, in the
   bar and More, holds Stop (`CanvasView.stopReplay`).
 - Palette (iPad first): `PaintingLayout.Palette` wraps the palette into rows (bottom) or columns
@@ -360,7 +361,7 @@ below name both alike.
 - Photo peek (`PhotoPeek`: hold to peek, tap to latch, `p` in the Paint menu) drives
   `CanvasView.showsPhoto`; the canvas draws the photo in its own pass, so it tracks zoom and pan;
   canvas touches hide a latched photo instead of painting.
-- Paper: Settings › Paper (`PaperAppearance`) reaches `CanvasView.paperAppearance`, which resolves a
+- Paper: Settings › Paper (Page in SideStore builds; `PaperAppearance`) reaches `CanvasView.paperAppearance`, which resolves a
   `CanvasPalette` from it and the trait collection every frame. `CanvasPalette.accent(for:)` is the
   selected paint lifted until it reads on the paper. Dark paper makes the bars, their popovers
   and the painting's toasts dark on a light system too (`PaintView.chromeScheme`: light glass
@@ -741,7 +742,7 @@ by the cuts made so far for one not cut yet, `LengthChip.expectedTimes`, and
 a length already cut while the painting is open is made again as it was, `cuts`). In SideStore and
   Debug builds (`#if UNRELEASED`, painting-company row 352) the chip's menu ends in **Fine-Tune…**
   (`FineTuneSheet`, the preview's `SettingSlider`s): Colors, Detail and Lines, opening on what the
-  painting was cut with, and Cut Again makes it again with them in place (`Library.retune`, recorded
+  painting was cut with, and Remake makes it again with them in place (`Library.retune`, recorded
   as custom, at its length); the menu then checks no length, and a length picked is cut afresh.
   `gallery-fine-tune` (with `-dark`, `-long-text`) is its screenshot, `FineTuneTests`. **✎ Change** (from 1.1, with the
   drawing tools; `PaintView.onChange`, `change-painting`, beside Undo and in the quiet bar) opens `RefineView` over

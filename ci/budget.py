@@ -46,8 +46,9 @@ CHOICES = [
     ("Painting Length", "../Sources/PaintCore/Auto/PaintingLength.swift", "PaintingLength"),
 ]
 
-# Controls the Finished panel's bar always has: its name, Replay, Share and Done.
-FINISHED_BAR = 4
+# Controls the Finished panel's bar always has: its name, Replay and Done (Share left on
+# November 18, 2026: Send It sends the time-lapse).
+FINISHED_BAR = 3
 
 
 def read(path):

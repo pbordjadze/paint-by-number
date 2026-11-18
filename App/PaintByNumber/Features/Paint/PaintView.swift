@@ -106,6 +106,9 @@ struct PaintView: View {
     /// Whether the top bar's row on screen has Hint: where it doesn't (a phone with ✎ Change),
     /// More offers Show Hint, or a phone had no hint until the bar went quiet.
     @State private var barShowsHint = true
+    /// Whether the top bar's row on screen has Edit: in SideStore builds a phone too narrow for
+    /// both keeps Hint and offers Edit in More instead.
+    @State private var barShowsEdit = true
     @State private var peek: PhotoPeek
     @State private var photoUnavailable = false
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -408,7 +411,7 @@ struct PaintView: View {
                                 feedback.isReviewing = true
                             })
                     } else {
-                        topBar(width: controlsWidth, regular: layout.regularChrome)
+                        topBar(width: controlsWidth, regular: layout.regularChrome, doorsShown: doors != nil)
                     }
                 }
                 .padding(.horizontal, Self.edge)
@@ -603,14 +606,24 @@ struct PaintView: View {
     /// people are just overwhelmed by a panel of buttons"). Nothing here may grow wider than the
     /// window: the bar's width would widen the whole screen. Quiet (`QuietPainting`), it fades
     /// to `quietRow`.
-    private func topBar(width: CGFloat, regular: Bool) -> some View {
+    private func topBar(width: CGFloat, regular: Bool, doorsShown: Bool) -> some View {
         let badges = badgeVariants(regular)
+        #if UNRELEASED
+        // Hint, the rough-day helper, keeps its place: where both don't fit, Edit goes into More
+        // first (the UI pass, November 18, 2026), and only then Hint on the narrowest windows.
+        let narrow = onChange == nil ? [] : badges.suffix(1).map { BarVariant(badge: $0, showsHint: true, showsEdit: false) }
+        let rows: [BarVariant] = session.isComplete
+            ? badges.map { BarVariant(badge: $0, showsHint: false) }
+            : badges.map { BarVariant(badge: $0, showsHint: true) } + narrow
+                + badges.suffix(1).map { BarVariant(badge: $0, showsHint: false, showsEdit: onChange == nil) }
+        #else
         // ✎ Change stays in the bar with Hint (the board's critic: it mustn't push Hint out); on
         // the narrowest windows Hint goes first, as it did before, and Change keeps its place.
         let rows: [BarVariant] = session.isComplete
             ? badges.map { BarVariant(badge: $0, showsHint: false) }
             : badges.map { BarVariant(badge: $0, showsHint: true) }
                 + badges.suffix(1).map { BarVariant(badge: $0, showsHint: false) }
+        #endif
         let quiet = isQuiet
         return GlassEffectContainer(spacing: 10) {
             Group {
@@ -621,9 +634,10 @@ struct PaintView: View {
                     // One `ForEach` of distinct rows: `ViewThatFits` traps on children sharing an id.
                     ViewThatFits(in: .horizontal) {
                         ForEach(rows, id: \.self) { row in
-                            topBarRow(badge: row.badge, showsHint: row.showsHint, regular: regular)
+                            topBarRow(badge: row.badge, showsHint: row.showsHint, showsEdit: row.showsEdit, regular: regular, doorsShown: doorsShown)
                                 .preference(key: BadgeTitleKey.self, value: [row.badge.showsTitle])
                                 .preference(key: BarHintKey.self, value: [row.showsHint])
+                                .preference(key: BarEditKey.self, value: [row.showsEdit])
                         }
                     }
                     .transition(.opacity)
@@ -638,6 +652,9 @@ struct PaintView: View {
         }
         .onPreferenceChange(BarHintKey.self) { shown in
             MainActor.assumeIsolated { barShowsHint = shown != [false] }
+        }
+        .onPreferenceChange(BarEditKey.self) { shown in
+            MainActor.assumeIsolated { barShowsEdit = shown != [false] }
         }
         // A fade, never a move, so Reduce Motion needs nothing else.
         .animation(.easeInOut(duration: 0.5), value: quiet)
@@ -679,6 +696,7 @@ struct PaintView: View {
     nonisolated private struct BarVariant: Hashable {
         var badge: BadgeVariant
         var showsHint: Bool
+        var showsEdit = true
     }
 
     /// Whether the top bar's row on screen names the painting in its badge.
@@ -693,7 +711,13 @@ struct PaintView: View {
         static func reduce(value: inout [Bool], nextValue: () -> [Bool]) { value += nextValue() }
     }
 
-    private func topBarRow(badge: BadgeVariant, showsHint: Bool, regular: Bool) -> some View {
+    /// Whether the top bar's row on screen has Edit (when the painting offers it).
+    nonisolated private struct BarEditKey: PreferenceKey {
+        static let defaultValue: [Bool] = []
+        static func reduce(value: inout [Bool], nextValue: () -> [Bool]) { value += nextValue() }
+    }
+
+    private func topBarRow(badge: BadgeVariant, showsHint: Bool, showsEdit: Bool, regular: Bool, doorsShown: Bool) -> some View {
         let barHeight = self.barHeight(regular)
         // 12 pt between every two shapes, more than the container's 10, so they don't merge. The
         // system glass buttons lay out about 5 pt wider on each side than their circle, Photo and
@@ -718,10 +742,10 @@ struct PaintView: View {
             GlassIconButton(systemImage: "arrow.uturn.backward", label: "Undo", action: undo)
                 .frame(width: barHeight, height: barHeight)
                 .disabled(!session.isStarted || session.isReplaying)
-            if let onChange {
+            if let onChange, showsEdit {
                 changeButton(onChange, barHeight: barHeight)
             }
-            moreMenu(regular)
+            moreMenu(regular, doorsShown: doorsShown)
         }
     }
 
@@ -791,7 +815,7 @@ struct PaintView: View {
 
     /// In three groups: how the page looks, the palette (or Replay), Print and Give Feedback, then
     /// Restart.
-    private func moreMenu(_ regular: Bool) -> some View {
+    private func moreMenu(_ regular: Bool, doorsShown: Bool) -> some View {
         let barHeight = self.barHeight(regular)
         return Menu {
             Toggle(isOn: $showsNumbers) { Label("Show Numbers", systemImage: "number") }
@@ -814,6 +838,24 @@ struct PaintView: View {
             if !barShowsHint, !session.isComplete {
                 Button { controller.showHint() } label: { Label("Show Hint", systemImage: "lightbulb") }
             }
+            #if UNRELEASED
+            // Where a phone's bar keeps Hint over Edit (`topBar`).
+            if !barShowsEdit, let onChange {
+                Button(action: onChange) { Label("Edit", systemImage: "pencil") }
+                    .disabled(session.isReplaying)
+                    .accessibilityIdentifier("change-painting-menu")
+            }
+            Divider()
+            // A finished painting's panel has Replay (▶, Stop while it plays) and, with its doors,
+            // On Paper: More doesn't repeat them (the UI pass, November 18, 2026).
+            if !session.isComplete {
+                paletteMenu
+            }
+            if offersPrint, !(session.isComplete && doorsShown) {
+                Button(action: printTemplate) { Label("Print…", systemImage: "printer") }
+                    .accessibilityIdentifier("print-template")
+            }
+            #else
             Divider()
             if session.isReplaying {
                 Button(action: controller.stopReplay) { Label("Stop Replay", systemImage: "stop") }
@@ -827,6 +869,7 @@ struct PaintView: View {
                 Button(action: printTemplate) { Label("Print…", systemImage: "printer") }
                     .accessibilityIdentifier("print-template")
             }
+            #endif
             Button(action: startFeedback) { Label("Give Feedback…", systemImage: "exclamationmark.bubble") }
             Divider()
             #if UNRELEASED
@@ -916,7 +959,7 @@ struct PaintView: View {
                 session: session, title: title, showsTitle: !badgeShowsTitle, share: completionShare,
                 sealBounces: sealBounces, onReplay: replay, onStopReplay: controller.stopReplay,
                 onShareTimelapse: shareTimelapse, onName: onName, isNamed: isNamed, onClose: onClose,
-                doors: doors, onChange: onChange, original: OriginalWork.of(libraryPicture), onOriginal: { about = $0 },
+                doors: doors, original: OriginalWork.of(libraryPicture), onOriginal: { about = $0 },
                 onPrint: offersPrint ? { printTemplate() } : nil)
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { completionHeight = $0 }
                 .transition(transition)
@@ -944,7 +987,7 @@ struct PaintView: View {
         let bars = Self.topGap + barHeight(layout.regularChrome) + PaintingLayout.canvasGap + Self.bottomGap + Self.bookGap
         let room = layout.mode == .whole
             ? page * PaintingLayout.doorsShare(compactHeight: verticalSizeClass == .compact) : page - bars
-        let count = FinishedDoor.shown(changes: onChange != nil, original: OriginalWork.of(libraryPicture) != nil).count
+        let count = FinishedDoor.shown(original: OriginalWork.of(libraryPicture) != nil).count
         let width = CompletionBar.doorsWidth(count: count, available: controlsWidth - 2 * Self.edge)
         let height = room - CompletionBar.height - CompletionBar.doorsInset
         return DoorMetrics.fitting(
@@ -1150,7 +1193,7 @@ private struct ProgressGroup: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        let percent = PaintSpeech.percent(painted: session.shownPaintedCount, total: session.progress.regionCount)
+        let percent = PaintSpeech.percent(painted: session.badgePaintedCount, total: session.progress.regionCount)
         HStack(spacing: 8) {
             PaintedRing(session: session)
                 .frame(width: 18, height: 18)
@@ -1191,7 +1234,7 @@ private struct QuietRingButton: View {
     @Environment(\.glassButtonDiameter) private var diameter
 
     var body: some View {
-        let percent = PaintSpeech.percent(painted: session.shownPaintedCount, total: session.progress.regionCount)
+        let percent = PaintSpeech.percent(painted: session.badgePaintedCount, total: session.progress.regionCount)
         Button(action: action) {
             PaintedRing(session: session)
                 .frame(width: diameter * 0.5, height: diameter * 0.5)
@@ -1206,6 +1249,27 @@ private struct QuietRingButton: View {
         .accessibilityHint(Text("Brings back the other controls"))
         .accessibilityInputLabels([Text("Show Controls")])
         .accessibilityShowsLargeContentViewer { Label("Show Controls", systemImage: "circle.dashed") }
+    }
+}
+
+/// What the progress badge counts. In SideStore builds a replay leaves it whole: a finished
+/// painting reads 100% while it plays back (the UI pass of November 18, 2026: "13%" under
+/// "Finished!" read as paint lost). The release's badge follows the replay (`shownPaintedCount`).
+private extension PaintingSession {
+    var badgePaintedCount: Int {
+        #if UNRELEASED
+        progress.paintedCount
+        #else
+        shownPaintedCount
+        #endif
+    }
+
+    var badgePaintedByColor: [Int] {
+        #if UNRELEASED
+        zip(totalByColor, remainingByColor).map { $0 - $1 }
+        #else
+        shownPaintedByColor
+        #endif
     }
 }
 
@@ -1224,12 +1288,12 @@ private struct PaintedRing: View {
                     .rotationEffect(.degrees(-90))
             }
         }
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.4), value: session.shownFraction)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.4), value: session.badgePaintedCount)
     }
 
     private var paintedArcs: [(paint: Color, start: Double, end: Double)] {
         let total = Double(max(session.progress.regionCount, 1))
-        let shown = session.shownPaintedByColor
+        let shown = session.badgePaintedByColor
         var start = 0.0
         return (0..<session.paletteCount).compactMap { color -> (paint: Color, start: Double, end: Double)? in
             let painted = shown[color]

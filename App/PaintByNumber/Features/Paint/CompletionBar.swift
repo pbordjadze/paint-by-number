@@ -39,8 +39,6 @@ struct CompletionBar: View {
     #if UNRELEASED
     /// The doors under the row (`FinishedDoors`), laid as these say; nil is the bar alone.
     var doors: DoorMetrics?
-    /// Change It's way into Edit (`PaintView.onChange`).
-    var onChange: (() -> Void)?
     /// The Original's work (`PaintView.libraryPicture`); nil leaves that door out.
     var original: OriginalWork?
     /// Opens The Original's page (`PaintView`'s sheet).
@@ -96,11 +94,11 @@ struct CompletionBar: View {
             .padding(.horizontal, 18)
             .padding(.vertical, 8)
             .frame(minHeight: Self.height)
-            FinishedDoors(session: session, title: title, picture: share.picture, metrics: doors, onChange: onChange, original: original, onOriginal: onOriginal, onPrint: onPrint, onSend: onShareTimelapse)
+            FinishedDoors(session: session, title: title, picture: share.picture, metrics: doors, original: original, onOriginal: onOriginal, onPrint: onPrint, onSend: onShareTimelapse)
                 .padding(.horizontal, Self.doorsInset)
                 .padding(.bottom, Self.doorsInset)
         }
-        .frame(maxWidth: Self.widestPanel(doors: FinishedDoor.shown(changes: onChange != nil, original: original != nil).count))
+        .frame(maxWidth: Self.widestPanel(doors: FinishedDoor.shown(original: original != nil).count))
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         .glassEffect(.regular, in: .rect(cornerRadius: 30, style: .continuous))
         .task(id: session.revision) { await share.prepare(for: session) }
