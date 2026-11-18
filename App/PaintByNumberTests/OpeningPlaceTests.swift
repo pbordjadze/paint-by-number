@@ -164,7 +164,7 @@ struct OpeningPlaceTests {
             ("en", .large, "Morning Glories at the Old Mill, No. 2", false, CanvasView.margin),
         ]
         for screen in Self.screens where !screen.name.contains("bar down the side") {
-            for count in [4, 5] {
+            for count in [3, 4] {
                 for test in cases {
                     let doors = PaintingLayout.Doors(count: count, compactHeight: screen.size.height < 500)
                     let safe = screen.hidden
@@ -197,11 +197,11 @@ struct OpeningPlaceTests {
     }
     #endif
 
-    /// The doors after Finished a painting of the library shows there, with Change It (SideStore
+    /// The doors after Finished a painting of the library shows there, The Original too (SideStore
     /// and Debug builds; none in the release).
     private static func doors(on screen: Screen) -> PaintingLayout.Doors? {
         #if UNRELEASED
-        PaintingLayout.Doors(count: 5, compactHeight: screen.size.height < 500)
+        PaintingLayout.Doors(count: 4, compactHeight: screen.size.height < 500)
         #else
         nil
         #endif

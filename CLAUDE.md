@@ -55,13 +55,16 @@ before planning app work).
     recolors regions and adds paints, at the palette's end) with a pale face's shadows mixed warm
     (`KitPaint.shade`). Beauty paint (`--paint-mix beauty`, `PaintMix.beauty`; row 360): rich paint mixed
     for a pretty painting over a faithful one (`BeautyPaint`: greys mixed from color, vibrance, the subject a
-    little forward, from each paint's mean importance); SideStore builds ask for it (`tools/paint_mix_sheet.py` lays the mixes side by side). `Vectorizer` and `LayeredLines` rebuild `SegmentationParameters` without the
+    little forward, from each paint's mean importance; a face held near the photo, row 363); SideStore builds ask for it (`tools/paint_mix_sheet.py` lays the mixes side by side). `Vectorizer` and `LayeredLines` rebuild `SegmentationParameters` without the
     coloring-book flattening, which must therefore never change `minRadius`. Gradient rings
     (`BandRings`): `docs/gradient-rings.md`.
   - `Vector/`: label map → shared smoothed boundaries, fill mesh, labels (`Vectorizer`; the pipeline
     calls `vectorizeWithStats`); `EdgeSmoother` repairs until `GeometryValidator` and every
     `LabelRoom` hold; an edge along a painter's line takes the line's path (`EdgeGuides`). `Template.validate` (`TemplateValidation.swift`) is the oracle of `pbn check`,
     the regression gate and the create flow's Debug check.
+  - `Together/`: Paint Together's sync (painting-company row 350): `TogetherLedger` (areas
+    stamped last writer wins, so any order of arrival converges), `TogetherMessage` (the wire
+    format, read as hostile input), `TogetherBatcher`, `TogetherTransport` and `LoopbackHub`.
   - `LineArt/` (`LayeredLines.apply`, `Writing` and `LineEdits`, see Line art), `Auto/` (`AutoSettings`, see Suggested
     settings), `Export/` (`SVGExport`: the headless preview pbn writes for `tools/eval.py`; the app
     prints and shares through CoreGraphics in `App/PaintByNumber/Export`).

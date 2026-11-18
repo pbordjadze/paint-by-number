@@ -186,6 +186,13 @@ below name both alike.
 - `Resources/`: asset catalog, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Models/` (the two
   `.mlpackage`s), `Samples/` (`library.json` and the pictures), `PrivacyInfo.xcprivacy`.
 - `Outside/` (`#if UNRELEASED`): the app's side of its widgets and stickers (Outside the app, below).
+- `Together/` (`#if UNRELEASED`; painting-company row 350, design `factory/pieces/shareplay/`):
+  Paint Together over SharePlay. `TogetherLink` starts and joins sessions and sends the painting
+  through the journal (the guest's arrives as a received painting); `TogetherEngine` syncs one
+  `PaintingSession` through PaintCore's `Together/` (ledger, messages, batcher), painting the
+  friend's fills with `PaintingSession.applyFriend` (no undo, advance, Zen or haptic of theirs);
+  undo takes back the painter's own areas (`PaintingSession.unpaint`). The group-session
+  entitlement and `NSSupportsGroupActivities` wait on a device test; `PaintTogetherTests`.
 - `App/Config/Info.plist` holds what the generated plist can't express: the image document type, the
   scene manifest, ProMotion on iPhone, and the launch screen's `Paper` color (a white launch screen
   flashed before the gallery's paper; `ci/check_release.sh` checks it).
@@ -300,14 +307,16 @@ below name both alike.
   bar's row that fits). In SideStore and Debug builds (`#if UNRELEASED`, painting-company row 332)
   the bar grows into a panel with the doors after Finished under its row (`FinishedDoors`: Another
   One paints the next night's library picture the gallery doesn't hold through the shell's
-  `\.paintPicture`, Change It is `onChange`, On Paper and Send It share the template's PDF and the
-  finished PNG from their own door), laid by `DoorMetrics` in at most `PaintingLayout.doorsShare`
+  `\.paintPicture`, On Paper opens Print's preview (`PaintView.printTemplate`; where
+  the device can't print, it shares the template's PDF) and Send It shares the painting's
+  time-lapse, `PaintView.shareTimelapse`; the panel's row has no Share, the gallery's card shares
+  the picture), laid by `DoorMetrics` in at most `PaintingLayout.doorsShare`
   of the screen; `PaintView` measures the panel and the canvas makes room for it
   (`PaintingLayout.Inputs.completionHeight`). `paint-complete` (with `-dark`) is its screenshot.
   A painting made from a library picture (`Artwork.sampleName`, handed on as
   `PaintView.libraryPicture`; a painter's own photo never) has a last door, The Original
-  (painting-company row 120), five doors standing three over two on a phone upright and in one
-  row on an iPad, whose panel widens by a door for them (`CompletionBar.widestPanel(doors:)`;
+  (painting-company row 120), four doors standing two over two on a phone upright and in one
+  row on an iPad (a fifth would widen the panel by a door: `CompletionBar.widestPanel(doors:)`;
   `doorsWidth` keeps the panel and `PaintView.doorMetrics` in step). It opens
   `AboutPainting`, a sheet of the same name, the wall label the door draws (`OriginalWork`,
   read from `library.json` alone): the picture, and under it one small placard, its title,
@@ -318,10 +327,11 @@ below name both alike.
   link in the words' color (the accent is gold in dark appearance); both open in the browser,
   and the app sends nothing. `about-painting` (with `-dark`)
   and `about-photograph` are its screenshots, `AboutPaintingTests` its tests. During a replay
-  the bar's ring and
-  percentage follow the canvas, not the finished painting (`CanvasView.replay` tells the session
-  how many areas are on screen, `PaintingSession.replayed`, by `ReplayProgress`; `isComplete` and
-  the saved progress stay whole). While it plays (`PaintingSession.isReplaying`) Undo is off (the
+  the release's ring and percentage follow the canvas, not the finished painting
+  (`CanvasView.replay` tells the session how many areas are on screen, `PaintingSession.replayed`,
+  by `ReplayProgress`; `isComplete` and the saved progress stay whole); SideStore builds keep them
+  at 100% under Finished! (`badgePaintedCount`), and leave Replay and Print… to ▶ and On Paper
+  once the Finished panel shows. While it plays (`PaintingSession.isReplaying`) Undo is off (the
   canvas offers no `undoManager`, so ⌘Z and three-finger undo wait too) and Replay's slot, in the
   bar and More, holds Stop (`CanvasView.stopReplay`).
 - Palette (iPad first): `PaintingLayout.Palette` wraps the palette into rows (bottom) or columns
@@ -351,7 +361,7 @@ below name both alike.
 - Photo peek (`PhotoPeek`: hold to peek, tap to latch, `p` in the Paint menu) drives
   `CanvasView.showsPhoto`; the canvas draws the photo in its own pass, so it tracks zoom and pan;
   canvas touches hide a latched photo instead of painting.
-- Paper: Settings › Paper (`PaperAppearance`) reaches `CanvasView.paperAppearance`, which resolves a
+- Paper: Settings › Paper (Page in SideStore builds; `PaperAppearance`) reaches `CanvasView.paperAppearance`, which resolves a
   `CanvasPalette` from it and the trait collection every frame. `CanvasPalette.accent(for:)` is the
   selected paint lifted until it reads on the paper. Dark paper makes the bars, their popovers
   and the painting's toasts dark on a light system too (`PaintView.chromeScheme`: light glass
@@ -588,7 +598,7 @@ Conventions).
   The painting keeps the choice (`Artwork.hidesLines`, an optional field of `meta.json` every
   build round-trips; only `paintsWithoutLines`, false in the release, draws by it), and its
   gallery thumbnail (`Library.setHidesLines`), Share Painting and the Finished bar's Share
-  Picture (`CompletionShare.withoutLines`) and the doors' Send It picture follow it. The time-lapse
+  Picture (`CompletionShare.withoutLines`) and the doors' glimpse of Send It follow it. The time-lapse
   and feedback's captures keep the lines, and so does the canvas while feedback marks it up. `paint-book-complete` and
   `paint-book-complete-no-lines` are the pair to look at; `FinishedWithoutLinesTests`.
 - Settings › Line Weight (`LineWeight`: Fine, Regular, Bold) is the one thing about a book's lines
@@ -732,7 +742,7 @@ by the cuts made so far for one not cut yet, `LengthChip.expectedTimes`, and
 a length already cut while the painting is open is made again as it was, `cuts`). In SideStore and
   Debug builds (`#if UNRELEASED`, painting-company row 352) the chip's menu ends in **Fine-Tune…**
   (`FineTuneSheet`, the preview's `SettingSlider`s): Colors, Detail and Lines, opening on what the
-  painting was cut with, and Cut Again makes it again with them in place (`Library.retune`, recorded
+  painting was cut with, and Remake makes it again with them in place (`Library.retune`, recorded
   as custom, at its length); the menu then checks no length, and a length picked is cut afresh.
   `gallery-fine-tune` (with `-dark`, `-long-text`) is its screenshot, `FineTuneTests`. **✎ Change** (from 1.1, with the
   drawing tools; `PaintView.onChange`, `change-painting`, beside Undo and in the quiet bar) opens `RefineView` over
@@ -1188,8 +1198,8 @@ a length already cut while the painting is open is made again as it was, `cuts`)
 - Compact windows (iPhone) show one slider at a time in the card, Colors first, under a
   segmented chooser (`TemplatePreviewView.settingChooser`; Paul's calmer menus, October 18); the
   iPad's card shows all four. In SideStore and Debug builds (`#if UNRELEASED`) the card folds them away until
-  Adjust shows them, and keeps them shown for whoever opened it (`TemplatePreviewView.foldsSettings`,
-  `SettingsKey.previewShowsSettings`; Adjust alone folds them, the chip keeping Reset to Suggested);
+  Fine-Tune shows them, and keeps them shown for whoever opened it (`TemplatePreviewView.foldsSettings`,
+  `SettingsKey.previewShowsSettings`; Fine-Tune alone folds them, the chip keeping Reset to Suggested);
   UI tests open them with `openPreviewSettings`, and find them as an earlier test left them. They enlarge the preview from the toolbar (Shrink Preview, in Enlarge
   Preview's place, goes back; a checkmark there read as accepting the painting): the comparison
   fills the page (`CompareView.fillsSpace`: the picture fitted in the space, and zoomed in, all
@@ -1291,7 +1301,7 @@ Paintings, the frame, a painting a day, which StandBy shows too) and `App/Moonli
   shelf out when a painting is closed and whenever the app leaves the foreground (`OutsideComings` on the shell;
   `ArtworkPaintingView` for an open painting, after its save) and holds the app awake for it
   (`BackgroundSaving`): the painting in progress as it stands and after each of the next areas
-  (`OutsideFills.plan`: the paint in hand's largest areas first, so a tap shows, drawn fainter unpainted, `TemplateRasterizer.Style.widget`; at most `OutsideFills.most`, never the last area,
+  (`OutsideFills.plan`: the largest areas left, of any paint, so a tap shows, drawn fainter unpainted, `TemplateRasterizer.Style.widget`; at most `OutsideFills.most`, never the last area,
   whose finish is the app's), the finished paintings' pictures, and their stickers
   (`StickerMaker`: a print with a white edge, and where Vision finds a subject in the photo, the
   subject cut out of the finished painting, each on a clear square of Messages' sizes, its white
@@ -1341,9 +1351,10 @@ per menu: painting-company `process/design-budget.md`); Paint by Mosaic's card k
 painting-company row 357) Print… opens Print's preview first (`PrintPreviewSheet`,
 `Export/PrintPreview.swift`): the pages as they will print, drawn from the PDF itself
 (`PrintPages`), a Blank / Painted switch (`PDFExporter.Layout.painted`: the template's pages
-painted in, never printed), and the layout's choices, `PDFExporter.Layout`: Paper, Orientation,
-Size (`PDFExporter.sizes`: the fewest legible sheets, then the picture across more, with its
-printed size) and Color Key; its Print hands that layout's blank PDF to the dialog and closes once
+painted in, never printed), and two of `PDFExporter.Layout`'s choices: Size (`PDFExporter.sizes`:
+the fewest legible sheets, then the picture across more, with its printed size) and Color Key
+(the paper is the region's and the page turns the picture's way: the system's dialog asks for
+both after); its Print hands that layout's blank PDF to the dialog and closes once
 it has printed (`PrintSheet.onPrinted`). `Layout(paper:)` is the PDF as it always was.
 `print-preview` (with `-dark`, `-long-text`), `-painted` and `-sheets` are its screenshots,
 `PrintLayoutTests` its tests.

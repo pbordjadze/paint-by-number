@@ -287,18 +287,12 @@ struct ArtworkPaintingView: View {
             isComplete: artwork.isComplete, doors: finishedDoors(artwork))
     }
 
-    /// The doors after Finished the painting screen will show, as it counts them (`PaintView`'s
-    /// `onChange` is `changeAction`, its library picture the artwork's). Before the painting has
-    /// loaded, whether it has a photo to change it over isn't known (`sourcePhotoLoader`): every
-    /// painting made here has one, and only one someone sent may not, so the door is counted
-    /// unless it came that way (counted otherwise, the thumbnail moved as the painting loaded).
+    /// The doors after Finished the painting screen will show, as it counts them (its library
+    /// picture is the artwork's), so the thumbnail waits where the finished painting opens.
     private func finishedDoors(_ artwork: Artwork) -> PaintingLayout.Doors? {
         #if UNRELEASED
-        let changes = autosaver == nil
-            ? artwork.sampleName != nil || artwork.receivedDigest == nil
-            : changeAction != nil
-        return PaintingLayout.Doors(
-            count: FinishedDoor.shown(changes: changes, original: OriginalWork.of(artwork.sampleName) != nil).count,
+        PaintingLayout.Doors(
+            count: FinishedDoor.shown(original: OriginalWork.of(artwork.sampleName) != nil).count,
             compactHeight: verticalSizeClass == .compact)
         #else
         nil
@@ -367,6 +361,12 @@ struct ArtworkPaintingView: View {
                     .background { RevisionObserver(session: autosaver.session, onChange: autosaver.sessionChanged) }
                     // A new template (a re-cut) is a new session: the screen starts afresh on it.
                     .id(ObjectIdentifier(autosaver.session))
+                    #if UNRELEASED
+                    .environment(\.paintTogether, artwork.map { artwork in PaintTogetherAction(painting: artwork.id) { startTogether(artwork) } })
+                    .task(id: ObjectIdentifier(autosaver.session)) {
+                        TogetherLink.shared.paintingOpened(artworkID, session: autosaver.session)
+                    }
+                    #endif
                     // Nothing is painted while the picture is cut again: it would be lost.
                     .overlay {
                         if recutting != nil || changing != nil { Color.clear.contentShape(.rect) }
@@ -482,6 +482,9 @@ struct ArtworkPaintingView: View {
             }
         }
         .onDisappear {
+            #if UNRELEASED
+            TogetherLink.shared.paintingClosed(artworkID)
+            #endif
             regeneration?.cancel()
             recutting?.cancel()
             releaseHeldScreen()
@@ -490,6 +493,20 @@ struct ArtworkPaintingView: View {
     }
 
     #if UNRELEASED
+    /// More › Paint Together: shares the painting as a `.moonlight` file would be sent (its
+    /// template and title, never its photo), and the painting screen paints together as soon as the
+    /// session is up (`TogetherLink.bind`).
+    private func startTogether(_ artwork: Artwork) {
+        autosaver?.saveNow()
+        let store = library.store, link = TogetherLink.shared
+        Task {
+            guard let data = try? await Background.run({
+                try ArtworkExporter.sharedPainting(store: store, artwork: artwork, includesPhoto: false)
+            }) else { return }
+            await link.start(artwork: artwork.id, title: artwork.title, data: data)
+        }
+    }
+
     /// The areas the widget's Paint One Area showed painted while the app was away go into the
     /// painting on screen, are saved, and the shelf is laid out from there (`OutsideDesk`).
     private func absorbWidgetAreas() {

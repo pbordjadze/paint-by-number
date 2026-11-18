@@ -2,7 +2,8 @@
 /// painting rather than a faithful one. Only the paints move, as with every mix.
 ///
 /// The beauty spike (painting-company `factory/pieces/beauty-paint/`) tried eleven ways on 22
-/// pictures; the one chosen is three steps on rich paint's colors:
+/// pictures; the one chosen is three steps on rich paint's colors, and a fourth holds a face
+/// near the photo:
 ///
 /// 1. **No mud** (`clean`): a black with no hue of its own (below `neutralChroma`, darker than
 ///    `darkLightness`) is mixed from a touch of indigo, as a painter mixes black, never from
@@ -22,6 +23,13 @@
 ///    painting whose subject (above the `subjectCut` share of the importance) is bolder
 ///    (`subjectGain`) and whose background recedes into a soft blue haze (`haze`), a dark
 ///    background by losing color rather than into grey, a vivid one (`vividChroma`) not at all.
+/// 4. **A face held near the photo** (`faceGain`): a paint whose pixels lie mostly on a face
+///    (`faceHeldShare`) is mixed at most `faceGain` times as colorful as the photo's (`photo`,
+///    the regions' means), and a greyish one `faceLift` more (`faceLiftFade`), so a pale face's
+///    lit side and a dark face's warm shadows keep what kit and rich paint gave them (a paint
+///    stepped all the way back is rich paint's, unheld). Kit, rich
+///    and beauty paint each add chroma, and skin's hold ends at a lip's red, so a man's pink lips
+///    in a dim selfie came out crimson and his cheeks apricot (painting-company row 363).
 ///
 /// Rich paint's colors go in, so a face keeps its own paints (`FacePaints`). Two paints the
 /// steps bring closer than `minDistance` step back toward rich paint's until they are apart.
@@ -68,14 +76,22 @@ public enum BeautyPaint {
     static let haze = SIMD3<Float>(0.86, -0.0125, -0.021_651)
     static let hazeMost: Float = 0.2
     static let vividChroma: ClosedRange<Float> = 0.08...0.14
+    /// A face's paint: at most `faceGain` times the photo's chroma, and `faceLift` more for a
+    /// greyish one (fading out over `faceLiftFade`), held fully once `faceHeldShare` of its
+    /// pixels lie on a face.
+    static let faceGain: Float = 1.1
+    static let faceLift: Float = 0.03
+    static let faceLiftFade: ClosedRange<Float> = 0.03...0.08
+    static let faceHeldShare: ClosedRange<Float> = 0.2...0.5
 
     /// `rich` (rich paint's colors) mixed as beauty paint. `shares`: the share of the painting
     /// each paint covers; `hold`: how much each is skin (`KitPaint.skinHold`); `faceShare`: the
-    /// share of its pixels on a face; `importance`: its pixels' mean importance (`importance(of:…)`).
+    /// share of its pixels on a face; `importance`: its pixels' mean importance (`importance(of:…)`);
+    /// `photo`: the regions' colors rich paint was mixed from (a face isn't held without).
     /// A list that isn't the palette's is left out (no focus without importance).
     public static func mix(
         _ rich: [PaletteColor], shares: [Float] = [], hold: [Float] = [], faceShare: [Float] = [], importance: [Float] = [],
-        space: RGBColorSpace, minDistance: Float
+        photo: [PaletteColor] = [], space: RGBColorSpace, minDistance: Float
     ) -> [PaletteColor] {
         let n = rich.count
         guard n > 0 else { return rich }
@@ -155,12 +171,30 @@ public enum BeautyPaint {
             }
         }
 
+        // 4. A face held near the photo.
+        let limit: [(chroma: Float, weight: Float)?] = rich.indices.map { i in
+            guard photo.count == n, face[i] > faceHeldShare.lowerBound else { return nil }
+            let lab = photo[i].oklab
+            let C = length(SIMD2(lab.y, lab.z))
+            guard C.isFinite else { return nil }
+            return (C * faceGain + faceLift * (1 - KitPaint.smoothstep(faceLiftFade, C)), KitPaint.smoothstep(faceHeldShare, face[i]))
+        }
+        // Scaled with the strength, so a paint stepped all the way back is rich paint's again.
+        func limited(_ i: Int, _ lab: SIMD3<Float>, strength: Float) -> SIMD3<Float> {
+            guard let (cap, full) = limit[i] else { return lab }
+            let w = full * strength
+            let C = length(SIMD2(lab.y, lab.z))
+            guard C > cap else { return lab }
+            let scale = 1 - w + w * cap / C
+            return SIMD3(lab.x, lab.y * scale, lab.z * scale)
+        }
+
         func encoded(_ lab: SIMD3<Float>) -> PaletteColor {
             let rgb = ColorScience.okLabToEncoded(lab, space: space)
             return PaletteColor(oklab: ColorScience.encodedToOKLab(rgb, space: space), rgb: rgb)
         }
         func paint(_ i: Int, strength: Float) -> PaletteColor {
-            strength > 0 ? encoded(rich[i].oklab + (target[i] - rich[i].oklab) * strength) : rich[i]
+            strength > 0 ? encoded(limited(i, rich[i].oklab + (target[i] - rich[i].oklab) * strength, strength: strength)) : rich[i]
         }
         var strength = [Float](repeating: 1, count: n)
         var mixed = (0..<n).map { paint($0, strength: 1) }

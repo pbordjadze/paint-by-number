@@ -7,7 +7,7 @@ import SwiftUI
 /// as a painting (row 239). Its sliders are the preview's (`SettingSlider`), opening on what the
 /// painting was cut with, each with a detent there, Colors on the paints its palette has (rich
 /// paint gives a face paints of its own and drops any unused, so the count asked for is not the
-/// count the painter sees); Cut Again makes the painting again with them (`Library.retune`). A
+/// count the painter sees); Remake makes the painting again with them (`Library.retune`). A
 /// compact sheet, as tall as its sliders, so the painting stays in view above it. SideStore and
 /// Debug builds, until Paul chooses it for a release.
 struct FineTuneSheet: View {
@@ -69,7 +69,7 @@ struct FineTuneSheet: View {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Cut Again") {
+                    Button("Remake") {
                         onCut(made)
                         dismiss()
                     }

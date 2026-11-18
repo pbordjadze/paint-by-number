@@ -10,6 +10,8 @@ nonisolated enum Log {
     static let tips = Logger(subsystem: subsystem, category: EraSeam.logPrefix + "tips")
     static let feedback = Logger(subsystem: subsystem, category: EraSeam.logPrefix + "feedback")
     static let store = Logger(subsystem: subsystem, category: EraSeam.logPrefix + "store")
+    /// Paint Together's sessions (SideStore and Debug builds).
+    static let together = Logger(subsystem: subsystem, category: EraSeam.logPrefix + "together")
     #if DEBUG
     static let demo = Logger(subsystem: subsystem, category: EraSeam.logPrefix + "demo")
     #endif

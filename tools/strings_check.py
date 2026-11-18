@@ -66,6 +66,9 @@ ERA_CATALOG = "App/RavennaResources/Localizable.xcstrings"
 SHARED_FILES = set()
 ERA_KEYS = []
 CATALOG = "App/PaintByNumber/Resources/Localizable.xcstrings"
+# Keys of the app's catalog that only Paint by Mosaic's own sources (App/Ravenna, never read here)
+# use as SwiftUI literals, which look up the app's catalog in both eras (App/CLAUDE.md › Ravenna).
+MOSAIC_ONLY_KEYS = {"Adjust"}
 INFOPLIST_CATALOG = "App/PaintByNumber/Resources/InfoPlist.xcstrings"
 PROJECT = "App/PaintByNumber.xcodeproj/project.pbxproj"
 INFOPLIST_FILE = "App/Config/Info.plist"
@@ -96,7 +99,6 @@ WRAPPERS = {
     "SettingSlider": "title",   # TemplatePreviewView
     "SectionTitle": "",         # PhotoSourceView
     "GlassIconButton": "label", # GlassIconButton.swift
-    "choice": "",               # PrintPreviewSheet
 }
 # How often each file mentions the `LocalizedStringKey` type (a parameter or property of a
 # wrapper above). A new wrapper changes a count, which fails the check until WRAPPERS lists it.
@@ -105,7 +107,6 @@ KEY_TYPE_DECLARATIONS = {
     "Features/Paint/GlassIconButton.swift": 1,
     "Features/Create/TemplatePreviewView.swift": 1,
     "Features/Create/PhotoSourceView.swift": 2,
-    "Export/PrintPreview.swift": 1,
 }
 # Calls that never carry user-facing text: logging, assertions, decoding diagnostics, file and
 # asset names.
@@ -672,7 +673,7 @@ def check_catalog(catalog, usages, findings, path=CATALOG):
             findings.append(Finding(path, 0, f'"{key}": needs a comment telling translators where it appears and what the placeholders are'))
         if entry.get("extractionState") != "manual":
             findings.append(Finding(path, 0, f'"{key}": extractionState must be "manual" (Xcode would mark it stale otherwise)'))
-        if key not in used:
+        if key not in used and not (path == CATALOG and key in MOSAIC_ONLY_KEYS):
             findings.append(Finding(path, 0, f'"{key}": not used by any source (remove it, or restore the code that uses it)'))
 
     for key, uses in used.items():

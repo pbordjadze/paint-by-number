@@ -17,7 +17,7 @@ What it counts, from the sources (so it runs on Linux in a second, before any si
   together (Replay or Stop) both count: an upper bound.
 - choice.options: the cases of each enum a picker offers.
 - screen.controls: Edit's tool rail (one control per `RefineTool`) and the Finished panel (its bar's
-  four controls plus one per `FinishedDoor`).
+  three controls plus one per `FinishedDoor`).
 - gates.unreleased: `#if UNRELEASED` lines under App/, engineering's count of two builds to keep.
 """
 
@@ -46,8 +46,9 @@ CHOICES = [
     ("Painting Length", "../Sources/PaintCore/Auto/PaintingLength.swift", "PaintingLength"),
 ]
 
-# Controls the Finished panel's bar always has: its name, Replay, Share and Done.
-FINISHED_BAR = 4
+# Controls the Finished panel's bar always has: its name, Replay and Done (Share left on
+# November 18, 2026: Send It sends the time-lapse).
+FINISHED_BAR = 3
 
 
 def read(path):

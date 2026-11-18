@@ -91,9 +91,18 @@ struct DraftRow: View {
         .accessibilityElement(children: .combine)
     }
 
+    /// 1.3's name for Refine is Edit (painting-company row 331).
+    private var continueTitle: Text {
+        #if UNRELEASED
+        Text("Continue Editing")
+        #else
+        Text("Continue Refining")
+        #endif
+    }
+
     private func continueButton(fillsWidth: Bool) -> some View {
         Button(action: onContinue) {
-            Text("Continue Refining")
+            continueTitle
                 .font(.subheadline.weight(.semibold))
                 .frame(maxWidth: fillsWidth ? .infinity : nil)
         }

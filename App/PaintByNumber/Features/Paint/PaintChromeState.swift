@@ -62,14 +62,14 @@ final class PaintChromeState {
         PaintTips.desk.enter(.bench)
         benchOpened(session)
         session.onEvent { [weak self, weak session] event in
-            if let session, let signal = PaintTips.signal(for: event, isStroking: session.isStroking) {
+            if let session, !session.isApplyingFriend, let signal = PaintTips.signal(for: event, isStroking: session.isStroking) {
                 self?.tipSignal(signal)
             }
             switch event {
             case let .painted(regions, _):
-                if let session, !session.isStroking { self?.registerUndo(of: regions.count, in: session) }
+                if let session, !session.isStroking, !session.isApplyingFriend { self?.registerUndo(of: regions, in: session) }
             case let .strokeEnded(regions):
-                if let session { self?.registerUndo(of: regions.count, in: session) }
+                if let session { self?.registerUndo(of: regions, in: session) }
             case let .rejected(_, expected):
                 // Without animation the shake's whole-number step leaves the swatch in place.
                 withAnimation(UIAccessibility.isReduceMotionEnabled ? nil : .linear(duration: 0.45)) {
@@ -93,17 +93,19 @@ final class PaintChromeState {
 
     /// Undo takes back the fills of one tap or one whole stroke. Redoing paints them again,
     /// which registers the next undo through the same event.
-    private func registerUndo(of count: Int, in session: PaintingSession) {
+    /// Undo names the areas it takes back, newest first, rather than popping the log: painting
+    /// together, the log's last fills may be the friend's (Paint Together's own undo).
+    private func registerUndo(of regions: [Int], in session: PaintingSession) {
         guard let undoManager else { return }
         // UndoManager calls back on the thread that undoes: the main thread.
         undoManager.registerUndo(withTarget: session) { [weak self] session in
-            MainActor.assumeIsolated { self?.undoFills(count, in: session) }
+            MainActor.assumeIsolated { self?.undoFills(regions, in: session) }
         }
         undoManager.setActionName(String(localized: "Paint"))
     }
 
-    private func undoFills(_ count: Int, in session: PaintingSession) {
-        let undone = (0..<count).compactMap { _ in session.undo() }
+    private func undoFills(_ regions: [Int], in session: PaintingSession) {
+        let undone = session.unpaint(Array(regions.reversed()))
         guard let undoManager, let first = undone.first else { return }
         undoManager.registerUndo(withTarget: session) { session in
             MainActor.assumeIsolated {

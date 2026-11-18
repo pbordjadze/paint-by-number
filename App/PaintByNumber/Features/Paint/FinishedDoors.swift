@@ -10,29 +10,32 @@ import UIKit
 /// The doors after Finished (painting-company row 332): under the Finished bar's row, the ways on
 /// from a finished painting, each a card with a glimpse of where it leads. Another One paints
 /// a new picture from the library (Tonight's Picture while the gallery doesn't hold it, else the
-/// next night's), Change It opens Edit on this painting, On Paper prints its template and Send It
-/// shares the finished picture; a painting made from a library picture has one more, The Original,
+/// next night's), On Paper opens Print's preview of its
+/// template (where the device can print; else it shares the template's PDF) and Send It
+/// sends the painting's time-lapse; a painting made from a library picture has one more, The Original,
 /// the page about the real work (`AboutPainting`, painting-company row 120). No frames or knobs:
 /// the glimpse is the door (the mockups' critic rounds, `factory/pieces/doors/`); the arches they
-/// were drawn as went for row 351's quieter touches. SideStore and Debug builds until Paul has seen
-/// it; the release keeps the plain Finished bar.
+/// were drawn as went for row 351's quieter touches. Change It left on November 18, 2026: the top
+/// bar's Edit opens the same tools (the UI pass, one way to do a thing per screen). SideStore and
+/// Debug builds until Paul has seen it; the release keeps the plain Finished bar.
 struct FinishedDoors: View {
     let session: PaintingSession
     let title: String
     /// The finished painting as a picture (`CompletionShare`): Send It's glimpse.
     let picture: CGImage?
     let metrics: DoorMetrics
-    /// Change It: Edit on this painting (`PaintView.onChange`); nil leaves the door out.
-    var onChange: (() -> Void)?
     /// The Original: the work behind the library picture this painting was made from; nil (a
     /// painter's own photo) leaves the door out.
     var original: OriginalWork?
     /// The Original's page, asked of the painting screen: a sheet hung in this panel would take
     /// its capped text size and the bar's color scheme.
     var onOriginal: ((OriginalWork) -> Void)?
-    /// Send It's picture is the painting as paint alone (`PaintView`'s Show Lines off;
-    /// painting-company row 295).
-    var withoutLines = false
+    /// On Paper: Print's preview with its layout's choices (`PaintView.printTemplate`), asked of
+    /// the painting screen for the same reason; nil (no printing here) shares the template's PDF.
+    var onPrint: (() -> Void)?
+    /// Send It: the painting's time-lapse, made and shared by the painting screen
+    /// (`PaintView.shareTimelapse`).
+    var onSend: (() -> Void)?
 
     @Environment(\.paintPicture) private var paintPicture
     @Environment(Library.self) private var library: Library?
@@ -40,14 +43,14 @@ struct FinishedDoors: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var glimpses = DoorGlimpses()
     @State private var sampleImage: CGImage?
-    /// The file On Paper or Send It made, while the share sheet is up for it.
+    /// The file On Paper made, while the share sheet is up for it.
     @State private var sharedFile: URL?
     @State private var preparing: FinishedDoor?
     @State private var sharedDoor: FinishedDoor?
     @State private var originalImage: CGImage?
 
     var body: some View {
-        let doors = FinishedDoor.shown(changes: onChange != nil, original: original != nil)
+        let doors = FinishedDoor.shown(original: original != nil)
         let next = nextPicture
         // Rows of their own, not a grid: a last row with fewer doors stands in the middle.
         VStack(spacing: DoorMetrics.rowGap) {
@@ -130,7 +133,6 @@ struct FinishedDoors: View {
     private func name(_ door: FinishedDoor) -> Text {
         switch door {
         case .another: Text("Another One")
-        case .change: Text("Change It")
         case .paper: Text("On Paper")
         case .send: Text("Send It")
         case .original: Text("The Original")
@@ -142,7 +144,6 @@ struct FinishedDoors: View {
         case .another:
             guard let next else { return Text("From the Library") }
             return next == Sample.tonight() ? Text("Tonight’s Picture") : Text(next.title)
-        case .change: return Text("Edit its lines")
         case .paper: return Text("Print and paint it")
         case .send: return Text("To someone you love")
         case .original: return Text("Who made it")
@@ -158,12 +159,6 @@ struct FinishedDoors: View {
             Theme.surface
             switch door {
             case .another: fill(sampleImage, fallback: "photo.on.rectangle")
-            case .change:
-                fill(glimpses.lines, fallback: "pencil")
-                // The lines laid over the paint, where a finished classic painting has dissolved them.
-                if glimpses.lines != nil, let ink = glimpses.ink {
-                    fill(ink, fallback: "pencil").blendMode(.multiply)
-                }
             case .paper: fill(glimpses.paper, fallback: "printer")
             case .send: sendCard
             case .original: wall
@@ -179,7 +174,7 @@ struct FinishedDoors: View {
         .overlay { card.stroke(Color.white.opacity(colorScheme == .dark ? 0.18 : 0.7), lineWidth: 1) }
         .shadow(color: .black.opacity(colorScheme == .dark ? 0.4 : 0.16), radius: 12, y: 7)
         .contentShape(card)
-        .animation(.easeOut(duration: 0.25), value: glimpses.lines == nil)
+        .animation(.easeOut(duration: 0.25), value: glimpses.paper == nil)
         .animation(.easeOut(duration: 0.25), value: sampleImage == nil)
         .animation(.easeOut(duration: 0.25), value: originalImage == nil)
     }
@@ -264,14 +259,12 @@ struct FinishedDoors: View {
     private func open(_ door: FinishedDoor, next: Sample?) {
         switch door {
         case .another: paintPicture?(next)
-        case .change: onChange?()
         case .paper:
+            if let onPrint { onPrint(); return }
             let template = session.template, nicknames = session.colorNicknames, name = title
             let paper = PDFExporter.Paper.default(for: Locale.current.region)
             prepare(door) { try await Self.paperFile(template, title: name, paper: paper, nicknames: nicknames) }
-        case .send:
-            let template = session.template, painted = session.progress.painted, name = title, plain = withoutLines
-            prepare(door) { try await Self.pictureFile(template, painted: painted, title: name, withoutLines: plain) }
+        case .send: onSend?()
         case .original: if let original { onOriginal?(original) }
         }
     }
@@ -297,28 +290,17 @@ struct FinishedDoors: View {
         let data = PDFExporter.document(for: template, title: title, paper: paper, nicknames: nicknames)
         return try ArtworkExporter.temporaryFile(data, name: ArtworkExporter.templateName(title: title), pathExtension: "pdf")
     }
-
-    @concurrent
-    private static func pictureFile(
-        _ template: Template, painted: [Bool], title: String, withoutLines: Bool
-    ) async throws -> URL {
-        guard let data = TemplateRasterizer.pngData(
-            template, painted: painted, style: .finished.hidingLines(withoutLines, painted: painted), maxPixelSize: ArtworkExporter.imagePixelSize)
-        else { throw ArtworkExporter.ExportError.renderFailed }
-        return try ArtworkExporter.temporaryFile(data, name: title, pathExtension: "png")
-    }
 }
 
 /// The doors, in the order they stand.
 nonisolated enum FinishedDoor: String, CaseIterable, Identifiable, Sendable {
-    case another, change, paper, send, original
+    case another, paper, send, original
 
     var id: String { rawValue }
 
-    /// The doors a painting shows: Change It only where Edit can open it, The Original only for a
-    /// painting made from a library picture.
-    static func shown(changes: Bool, original: Bool) -> [FinishedDoor] {
-        allCases.filter { ($0 != .change || changes) && ($0 != .original || original) }
+    /// The doors a painting shows: The Original only for a painting made from a library picture.
+    static func shown(original: Bool) -> [FinishedDoor] {
+        allCases.filter { $0 != .original || original }
     }
 }
 
@@ -391,17 +373,13 @@ nonisolated struct DoorMetrics: Equatable, Sendable {
     }
 }
 
-/// The glimpses through Change It and On Paper: this painting with its lines, and its template as
-/// it would print, drawn once a finished painting.
+/// The glimpse through On Paper: the painting's template as it would print, drawn once a
+/// finished painting.
 @Observable
 final class DoorGlimpses {
     /// Height of a glimpse, in pixels: a door at most `DoorMetrics.largest` points wide, at 3×.
     nonisolated static let pixelSize = 560
 
-    private(set) var lines: CGImage?
-    /// The lines alone on paper, multiplied over `lines`: a classic painting's edges fade away
-    /// between painted areas, and Change It is about its lines.
-    private(set) var ink: CGImage?
     private(set) var paper: CGImage?
     @ObservationIgnored private var revision: Int?
 
@@ -409,29 +387,20 @@ final class DoorGlimpses {
         guard session.isComplete, revision != session.revision else { return }
         let target = session.revision
         revision = target
-        let (lines, ink, paper) = await Self.render(template: session.template, progress: session.progress)
+        let paper = await Self.render(template: session.template)
         guard revision == target else { return }
-        self.lines = lines
-        self.ink = ink
         self.paper = paper
-        if lines == nil || ink == nil || paper == nil { revision = nil }
+        if paper == nil { revision = nil }
     }
 
     @concurrent
-    private static func render(template: Template, progress: PaintProgress) async -> (CGImage?, CGImage?, CGImage?) {
+    private static func render(template: Template) async -> CGImage? {
         let rect = closeUp(of: CGSize(width: template.width, height: template.height))
         let height = Double(pixelSize)
         let size = CGSize(width: (height / Double(DoorMetrics.aspect)).rounded(), height: height)
-        let lines = CanvasSnapshot.render(
-            template: template, progress: progress, rect: rect, size: size,
-            options: CanvasSnapshot.Options(outlines: true, numbers: false, outlineWidth: lineWidth))
-        let ink = CanvasSnapshot.render(
-            template: template, progress: nil, rect: rect, size: size,
-            options: CanvasSnapshot.Options(outlines: true, numbers: false, outlineWidth: lineWidth))
-        let paper = CanvasSnapshot.render(
+        return CanvasSnapshot.render(
             template: template, progress: nil, rect: rect, size: size,
             options: CanvasSnapshot.Options(outlines: true, numbers: true, outlineWidth: lineWidth))
-        return (lines, ink, paper)
     }
 
     /// Lines as dark as the mockups' (`factory/pieces/doors/`): the whole picture at a door's size
