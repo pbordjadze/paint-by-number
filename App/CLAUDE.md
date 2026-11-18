@@ -299,7 +299,9 @@ below name both alike.
   the bar grows into a panel with the doors after Finished under its row (`FinishedDoors`: Another
   One paints the next night's library picture the gallery doesn't hold through the shell's
   `\.paintPicture`, Change It is `onChange`, On Paper opens Print's preview (`PaintView.printTemplate`; where
-  the device can't print, it shares the template's PDF) and Send It shares the finished PNG), laid by `DoorMetrics` in at most `PaintingLayout.doorsShare`
+  the device can't print, it shares the template's PDF) and Send It shares the painting's
+  time-lapse, `PaintView.shareTimelapse`; the panel's row has no Share, the gallery's card shares
+  the picture), laid by `DoorMetrics` in at most `PaintingLayout.doorsShare`
   of the screen; `PaintView` measures the panel and the canvas makes room for it
   (`PaintingLayout.Inputs.completionHeight`). `paint-complete` (with `-dark`) is its screenshot.
   A painting made from a library picture (`Artwork.sampleName`, handed on as
@@ -601,7 +603,7 @@ Conventions).
   The painting keeps the choice (`Artwork.hidesLines`, an optional field of `meta.json` every
   build round-trips; only `paintsWithoutLines`, false in the release, draws by it), and its
   gallery thumbnail (`Library.setHidesLines`), Share Painting and the Finished bar's Share
-  Picture (`CompletionShare.withoutLines`) and the doors' Send It picture follow it. The time-lapse
+  Picture (`CompletionShare.withoutLines`) and the doors' glimpse of Send It follow it. The time-lapse
   and feedback's captures keep the lines, and so does the canvas while feedback marks it up. `paint-book-complete` and
   `paint-book-complete-no-lines` are the pair to look at; `FinishedWithoutLinesTests`.
 - Settings › Line Weight (`LineWeight`: Fine, Regular, Bold) is the one thing about a book's lines

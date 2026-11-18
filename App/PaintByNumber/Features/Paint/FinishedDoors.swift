@@ -12,7 +12,7 @@ import UIKit
 /// a new picture from the library (Tonight's Picture while the gallery doesn't hold it, else the
 /// next night's), Change It opens Edit on this painting, On Paper opens Print's preview of its
 /// template (where the device can print; else it shares the template's PDF) and Send It
-/// shares the finished picture; a painting made from a library picture has one more, The Original,
+/// sends the painting's time-lapse; a painting made from a library picture has one more, The Original,
 /// the page about the real work (`AboutPainting`, painting-company row 120). No frames or knobs:
 /// the glimpse is the door (the mockups' critic rounds, `factory/pieces/doors/`); the arches they
 /// were drawn as went for row 351's quieter touches. SideStore and Debug builds until Paul has seen
@@ -34,16 +34,16 @@ struct FinishedDoors: View {
     /// On Paper: Print's preview with its layout's choices (`PaintView.printTemplate`), asked of
     /// the painting screen for the same reason; nil (no printing here) shares the template's PDF.
     var onPrint: (() -> Void)?
-    /// Send It's picture is the painting as paint alone (`PaintView`'s Show Lines off;
-    /// painting-company row 295).
-    var withoutLines = false
+    /// Send It: the painting's time-lapse, made and shared by the painting screen
+    /// (`PaintView.shareTimelapse`).
+    var onSend: (() -> Void)?
 
     @Environment(\.paintPicture) private var paintPicture
     @Environment(Library.self) private var library: Library?
     @Environment(\.colorScheme) private var colorScheme
     @State private var glimpses = DoorGlimpses()
     @State private var sampleImage: CGImage?
-    /// The file On Paper or Send It made, while the share sheet is up for it.
+    /// The file On Paper made, while the share sheet is up for it.
     @State private var sharedFile: URL?
     @State private var preparing: FinishedDoor?
     @State private var sharedDoor: FinishedDoor?
@@ -271,9 +271,7 @@ struct FinishedDoors: View {
             let template = session.template, nicknames = session.colorNicknames, name = title
             let paper = PDFExporter.Paper.default(for: Locale.current.region)
             prepare(door) { try await Self.paperFile(template, title: name, paper: paper, nicknames: nicknames) }
-        case .send:
-            let template = session.template, painted = session.progress.painted, name = title, plain = withoutLines
-            prepare(door) { try await Self.pictureFile(template, painted: painted, title: name, withoutLines: plain) }
+        case .send: onSend?()
         case .original: if let original { onOriginal?(original) }
         }
     }
@@ -298,16 +296,6 @@ struct FinishedDoors: View {
     private static func paperFile(_ template: Template, title: String, paper: PDFExporter.Paper, nicknames: [String?]) async throws -> URL {
         let data = PDFExporter.document(for: template, title: title, paper: paper, nicknames: nicknames)
         return try ArtworkExporter.temporaryFile(data, name: ArtworkExporter.templateName(title: title), pathExtension: "pdf")
-    }
-
-    @concurrent
-    private static func pictureFile(
-        _ template: Template, painted: [Bool], title: String, withoutLines: Bool
-    ) async throws -> URL {
-        guard let data = TemplateRasterizer.pngData(
-            template, painted: painted, style: .finished.hidingLines(withoutLines, painted: painted), maxPixelSize: ArtworkExporter.imagePixelSize)
-        else { throw ArtworkExporter.ExportError.renderFailed }
-        return try ArtworkExporter.temporaryFile(data, name: title, pathExtension: "png")
     }
 }
 

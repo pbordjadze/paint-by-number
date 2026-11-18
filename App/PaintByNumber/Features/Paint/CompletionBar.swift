@@ -86,15 +86,17 @@ struct CompletionBar: View {
     /// The bar grown into a panel: its row as it is, the doors under it (painting-company row 332).
     private func panel(_ doors: DoorMetrics) -> some View {
         VStack(spacing: 0) {
+            // No Share in the panel's row: Send It sends the time-lapse, and the gallery's card
+            // shares the picture (painting-company row 332).
             ViewThatFits(in: .horizontal) {
-                row(seal: true, titleLines: 1)
-                row(seal: false, titleLines: 1)
-                row(seal: false, titleLines: 2)
+                row(seal: true, titleLines: 1, shares: false)
+                row(seal: false, titleLines: 1, shares: false)
+                row(seal: false, titleLines: 2, shares: false)
             }
             .padding(.horizontal, 18)
             .padding(.vertical, 8)
             .frame(minHeight: Self.height)
-            FinishedDoors(session: session, title: title, picture: share.picture, metrics: doors, onChange: onChange, original: original, onOriginal: onOriginal, onPrint: onPrint, withoutLines: share.withoutLines)
+            FinishedDoors(session: session, title: title, picture: share.picture, metrics: doors, onChange: onChange, original: original, onOriginal: onOriginal, onPrint: onPrint, onSend: onShareTimelapse)
                 .padding(.horizontal, Self.doorsInset)
                 .padding(.bottom, Self.doorsInset)
         }
@@ -135,7 +137,7 @@ struct CompletionBar: View {
         #endif
     }
 
-    private func row(seal: Bool, titleLines: Int) -> some View {
+    private func row(seal: Bool, titleLines: Int, shares: Bool = true) -> some View {
         HStack(spacing: 12) {
             if seal {
                 Image(systemName: "checkmark.seal.fill")
@@ -205,7 +207,7 @@ struct CompletionBar: View {
             .gentleTip(.benchReplay, active: !isWarmup, arrowEdge: .bottom, besideEdge: replayTipBesideEdge)
             // UIImage keeps the picture's Display P3 colors.
             let shareImage: Image? = isWarmup ? Image(systemName: "photo") : share.picture.map { Image(uiImage: UIImage(cgImage: $0)) }
-            if let shareImage {
+            if shares, let shareImage {
                 let name = title.isEmpty ? String(localized: "Painting") : title
                 Menu {
                     ShareLink(item: shareImage, preview: SharePreview(name, image: shareImage)) {
