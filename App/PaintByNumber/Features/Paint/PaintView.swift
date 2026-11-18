@@ -970,7 +970,7 @@ struct PaintView: View {
     /// is a trial that saves nothing, not a painting to print), where the device can print.
     private var offersPrint: Bool { asksForRating && PrintSheet.isAvailable }
 
-    /// More › Print…: the template as Print Template… prints it, lines, numbers and the color key,
+    /// More › Print…: the template's PDF, lines, numbers and the color key,
     /// whatever is painted, from the live session; then the print dialog. One at a time: asked
     /// again while a PDF is being made, it does nothing.
     private func printTemplate() {

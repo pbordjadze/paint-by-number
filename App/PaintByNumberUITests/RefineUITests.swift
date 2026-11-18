@@ -436,15 +436,6 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "Bend Line didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-bend")
 
-        // A look over every paint.
-        pickTool("looks", in: "Colors", of: app)
-        let look = app.buttons["refine-look-moonlit"]
-        XCTAssertTrue(look.waitForExistence(timeout: 5), "Looks offers no Moonlit")
-        look.tap()
-        count += 1
-        XCTAssertTrue(waitFor(canvas, toMatch: changes("\(count) changes")), "The look didn't count: \(canvas.value ?? "")")
-        attachScreenshot(of: app, named: "refine-look")
-
         app.buttons["refine-done"].tap()
         XCTAssertTrue(waitFor(refine, toMatch: changes("\(count) changes")), "Done didn't keep the changes")
     }
@@ -479,7 +470,7 @@ final class RefineUITests: XCTestCase {
     }
 
     /// A painter's edits survive a base made again (painting-company row 278): a repaint (Edit
-    /// Paint's swatch dropped on another, on iPad; a look on iPhone, where a swatch isn't dragged),
+    /// Paint's swatch dropped on another, on iPad; a line drawn on iPhone, where a swatch isn't dragged),
     /// a merge, a rub of the Eraser and an Only This Area from an area's card, then a Writing mark,
     /// which makes the base again: the count still says every change, none is said to be left
     /// out, and Done keeps them all.
@@ -501,12 +492,10 @@ final class RefineUITests: XCTestCase {
                 retapIfLost("swatch drag", dragged)
             }
         } else {
-            pickTool("looks", in: "Colors", of: app)
-            let look = app.buttons["refine-look-moonlit"]
-            XCTAssertTrue(look.waitForExistence(timeout: 5), "Looks offers no Moonlit")
-            look.tap()
+            pickTool("pen", in: "Ink", of: app)
+            drag(on: canvas, from: onPicture(canvas, 0.44, 0.44), to: onPicture(canvas, 0.44, 0.52))
         }
-        XCTAssertTrue(waitFor(canvas, toMatch: changes("1 change")), "The repaint didn't count: \(canvas.value ?? "")")
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("1 change")), "The first edit didn't count: \(canvas.value ?? "")")
 
         // From the open sky down into the band of sea under it (the sky is one area already).
         pickTool("merge", in: "Cells", of: app)
@@ -688,9 +677,9 @@ final class RefineUITests: XCTestCase {
 
     /// iPhone on its side: the picture takes most of the screen's height, and the tools, Start From
     /// and the tiny-numbers badge stand beside it, covering none of it, Done within reach, with the
-    /// Pen, with Select's cell and its card, with the looks, and Layers opens: under the tools it
-    /// was about 190 × 130 points, the badge over its corner, and gone with the looks (QA,
-    /// November 7 and 9).
+    /// Pen, with Select's cell and its card, with Edit Paint's panel, and Layers opens: under the
+    /// tools it was about 190 × 130 points, the badge over its corner, and gone with the looks
+    /// (QA, November 7 and 9).
     @MainActor
     func testThePictureFillsAPhoneOnItsSide() throws {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .phone, "An iPad on its side keeps its rail")
@@ -747,9 +736,9 @@ final class RefineUITests: XCTestCase {
         // The card takes the groups' room beside the picture: closed, they are back.
         if change.exists { change.tap() }
         XCTAssertTrue(app.buttons["Colors"].waitForExistence(timeout: 5), "The groups didn't come back after the card")
-        pickTool("looks", in: "Colors", of: app)
+        pickTool("editPaint", in: "Colors", of: app)
         sleep(1)
-        clear("looks")
+        clear("edit-paint")
         app.buttons["refine-layers"].tap()
         XCTAssertTrue(app.descendants(matching: .any)["refine-layers-panel"].waitForExistence(timeout: 10), "Layers didn't open")
         sleep(1)

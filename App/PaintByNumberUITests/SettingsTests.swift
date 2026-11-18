@@ -1,7 +1,7 @@
 import XCTest
 
 /// Settings: About (version, acknowledgements), Paper, Line Weight, Tips, Music, Painting Length,
-/// Preview, The Making-of and Unlimited Paintings.
+/// The Making-of and Unlimited Paintings.
 final class SettingsTests: XCTestCase {
     @MainActor
     func testAboutShowsTheVersion() throws {
@@ -138,28 +138,6 @@ final class SettingsTests: XCTestCase {
         XCTAssertTrue(app.buttons["Relaxed"].waitForExistence(timeout: 5))
         app.buttons["Relaxed"].firstMatch.tap()
         XCTAssertTrue(shows(picker, "Relaxed"))
-    }
-
-    /// Settings › Preview offers Painting and Line Art, starts on Painting and keeps the choice.
-    @MainActor
-    func testPreviewPickerChangesTheValue() throws {
-        let app = openSettings()
-        let picker = app.descendants(matching: .any)["settings-preview"]
-        scroll(app, to: picker)
-        XCTAssertTrue(picker.exists, "Settings has no Preview picker")
-        XCTAssertTrue(describe(picker).contains("Painting"), "Preview doesn't start on Painting: \(describe(picker))")
-        picker.tap()
-        for choice in ["Painting", "Line Art"] {
-            XCTAssertTrue(app.buttons[choice].waitForExistence(timeout: 5), "The Preview picker has no \(choice)")
-        }
-        app.buttons["Line Art"].firstMatch.tap()
-        XCTAssertTrue(shows(picker, "Line Art"), "Choosing Line Art didn't change the picker: \(describe(picker))")
-        attachScreenshot(of: app, named: "settings-preview-line-art")
-        // The choice is stored in the simulator's defaults: put it back for the other tests.
-        picker.tap()
-        XCTAssertTrue(app.buttons["Painting"].waitForExistence(timeout: 5))
-        app.buttons["Painting"].firstMatch.tap()
-        XCTAssertTrue(shows(picker, "Painting"), "Choosing Painting didn't change the picker: \(describe(picker))")
     }
 
     /// The Making-of starts off and switches on (Start then plays the show: `MakingOfUITests`).

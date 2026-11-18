@@ -140,20 +140,6 @@ nonisolated struct PaintingImageFile: Sendable {
     }
 }
 
-/// "Printable Template": a PDF (the template, on several sheets when it is detailed, then the
-/// color key), written before the share sheet opens on it.
-nonisolated struct PrintableTemplateFile: Sendable {
-    let store: ArtworkStore
-    let artwork: Artwork
-    let paper: PDFExporter.Paper
-
-    @concurrent
-    func export() async throws -> URL {
-        let data = try ArtworkExporter.templatePDF(store: store, artwork: artwork, paper: paper)
-        return try ArtworkExporter.temporaryFile(data, name: ArtworkExporter.templateName(title: artwork.title), pathExtension: "pdf")
-    }
-}
-
 /// What a time-lapse replays: a saved artwork, or an open painting's live state (its saved
 /// copy may lag behind).
 nonisolated enum TimelapseSource: Sendable {

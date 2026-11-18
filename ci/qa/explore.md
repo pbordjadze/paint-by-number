@@ -163,8 +163,8 @@ Report these only if they look wrong in another way:
   the Eyedropper does. A paint that Make Cell, the Eraser or the Line Eraser takes every area
   from leaves the palette, the numbers after it closing up, as Merge's does.
 - In Refine (debug build): Cancel with changes asks before putting back what Refine opened with;
-  a look or Photo in Looks takes every earlier look and Edit Paint repaint out first (Undo brings
-  them back); the picker of an area's card is one step of the history however many colors it
+  Photo's Colors in Edit Paint takes every earlier repaint out at once (Undo brings them back);
+  the picker of an area's card is one step of the history however many colors it
   picks, while Edit Paint's are a step each; and the canvas keeps the room of the tallest panel
   it has had below it, so the picture never moves under a finger as tools change. Each is a
   design question for later (painting-company row 143), not a bug of the screen.

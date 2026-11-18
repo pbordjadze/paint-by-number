@@ -181,7 +181,7 @@ final class RefineModel {
         #if DEBUG
         if let demo = ShellDemo.current {
             let opens: RefineTool? =
-                demo.picksColorPaint ? .editPaint : demo.opensColors ? .looks : demo.selectsCell || demo.opensCard ? .select : nil
+                demo.opensColors ? .editPaint : demo.selectsCell || demo.opensCard ? .select : nil
             if let opens {
                 tool = opens
                 group = RefineGroup.of(opens)
@@ -412,7 +412,7 @@ final class RefineModel {
         // A fill is a tap, and so are selecting, painting a cell and picking a paint: a drag
         // does nothing.
         case .bendLine, .moveEdge, .moveNumber: drag(touch, at: point)
-        case .fill, .select, .bucket, .eyedropper, .editPaint, .looks, .tryPainting: break
+        case .fill, .select, .bucket, .eyedropper, .editPaint, .tryPainting: break
         }
     }
 
@@ -695,7 +695,7 @@ final class RefineModel {
         tinyMarked = nil
         revealLayer()
         switch tool {
-        case .pen, .cellEdge, .merge, .looks, .bendLine, .moveEdge, .moveNumber, .tryPainting:
+        case .pen, .cellEdge, .merge, .bendLine, .moveEdge, .moveNumber, .tryPainting:
             break
         case .brush:
             // A dab, of the brush's own reach.
@@ -1044,11 +1044,10 @@ final class RefineModel {
         model.recolor(.repaint(from: palette[from].oklab, to: palette[into].oklab, family: false))
     }
 
-    /// Edit Paint's paint, as the colors panel picks it: the current paint.
-    /// Looks and Edit Paint's change. A repaint of the current paint keeps it the current paint
-    /// once it lands, in the color the repaint gives it (`repainted`), so a picker still open goes
-    /// on with it; a repaint of another (a color still waiting as another paint was chosen) leaves
-    /// the choice alone.
+    /// Edit Paint's paint, as the colors panel picks it: the current paint, and its change. A
+    /// repaint of the current paint keeps it the current paint once it lands, in the color the
+    /// repaint gives it (`repainted`), so a picker still open goes on with it; a repaint of
+    /// another (a color still waiting as another paint was chosen) leaves the choice alone.
     func recolor(_ change: RefineColors) {
         if case .repaint(let from, let to, let family) = change, from == currentPaint {
             let edit = TemplateEditor.Edit.repaint(from: from, to: to, family: family)

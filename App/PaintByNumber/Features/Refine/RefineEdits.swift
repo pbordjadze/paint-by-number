@@ -28,19 +28,16 @@ nonisolated enum RefineChange: Sendable, Equatable {
     }
 }
 
-/// A change Refine's Looks and Edit Paint make to the edits (`CreateModel.recolor(_:)`), described so it lands
-/// on the edits as they are when its turn comes. A look and the photo's colors start the colors
-/// over: they take every look and repaint out first, so looks never stack and the strength slider
-/// replaces the look it moves.
+/// A change Refine's Edit Paint makes to the edits (`CreateModel.recolor(_:)`), described so it
+/// lands on the edits as they are when its turn comes. The photo's colors start the colors over:
+/// they take every look (laid before Looks left Refine, November 17, 2026) and repaint out.
 nonisolated enum RefineColors: Sendable, Equatable {
-    /// Every paint in `look` at `strength` (0 to 1).
-    case look(TemplateEditor.Look, strength: Float)
     /// The photo's own colors: no look, no repaint.
     case photo
     /// The paint of color `from` (OKLab) made `to`, with the paints of about its hue when `family`.
     case repaint(from: SIMD3<Float>, to: SIMD3<Float>, family: Bool)
 
-    /// `edits` without Colors' own: what a look or the photo's colors start from.
+    /// `edits` without Colors' own: what the photo's colors start from.
     static func withoutColors(_ edits: [TemplateEditor.Edit]) -> [TemplateEditor.Edit] {
         edits.filter { !TemplateEditor.isRecolor($0) }
     }
@@ -50,14 +47,6 @@ nonisolated enum RefineColors: Sendable, Equatable {
     func replacesLast(of edits: [TemplateEditor.Edit]) -> Bool {
         guard case .repaint(let from, _, _) = self, case .repaint(let last, _, _)? = edits.last else { return false }
         return from == last
-    }
-
-    /// The look `edits` lay, with its strength; nil for the photo's colors.
-    static func look(in edits: [TemplateEditor.Edit]) -> (look: TemplateEditor.Look, strength: Float)? {
-        for edit in edits.reversed() {
-            if case .look(let look, let strength, _) = edit { return (look, strength) }
-        }
-        return nil
     }
 }
 

@@ -19,8 +19,6 @@ enum SettingsKey {
     static let paletteOrder = "paletteOrder"
     /// How heavy a coloring book's drawing is (`LineWeight`).
     nonisolated static let lineWeight = "lineWeight"
-    /// What the create flow's preview shows beside the photo (`PreviewStyle`).
-    nonisolated static let previewStyle = "previewStyle"
     /// Start Painting first plays the making-of show (`MakingOfView`): the painter's photo becoming
     /// its painting, step by step (Settings › The Making-of; off by default).
     static let playsMakingOf = "playsMakingOf"
@@ -46,7 +44,7 @@ enum SettingsKey {
 /// What each switch of `SettingsKey` is until the painter sets it, written once: the `@AppStorage`
 /// declarations and the code reading `UserDefaults` itself start from these. The keys whose
 /// values are a type of their own keep their default on it (`PaintingLength.default`,
-/// `SkySetting.default`, `PaperAppearance.default`, `LineWeight.default`, `PreviewStyle.default`,
+/// `SkySetting.default`, `PaperAppearance.default`, `LineWeight.default`,
 /// `PaletteRows.default`, `PaletteOrder.default`).
 nonisolated enum SettingsDefault {
     static let haptics = true
@@ -70,15 +68,12 @@ nonisolated enum SettingsDefault {
 struct Preferences {
     /// How long a painting Suggested settings aim for in the create flow.
     var paintingLength: PaintingLength
-    /// What the create flow's preview shows beside the photo.
-    var previewStyle: PreviewStyle
     /// Start Painting plays the making-of show first.
     var playsMakingOf: Bool
 
     init(defaults: UserDefaults = .standard) {
         paintingLength = defaults.string(forKey: SettingsKey.paintingLength).flatMap(PaintingLength.init(rawValue:))
             ?? .default
-        previewStyle = PreviewStyle.stored(in: defaults)
         // `bool(forKey:)` reads a launch argument's `YES` too.
         playsMakingOf = defaults.object(forKey: SettingsKey.playsMakingOf) == nil
             ? SettingsDefault.playsMakingOf : defaults.bool(forKey: SettingsKey.playsMakingOf)
@@ -88,10 +83,13 @@ struct Preferences {
     /// line appearance and preview picture, and its switch for each sound, haptic and flourish;
     /// Settings' paper size for printing and Color Names; the time-lapse's pace; Settings › Detail
     /// Brushes (later Text Corrections: Refine's Text tool is always there now); Settings › The
-    /// Marginarium. Left in place, the first two would still shape new paintings, unseen.
+    /// Marginarium; Settings › Preview, which nothing reads since a picked picture skips the preview
+    /// (painting-company's cut list, Nov 17, 2026). Left in place, the first two would still shape
+    /// new paintings, unseen.
     static let retiredKeys = [
         "advancedLineArt", "advancedPipelineTuning", "advancedLineAppearance", "advancedPreviewPicture",
         "printPaperSize", "colorNameStyle", "timelapsePace", "refineDetailBrushes", "showsMarginarium",
+        "previewStyle",
     ] + [
         "paintNotes", "colorJingle", "finishFanfare", "wrongColorSound", "fillHaptics", "wrongColorHaptics",
         "finishHaptics", "fillSparkles", "finishShine",

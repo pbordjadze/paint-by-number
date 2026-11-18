@@ -112,7 +112,8 @@ struct OutsideDeskTests {
             title: "Mosaic", template: Fixtures.mosaic, settings: GenerationSettings(colorCount: 12), photo: nil, sampleName: nil, progress: nil))
     }
 
-    /// The plan keeps to one paint until it is finished, takes no area twice and never the last.
+    /// The plan keeps to one paint until it is finished, its largest areas first, takes no area
+    /// twice and never the last.
     @Test func thePlanFollowsAPaintAndLeavesTheLastArea() {
         let template = Fixtures.mosaic
         let count = template.regions.count
@@ -122,6 +123,10 @@ struct OutsideDeskTests {
         let first = template.regions[plan[0]].colorIndex
         let ofFirst = template.regions.count(where: { $0.colorIndex == first })
         #expect(plan.prefix(ofFirst).allSatisfy { template.regions[$0].colorIndex == first })
+        // Largest first, so each tap shows in a widget's small picture.
+        let areas = plan.prefix(ofFirst).map { template.regions[$0].area }
+        #expect(areas == areas.sorted(by: >))
+        #expect(areas.first == template.regions.filter { $0.colorIndex == first }.map(\.area).max())
 
         progress.inHand = Int(template.regions[count - 1].colorIndex)
         #expect(OutsideFills.plan(template: template, progress: progress, limit: 1).map { template.regions[$0].colorIndex } == [template.regions[count - 1].colorIndex])

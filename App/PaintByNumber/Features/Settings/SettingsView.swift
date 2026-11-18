@@ -13,7 +13,6 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.paintingLength) private var paintingLength = PaintingLength.default
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
-    @AppStorage(SettingsKey.previewStyle) private var previewStyle = PreviewStyle.default
     /// On until switched off here (`TipPreference`).
     @AppStorage(SettingsKey.tipsEnabled) private var tipsEnabled = SettingsDefault.tipsEnabled
     @AppStorage(SettingsKey.playsMakingOf) private var playsMakingOf = SettingsDefault.playsMakingOf
@@ -133,16 +132,7 @@ struct SettingsView: View {
                         }
                     }
 
-                    // Painting Length last, so its footer sits under it.
                     Section {
-                        Picker(selection: $previewStyle) {
-                            ForEach(PreviewStyle.allCases) { style in
-                                Text(style.name).tag(style)
-                            }
-                        } label: {
-                            SwiftUI.Label("Preview", systemImage: "rectangle.split.2x1")
-                        }
-                        .accessibilityIdentifier("settings-preview")
                         Picker(selection: $paintingLength) {
                             ForEach(PaintingLength.allCases, id: \.self) { length in
                                 Text(length.name).tag(length)
