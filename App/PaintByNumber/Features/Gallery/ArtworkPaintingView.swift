@@ -245,7 +245,7 @@ struct ArtworkPaintingView: View {
         else { return nil }
         return StatusBarAtOpen.measured(
             insets, barFrame: bar.statusBarFrame, barHidden: bar.isStatusBarHidden, fullScreen: scene.isFullScreen,
-            idiom: scene.traitCollection.userInterfaceIdiom, screenWidth: scene.coordinateSpace.bounds.width)
+            idiom: scene.traitCollection.userInterfaceIdiom, screenWidth: scene.effectiveGeometry.coordinateSpace.bounds.width)
     }
 
     /// Where the waiting thumbnail lies in its reader (a view inside the safe area `insets`, read
