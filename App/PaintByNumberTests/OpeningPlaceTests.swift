@@ -181,8 +181,8 @@ struct OpeningPlaceTests {
                     let bar = CompletionBar(
                         session: session, title: test.title, share: CompletionShare(), sealBounces: 0, onReplay: {},
                         onStopReplay: {}, onShareTimelapse: {}, onName: test.named ? nil : {}, isNamed: test.named,
-                        onClose: {}, doors: metrics, onChange: count == 5 ? {} : nil,
-                        original: count == 5 ? OriginalWork.all.values.first : nil)
+                        onClose: {}, doors: metrics,
+                        original: count == 4 ? OriginalWork.all.values.first : nil)
                         .environment(\.locale, Locale(identifier: test.locale))
                         .environment(\.dynamicTypeSize, test.size)
                     let host = UIHostingController(rootView: bar)

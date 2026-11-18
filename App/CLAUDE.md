@@ -311,13 +311,13 @@ below name both alike.
   the device can't print, it shares the template's PDF) and Send It shares the painting's
   time-lapse, `PaintView.shareTimelapse`; the panel's row has no Share, the gallery's card shares
   the picture), laid by `DoorMetrics` in at most `PaintingLayout.doorsShare`
-  of the screen; `PaintView` measures the panel and the canvas makes room for it
-  (`PaintingLayout.Inputs.completionHeight`). `paint-complete` (with `-dark`) is its screenshot.
+  of the screen; the canvas makes room for the panel at the height `CompletionBar.panelHeight`
+  counts (`PaintingLayout.Inputs.completionHeight`, never measured). `paint-complete` (with `-dark`) is its screenshot.
   A painting made from a library picture (`Artwork.sampleName`, handed on as
   `PaintView.libraryPicture`; a painter's own photo never) has a last door, The Original
   (painting-company row 120), four doors standing two over two on a phone upright and in one
   row on an iPad (a fifth would widen the panel by a door: `CompletionBar.widestPanel(doors:)`;
-  `doorsWidth` keeps the panel and `PaintView.doorMetrics` in step). It opens
+  `doorsWidth` keeps the panel and `PaintingLayout.doorMetrics` in step). It opens
   `AboutPainting`, a sheet of the same name, the wall label the door draws (`OriginalWork`,
   read from `library.json` alone): the picture, and under it one small placard, its title,
   maker and date, medium and, last, where it hangs (a record without a place has no such
