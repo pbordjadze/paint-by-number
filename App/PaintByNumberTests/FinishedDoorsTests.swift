@@ -9,16 +9,11 @@ import Testing
 /// room the painting screen gives them, and the room the canvas makes for them.
 @MainActor
 struct FinishedDoorsTests {
-    @Test func changeItShowsOnlyWhereEditOpens() {
-        #expect(FinishedDoor.shown(changes: true, original: false) == [.another, .change, .paper, .send])
-        #expect(FinishedDoor.shown(changes: false, original: false) == [.another, .paper, .send])
-    }
-
     /// The Original (painting-company row 120) is the last door, and only a painting made from a
-    /// library picture has it.
+    /// library picture has it. No Change It: the top bar's Edit opens the same tools (Nov 18, 2026).
     @Test func theOriginalIsTheLastDoorOfALibraryPicture() {
-        #expect(FinishedDoor.shown(changes: true, original: true) == [.another, .change, .paper, .send, .original])
-        #expect(FinishedDoor.shown(changes: false, original: true) == [.another, .paper, .send, .original])
+        #expect(FinishedDoor.shown(original: false) == [.another, .paper, .send])
+        #expect(FinishedDoor.shown(original: true) == [.another, .paper, .send, .original])
     }
 
     /// Five doors: three over two where a row of five would be too small (a phone upright), one
@@ -90,7 +85,7 @@ struct FinishedDoorsTests {
         #expect(abs(panel - bar - (500 - CompletionBar.height)) < 0.01)
     }
 
-    /// Change It and On Paper look through the door at the middle of the picture, close enough to
+    /// On Paper looks through the door at the middle of the picture, close enough to
     /// read its lines, in the door's own proportions and inside the canvas.
     @Test func theGlimpseIsACloseUpInTheDoorsShape() {
         for (w, h) in [(2100, 1500), (1100, 2100), (2000, 300)] {

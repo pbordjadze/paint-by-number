@@ -84,7 +84,7 @@ struct PaintDemoView: View {
                 PaintView(
                     session: demo.session, title: demo.title, onClose: {},
                     onName: scenario == "paint-complete-unnamed" ? {} : nil, isNamed: scenario != "paint-complete-unnamed", initialCamera: demo.camera, fillDurationScale: demo.fillDurationScale, showsPhoto: demo.showsPhoto,
-                    // A finished painting's Edit, so its doors show Change It as the app's do.
+                    // A finished painting's Edit, so its top bar shows the pencil as the app's does.
                     onChange: scenario.hasPrefix("paint-complete") ? {} : nil,
                     // A library picture's painting, so its doors end with The Original; the one
                     // under a date's name stands for a painter's own photo, without it.

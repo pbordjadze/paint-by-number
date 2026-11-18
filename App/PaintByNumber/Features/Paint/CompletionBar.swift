@@ -39,8 +39,6 @@ struct CompletionBar: View {
     #if UNRELEASED
     /// The doors under the row (`FinishedDoors`), laid as these say; nil is the bar alone.
     var doors: DoorMetrics?
-    /// Change It's way into Edit (`PaintView.onChange`).
-    var onChange: (() -> Void)?
     /// The Original's work (`PaintView.libraryPicture`); nil leaves that door out.
     var original: OriginalWork?
     /// Opens The Original's page (`PaintView`'s sheet).
@@ -55,8 +53,9 @@ struct CompletionBar: View {
     nonisolated static let doorsInset: CGFloat = 16
 
     #if UNRELEASED
-    /// The panel's widest with so many doors: a fifth door (The Original) widens it by a door, so
-    /// a row of five on an iPad keeps the arches of a row of four, and their captions one line.
+    /// The panel's widest with so many doors: four fit `panelWidth`; a fifth would widen it by a
+    /// door, so a row of five on an iPad would keep the arches of a row of four and their captions
+    /// one line.
     nonisolated static func widestPanel(doors: Int) -> CGFloat {
         let door = (panelWidth - 2 * doorsInset - 3 * DoorMetrics.gap) / 4
         return max(panelWidth, 2 * doorsInset + CGFloat(doors) * door + CGFloat(doors - 1) * DoorMetrics.gap)
@@ -96,11 +95,11 @@ struct CompletionBar: View {
             .padding(.horizontal, 18)
             .padding(.vertical, 8)
             .frame(minHeight: Self.height)
-            FinishedDoors(session: session, title: title, picture: share.picture, metrics: doors, onChange: onChange, original: original, onOriginal: onOriginal, onPrint: onPrint, onSend: onShareTimelapse)
+            FinishedDoors(session: session, title: title, picture: share.picture, metrics: doors, original: original, onOriginal: onOriginal, onPrint: onPrint, onSend: onShareTimelapse)
                 .padding(.horizontal, Self.doorsInset)
                 .padding(.bottom, Self.doorsInset)
         }
-        .frame(maxWidth: Self.widestPanel(doors: FinishedDoor.shown(changes: onChange != nil, original: original != nil).count))
+        .frame(maxWidth: Self.widestPanel(doors: FinishedDoor.shown(original: original != nil).count))
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         .glassEffect(.regular, in: .rect(cornerRadius: 30, style: .continuous))
         .task(id: session.revision) { await share.prepare(for: session) }

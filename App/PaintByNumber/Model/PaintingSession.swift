@@ -94,8 +94,9 @@ final class PaintingSession {
     /// While the canvas replays the painting: how many of its areas are on screen, in the order
     /// they were painted (all as the paint starts to lift, none once it has gone, then each as its
     /// fill begins); nil otherwise. The painting itself is untouched: `progress` stays whole.
-    /// Only the progress badge reads it (`shownPaintedCount`, `shownFraction`,
-    /// `shownPaintedByColor`), so it says what the canvas shows.
+    /// Only the release's progress badge reads it (`shownPaintedCount`, `shownFraction`,
+    /// `shownPaintedByColor`), so it says what the canvas shows; SideStore builds' badge stays whole
+    /// (`PaintView`'s `badgePaintedCount`).
     private(set) var replayed: Int?
     /// A replay plays: Undo waits and Replay becomes Stop. Stored apart from `replayed`, which
     /// changes many times a second, so the screen around the badge renders only as it starts and ends.

@@ -46,7 +46,7 @@ struct TemplatePreviewView: View {
     @State private var offersRefineUnlock = false
     /// The setting the one slider of a compact window tunes; nil until the painter picks one.
     @State private var tunedSetting: Setting?
-    /// The painter opened Adjust, and the card shows its settings from then on (`foldsSettings`).
+    /// The painter opened Fine-Tune, and the card shows its settings from then on (`foldsSettings`).
     @AppStorage(SettingsKey.previewShowsSettings) private var opensSettings = SettingsDefault.previewShowsSettings
     #if UNRELEASED
     /// With the show on, the picture forming brings no lines: the show takes the photo.
@@ -259,7 +259,7 @@ struct TemplatePreviewView: View {
         guard room.width.isFinite, room.height.isFinite, room.width > 0, room.height > 0 else { return false }
         // The stacked controls card: title row, settings chip, the sliders (one and its chooser in
         // a compact window), summary, Start and the free paintings under it.
-        // With its settings shown, folded or not: Adjust then never moves the card from under the finger.
+        // With its settings shown, folded or not: Fine-Tune then never moves the card from under the finger.
         let card: CGFloat = (room.width < Self.compactWidth ? 364 : (hasLines ? 512 : 460)) + (showsFreeCount ? 30 : 0)
         let stacked = Self.fittedArea(
             width: room.width - 2 * sidePadding, height: room.height - card, aspect: photoAspect)
@@ -567,8 +567,18 @@ struct TemplatePreviewView: View {
         return CompareView(
             photo: source.preview, after: model.preview?.picture, afterID: model.preview?.id.uuidString ?? "none",
             afterLabel: model.previewStyle.name,
-            beforeLabel: model.isDrawing ? String(localized: "Drawing") : String(localized: "Photo"),
+            beforeLabel: beforeLabel(of: source),
             compares: !model.isScratch && !isWaitOnly, aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged)
+    }
+
+    /// The comparison's name for the picture the painting is made from. A library picture is a
+    /// painting or a print, not a photo, in SideStore builds (the UI pass of Nov 18, 2026).
+    private func beforeLabel(of source: CreateModel.Source) -> String {
+        if model.isDrawing { return String(localized: "Drawing") }
+        #if UNRELEASED
+        if source.sampleName != nil { return String(localized: "Original") }
+        #endif
+        return String(localized: "Photo")
     }
 
     #if UNRELEASED
@@ -740,7 +750,7 @@ struct TemplatePreviewView: View {
         .duoProbe("preview-card")
     }
 
-    /// The settings' origin, and in SideStore and Debug builds Adjust beside it (`foldsSettings`).
+    /// The settings' origin, and in SideStore and Debug builds Fine-Tune beside it (`foldsSettings`).
     @ViewBuilder
     private var originRow: some View {
         if Self.foldsSettings {
@@ -809,10 +819,10 @@ struct TemplatePreviewView: View {
 
     /// In SideStore and Debug builds (`UNRELEASED`, until a Lamplit Table round and Paul choose it for
     /// the release) the card folds its settings away: the title, the suggestion, the summary and
-    /// Start Painting, and Adjust, which shows the sliders as they are and keeps them shown for
+    /// Start Painting, and Fine-Tune, which shows the sliders as they are and keeps them shown for
     /// whoever opened it (`SettingsKey.previewShowsSettings`). The first-five-minutes walk, October
     /// 23: four questions a newcomer can't answer, while Already Chosen for You says to just tap
-    /// Start Painting; Paul: "let's build them all". Adjust alone shows or folds them: settings of
+    /// Start Painting; Paul: "let's build them all". Fine-Tune alone shows or folds them: settings of
     /// the painter's own (from the enlarged preview) fold too, the chip saying Custom with its Reset
     /// to Suggested, so no slider goes from under a finger as its drag comes back to its detent.
     #if UNRELEASED
@@ -831,7 +841,7 @@ struct TemplatePreviewView: View {
             withAnimation(reduceMotion ? nil : .settle) { opensSettings.toggle() }
         } label: {
             HStack(spacing: 4) {
-                Text("Adjust")
+                Text("Fine-Tune")
                 Image(systemName: "chevron.down")
                     .rotationEffect(.degrees(opensSettings ? 180 : 0))
                     .accessibilityHidden(true)
