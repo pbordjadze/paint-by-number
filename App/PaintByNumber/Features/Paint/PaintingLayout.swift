@@ -261,6 +261,32 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
             insets: Self.uiInsets(canvasInsets, rightToLeft: rightToLeft))
     }
 
+    /// What a painting's page is laid out by before its screen is built: its template's size
+    /// (canvas units), its colors (`PaletteBar.visibleColorCount`) and whether it is finished.
+    nonisolated struct Opening: Equatable, Sendable {
+        var size: CGSize
+        var colors: Int
+        var isComplete: Bool
+    }
+
+    /// The painting screen's inputs in a view of `size` inside the safe area `safe` (its
+    /// `GeometryProxy`'s), the fold where `foldPlace` puts it or else where the window has it. One
+    /// recipe for `PaintView`'s layout and for the thumbnail a painting opens on
+    /// (`ArtworkPaintingView`), so the thumbnail lands where the canvas then puts the page and
+    /// nothing moves as the painting takes its place (painting-company row 364).
+    @MainActor
+    static func screen(
+        size: CGSize, safe: EdgeInsets, regularWidth: Bool, dynamicTypeSize: DynamicTypeSize, rows: PaletteRows,
+        colors: Int, isComplete: Bool, completionHeight: CGFloat? = nil, foldPlace: FoldPlace?, rightToLeft: Bool
+    ) -> Inputs {
+        Inputs(
+            size: size, safe: safe, regularWidth: regularWidth, dynamicTypeSize: dynamicTypeSize, rows: rows,
+            colors: colors, isComplete: isComplete, completionHeight: isComplete ? completionHeight : nil,
+            fold: foldPlace == nil
+                ? FoldWatch.shared.windowFold(rightToLeft: rightToLeft)
+                : fold(foldPlace, rightToLeft: rightToLeft, safe: safe))
+    }
+
     /// The active fold of a half-open iPhone Duo in the whole screen's coordinates (x from the
     /// leading edge), from where it is in a view that stops at the safe area (`FoldPlace`, as
     /// `PaintView` reads it). Nil when the device is flat or closed, and on every other device.

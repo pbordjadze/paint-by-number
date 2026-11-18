@@ -18,6 +18,9 @@ struct ArtworkPaintingView: View {
     /// cover, which dissolves into it once the canvas has drawn (`StartHandoff`).
     @Environment(\.startHandoff) private var handoff
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
+    @AppStorage(SettingsKey.paletteRows) private var paletteRows = PaletteRows.default
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.colorScheme) private var colorScheme
     @State private var autosaver: PaintingAutosaver?
     /// Made once when the painting is presented, not in `body`: each autosave replaces the
@@ -37,6 +40,9 @@ struct ArtworkPaintingView: View {
     /// The painting was opened under the cover: built then, it stays built once the hand-off is
     /// over (no longer awaiting) though the push may not have landed yet.
     @State private var builtUnderCover = false
+    /// The safe area is as the painting has it, the status bar gone (or never in the way):
+    /// `waitingPage` sees it, or `land` stops waiting for it (`statusBarWait`).
+    @State private var statusBarGone = false
     /// Back was tapped: the status bar is back before the pop starts (`close`).
     @State private var leaving = false
     @State private var failure: Library.OpenError?
@@ -128,9 +134,99 @@ struct ArtworkPaintingView: View {
     /// dissolves.
     private var isUnderCover: Bool { handoff?.isAwaiting(artworkID) == true }
 
-    /// The painting screen takes the thumbnail's place: once the push has landed, or at once under
-    /// the cover (`hasLanded`).
-    private var isBuilt: Bool { hasLanded || builtUnderCover }
+    /// The painting screen takes the thumbnail's place: once the push has landed and the status
+    /// bar has gone (built before the safe area followed, the canvas's first frames put the page
+    /// lower on an iPad, and it moved up), or at once under the cover (`hasLanded`).
+    private var isBuilt: Bool { (hasLanded && statusBarGone) || builtUnderCover }
+
+    /// What the zoom transition shows, and where it lands while the painting loads: the thumbnail
+    /// just where the canvas will open the page, laid out by `PaintView`'s own recipe
+    /// (`PaintingLayout.screen`) in the safe area the painting will have once its status bar has
+    /// gone (`withoutStatusBar`). Centered on the whole screen, it jumped up and grew as the
+    /// painting took its place (painting-company row 364). The status bar stays while it shows:
+    /// hidden as the zoom began, an iPad's gallery behind it would move up under the card.
+    private func waitingPage(_ artwork: Artwork) -> some View {
+        GeometryReader { geo in
+            let safe = Self.directed(Self.withoutStatusBar(geo.safeAreaInsets), rightToLeft: rightToLeft)
+            let size = CGSize(
+                width: geo.size.width, height: geo.size.height + geo.safeAreaInsets.top - safe.top)
+            let page = Self.waitingPlace(
+                of: waitingTemplate(artwork), size: size, safe: safe,
+                regularWidth: sizeClass == .regular, dynamicTypeSize: dynamicTypeSize, rows: paletteRows,
+                foldPlace: foldPlace, rightToLeft: rightToLeft)
+            ArtworkThumbnail(artwork: artwork, contentMode: .fit)
+                .frame(width: page.width, height: page.height)
+                .overlay {
+                    if autosaver == nil { ProgressView().controlSize(.large) }
+                }
+                // `page` is in the whole screen's coordinates, UIKit's left and right.
+                .position(x: page.midX - geo.safeAreaInsets.leading, y: page.midY - geo.safeAreaInsets.top)
+                .onChange(of: geo.safeAreaInsets.top <= safe.top, initial: true) { _, gone in
+                    if gone { barWentAway() }
+                }
+        }
+        // The status bar goes once the zoom has landed (the gallery behind it would move up under
+        // the card as it came), and the painting is built in the safe area that follows.
+        .statusBarHidden(hasLanded && !leaving)
+        // Left to right, so the position is UIKit's whatever the language (the page was mirrored
+        // already) and the safe area's leading edge is its left.
+        .environment(\.layoutDirection, .leftToRight)
+    }
+
+    /// `insets` as they are once the painting has hidden the status bar, before and after it goes:
+    /// where the bar alone keeps the top clear (an iPad, a phone with no sensor housing) and the
+    /// window is the whole screen (elsewhere it stays), no top at all; else as they are. Never read
+    /// from whether the bar is hidden: UIKit says so a moment before the safe area follows
+    /// (`CreateFlowView.letStatusBarGo`), which would move the thumbnail for that moment.
+    static func withoutStatusBar(_ insets: EdgeInsets) -> EdgeInsets {
+        guard let scene = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first(where: { $0.activationState == .foregroundActive }),
+            scene.isFullScreen,
+            Self.statusBarSetsTheTop(idiom: scene.traitCollection.userInterfaceIdiom, insets: insets)
+        else { return insets }
+        var without = insets
+        without.top = 0
+        return without
+    }
+
+    /// Whether the top safe area is the status bar's alone, as the create flow decides it.
+    static func statusBarSetsTheTop(idiom: UIUserInterfaceIdiom, insets: EdgeInsets) -> Bool {
+        idiom == .pad || insets.bottom == 0
+    }
+
+    private var rightToLeft: Bool { layoutDirection == .rightToLeft }
+
+    /// The size, colors and state the page is laid out by: the loaded template's once there is one,
+    /// the artwork's record until then.
+    private func waitingTemplate(_ artwork: Artwork) -> PaintingLayout.Opening {
+        if let session = autosaver?.session {
+            return PaintingLayout.Opening(
+                size: CGSize(width: session.template.width, height: session.template.height),
+                colors: PaletteBar.visibleColorCount(session.template), isComplete: session.isComplete)
+        }
+        return PaintingLayout.Opening(
+            size: CGSize(width: artwork.width, height: artwork.height), colors: artwork.colorCount,
+            isComplete: artwork.isComplete)
+    }
+
+    /// Safe-area insets read in a left-to-right view as they are in the painting's direction.
+    static func directed(_ insets: EdgeInsets, rightToLeft: Bool) -> EdgeInsets {
+        guard rightToLeft else { return insets }
+        return EdgeInsets(top: insets.top, leading: insets.trailing, bottom: insets.bottom, trailing: insets.leading)
+    }
+
+    /// Where the canvas will first show the page of `opening` in a view of `size` inside `safe`:
+    /// the whole screen's coordinates, as `PaintView` lays itself out there.
+    static func waitingPlace(
+        of opening: PaintingLayout.Opening, size: CGSize, safe: EdgeInsets, regularWidth: Bool,
+        dynamicTypeSize: DynamicTypeSize, rows: PaletteRows, foldPlace: FoldPlace?, rightToLeft: Bool
+    ) -> CGRect {
+        let inputs = PaintingLayout.screen(
+            size: size, safe: safe, regularWidth: regularWidth, dynamicTypeSize: dynamicTypeSize, rows: rows,
+            colors: opening.colors, isComplete: opening.isComplete, foldPlace: foldPlace, rightToLeft: rightToLeft)
+        return PaintingLayout(inputs).page(of: opening.size, inputs: inputs, rightToLeft: rightToLeft)
+    }
 
     /// What the canvas tells once its first frame is on screen, while the cover waits for it, and
     /// when a layout moves the template after that.
@@ -197,13 +293,7 @@ struct ArtworkPaintingView: View {
                     }
                     #endif
             } else if let artwork {
-                // What the zoom transition shows, and where it lands while the template loads.
-                ArtworkThumbnail(artwork: artwork, contentMode: .fit)
-                    .aspectRatio(artwork.aspectRatio, contentMode: .fit)
-                    .padding(20)
-                    .overlay {
-                        if autosaver == nil { ProgressView().controlSize(.large) }
-                    }
+                waitingPage(artwork)
             }
         }
         // Below PaintView's top bar (6 pt inset + 44 pt buttons).
@@ -429,6 +519,24 @@ struct ArtworkPaintingView: View {
     private func land() {
         guard !hasLanded else { return }
         withAnimation(isUnderCover ? nil : .easeOut(duration: 0.25)) { hasLanded = true }
+        // Should the safe area never be seen to follow (a window laid out otherwise), the painting
+        // comes all the same.
+        Task {
+            try? await Task.sleep(for: Self.statusBarWait)
+            barWentAway()
+        }
+        #if DEBUG
+        markDemoReady()
+        #endif
+    }
+
+    /// The most the painting waits, once landed, for the safe area to follow the status bar.
+    private static let statusBarWait: Duration = .milliseconds(400)
+
+    /// The status bar is out of the way: the painting may be built (`isBuilt`).
+    private func barWentAway() {
+        guard !statusBarGone else { return }
+        withAnimation(isUnderCover ? nil : .easeOut(duration: 0.25)) { statusBarGone = true }
         #if DEBUG
         markDemoReady()
         #endif
@@ -438,7 +546,7 @@ struct ArtworkPaintingView: View {
     /// `gallery-open` and `gallery-received` are ready once the painting is on screen,
     /// `gallery-fine-tune` once Fine-Tune's sheet has risen over it.
     private func markDemoReady() {
-        guard autosaver != nil, hasLanded else { return }
+        guard autosaver != nil, hasLanded, statusBarGone else { return }
         #if UNRELEASED
         if ShellDemo.current == .galleryFineTune, !fineTuning {
             fineTuning = true
