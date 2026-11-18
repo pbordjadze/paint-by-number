@@ -64,6 +64,9 @@ struct PaintView: View {
     var onHidesLines: ((Bool) -> Void)?
 
     @State private var controller = CanvasController()
+    #if UNRELEASED
+    @Environment(\.paintTogether) private var paintTogether
+    #endif
     @Environment(\.startHandoff) private var startHandoff
     @State private var chrome = PaintChromeState()
     @State private var showsNumbers = true
@@ -801,6 +804,12 @@ struct PaintView: View {
             }
             #endif
             Toggle(isOn: $zenMode) { Label("Zen Mode", systemImage: "leaf") }
+            #if UNRELEASED
+            if let paintTogether, !session.isComplete {
+                Button { paintTogether() } label: { Label("Paint Together", systemImage: "shareplay") }
+                    .accessibilityIdentifier("paint-together")
+            }
+            #endif
             Button { controller.zoomToFit() } label: { Label("Fit to Screen", systemImage: "arrow.down.right.and.arrow.up.left") }
             if !barShowsHint, !session.isComplete {
                 Button { controller.showHint() } label: { Label("Show Hint", systemImage: "lightbulb") }
@@ -820,7 +829,14 @@ struct PaintView: View {
             }
             Button(action: startFeedback) { Label("Give Feedback…", systemImage: "exclamationmark.bubble") }
             Divider()
+            #if UNRELEASED
+            // Painting together, a restart would clear only this side.
+            if !TogetherLink.shared.isActive {
+                Button(role: .destructive) { confirmRestart = true } label: { Label("Restart", systemImage: "arrow.counterclockwise") }
+            }
+            #else
             Button(role: .destructive) { confirmRestart = true } label: { Label("Restart", systemImage: "arrow.counterclockwise") }
+            #endif
         } label: {
             Image(systemName: "ellipsis")
                 .font(.body.weight(.semibold))

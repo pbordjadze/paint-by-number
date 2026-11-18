@@ -447,6 +447,63 @@ final class PaintingSession {
         return event
     }
 
+    /// Unpaints these areas wherever they are in the log, in the order given; returns those that
+    /// were painted. Undo goes through here (`PaintChromeState`): painting together, the last
+    /// fills in the log may be the friend's, and undo takes back only the painter's own.
+    @discardableResult
+    func unpaint(_ regions: [Int]) -> [Int] {
+        var undone: [Int] = []
+        for region in regions where progress.unpaint(region) {
+            undone.append(region)
+            remainingByColor[colorOf(region)] += 1
+        }
+        guard !undone.isEmpty else { return [] }
+        revision += 1
+        updateMilestones(colors: Set(undone.map(colorOf)))
+        if selectedColor == nil, let first = undone.first { select(color: colorOf(first)) }
+        canvas?.session(self, didUnpaint: undone)
+        for region in undone { emit(.undone(region: region)) }
+        return undone
+    }
+
+    /// Whether the event being sent came from the friend painting with this painter (Paint
+    /// Together), so observers leave out what is only the painter's own: undo, tips, louder
+    /// feedback.
+    @ObservationIgnored private(set) var isApplyingFriend = false
+
+    /// The friend's fills and take-backs, painted as they come: none of the single painter's
+    /// rules (a stroke's undo, Advance to Next Color, Zen Mode's flight) answer them, so nothing
+    /// the friend does moves this painter's brush or view. `origin` is where the friend's paint
+    /// spreads from.
+    func applyFriend(painted: [Int], unpainted: [Int], from origin: SIMD2<Float>) {
+        let valid = 0..<progress.regionCount
+        isApplyingFriend = true
+        defer { isApplyingFriend = false }
+        var newly: [Int] = []
+        for r in painted where valid.contains(r) && progress.paint(r) {
+            newly.append(r)
+            remainingByColor[colorOf(r)] -= 1
+        }
+        var gone: [Int] = []
+        for r in unpainted where valid.contains(r) && progress.unpaint(r) {
+            gone.append(r)
+            remainingByColor[colorOf(r)] += 1
+        }
+        guard !newly.isEmpty || !gone.isEmpty else { return }
+        revision += 1
+        let colors = Set((newly + gone).map(colorOf))
+        updateMilestones(colors: colors)
+        if !gone.isEmpty {
+            canvas?.session(self, didUnpaint: gone)
+            for r in gone { emit(.undone(region: r)) }
+        }
+        guard !newly.isEmpty else { return }
+        canvas?.session(self, didPaint: newly, from: origin, animated: !reduceMotion)
+        emit(.painted(regions: newly, color: colorOf(newly[0])))
+        for c in colors.filter({ remainingByColor[$0] == 0 }).sorted() { emit(.colorCompleted(c)) }
+        if progress.isComplete { emit(.artworkCompleted) }
+    }
+
     /// Unpaints the most recent fill; returns its region.
     @discardableResult
     func undo() -> Int? {

@@ -186,6 +186,13 @@ below name both alike.
 - `Resources/`: asset catalog, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Models/` (the two
   `.mlpackage`s), `Samples/` (`library.json` and the pictures), `PrivacyInfo.xcprivacy`.
 - `Outside/` (`#if UNRELEASED`): the app's side of its widgets and stickers (Outside the app, below).
+- `Together/` (`#if UNRELEASED`; painting-company row 350, design `factory/pieces/shareplay/`):
+  Paint Together over SharePlay. `TogetherLink` starts and joins sessions and sends the painting
+  through the journal (the guest's arrives as a received painting); `TogetherEngine` syncs one
+  `PaintingSession` through PaintCore's `Together/` (ledger, messages, batcher), painting the
+  friend's fills with `PaintingSession.applyFriend` (no undo, advance, Zen or haptic of theirs);
+  undo takes back the painter's own areas (`PaintingSession.unpaint`). The group-session
+  entitlement and `NSSupportsGroupActivities` wait on a device test; `PaintTogetherTests`.
 - `App/Config/Info.plist` holds what the generated plist can't express: the image document type, the
   scene manifest, ProMotion on iPhone, and the launch screen's `Paper` color (a white launch screen
   flashed before the gallery's paper; `ci/check_release.sh` checks it).

@@ -38,6 +38,18 @@ nonisolated struct PaintProgress: Sendable, Equatable {
         return true
     }
 
+    /// Unpaints `region` wherever its fill sits in the log; returns false if it wasn't painted.
+    /// Painting together, the most recent fill may be the friend's, so a painter's undo names
+    /// the areas it takes back (`PaintingSession.unpaint`).
+    @discardableResult
+    mutating func unpaint(_ region: Int) -> Bool {
+        guard painted.indices.contains(region), painted[region],
+              let at = log.lastIndex(where: { $0.region == UInt32(region) }) else { return false }
+        painted[region] = false
+        log.remove(at: at)
+        return true
+    }
+
     /// Reverts the most recent fill.
     mutating func undo() -> Int? {
         guard let last = log.popLast() else { return nil }

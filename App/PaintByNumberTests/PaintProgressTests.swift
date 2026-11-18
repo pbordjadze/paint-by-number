@@ -9,6 +9,19 @@ import Testing
 struct PaintProgressTests {
     let template = Fixtures.mosaic
 
+    /// Unpainting an area takes its fill out of the log wherever it is (Paint Together's undo),
+    /// and the log still encodes and reads back.
+    @Test func unpaintTakesOneFillFromAnywhereInTheLog() throws {
+        var p = PaintProgress(regionCount: 5)
+        for r in [0, 3, 1] { p.paint(r) }
+        // A mutating call can't sit inside #expect.
+        let first = p.unpaint(3), again = p.unpaint(3), never = p.unpaint(4), outside = p.unpaint(99)
+        #expect(first && !again && !never && !outside)
+        #expect(p.log.map(\.region) == [0, 1])
+        #expect(!p.isPainted(3))
+        #expect(try PaintProgress(encoded: p.encoded()) == p)
+    }
+
     @Test func progressSurvivesEncoding() throws {
         let session = PaintingSession(template: template)
         session.paint([3, 1, 4, 1, 5, 9, 2, 6], from: .zero, animated: false)
