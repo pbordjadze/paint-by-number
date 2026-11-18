@@ -205,6 +205,14 @@ jobs:
           python3 tools/strings_check.py --self-test
           python3 tools/l10n.py self-test
           python3 tools/strings_check.py | tee out/strings-check.log
+      - name: Design budget
+        # Controls, menu items and choices counted against ci/design-budget.json: a warning on the
+        # run and a line in STATUS.md, never a failure (soft limits since November 17, 2026).
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          mkdir -p out
+          { python3 ci/budget.py --self-test && python3 ci/budget.py; } 2>&1 | tee out/design-budget.log || true
       - name: CI report script
         # The report job runs ci/report.py once, at the end: a break there costs every waiter the run.
         if: ${{ !cancelled() }}

@@ -7,7 +7,7 @@ import UIKit
 @testable import PaintByNumber
 
 /// Print… (a painting's More menu, a gallery card's menu; painting-company row 240): what it
-/// hands the print dialog is Print Template…'s PDF, from the gallery's saved painting and from an
+/// hands the print dialog is the template's PDF (`PDFExporter.document`), from the gallery's saved painting and from an
 /// open painting's session alike, and for a painting someone sent.
 @MainActor
 struct TemplatePrintTests {

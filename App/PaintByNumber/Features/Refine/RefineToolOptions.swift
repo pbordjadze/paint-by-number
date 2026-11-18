@@ -5,7 +5,7 @@ import SwiftUI
 import UIKit
 
 /// What the picked tool offers above the tools: Shapes' figures, Snap where lines join, the
-/// Pen's Color from Photo, the looks, and the current paint's color.
+/// Pen's Color from Photo, and the current paint's color.
 struct RefineToolOptions: View {
     @Bindable var refine: RefineModel
     /// The tools stand in a column beside the picture (`RefineView.usesSide`), the options bare
@@ -56,12 +56,11 @@ struct RefineToolOptions: View {
             optionBar { sizeSlider($brushSize, id: "refine-brush-size") }
         case .eraser, .smartEraser:
             optionBar { sizeSlider($eraserSize, id: "refine-eraser-size") }
-        case .looks, .editPaint:
+        case .editPaint:
             if let base = refine.base {
                 RefineColorsPanel(
-                    template: base.template, paintsBefore: model.paintsBeforeEdits, edits: base.refinements.edits,
-                    mode: refine.tool == .looks ? .looks : .paint, paint: currentIndexBinding, family: $refine.colorFamily,
-                    change: refine.recolor)
+                    template: base.template, edits: base.refinements.edits,
+                    paint: currentIndexBinding, family: $refine.colorFamily, change: refine.recolor)
                     .disabled(model.phase == .generating || !model.hasLineArtInput)
                     .transition(.opacity)
             }

@@ -140,7 +140,7 @@ nonisolated struct RefineGuidePage {
 
                     - Ink: the Pen, Shapes, Bend Line, the Eraser and the Line Eraser
                     - Cells: Select, Cell Edge, Merge, Move Edge and Make Cell
-                    - Paint: the Bucket, the Paint Brush, the Eyedropper, Edit Paint and Looks
+                    - Paint: the Bucket, the Paint Brush, the Eyedropper and Edit Paint
                     - Numbers: Move Number
                     - See: Writing and Try Painting
 
@@ -184,7 +184,7 @@ nonisolated struct RefineGuidePage {
 
                     - Ink: the Pen, Shapes, Bend Line, the Eraser and the Line Eraser
                     - Cells: Select, Cell Edge, Merge, Move Edge and Make Cell
-                    - Colors: the Bucket, the Paint Brush, the Eyedropper, Edit Paint and Looks
+                    - Colors: the Bucket, the Paint Brush, the Eyedropper and Edit Paint
                     - Numbers: Move Number
                     - See: Writing and Try Painting
 
@@ -577,29 +577,13 @@ nonisolated struct RefineGuidePage {
 
                     To recolor a single cell, use the [Bucket](guide:bucket), or select it with [Select](guide:select) and tap Change Color.
 
-                    Choosing one of the [Looks](guide:looks), or going back to the photo’s colors there, undoes every change made here.
+                    Photo’s Colors, which appears once a paint has changed, undoes every change made here.
 
                     ## On the practice picture
                     Pick the near hill and turn it an autumn orange; with Similar colors too on, watch the tree’s greens follow it. Then drag the window’s swatch onto the moon’s.
                     """,
                              comment: "Tool Guide, Edit Paint: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
                 practice: RefinePracticeSetup(scene: .painted, tool: .editPaint))
-        case .looks:
-            RefineGuidePage(
-                summary: String(localized: "refine.guide.looks.summary", defaultValue: "Recolors every paint at once, in a mood.",
-                                comment: "Tool Guide, Looks: one line under its name in the guide's list (iPhone)"),
-                text: String(localized: "refine.guide.looks.text", defaultValue: """
-                    A look moves every paint toward a time of day or a mood, while light parts stay light and dark parts dark: Moonlit, Golden Hour, Pastel, Garden or Starry Night. Once you’ve chosen one, Strength sets how far it goes. It starts at full each time you choose a look, and the picture changes when you let go of the slider. The Photo choice, beside the looks, goes back to your photo’s own colors.
-
-                    You can have one look at a time. Choosing a look, or Photo, also takes away every change made with [Edit Paint](guide:editPaint), while colors you gave single cells, with the Bucket, the Paint Brush or Only This Area, stay. So choose your look first, then adjust single paints.
-
-                    When a look makes two paints too alike, they become one paint, and the note says “Colors that came out alike share a number now.”
-
-                    ## On the practice picture
-                    Try each look on the evening scene, then bring Golden Hour’s Strength down to half.
-                    """,
-                             comment: "Tool Guide, Looks: the page's words. A paragraph per blank line; a line starting \"## \" is a heading in the reader's words, one starting \"- \" a list item; [name](guide:id) links another page (keep the guide:id). Quoted notes are Refine's own messages and the named controls its own labels: keep them as the app shows them"),
-                practice: RefinePracticeSetup(scene: .painted, tool: .looks))
         case .moveNumber:
             RefineGuidePage(
                 summary: String(localized: "refine.guide.moveNumber.summary", defaultValue: "Moves a number to a better spot in its cell.",

@@ -31,13 +31,13 @@ import PaintCore
 /// - `create-samples-paintings`, `create-samples-photographs`: the Samples pane scrolled to its
 ///   Paintings or Photographs section.
 /// - `create-preview`, `create-preview-dark`: the painting starter generated, comparison at half.
-/// - `create-line-art`: `create-preview` with Settings › Preview on Line Art: the drawing alone
+/// - `create-line-art`: `create-preview` showing its line art: the drawing alone
 ///   beside the photo.
 /// - `create-refine`, `-dark`, `-long-text`: The Great Wave's Refine screen, refined as a painter
 ///   might (`refinements(canvas:)`, edits made to the template by hand): the big cloud's edge drawn
 ///   in, exactly as drawn, the spray off the wave's crest rubbed out.
-/// - `create-refine-colors`, `create-refine-colors-dark`: the same, in Starry Night, with Refine's
-///   Looks open over the painting (`RefineColorsPanel`).
+/// - `create-refine-colors`, `create-refine-colors-dark`: the same, in Starry Night (a look laid
+///   before Looks left Refine), with Edit Paint open and its Photo’s Colors (`RefineColorsPanel`).
 /// - `create-refine-colors-picked`, `create-refine-colors-picked-dark`: Edit Paint with the paint
 ///   used by the most areas the current paint, all of those areas glowing (`RefinePaintGlow`).
 /// - `create-refine-card`, `-dark`, `-long-text`: Select with the largest area selected and its
