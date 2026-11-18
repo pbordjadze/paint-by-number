@@ -103,8 +103,14 @@ final class MakingOfPlayer {
 
     private func perform(_ source: MakingOfSource, reduceMotion: Bool) async {
         do {
+            #if DEBUG
+            TourLog.trace("mark", "making-of-build begin")
+            #endif
             let built = try await MakingOfShow.build(source)
             try Task.checkCancellation()
+            #if DEBUG
+            TourLog.trace("mark", "making-of-build end")
+            #endif
             self.built = built
             if reduceMotion {
                 try await playStills(built)

@@ -105,7 +105,8 @@ final class CanvasView: UIView, PaintingCanvas {
     var watchesFirstFrame = false {
         didSet { if watchesFirstFrame { selectionFade = Fade(from: 0, to: 0, duration: selectionFade.duration) } }
     }
-    /// The first frame is on screen (a tenth of a second after the GPU finished it).
+    /// The first frame is on screen (as its drawable was shown, or a tenth of a second after the
+    /// GPU finished it: `CanvasRenderer.draw`'s `onPresented`).
     private(set) var hasShownFirstFrame = false
     /// Built out of sight before Start Painting (`PaintScreenWarmup`): it takes no first responder
     /// from the screen in sight, and tells VoiceOver and Switch Control nothing. Set before the

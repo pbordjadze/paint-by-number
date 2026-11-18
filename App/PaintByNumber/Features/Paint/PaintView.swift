@@ -513,14 +513,20 @@ struct PaintView: View {
     private func reportTemplate(to report: (CGRect) -> Void) async {
         var previous: CGRect?
         var announced: CGRect?
-        for _ in 0..<600 {
-            try? await Task.sleep(for: .milliseconds(100))
+        // Every refresh or so until the first report, every tenth of a second after it: the
+        // cover waits for that first one (painting-company row 361), a rotation can wait.
+        var steady = 0
+        let deadline = ContinuousClock.now + .seconds(60)
+        while ContinuousClock.now < deadline {
+            try? await Task.sleep(for: .milliseconds(announced == nil ? 16 : 100))
             guard !Task.isCancelled, startHandoff?.isRunning == true else { return }
             guard controller.isShowingFirstFrame, let frame = controller.templateFrameInWindow else { continue }
+            steady = frame == previous ? steady + 1 : 0
             defer { previous = frame }
             guard frame != announced else { continue }
-            // The first time, once two looks agree; after that, as it moves.
-            if announced != nil || frame == previous {
+            // The first time, once it has stayed put for three refreshes (the tenth of a second
+            // two looks used to span); after that, as it moves.
+            if announced != nil || steady >= 3 {
                 announced = frame
                 report(frame)
             }
