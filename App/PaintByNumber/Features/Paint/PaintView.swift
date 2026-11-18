@@ -908,7 +908,7 @@ struct PaintView: View {
             PaletteBar(
                 session: session, axis: palette.side ? .vertical : .horizontal, lines: palette.lines,
                 shakes: chrome.shakes, metrics: palette.metrics, showsCurrentColor: palette.caption,
-                order: colorOrder, keepsPlaces: PaintingLayout.paletteKeepsPlaces(paletteOrder, lines: palette.lines))
+                order: colorOrder)
         }
     }
 

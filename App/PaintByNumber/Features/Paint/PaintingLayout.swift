@@ -95,20 +95,6 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
     /// Where a side palette starts, below the top bar.
     static func sidePaletteTop(regularWidth: Bool) -> CGFloat { topGap + barHeight(regularWidth: regularWidth) + 12 }
 
-    /// Whether the palette keeps every color in its place, a finished one as a spent well
-    /// (`PaletteBar.keepsPlaces`): in SideStore and Debug builds (painting-company row 293), in
-    /// every order but those the painter chose for following the areas left, which re-sort at
-    /// every fill by their nature, and only on a bar of several `lines`, which shows every color
-    /// at once: a phone's one scrolling line would fill with wells from its start and keep the
-    /// colors to come out of sight. The release packs the swatches left again at every finish.
-    static func paletteKeepsPlaces(_ order: PaletteOrder, lines: Int) -> Bool {
-        #if UNRELEASED
-        !order.followsProgress && lines > 1
-        #else
-        false
-        #endif
-    }
-
     init(_ inputs: Inputs) {
         let screen = CGSize(
             width: inputs.size.width + inputs.safe.leading + inputs.safe.trailing,
