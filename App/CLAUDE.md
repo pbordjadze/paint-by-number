@@ -24,7 +24,7 @@ synchronized folder would bundle it into the app.
   turns off: they stole canvas gestures (`PaintingNavigationTests` guards this). It shows the
   painting only once the push has landed: the transition lays the screen out every frame, and
   the painting screen rendered at each frame (hundreds of renders) stopped CI's simulator
-  answering UI tests for up to half a minute. The painting Start Painting makes is pushed the
+  answering UI tests for up to half a minute. Until then the thumbnail stands exactly where the canvas will open the page, laid out by `PaintView`'s own recipe (`PaintingLayout.screen`, `ArtworkPaintingView.waitingPage`, in the safe area the painting has without its status bar; `OpeningPlaceTests` holds it on every screen size), the status bar goes once the zoom has landed (earlier, an iPad's gallery moved up under the card) and the painting is built once the safe area has followed, so it never moves as it takes the thumbnail's place (painting-company row 364); a finished painting's doors panel is laid out to a height counted before the screen is built, never measured (`CompletionBar.panelHeight`, `DoorMetrics.labelRoom`, `PaintingLayout.doorMetrics`), which `OpeningPlaceTests` measures in English and German. The painting Start Painting makes is pushed the
   usual way, its zoom unseen under the create flow's cover (with no animation at all the edge
   swipe back never worked), and shows without fading (`StartHandoff`); it is built at once there,
   not after the push (`isBuilt`, `builtUnderCover`: the unseen zoom cost Start 0.8 s on an iPad,
@@ -311,13 +311,13 @@ below name both alike.
   the device can't print, it shares the template's PDF) and Send It shares the painting's
   time-lapse, `PaintView.shareTimelapse`; the panel's row has no Share, the gallery's card shares
   the picture), laid by `DoorMetrics` in at most `PaintingLayout.doorsShare`
-  of the screen; `PaintView` measures the panel and the canvas makes room for it
-  (`PaintingLayout.Inputs.completionHeight`). `paint-complete` (with `-dark`) is its screenshot.
+  of the screen; the canvas makes room for the panel at the height `CompletionBar.panelHeight`
+  counts (`PaintingLayout.Inputs.completionHeight`, never measured). `paint-complete` (with `-dark`) is its screenshot.
   A painting made from a library picture (`Artwork.sampleName`, handed on as
   `PaintView.libraryPicture`; a painter's own photo never) has a last door, The Original
   (painting-company row 120), four doors standing two over two on a phone upright and in one
   row on an iPad (a fifth would widen the panel by a door: `CompletionBar.widestPanel(doors:)`;
-  `doorsWidth` keeps the panel and `PaintView.doorMetrics` in step). It opens
+  `doorsWidth` keeps the panel and `PaintingLayout.doorMetrics` in step). It opens
   `AboutPainting`, a sheet of the same name, the wall label the door draws (`OriginalWork`,
   read from `library.json` alone): the picture, and under it one small placard, its title,
   maker and date, medium and, last, where it hangs (a record without a place has no such

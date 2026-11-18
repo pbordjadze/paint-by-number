@@ -40,6 +40,7 @@ struct FinishedDoors: View {
     @Environment(\.paintPicture) private var paintPicture
     @Environment(Library.self) private var library: Library?
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var glimpses = DoorGlimpses()
     @State private var sampleImage: CGImage?
     /// The file On Paper made, while the share sheet is up for it.
@@ -106,7 +107,9 @@ struct FinishedDoors: View {
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
-                .frame(width: metrics.door.width)
+                // The room the painting screen counted on (`CompletionBar.panelHeight`): a line
+                // more reaches into the gap below rather than growing the panel over the page.
+                .frame(width: metrics.door.width, height: metrics.labelRoom(dynamicTypeSize), alignment: .top)
             }
             .contentShape(.rect)
         }
@@ -345,12 +348,28 @@ nonisolated struct DoorMetrics: Equatable, Sendable {
         return best.door.width >= smallest ? best : nil
     }
 
+    /// The room a door's words are given under it (`FinishedDoors`, `CompletionBar.panelHeight`):
+    /// its name and the line under it, and a second line for that one on doors narrower than a
+    /// roomy row's, where it wraps ("To someone you love", most translations).
+    func labelRoom(_ size: DynamicTypeSize) -> CGFloat {
+        let size = min(size, .xxLarge)
+        let label = Self.labelHeight(size)
+        guard door.width < Self.roomyRow else { return label }
+        return label + (Self.captionLine * Self.textScale(size)).rounded(.up)
+    }
+
+    /// A line of `.caption` at the Large text size.
+    static let captionLine: CGFloat = 16
+
+    private static func textScale(_ size: DynamicTypeSize) -> CGFloat {
+        let steps: [(DynamicTypeSize, CGFloat)] = [(.large, 1), (.xLarge, 1.1), (.xxLarge, 1.2)]
+        return steps.last(where: { $0.0 <= size })?.1 ?? 0.9
+    }
+
     /// A door's name and the line under it, one line each, at the text size (capped as the
     /// Finished panel caps it).
     static func labelHeight(_ size: DynamicTypeSize) -> CGFloat {
-        let steps: [(DynamicTypeSize, CGFloat)] = [(.large, 1), (.xLarge, 1.1), (.xxLarge, 1.2)]
-        let scale = steps.last(where: { $0.0 <= size })?.1 ?? 0.9
-        return (38 * scale).rounded(.up)
+        (38 * textScale(size)).rounded(.up)
     }
 }
 

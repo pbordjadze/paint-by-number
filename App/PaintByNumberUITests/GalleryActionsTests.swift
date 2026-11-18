@@ -324,11 +324,16 @@ final class GalleryActionsTests: XCTestCase {
     /// row below the fold on a phone, was never in the tree to wait for). The navigation bar's
     /// subtitle is always there and counts every painting, those still being made too: it reads
     /// like this once the last has landed, and nothing slides along under a long press then.
+    ///
+    /// The first gallery test of a run may make the six itself: when the demo caches it was given
+    /// hold none of them, each is generated, models and all, in its turn (CI's iPad, November 18:
+    /// the six took over three minutes, one 97 s, and two tries of two minutes failed), and every
+    /// test after it finds them made.
     @MainActor
     private func revealCard(_ title: String, in app: XCUIApplication) -> XCUIElement {
         let counts = app.descendants(matching: .any)
             .matching(NSPredicate(format: "label == %@", "3 in progress · 1 ready · 2 finished")).firstMatch
-        XCTAssertTrue(counts.waitForExistence(timeout: 120), "The demo gallery never finished making its paintings")
+        XCTAssertTrue(counts.waitForExistence(timeout: 360), "The demo gallery never finished making its paintings")
         let card = app.buttons[title].firstMatch
         let window = app.windows.firstMatch.frame
         // The middle of the card between the bars: its top is the status bar and the navigation bar,

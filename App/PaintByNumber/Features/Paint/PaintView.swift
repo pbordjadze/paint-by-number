@@ -154,7 +154,7 @@ struct PaintView: View {
     #endif
 
     /// Between the bar and the palette on a half-open Duo's book page.
-    private static let bookGap: CGFloat = 20
+    private static let bookGap = PaintingLayout.bookGap
     /// The bars' margins (`PaintingLayout`, whose canvas insets keep the canvas clear of them).
     private static let edge = PaintingLayout.edge
     private static let topGap = PaintingLayout.topGap
@@ -335,7 +335,7 @@ struct PaintView: View {
         let controls = Self.padding(layout.controls, within: geo.safeAreaInsets)
         let controlsWidth = max(0, geo.size.width - controls.leading - controls.trailing)
         #if UNRELEASED
-        let doors = session.isComplete ? doorMetrics(layout: layout, geo: geo, controlsWidth: controlsWidth) : nil
+        let doors = session.isComplete ? finishedDoors.flatMap { PaintingLayout.doorMetrics($0, inputs: inputs(in: geo)) } : nil
         #else
         let doors: Never? = nil
         #endif
@@ -545,19 +545,30 @@ struct PaintView: View {
     /// too, to put its picture where this page will be).
     typealias PaletteLayout = PaintingLayout.Palette
 
-    private func layout(in geo: GeometryProxy) -> PaintingLayout {
-        PaintingLayout(PaintingLayout.Inputs(
+    private func layout(in geo: GeometryProxy) -> PaintingLayout { PaintingLayout(inputs(in: geo)) }
+
+    /// The doors after Finished this painting shows, finished (SideStore and Debug builds), for
+    /// the layout to count on their panel before it is measured.
+    private var finishedDoors: PaintingLayout.Doors? {
+        #if UNRELEASED
+        PaintingLayout.Doors(
+            count: FinishedDoor.shown(original: OriginalWork.of(libraryPicture) != nil).count,
+            compactHeight: verticalSizeClass == .compact)
+        #else
+        nil
+        #endif
+    }
+
+    private func inputs(in geo: GeometryProxy) -> PaintingLayout.Inputs {
+        PaintingLayout.screen(
             size: geo.size, safe: geo.safeAreaInsets, regularWidth: sizeClass == .regular,
             // The painting's colors, not those left: Auto's count of lines went with the colors
             // left, so finishing one re-laid the whole palette (3 rows to 2 on an iPad, the bar
             // wider than the picture and the picture taller; the Mac's QA, November 10). The
             // create flow's hand-off counts them so too.
             dynamicTypeSize: dynamicTypeSize, rows: paletteRows, colors: PaletteBar.visibleColorCount(session.template),
-            isComplete: session.isComplete,
-            completionHeight: session.isComplete ? completionHeight : nil,
-            fold: foldPlace == nil
-                ? FoldWatch.shared.windowFold(rightToLeft: layoutDirection == .rightToLeft)
-                : PaintingLayout.fold(foldPlace, rightToLeft: layoutDirection == .rightToLeft, safe: geo.safeAreaInsets)))
+            isComplete: session.isComplete, completionHeight: completionHeight, doors: finishedDoors,
+            foldPlace: foldPlace, rightToLeft: layoutDirection == .rightToLeft)
     }
 
 
@@ -982,23 +993,6 @@ struct PaintView: View {
         }
     }
 
-    #if UNRELEASED
-    /// The doors after Finished in the room the painting screen gives them: most of the page under
-    /// the top bar, never so much that the painting has no room (on the whole screen, at most
-    /// `doorsShare` of it), or all of a fold's controls page.
-    private func doorMetrics(layout: PaintingLayout, geo: GeometryProxy, controlsWidth: CGFloat) -> DoorMetrics? {
-        let page = geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom - layout.controls.top - layout.controls.bottom
-        let bars = Self.topGap + barHeight(layout.regularChrome) + PaintingLayout.canvasGap + Self.bottomGap + Self.bookGap
-        let room = layout.mode == .whole
-            ? page * PaintingLayout.doorsShare(compactHeight: verticalSizeClass == .compact) : page - bars
-        let count = FinishedDoor.shown(original: OriginalWork.of(libraryPicture) != nil).count
-        let width = CompletionBar.doorsWidth(count: count, available: controlsWidth - 2 * Self.edge)
-        let height = room - CompletionBar.height - CompletionBar.doorsInset
-        return DoorMetrics.fitting(
-            count: count, width: width, height: height,
-            dynamicTypeSize: min(dynamicTypeSize, .xxLarge))
-    }
-    #endif
 
     // MARK: Actions
 
