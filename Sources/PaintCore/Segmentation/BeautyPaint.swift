@@ -23,11 +23,13 @@
 ///    (`subjectGain`) and whose background recedes into a soft blue haze (`haze`), a dark
 ///    background by losing color rather than into grey, a vivid one (`vividChroma`) not at all.
 ///
-/// 4. **A face's reds** (`faceRed`): a face's paint of a red or pink hue, lips, a blush, a
-///    flushed nose, is mixed no more than `faceRedGain` more colorful than the photo's
-///    (`photo`, the regions' means). Kit, rich and beauty paint each add a little chroma, and
-///    skin's hold misses a lip's red, so lips came out at twice the photo's chroma, a lipstick
-///    red on a man's selfie (painting-company row 363).
+/// 4. **A face held near the photo** (`faceGain`): a paint whose pixels lie mostly on a face
+///    (`faceHeldShare`) is mixed no more colorful than the photo's (`photo`, the regions'
+///    means) by `faceGain` times its chroma or `faceLift` added, whichever is more, so a pale
+///    face's lit side and a dark face's warm shadows keep what kit and rich paint gave them.
+///    Kit, rich and beauty paint each add chroma, and skin's hold ends at a lip's red and an
+///    ear's flush, so a man's lips came out lipstick red and an ear orange-red, at twice the
+///    photo's chroma (painting-company row 363).
 ///
 /// Rich paint's colors go in, so a face keeps its own paints (`FacePaints`). Two paints the
 /// steps bring closer than `minDistance` step back toward rich paint's until they are apart.
@@ -74,19 +76,16 @@ public enum BeautyPaint {
     static let haze = SIMD3<Float>(0.86, -0.0125, -0.021_651)
     static let hazeMost: Float = 0.2
     static let vividChroma: ClosedRange<Float> = 0.08...0.14
-    /// A face's red: hues within about 30° of red (10°) and clear of skin's (50°), on a paint
-    /// whose pixels lie mostly on a face (`faceRedShare`), at most this much more chroma than
-    /// the photo's.
-    static let faceRedGain: Float = 0.3
-    static let red = SIMD2<Float>(0.984_808, 0.173_648)
-    static let redCosine: ClosedRange<Float> = 0.75...0.9
-    static let faceRedSkinCosine: ClosedRange<Float> = 0.82...0.94
-    static let faceRedShare: ClosedRange<Float> = 0.2...0.5
+    /// A face's paint: at most `faceGain` times the photo's chroma, or `faceLift` more,
+    /// whichever is more, held fully once `faceHeldShare` of its pixels lie on a face.
+    static let faceGain: Float = 1.3
+    static let faceLift: Float = 0.03
+    static let faceHeldShare: ClosedRange<Float> = 0.2...0.5
 
     /// `rich` (rich paint's colors) mixed as beauty paint. `shares`: the share of the painting
     /// each paint covers; `hold`: how much each is skin (`KitPaint.skinHold`); `faceShare`: the
     /// share of its pixels on a face; `importance`: its pixels' mean importance (`importance(of:…)`);
-    /// `photo`: the regions' colors rich paint was mixed from (no limit on a face's reds without).
+    /// `photo`: the regions' colors rich paint was mixed from (a face isn't held without).
     /// A list that isn't the palette's is left out (no focus without importance).
     public static func mix(
         _ rich: [PaletteColor], shares: [Float] = [], hold: [Float] = [], faceShare: [Float] = [], importance: [Float] = [],
@@ -170,16 +169,13 @@ public enum BeautyPaint {
             }
         }
 
-        // 4. A face's reds: at most `faceRedGain` more chroma than the photo's.
+        // 4. A face held near the photo.
         let limit: [(chroma: Float, weight: Float)?] = rich.indices.map { i in
-            guard photo.count == n, face[i] > faceRedShare.lowerBound else { return nil }
+            guard photo.count == n, face[i] > faceHeldShare.lowerBound else { return nil }
             let lab = photo[i].oklab
             let C = length(SIMD2(lab.y, lab.z))
-            guard C > 0.02, C.isFinite else { return nil }
-            let u = SIMD2(lab.y, lab.z) / C
-            let w = KitPaint.smoothstep(faceRedShare, face[i]) * KitPaint.smoothstep(redCosine, dot(u, red))
-                * (1 - KitPaint.smoothstep(faceRedSkinCosine, dot(u, KitPaint.skinHue)))
-            return w > 0 ? (C * (1 + faceRedGain), w) : nil
+            guard C.isFinite else { return nil }
+            return (max(C * faceGain, C + faceLift), KitPaint.smoothstep(faceHeldShare, face[i]))
         }
         // Scaled with the strength, so a paint stepped all the way back is rich paint's again.
         func limited(_ i: Int, _ lab: SIMD3<Float>, strength: Float) -> SIMD3<Float> {
@@ -260,5 +256,4 @@ public enum BeautyPaint {
 
     static func length(_ v: SIMD2<Float>) -> Float { (v.x * v.x + v.y * v.y).squareRoot() }
     static func cross(_ u: SIMD2<Float>, _ v: SIMD2<Float>) -> Float { u.x * v.y - u.y * v.x }
-    static func dot(_ u: SIMD2<Float>, _ v: SIMD2<Float>) -> Float { u.x * v.x + u.y * v.y }
 }
