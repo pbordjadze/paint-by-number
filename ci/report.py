@@ -228,7 +228,10 @@ def main(argv):
         else:
             head.append(f"{job}: {result}")
         if job == "core":
-            for label, path in (("regression", "regression/regression.txt"), ("strings", "strings-check.log")):
+            for label, path in (
+                ("regression", "regression/regression.txt"), ("strings", "strings-check.log"),
+                ("budget", "design-budget.log"),
+            ):
                 last = last_line(os.path.join(job_dir, path))
                 if last:
                     head.append(f"{label}: {last}")

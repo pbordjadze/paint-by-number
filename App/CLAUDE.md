@@ -26,7 +26,9 @@ synchronized folder would bundle it into the app.
   the painting screen rendered at each frame (hundreds of renders) stopped CI's simulator
   answering UI tests for up to half a minute. The painting Start Painting makes is pushed the
   usual way, its zoom unseen under the create flow's cover (with no animation at all the edge
-  swipe back never worked), and shows without fading (`StartHandoff`).
+  swipe back never worked), and shows without fading (`StartHandoff`); it is built at once there,
+  not after the push (`isBuilt`, `builtUnderCover`: the unseen zoom cost Start 0.8 s on an iPad,
+  painting-company row 361).
 - What SwiftUI can't hand Core Animation as a layer of its own (a picture clipped to a rounded
   shape under a shadow, as a gallery card's is) it draws with CoreGraphics on the main thread, and
   draws again at every frame of an animation that moves or fades it, seen or not. While Start
@@ -342,22 +344,7 @@ below name both alike.
   view as little as it can (`PaletteBar.shaken`, `reveal`), so the shake is seen; the next fill
   or undo of the color in hand brings its swatch back (`selectedRemaining`). The palette's
   lines are counted from the painting's colors, not those left (`PaintingLayout.Inputs.colors`),
-  so they never change as colors finish. In SideStore and Debug builds the palette stays put
-  (painting-company row 293; `PaintingLayout.paletteKeepsPlaces`, `PaletteBar.keepsPlaces`,
-  `placedColors`): every color of the painting keeps its place from the first fill to the last,
-  on a bar of several lines (one scrolling line, a phone's, packs as the release does: wells from
-  its start would keep the colors to come out of sight), and a finished one that is no longer in
-  hand becomes a spent well there
-  (`SwatchButton.isSpent`: what is left of its paint, a thinner wash set well in inside a thin rim, no
-  numeral, check or progress ring; a cross-fade, a cut under Reduce Motion), so nothing
-  ever moves and the wells are a small picture of progress. A well selects nothing (a tap does
-  nothing; a hold still shows the paint's details); VoiceOver reads it in the palette's order as
-  its color, "finished", with no button trait or hint, and UI tests find it as `well-N`, so
-  `swatch-N` stays the colors there are to paint. The selection moves on to the next color left
-  and the bar scrolls it into view past the wells; an undo puts the paint back in its well. Not
-  under Nearly Done or Most Left, which re-sort by the painter's choice; the release lets a
-  finished color leave and packs the rest, as 1.1 did. `paint-palette`, `paint-palette-number`
-  and `paint-progress` (with `paint-dark`) show the wells.
+  so they never change as colors finish.
 - `PaintCommands` is the Paint menu (iPadOS menu bar, single-key shortcuts: `]` `[` H N P Z for
   Zen Mode, R for Replay or Stop on a finished painting; ⌘[ is Back) fed by the focused
   `PaintingFocus`; fills are registered with the window's `UndoManager` (⌘Z/⇧⌘Z, Edit menu,
@@ -829,7 +816,8 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   moves the book's thresholds and shortest line (`CreateModel.lineArt(_:lines:)`; the middle is
   the book's defaults), the line art recorded with the painting like any setting. `CompareView` zooms both layers alike (pinch, double tap, VoiceOver), the zoom held
   across slider changes.
-- Settings › Preview (`PreviewStyle`) picks the comparison's other layer (`CreateModel.Picture`):
+- `PreviewStyle` is the comparison's other layer (`CreateModel.Picture`; no longer a setting since
+  November 17, 2026, as a picked picture skips the preview: the Tool Guide and demos pick it):
   the painting (`TemplateRasterizer`'s `.painting`), or its line art: `LineArtDrawing`, the lines
   `TemplateRasterizer` draws for a book (a classic template's every edge), which `CompareView`
   strokes as vectors on the sheet's paper, crisp at every zoom and as heavy as the canvas draws
@@ -865,15 +853,16 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   VoiceOver hint does, and a tip once, `RefineDrawTip`; only a curve waiting to be bent says
   what comes next); Make Cell's tap (`RefineTool.fill`) makes the closed shape under it an area of its own in the photo's color
   there (a detail area, its number down to half size), and a tap in a filled area takes that fill
-  out (`EditFills`). Looks and Edit Paint (backlog row 38) show the painting and `RefineColorsPanel`: a row of looks (Photo, then the
-  five of PaintCore's `TemplateEditor.Look`s it `offered`s, night to day, then a painter's; the
-  Lamplit Table's `factory/pieces/recolor`, and Paul's five of eight, the rest kept) with a Strength slider once one is chosen, and the paints, one picked
+  out (`EditFills`). Edit Paint (backlog row 38) shows the painting and `RefineColorsPanel`: the paints, one picked
   there or by a tap on its area taking a new color from the system `ColorPicker` (its family
   along while Similar Colors Too is on; laid once the picker rests, or as the panel or the
   area's card goes, `RefinePendingPick`, but never over what Cancel put back,
-  `CreateModel.refiningCancelled`); the picked paint's areas glow (`RefinePaintGlow`).
-  `CreateModel.recolor(_:)` makes them edits
-  (`RefineColors`): a look or Photo takes every look and repaint out first, so looks never stack;
+  `CreateModel.refiningCancelled`); the picked paint's areas glow (`RefinePaintGlow`); once any
+  paint has changed, Photo’s Colors puts the photo's own back. Looks, its row of moods over every
+  paint, left on November 17, 2026 (painting-company process/design-budget.md); a painting's look
+  laid before then stays, `TemplateEditor.Look` and its edit decode as ever, and Photo’s Colors
+  takes it out. `CreateModel.recolor(_:)` makes them edits
+  (`RefineColors`): Photo takes every look and repaint out;
   a repaint of the color the last one repainted replaces it (the picker still moving is one step
   of the history); paints made alike merge and a note says so. They are laid as an edit is
   (`CreateModel.lay`): one the editor declines is not kept (below). New colors cross-fade in (none
@@ -911,7 +900,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
     the groups (each name at its own width, `sideGroups`) and the tools at its foot, scrolling
     under a fixed head where they are taller than the screen, and the picture beside it at the
     screen's full height; an area's card takes the room of all but Select's band there. The tools along the bottom keep the room of the tallest they have been, and a
-    taller one (Select's band, a card, the looks) rises over the paper under the picture where
+    taller one (Select's band, a card, Edit Paint's panel) rises over the paper under the picture where
     that holds it, so the picture moves only where it would be covered (`reservedTools`); an
     option row's switches each keep their own width. Ink: the Pen (ink alone, `RefineView.inked`: a draw with no paints to give; its
     options Snap, `PenAssist`'s end join, on by default, Color from Photo, off, and Smoothing,
@@ -937,8 +926,8 @@ a length already cut while the painting is open is made again as it was, `cuts`)
     Paint Brush (`.brush`: the stroke's footprint in the current paint, joining that paint's cells
     it meets; a tap a dab; its Size, `SettingsKey.refineBrushSize`, a radius on screen),
     the Eyedropper (a cell's paint, or where the photo shows more than the paint the photo's color,
-    `RefineLayers.photoReads`; a touch held does the same with any tool), Edit Paint and Looks
-    (`RefineColorsPanel`'s two modes; in Edit Paint a swatch dragged onto another becomes it, a
+    `RefineLayers.photoReads`; a touch held does the same with any tool) and Edit Paint
+    (`RefineColorsPanel`; a swatch dragged onto another becomes it, a
     repaint whose paints made alike merge). Numbers: Move Number (`.moveLabel`, the number held under
     the finger, `RefineHeldNumber`). See: Writing (the Text tool) and Try Painting (the painting
     screen on the template as it stands, `RefineTrial`, saving nothing, its paints named as the
@@ -1148,7 +1137,8 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   (`startPainting`: the usual push and its zoom, unseen behind the opaque cover; a push with
   animations off left the edge swipe back dead), and `ArtworkPaintingView` mounts without its fades
   (`isUnderCover`). The canvas notes when its first frame is on screen
-  (`CanvasView.hasShownFirstFrame`: a tenth of a second after the GPU finished it), and
+  (`CanvasView.hasShownFirstFrame`: as its drawable is shown, at the latest a tenth of a second
+  after the GPU finished it), and
   `PaintView.reportTemplate` then tells the hand-off where the page is, in the window's coordinates
   as UIKit has the canvas (`CanvasController.templateFrameInWindow`; SwiftUI's global frame of the
   pushed canvas put it a safe area's height too low, October 25), and again should it move (a
@@ -1338,8 +1328,8 @@ Paintings, the frame, a painting a day, which StandBy shows too) and `App/Moonli
 The time-lapse renders under `TimelapseExportSheet`/`TimelapseExportModel` (progress, Cancel, Try
 Again; `TimelapseSchedule` eases the strokes in and out) and goes to `ActivityShareSheet`, which
 reports when the share sheet closes so the movie is deleted. Every export lives in
-`tmp/Exports/<uuid>/` (`ArtworkExporter`). A gallery card's Share Progress, Share Painting and
-Print Template… write their file first and open `ActivityShareSheet` on it, which deletes it
+`tmp/Exports/<uuid>/` (`ArtworkExporter`). A gallery card's Share Progress and Share Painting
+write their file first and open `ActivityShareSheet` on it, which deletes it
 when it closes: the sheet's tile is a ready file's own thumbnail, and a `ShareLink`'s file,
 written when the sheet asks, left the tile to `SharePreview`'s image, which iOS 27's sheet drops
 (a blank white tile; `GalleryView.share`; Ravenna's gallery does the same). Print… (painting-company
@@ -1348,7 +1338,8 @@ and at the top of a gallery card's menu, beside Share, in every build: it makes 
 (`TemplatePrintJob`, `Export/TemplatePrint.swift`: `saved` from the card's painting, `open` from
 the session on screen, whatever is painted) and hands it, as data, with no file to delete, to the
 system's print dialog (`PrintSheet`, `UIPrintInteractionController`), which hangs from the card
-or the More button on an iPad. Share keeps Print Template…, the PDF as a file to send or save. In SideStore and Debug builds (`#if UNRELEASED`, until 1.3;
+or the More button on an iPad. Share's Print Template… left on November 17, 2026 (one way to print
+per menu: painting-company `process/design-budget.md`); Paint by Mosaic's card keeps its own. In SideStore and Debug builds (`#if UNRELEASED`, until 1.3;
 painting-company row 357) Print… opens Print's preview first (`PrintPreviewSheet`,
 `Export/PrintPreview.swift`): the pages as they will print, drawn from the PDF itself
 (`PrintPages`), a Blank / Painted switch (`PDFExporter.Layout.painted`: the template's pages
@@ -1371,7 +1362,7 @@ then Send… shares "<Title> Template.moonlight" (`ArtworkExporter.sharedPaintin
 `SharedPainting`, the template as it is (the painter's refinements are in it) with its title,
 settings and paint names (their seed and vocabulary: the receiver's `Artwork.sentNicknameSeed`), LZFSE inside (`SharedPaintingCodec`), and with the switch on the photo and library
 picture; never progress or refinements. The sheet deletes the file once the share sheet closes,
-and stays up when the painter backs out of it. Whoever hasn't the app gets Print Template…'s PDF
+and stays up when the painter backs out of it. Whoever hasn't the app gets the PDF from Print…
 instead. `PRIVACY.md` says what the file holds (no change to the privacy manifest: the painter
 sends it, the developers collect nothing).
 
@@ -1426,8 +1417,7 @@ sends it, the developers collect nothing).
 - `Preferences` is the snapshot that code outside views reads (the create flow); views bind the
   other `SettingsKey`s with `@AppStorage`, and `PaintView` hands a painting's session the
   painting settings (Advance to Next Color, Zen Mode, the palette's order) whoever presents it. Settings › Painting Length
-  (`PaintingLength`, Relaxed by default) is what suggestions aim for; Settings › Preview
-  (`PreviewStyle`, Painting by default) is how the create flow shows a new painting; Settings › The Making-of plays the
+  (`PaintingLength`, Relaxed by default) is what suggestions aim for; Settings › The Making-of plays the
   making-of show after Start Painting (off by default; `Features/MakingOf`); Settings › Music
   (`SkySetting`: Sun, Moon or Auto, the default) picks the sounds and whether the fill's
   sparkles are stars (Painting screen › Feedback). New paintings are coloring books at the book's defaults
@@ -1440,7 +1430,7 @@ sends it, the developers collect nothing).
 - Printed templates are laid out for the region's paper (`PDFExporter.Paper.default(for:)`).
 - Settings the app retired (Settings › Advanced's line art, tuning, line appearance and preview
   picture, and its switch per sound, haptic and flourish; the time-lapse's pace; Settings' paper
-  size, Color Names and Detail Brushes,
+  size, Color Names, Preview and Detail Brushes,
   later Text Corrections, whose Text tool Refine now always offers (Paul, October 18), and The
   Marginarium; the Custom palette order with every painting's arrangement) are removed at launch by
   `Preferences.removeRetiredSettings`, Advanced's book Line Weight carried over to Settings ›

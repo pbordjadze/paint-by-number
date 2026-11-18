@@ -21,6 +21,9 @@ nonisolated struct MakingOfSource: Sendable {
     var seed: UInt64
     /// The paints the base was made of (`TemplateRefinements.pin`), nil when they were chosen.
     var palette: [PaletteColor]? = nil
+    /// The stage pictures the create flow kept as it made this base (`CreateModel.shownStages`):
+    /// with them and `template`, the base isn't made again. nil makes it again.
+    var stages: [PipelineSnapshot]? = nil
 }
 
 /// A making-of show ready to play (`MakingOfPlayer`): MakingOf's `FieldShow`, the show with no crew
@@ -28,11 +31,12 @@ nonisolated struct MakingOfSource: Sendable {
 /// pictures (`ShowFrame`'s doc comment): the numbers' digits, each step's card, and the real
 /// template the finished drawing hands over to.
 ///
-/// `build` generates the base template once more with a `PipelineSnapshot` observer for the stage
-/// pictures (observing never changes the template: PaintCore's `PipelineSnapshotTests`), then
-/// builds the show from them, the painting's own template, the bundled `making-of.json` and the
-/// artwork's seed. On a device that is a generation and about a second more; the show keeps about
-/// 35 MB.
+/// `build` takes the stage pictures the create flow kept as it made the base (`MakingOfSource.stages`),
+/// or else generates the base template once more with a `PipelineSnapshot` observer for them
+/// (observing never changes the template: PaintCore's `PipelineSnapshotTests`), then builds the
+/// show from them, the painting's own template, the bundled `making-of.json` and the artwork's
+/// seed. Made again, the base costs a generation (0.77 s on the iPad Air 5, painting-company row
+/// 361); the show keeps about 35 MB.
 nonisolated struct MakingOfShow: Sendable {
     let show: FieldShow
     let spec: ShowSpec
@@ -82,6 +86,12 @@ nonisolated struct MakingOfShow: Sendable {
 
     /// The base template made again from `source`, and the stage pictures its making showed.
     static func observe(_ source: MakingOfSource, cancel: CancellationCheck) throws -> (ShowPictures, Template) {
+        if let stages = source.stages, let template = source.template,
+           let pictures = try? ShowPictures(snapshots: stages.filter { $0.stage != .lineArt && $0.stage != .vectorized }) {
+            // `template` is the painting's own, which the show ends on: the base it would stand
+            // for is never read.
+            return (pictures, template)
+        }
         let aspect = Float(source.image.width) / Float(max(source.image.height, 1))
         let inputs = source.refinements.refining(importance: source.importance, lineArt: source.lineArt, aspect: aspect)
         let recorder = SnapshotRecorder()
@@ -139,7 +149,7 @@ nonisolated struct MakingOfShow: Sendable {
 
 /// Keeps the stage pictures a show is made from, as the generator's thread hands them over: the
 /// line art and vectorized pictures are not among them.
-private nonisolated final class SnapshotRecorder: @unchecked Sendable {
+nonisolated final class SnapshotRecorder: @unchecked Sendable {
     private let lock = NSLock()
     private var kept: [PipelineSnapshot] = []
 

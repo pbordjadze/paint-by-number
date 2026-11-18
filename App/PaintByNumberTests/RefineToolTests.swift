@@ -17,21 +17,21 @@ struct RefineToolTests {
         #expect(RefineTool.cellEdge.pencilPartner == nil && RefineTool.text.pencilPartner == nil)
         #expect(RefineTool.fill.pencilPartner == nil && !RefineTool.fill.erases)
         let tools: [RefineTool] = [
-            .select, .cellEdge, .merge, .brush, .bucket, .eyedropper, .editPaint, .looks, .bendLine, .moveEdge, .moveNumber, .tryPainting,
+            .select, .cellEdge, .merge, .brush, .bucket, .eyedropper, .editPaint, .bendLine, .moveEdge, .moveNumber, .tryPainting,
         ]
         for tool in tools {
             #expect(tool.pencilPartner == nil && !tool.erases, "\(tool)")
         }
         // The tools that change paint alone show the painting beneath them; the Eyedropper may
         // read the photo.
-        #expect(RefineTool.bucket.paints && RefineTool.brush.paints && RefineTool.cellEdge.paints && RefineTool.looks.paints)
+        #expect(RefineTool.bucket.paints && RefineTool.brush.paints && RefineTool.cellEdge.paints && RefineTool.editPaint.paints)
         #expect(!RefineTool.merge.paints)
         #expect(!RefineTool.eyedropper.paints && !RefineTool.pen.paints && !RefineTool.select.paints)
     }
 
-    /// Colors' changes to the edits: a look and the photo's colors start from the edits without
-    /// looks and repaints, a repaint of the color the last one repainted takes its place, and the
-    /// look shown is the last one laid.
+    /// Colors' changes to the edits: the photo's colors start from the edits without looks (a
+    /// painting's from before Looks left) and repaints, and a repaint of the color the last one
+    /// repainted takes its place.
     @Test func colorsChangeTheirOwnEditsAlone() {
         let red = SIMD3<Float>(0.6, 0.2, 0.1), blue = SIMD3<Float>(0.6, -0.05, -0.2)
         let drawn = TemplateEditor.Edit.draw(points: [SIMD2(1, 1), SIMD2(5, 5)])
@@ -39,26 +39,10 @@ struct RefineToolTests {
         let repaint = TemplateEditor.Edit.repaint(from: red, to: blue, family: true)
         let edits = [drawn, moonlit, repaint]
         #expect(RefineColors.withoutColors(edits) == [drawn])
-        #expect(RefineColors.look(in: edits)?.look == .moonlit && RefineColors.look(in: edits)?.strength == 0.5)
-        #expect(RefineColors.look(in: [drawn]) == nil)
         #expect(RefineColors.repaint(from: red, to: red, family: false).replacesLast(of: edits))
         #expect(!RefineColors.repaint(from: blue, to: red, family: true).replacesLast(of: edits))
         #expect(!RefineColors.repaint(from: red, to: blue, family: true).replacesLast(of: [drawn]))
-        #expect(!RefineColors.look(.sepia, strength: 1).replacesLast(of: edits))
-    }
-
-    /// A look's chip shows four of the painting's paints, darkest to lightest, in that look.
-    @Test func aLooksChipShowsFourPaints() {
-        let palette = (0..<10).map { PaletteColor(oklab: SIMD3(0.1 + 0.08 * Float($0), 0.05, -0.02), space: .sRGB) }
-        #expect(RefineColorsPanel.preview(of: nil, on: palette).count == 4)
-        #expect(RefineColorsPanel.preview(of: .starryNight, on: palette).count == 4)
-        #expect(RefineColorsPanel.preview(of: .moonlit, on: []).isEmpty)
-    }
-
-    /// The row offers five looks, Moonlit first (Paul, October 18); the rest are kept for later.
-    @Test func theRowOffersFiveLooks() {
-        #expect(RefineColorsPanel.offered == [.moonlit, .goldenHour, .pastel, .garden, .starryNight])
-        #expect(Set(RefineColorsPanel.offered).isSubset(of: Set(TemplateEditor.Look.allCases)))
+        #expect(!RefineColors.photo.replacesLast(of: edits))
     }
 
     /// The color picker's last color is laid once the picker rests, in place of the ones before
@@ -108,9 +92,9 @@ struct RefineToolTests {
         #expect(all == RefineTool.allCases, "every tool stands in its group, in the order declared")
         #expect(RefineGroup.ink.tools == [.pen, .shape, .bendLine, .eraser, .smartEraser])
         #expect(RefineGroup.cells.tools == [.select, .cellEdge, .merge, .moveEdge, .fill])
-        #expect(RefineGroup.paint.tools == [.bucket, .brush, .eyedropper, .editPaint, .looks])
+        #expect(RefineGroup.paint.tools == [.bucket, .brush, .eyedropper, .editPaint])
         #expect(RefineGroup.of(.smartEraser) == .ink && RefineGroup.of(.cellEdge) == .cells && RefineGroup.of(.fill) == .cells)
-        #expect(RefineGroup.of(.bucket) == .paint && RefineGroup.of(.looks) == .paint && RefineGroup.of(.text) == .see)
+        #expect(RefineGroup.of(.bucket) == .paint && RefineGroup.of(.editPaint) == .paint && RefineGroup.of(.text) == .see)
         #expect(RefineGroup.of(.merge) == .cells && RefineGroup.of(.brush) == .paint)
         #expect(RefineGroup.of(.bendLine) == .ink && RefineGroup.of(.moveEdge) == .cells && RefineGroup.of(.moveNumber) == .numbers)
         #expect(RefineGroup.of(.tryPainting) == .see)

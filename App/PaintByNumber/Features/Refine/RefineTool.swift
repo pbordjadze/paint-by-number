@@ -43,8 +43,6 @@ nonisolated enum RefineTool: Hashable, CaseIterable {
     /// The Toolbox's Edit Paint: the current paint takes a new color everywhere it's used
     /// (`RefineColorsPanel`'s picker); a tap on a cell makes its paint the current one.
     case editPaint
-    /// The Toolbox's Looks over every paint (`RefineColorsPanel`'s row).
-    case looks
     /// The Toolbox's Move Number: a drag moves a number within its cell
     /// (`TemplateEditor.Edit.moveLabel`).
     case moveNumber
@@ -61,7 +59,7 @@ nonisolated enum RefineTool: Hashable, CaseIterable {
         switch self {
         case .pen, .shape, .bendLine, .eraser, .smartEraser: .ink
         case .select, .cellEdge, .merge, .moveEdge, .fill: .cells
-        case .bucket, .brush, .eyedropper, .editPaint, .looks: .paint
+        case .bucket, .brush, .eyedropper, .editPaint: .paint
         case .moveNumber: .numbers
         case .text, .tryPainting: .see
         }
@@ -73,7 +71,7 @@ nonisolated enum RefineTool: Hashable, CaseIterable {
         switch self {
         case .pen, .shape: .eraser
         case .eraser, .smartEraser: .pen
-        case .fill, .text, .select, .cellEdge, .merge, .brush, .bucket, .eyedropper, .editPaint, .looks, .bendLine,
+        case .fill, .text, .select, .cellEdge, .merge, .brush, .bucket, .eyedropper, .editPaint, .bendLine,
              .moveEdge, .moveNumber, .tryPainting:
             nil
         }
@@ -88,12 +86,12 @@ nonisolated enum RefineTool: Hashable, CaseIterable {
     var strokes: Bool {
         switch self {
         case .pen, .shape, .bendLine, .eraser, .smartEraser, .cellEdge, .merge, .moveEdge, .brush, .moveNumber, .text: true
-        case .select, .fill, .bucket, .eyedropper, .editPaint, .looks, .tryPainting: false
+        case .select, .fill, .bucket, .eyedropper, .editPaint, .tryPainting: false
         }
     }
 
     var paints: Bool {
-        self == .cellEdge || self == .brush || self == .bucket || self == .editPaint || self == .looks
+        self == .cellEdge || self == .brush || self == .bucket || self == .editPaint
     }
 
     var erases: Bool { self == .eraser || self == .smartEraser }
@@ -144,7 +142,6 @@ extension RefineView {
         case .bucket: String(localized: "Bucket")
         case .eyedropper: String(localized: "Eyedropper")
         case .editPaint: String(localized: "Edit Paint")
-        case .looks: String(localized: "Looks")
         case .bendLine: String(localized: "Bend Line")
         case .moveEdge: String(localized: "Move Edge")
         case .moveNumber: String(localized: "Move Number")
@@ -167,7 +164,6 @@ extension RefineView {
         case .bucket: "drop.fill"
         case .eyedropper: "eyedropper"
         case .editPaint: "swatchpalette"
-        case .looks: "camera.filters"
         case .bendLine: "scribble"
         case .moveEdge: "arrow.left.and.right.square"
         case .moveNumber: "number.circle"
@@ -289,10 +285,6 @@ extension RefineView {
             String(localized: "refine.hint.editPaint",
                    defaultValue: "Give the current paint a new color everywhere it’s used. Tap an area to pick its paint.",
                    comment: "Refine screen: how Edit Paint works (the current paint takes a new color from the color picker in every area that uses it; a tap on an area picks its paint), read by VoiceOver as the hint of its button")
-        case .looks:
-            String(localized: "refine.hint.looks",
-                   defaultValue: "Pick a look for every paint.",
-                   comment: "Refine screen: how Looks works (a look changes every paint of the painting at once), read by VoiceOver as the hint of its button")
         case .text:
             String(localized: "refine.hint.text",
                    defaultValue: "Tap a line of text to keep or ignore it, or drag across a line the app missed.",

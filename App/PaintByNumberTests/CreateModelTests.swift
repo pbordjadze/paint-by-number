@@ -722,10 +722,10 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
-    /// Refine's Colors: a look is laid on the template on screen alone, as the editor lays it; its
-    /// strength takes its place; a color the picker moves on is one step of the history; and the
-    /// photo's colors take them all out, back to the template it was.
-    @Test func colorsLayLooksAndRepaintsOnTheTemplateOnScreen() async throws {
+    /// Refine's Edit Paint: a repaint is laid on the template on screen alone, as the editor lays
+    /// it, without generating it again; a color the picker moves on is one step of the history;
+    /// and the photo's colors take them all out, back to the template it was.
+    @Test func colorsLayRepaintsOnTheTemplateOnScreen() async throws {
         let model = CreateModel()
         model.load(sample: try #require(Sample.named("red-fox")))
         try await waitUntil { model.isFinal }
@@ -734,29 +734,23 @@ struct CreateModelTests {
             model.refinements.edits == edits && model.preview?.refinements == model.refinements && model.isFinal
         }
 
-        var generated = false
-        model.recolor(.look(.moonlit, strength: 1))
-        let look = TemplateEditor.look(.moonlit, strength: 1, on: before)
-        try await waitUntil(polling: .milliseconds(2)) {
-            if model.phase == .generating { generated = true }
-            return shows([look])
-        }
-        #expect(!generated, "A look generated the template again")
-        #expect(model.preview?.template == (try TemplateEditor.apply(look, to: before).template))
-
-        model.recolor(.look(.moonlit, strength: 0.5))
-        let softer = TemplateEditor.look(.moonlit, strength: 0.5, on: before)
-        try await waitUntil { shows([softer]) }
-
         let from = try #require(model.preview?.template.palette.first?.oklab)
         let first = TemplateEditor.Edit.repaint(from: from, to: SIMD3(0.5, 0.1, -0.1), family: true)
         let moved = TemplateEditor.Edit.repaint(from: from, to: SIMD3(0.5, -0.1, -0.1), family: true)
+        var generated = false
         model.recolor(.repaint(from: from, to: SIMD3(0.5, 0.1, -0.1), family: true))
-        try await waitUntil { shows([softer, first]) }
+        try await waitUntil(polling: .milliseconds(2)) {
+            if model.phase == .generating { generated = true }
+            return shows([first])
+        }
+        #expect(!generated, "A repaint generated the template again")
+        #expect(model.preview?.template == (try TemplateEditor.apply(first, to: before).template))
         model.recolor(.repaint(from: from, to: SIMD3(0.5, -0.1, -0.1), family: true))
-        try await waitUntil { shows([softer, moved]) }
+        try await waitUntil { shows([moved]) }
         model.undo()
-        try await waitUntil { shows([softer]) }
+        try await waitUntil { shows([]) }
+        model.recolor(.repaint(from: from, to: SIMD3(0.5, 0.1, -0.1), family: true))
+        try await waitUntil { shows([first]) }
 
         model.recolor(.photo)
         try await waitUntil { shows([]) }
@@ -764,7 +758,7 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
-    /// A look, a repaint or Only This Area that the editor declines changes nothing, as a declined
+    /// A repaint or Only This Area that the editor declines changes nothing, as a declined
     /// edit does: nothing is kept (no edit, no draft), Undo has no step, and the painter is told.
     /// The editor declines every edit on a classic template: it has no line art to edit.
     @Test func aColorChangeTheEditorDeclinesIsNotKept() async throws {
@@ -776,10 +770,6 @@ struct CreateModelTests {
         let shown = model.preview?.id
         let from = try #require(before.palette.first?.oklab)
 
-        model.recolor(.look(.moonlit, strength: 1))
-        await model.settled()
-        #expect(model.note?.kind == .notRecolored)
-        model.dismissNote()
         model.recolor(.repaint(from: from, to: SIMD3(0.5, 0.1, -0.1), family: false))
         await model.settled()
         #expect(model.note?.kind == .notRecolored)

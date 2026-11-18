@@ -252,12 +252,12 @@ struct CreateFlowView: View {
         #endif
     }
 
-    /// Settings › Preview, or the scenario's (demo launches).
+    /// The painting, or the scenario's (demo launches).
     private static var previewStyle: PreviewStyle {
         #if DEBUG
         if let style = ShellDemo.current?.previewStyle { return style }
         #endif
-        return Preferences().previewStyle
+        return .default
     }
 
     /// Saves the full-resolution template to the library and goes into the painting; the draft of

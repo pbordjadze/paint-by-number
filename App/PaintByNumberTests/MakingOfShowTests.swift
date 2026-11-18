@@ -152,6 +152,34 @@ struct MakingOfShowTests {
         }
     }
 
+    /// The stage pictures the create flow kept as it made the base (`MakingOfSource.stages`) make
+    /// the very show that making the base again would, frame for frame and pixel for pixel, and
+    /// nothing is generated again: a source whose photo is a single pixel, which no generation
+    /// takes, still builds the show of the base it kept.
+    @Test func keptStagesMakeTheSameShowWithoutGeneratingAgain() async throws {
+        var source = try Self.source()
+        let recorder = SnapshotRecorder()
+        let saved = try TemplateGenerator(settings: source.settings)
+            .generate(from: source.image, cancel: .none, observer: { recorder.receive($0) }).template
+        source.template = saved
+        let remade = try await MakingOfShow.build(source)
+
+        var kept = source
+        kept.stages = recorder.snapshots
+        kept.image = RGBAImage(width: 1, height: 1, pixels: [255, 255, 255, 255])
+        let reused = try await MakingOfShow.build(kept)
+        var mine = Plane<SIMD4<UInt8>>(width: reused.show.size.width, height: reused.show.size.height, repeating: .zero)
+        var theirs = Plane<SIMD4<UInt8>>(width: remade.show.size.width, height: remade.show.size.height, repeating: .zero)
+        for t in stride(from: 0.0, through: remade.show.duration, by: 0.7) {
+            let frame = remade.show.frame(at: t)
+            #expect(reused.show.frame(at: t) == frame, "t = \(t)")
+            reused.show.composite(frame, into: &mine)
+            remade.show.composite(frame, into: &theirs)
+            #expect(mine == theirs, "t = \(t)")
+        }
+        #expect(reused.digits == remade.digits && reused.numbers == remade.numbers)
+    }
+
     /// Reduce Motion's stills: the picture as each step leaves it, then the real template, with
     /// no seed rings, sparks or stars.
     @Test func stillsFollowTheSteps() async throws {
