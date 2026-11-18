@@ -5,7 +5,7 @@ import SwiftUI
 import Testing
 @testable import PaintByNumber
 
-/// Settings › Preview's Line Art: what the create flow's comparison draws of a template
+/// The preview's Line Art: what the create flow's comparison draws of a template
 /// (`LineArtDrawing`), how heavy, the comparison drawing it, and the model making it.
 @MainActor
 struct LineArtPreviewTests {

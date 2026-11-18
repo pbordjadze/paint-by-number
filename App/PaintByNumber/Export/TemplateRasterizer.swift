@@ -19,6 +19,9 @@ nonisolated enum TemplateRasterizer {
             /// A pale wash of the region's paint, so a painting not begun shows its picture in
             /// soft color and every area painted stands out in full (`sketchColor`).
             case sketch
+            /// A fainter wash than `sketch`'s, nearer the paper, so an area painted shows in a
+            /// picture a widget's size (`faintColor`).
+            case faint
         }
 
         /// Where a coloring book's drawing goes (classic templates draw every line alike).
@@ -66,6 +69,10 @@ nonisolated enum TemplateRasterizer {
         /// Gallery thumbnails: painted regions in color, the rest a pale wash of theirs.
         static let thumbnail = Style(
             unpainted: .sketch, outlineWidth: 0.9, outlineColor: SIMD4(0.45, 0.46, 0.49, 0.28))
+        /// A painting in progress in a widget (painting-company row 348): the thumbnail's, with
+        /// unpainted areas fainter, so a tap of Paint One Area shows in the picture.
+        static let widget = Style(
+            unpainted: .faint, outlineWidth: 0.9, outlineColor: SIMD4(0.45, 0.46, 0.49, 0.28))
         /// The finished painting, with a whisper of the lines it was painted in.
         static let finished = Style(
             paintAll: true, outlineWidth: 0.8, outlineColor: SIMD4(0.2, 0.2, 0.22, 0.10),
@@ -218,6 +225,13 @@ nonisolated enum TemplateRasterizer {
         return ColorScience.okLabToEncoded(SIMD3(0.68 + 0.30 * lightness, lab.y * 0.5, lab.z * 0.5), space: space)
     }
 
+    /// The wash of `.faint`: the paint's hue a whisper over the paper, its chroma a fifth.
+    static func faintColor(_ color: PaletteColor, space: RGBColorSpace) -> SIMD3<Float> {
+        let lab = color.oklab
+        let lightness = min(max(lab.x, 0), 1)
+        return ColorScience.okLabToEncoded(SIMD3(0.88 + 0.10 * lightness, lab.y * 0.2, lab.z * 0.2), space: space)
+    }
+
     private static func resolvedPainted(_ t: Template, painted: [Bool]?, style: Style) -> [Bool] {
         if style.paintAll { return [Bool](repeating: true, count: t.regions.count) }
         guard let painted, painted.count == t.regions.count else { return [Bool](repeating: false, count: t.regions.count) }
@@ -228,12 +242,21 @@ nonisolated enum TemplateRasterizer {
     private static func fill(of region: Int, _ t: Template, painted: [Bool], style: Style) -> SIMD3<Float>? {
         let color = t.palette[Int(t.regions[region].colorIndex)]
         if painted[region] { return color.rgb }
-        return style.unpainted == .sketch ? sketchColor(color, space: t.colorSpace) : nil
+        return wash(color, style.unpainted, space: t.colorSpace)
+    }
+
+    /// An unpainted area's fill in `unpainted`, or nil for the paper.
+    static func wash(_ color: PaletteColor, _ unpainted: Style.Unpainted, space: RGBColorSpace) -> SIMD3<Float>? {
+        switch unpainted {
+        case .paper: nil
+        case .sketch: sketchColor(color, space: space)
+        case .faint: faintColor(color, space: space)
+        }
     }
 
     // MARK: Vector path
 
-    /// One even-odd path per distinct fill (a paint painted, then a paint sketched), nil where nothing has it.
+    /// One even-odd path per distinct fill (a paint painted, then a paint washed), nil where nothing has it.
     /// Regions never overlap, so even-odd over a union of regions (outer rings + holes) fills exactly those
     /// regions.
     private static func fillPaths(_ t: Template, painted: [Bool], style: Style) -> [CGPath?] {
@@ -244,7 +267,7 @@ nonisolated enum TemplateRasterizer {
             let key: Int
             if painted[index] {
                 key = color
-            } else if style.unpainted == .sketch {
+            } else if style.unpainted != .paper {
                 key = paletteCount + color
             } else {
                 continue
@@ -268,7 +291,9 @@ nonisolated enum TemplateRasterizer {
         ctx.setLineWidth(seam)
         for (key, path) in paths.enumerated() {
             guard let path else { continue }
-            let rgb = key < paletteCount ? t.palette[key].rgb : sketchColor(t.palette[key - paletteCount], space: t.colorSpace)
+            let rgb = key < paletteCount
+                ? t.palette[key].rgb
+                : wash(t.palette[key - paletteCount], style.unpainted, space: t.colorSpace) ?? style.paper
             let color = cgColor(SIMD4(rgb, 1), space: t.colorSpace)
             ctx.setFillColor(color)
             ctx.setStrokeColor(color)

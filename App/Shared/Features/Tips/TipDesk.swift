@@ -773,11 +773,14 @@ extension View {
 
     /// Whichever of `ids` has the turn, as a popover from this card on the shelf, which anchors them
     /// while it is mostly in view; `besideEdge` is the popover's side in the small form
-    /// (`TipForm.beside`) where it is not `arrowEdge`.
-    func cardTip(_ ids: [TipID], arrowEdge: Edge = .top, besideEdge: Edge? = nil) -> some View {
-        let ids = TipSet(ids)
-        return modifier(OwnPopoverTipModifier(ids: ids, arrowEdge: arrowEdge, besideEdge: besideEdge))
-            .modifier(CardTipAnchor(ids: ids))
+    /// (`TipForm.beside`) where it is not `arrowEdge`. The card anchors `drawnElsewhere` too, but
+    /// draws none of them: the screen lays their card among its content (`GentleTipView`).
+    func cardTip(
+        _ ids: [TipID], arrowEdge: Edge = .top, besideEdge: Edge? = nil, drawnElsewhere: [TipID] = []
+    ) -> some View {
+        let drawn = TipSet(ids.filter { !drawnElsewhere.contains($0) })
+        return modifier(OwnPopoverTipModifier(ids: drawn, arrowEdge: arrowEdge, besideEdge: besideEdge))
+            .modifier(CardTipAnchor(ids: TipSet(ids)))
     }
 }
 

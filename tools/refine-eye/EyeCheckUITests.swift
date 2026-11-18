@@ -21,7 +21,7 @@ final class EyeCheckUITests: XCTestCase {
     }
 
     /// The cases of row 338's review: (a) a hidden layer shown again by its tool and by the panel,
-    /// (d) by a touch, (b) a look landing, (e) ordinary use.
+    /// (d) by a touch, (e) ordinary use.
     @MainActor
     func testEyeCases() throws {
         let app = launch("create-refine")
@@ -53,10 +53,6 @@ final class EyeCheckUITests: XCTestCase {
         if app.staticTexts["refine-hint"].exists { note("hint", app.staticTexts["refine-hint"].frame) }
         mark("d-curve-bend"); drag(canvas, (0.725, 0.48), (0.725, 0.45)); sleep(2)
 
-        // (b) A look lands.
-        pickTool("looks", app); sleep(1)
-        mark("b-look"); app.buttons["refine-look-moonlit"].tap(); sleep(3)
-
         // (e) Ordinary use: Select and a tap, another tool's options, full screen and back.
         mark("e-select"); pickTool("select", app); sleep(2)
         mark("e-select-tap"); canvas.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.25)).tap(); sleep(2)
@@ -75,8 +71,6 @@ final class EyeCheckUITests: XCTestCase {
         XCTAssertTrue(tiny.waitForExistence(timeout: 60), "No tiny badge")
         sleep(3)
         mark("m-tiny-tap"); tiny.tap(); sleep(3)
-        pickTool("looks", app); sleep(2)
-        mark("m-look"); app.buttons["refine-look-moonlit"].tap(); sleep(4)
         mark("m-end")
     }
 
@@ -155,12 +149,7 @@ final class EyeCheckUITests: XCTestCase {
         mark("e-shapes"); pickTool("shapes", app); try state("shapes")
         mark("e-pen"); pickTool("pen", app); try state("pen")
 
-        // (d) A look makes paints alike, which then share a number: a landing that renumbers;
-        // (e) the badge after it, a second landing.
-        pickTool("looks", app); sleep(1)
-        mark("d-renumber"); landing(on: canvas) { app.buttons["refine-look-moonlit"].tap() }
-        sleep(6)  // past the note the look raises
-        try state("renumbered")
+        // (Looks, whose look made paints alike and renumbered them, left Refine on November 17, 2026.)
         mark("end")
     }
 

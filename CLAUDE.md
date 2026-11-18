@@ -153,7 +153,7 @@ before planning app work).
   log, `analyze.py` a device trace beside it).
 - `ci/` scripts and `.github/workflows/ci.yml`: jobs `plan` (`ci/plan.py`: on `main`, the simulator
   entries that already passed on the same files are left out), `core` (Linux: PaintCore tests, the feedback relay's
-  tests, quality regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
+  tests, quality regression, string catalog, the design budget's warnings from `ci/budget.py`), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;
   on `main`: `iphone` and `iphone-ui`, the iPhone's share alike, and `release-tests`, the unit tests in the
   App Store's build; a branch's `[compile]`, `[test …]`, `[duo]` or `[release-tests]` runs one entry instead, CI
@@ -649,8 +649,10 @@ him itself, with a push notification once he has gone quiet.
 - **A fresh reader before every merge.** Before merging into `main`, have a reviewer that didn't
   write the code read `git diff origin/main...HEAD` (the `/code-review` skill, or an Opus
   subagent). Fix what it confirms; anything large or design-level goes to Paul. The merge
-  commit's message lists what the review found and what was fixed. No PR, no
-  extra CI run. A commit message holds CI's tags only to mean them: GitHub runs nothing for a
+  commit's message lists what the review found and what was fixed. The reviewer also asks: does
+  this add a control, a menu item, a setting or an option? Then the commit says what left, or why
+  the budget has room (painting-company `process/design-budget.md`; `ci/budget.py` counts it in
+  `core` and warns, never fails). No PR, no extra CI run. A commit message holds CI's tags only to mean them: GitHub runs nothing for a
   head commit with `[skip ci]` (or `[ci skip]`, `[no ci]`, `[skip actions]`, `[actions skip]`, a
   `skip-checks: true` trailer) anywhere in its message, quoted too, and `ci.yml` reads
   `[compile]`, `[test …]`, `[duo]`, `[release-tests]`, `[iphone]` and `[ipa]` the same way on branches.

@@ -1,0 +1,11 @@
+{
+  "about": "Paint by Moonlight's design budget (painting-company process/design-budget.md). Soft limits: ci/budget.py warns when one is passed and never fails a build. Adopted as warnings on November 17, 2026, to be revisited in a few weeks. An exception is a line under exceptions: {key, what, row, until}: the budget's key, the count's name as ci/budget.py prints it, the painting-company row that grants it, and a review date.",
+  "limits": {
+    "settings.rows": 8,
+    "menu.items": 7,
+    "choice.options": 4,
+    "screen.controls": 7,
+    "gates.unreleased": 100
+  },
+  "exceptions": []
+}

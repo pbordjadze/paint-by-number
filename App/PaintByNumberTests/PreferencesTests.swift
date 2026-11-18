@@ -13,7 +13,7 @@ struct PreferencesTests {
             SettingsKey.haptics, SettingsKey.sounds, SettingsKey.sky, SettingsKey.autoAdvance,
             SettingsKey.zenMode, SettingsKey.paintingLength, SettingsKey.paperAppearance,
             SettingsKey.paletteRows, SettingsKey.paletteOrder, SettingsKey.lineWeight,
-            SettingsKey.previewStyle, SettingsKey.playsMakingOf, SettingsKey.tipsEnabled,
+            SettingsKey.playsMakingOf, SettingsKey.tipsEnabled,
             SettingsKey.previewShowsSettings, SettingsKey.refineSnaps, SettingsKey.refinePenColors,
             SettingsKey.refineBrushSize, SettingsKey.refineEraserSize, SettingsKey.refinePenSmoothing,
         ]
@@ -21,7 +21,7 @@ struct PreferencesTests {
             "hapticsEnabled", "soundsEnabled", "sky", "autoAdvanceColors",
             "zenMode", "paintingLength", "paperAppearance",
             "paletteRows", "paletteOrder", "lineWeight",
-            "previewStyle", "playsMakingOf", "tipsEnabled",
+            "playsMakingOf", "tipsEnabled",
             "previewShowsSettings", "refineSnaps", "refinePenColors",
             "refineBrushSize", "refineEraserSize", "refinePenSmoothing",
         ])
@@ -106,27 +106,6 @@ struct PreferencesTests {
         #expect(LineWeight.nearest(to: 0) == .regular && LineWeight.nearest(to: .nan) == .regular)
     }
 
-    /// Settings › Preview defaults to Painting, ignores anything it doesn't know, and is what the
-    /// create flow's comparison shows.
-    @Test func previewStyleDefaultsAndPersists() throws {
-        let suite = "PBNTests-\(UUID().uuidString)"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
-
-        #expect(Preferences(defaults: defaults).previewStyle == .painting && PreviewStyle.default == .painting)
-        for style in PreviewStyle.allCases {
-            defaults.set(style.rawValue, forKey: SettingsKey.previewStyle)
-            #expect(Preferences(defaults: defaults).previewStyle == style)
-            #expect(!style.name.isEmpty)
-        }
-        defaults.set("sketch", forKey: SettingsKey.previewStyle)
-        #expect(PreviewStyle.stored(in: defaults) == .painting)
-        // What `@AppStorage` and launch arguments (`-previewStyle lineArt`) use.
-        #expect(SettingsKey.previewStyle == "previewStyle")
-        #expect(Set(PreviewStyle.allCases.map(\.rawValue)) == ["painting", "lineArt"])
-        #expect(CreateModel(previewStyle: .lineArt).previewStyle == .lineArt)
-    }
-
     /// Settings › Advanced's stored settings are removed at launch, so nothing unseen shapes new
     /// paintings; its Line Weight carries over unless Settings › Line Weight already has one.
     @Test func retiredSettingsAreRemoved() throws {
@@ -152,6 +131,8 @@ struct PreferencesTests {
         #expect(Preferences.retiredKeys.contains("refineDetailBrushes"))
         // Settings › The Marginarium, which left every build.
         #expect(Preferences.retiredKeys.contains("showsMarginarium"))
+        // Settings › Preview (November 17, 2026): nothing read it once a picked picture skipped the preview.
+        #expect(Preferences.retiredKeys.contains("previewStyle"))
         // The Custom palette order goes with every painting's arrangement; the rows stay.
         #expect(defaults.object(forKey: SettingsKey.paletteOrder) == nil)
         #expect(defaults.object(forKey: Preferences.retiredCustomOrderPrefix + "42") == nil)
