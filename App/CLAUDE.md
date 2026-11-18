@@ -488,7 +488,7 @@ quiet; a screen entering in front calls off the covered screen's moment and tip)
   picture's foot for the small one (`CompareView.DividerTipFoot`, under the divider), which
   hangs under the picture. No small tip lies over a picture: where its usual side would, it
   takes another (`.gentleTip(…, besideEdge:)`, `.cardTip(…, besideEdge:)`: Watch It Again under
-  the finished row, over the doors; the first card's tips above it) or draws wider and shorter
+  the finished row, over the doors; the first card's tips above it, but Hold's, atop the pages as the gear's is on a phone, `GalleryView.holdLiesAtop`) or draws wider and shorter
   (`wideBeside`, `TipForm.besideWideWidth`: the create flow's, between the comparison and the
   chip), and Can't Find It hangs from its lane, above the caption naming the color. The gate is the compact width, not the phone: an iPad's window in Split View or
   Slide Over gets these forms too. A tip whose view reads an accessibility text size keeps its
@@ -1301,7 +1301,7 @@ Paintings, the frame, a painting a day, which StandBy shows too) and `App/Moonli
   shelf out when a painting is closed and whenever the app leaves the foreground (`OutsideComings` on the shell;
   `ArtworkPaintingView` for an open painting, after its save) and holds the app awake for it
   (`BackgroundSaving`): the painting in progress as it stands and after each of the next areas
-  (`OutsideFills.plan`: Zen Mode's order, at most `OutsideFills.most`, never the last area,
+  (`OutsideFills.plan`: the paint in hand's largest areas first, so a tap shows, drawn fainter unpainted, `TemplateRasterizer.Style.widget`; at most `OutsideFills.most`, never the last area,
   whose finish is the app's), the finished paintings' pictures, and their stickers
   (`StickerMaker`: a print with a white edge, and where Vision finds a subject in the photo, the
   subject cut out of the finished painting, each on a clear square of Messages' sizes, its white

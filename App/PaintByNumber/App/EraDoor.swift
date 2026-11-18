@@ -284,7 +284,7 @@ struct EraPassage: View {
             // top, at least as bright as the stars it brings out.
             let crescent = Path(Crescent.cgPath(in: sky.moon))
             var glow = graphics
-            glow.addFilter(.shadow(color: Theme.gold.opacity(0.55 * moon), radius: sky.moon.width * 0.18))
+            glow.addFilter(.shadow(color: Theme.gold.opacity(0.7 * moon), radius: sky.moon.width * 0.24))
             glow.fill(crescent, with: .color(Theme.gold.opacity(0.92 * moon)))
             graphics.stroke(crescent, with: .color(Theme.gold.opacity(moon)),
                             style: StrokeStyle(lineWidth: min(4, max(2, sky.moon.width * 0.04)), lineCap: .round, lineJoin: .round))
