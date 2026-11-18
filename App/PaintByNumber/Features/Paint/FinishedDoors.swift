@@ -10,7 +10,8 @@ import UIKit
 /// The doors after Finished (painting-company row 332): under the Finished bar's row, the ways on
 /// from a finished painting, each a card with a glimpse of where it leads. Another One paints
 /// a new picture from the library (Tonight's Picture while the gallery doesn't hold it, else the
-/// next night's), Change It opens Edit on this painting, On Paper prints its template and Send It
+/// next night's), Change It opens Edit on this painting, On Paper opens Print's preview of its
+/// template (where the device can print; else it shares the template's PDF) and Send It
 /// shares the finished picture; a painting made from a library picture has one more, The Original,
 /// the page about the real work (`AboutPainting`, painting-company row 120). No frames or knobs:
 /// the glimpse is the door (the mockups' critic rounds, `factory/pieces/doors/`); the arches they
@@ -30,6 +31,9 @@ struct FinishedDoors: View {
     /// The Original's page, asked of the painting screen: a sheet hung in this panel would take
     /// its capped text size and the bar's color scheme.
     var onOriginal: ((OriginalWork) -> Void)?
+    /// On Paper: Print's preview with its layout's choices (`PaintView.printTemplate`), asked of
+    /// the painting screen for the same reason; nil (no printing here) shares the template's PDF.
+    var onPrint: (() -> Void)?
     /// Send It's picture is the painting as paint alone (`PaintView`'s Show Lines off;
     /// painting-company row 295).
     var withoutLines = false
@@ -263,6 +267,7 @@ struct FinishedDoors: View {
         case .another: paintPicture?(next)
         case .change: onChange?()
         case .paper:
+            if let onPrint { onPrint(); return }
             let template = session.template, nicknames = session.colorNicknames, name = title
             let paper = PDFExporter.Paper.default(for: Locale.current.region)
             prepare(door) { try await Self.paperFile(template, title: name, paper: paper, nicknames: nicknames) }

@@ -45,6 +45,8 @@ struct CompletionBar: View {
     var original: OriginalWork?
     /// Opens The Original's page (`PaintView`'s sheet).
     var onOriginal: ((OriginalWork) -> Void)?
+    /// On Paper's way into Print's preview (`PaintView.printTemplate`); nil shares the PDF.
+    var onPrint: (() -> Void)?
     #endif
 
     /// The bar's widest, and the panel's with up to four doors.
@@ -92,7 +94,7 @@ struct CompletionBar: View {
             .padding(.horizontal, 18)
             .padding(.vertical, 8)
             .frame(minHeight: Self.height)
-            FinishedDoors(session: session, title: title, picture: share.picture, metrics: doors, onChange: onChange, original: original, onOriginal: onOriginal, withoutLines: share.withoutLines)
+            FinishedDoors(session: session, title: title, picture: share.picture, metrics: doors, onChange: onChange, original: original, onOriginal: onOriginal, onPrint: onPrint, withoutLines: share.withoutLines)
                 .padding(.horizontal, Self.doorsInset)
                 .padding(.bottom, Self.doorsInset)
         }

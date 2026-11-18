@@ -298,8 +298,8 @@ below name both alike.
   bar's row that fits). In SideStore and Debug builds (`#if UNRELEASED`, painting-company row 332)
   the bar grows into a panel with the doors after Finished under its row (`FinishedDoors`: Another
   One paints the next night's library picture the gallery doesn't hold through the shell's
-  `\.paintPicture`, Change It is `onChange`, On Paper and Send It share the template's PDF and the
-  finished PNG from their own door), laid by `DoorMetrics` in at most `PaintingLayout.doorsShare`
+  `\.paintPicture`, Change It is `onChange`, On Paper opens Print's preview (`PaintView.printTemplate`; where
+  the device can't print, it shares the template's PDF) and Send It shares the finished PNG), laid by `DoorMetrics` in at most `PaintingLayout.doorsShare`
   of the screen; `PaintView` measures the panel and the canvas makes room for it
   (`PaintingLayout.Inputs.completionHeight`). `paint-complete` (with `-dark`) is its screenshot.
   A painting made from a library picture (`Artwork.sampleName`, handed on as
