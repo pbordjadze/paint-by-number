@@ -46,6 +46,21 @@ struct BeautyPaintTests {
         #expect(Self.chroma(kept[1]) >= Self.chroma(vivid) - 0.002)
     }
 
+    /// A face's red (lips) stays within `faceRedGain` of the photo's chroma, however bold rich
+    /// paint made it; the same red off the face, and a face's skin, aren't held to it
+    /// (painting-company row 363).
+    @Test func aFacesRedStaysNearThePhotos() {
+        let photo = [Self.paint(0.5, chroma: 0.1, hue: 16), Self.paint(0.5, chroma: 0.1, hue: 16), Self.paint(0.7, chroma: 0.05, hue: 55)]
+        let rich = [Self.paint(0.5, chroma: 0.16, hue: 16), Self.paint(0.5, chroma: 0.16, hue: 16), Self.paint(0.7, chroma: 0.07, hue: 55)]
+        let mixed = BeautyPaint.mix(
+            rich, shares: [0.1, 0.1, 0.8], faceShare: [0.9, 0, 0.9], photo: photo, space: .sRGB, minDistance: 0.02)
+        #expect(Self.chroma(mixed[0]) <= 0.1 * (1 + BeautyPaint.faceRedGain) + 0.002)
+        #expect(abs(Self.hue(mixed[0]) - 16) < 3)
+        #expect(Self.chroma(mixed[1]) > 0.16)
+        let unheld = BeautyPaint.mix(rich, shares: [0.1, 0.1, 0.8], faceShare: [0.9, 0, 0.9], space: .sRGB, minDistance: 0.02)
+        #expect(abs(Self.chroma(mixed[2]) - Self.chroma(unheld[2])) < 1e-4)
+    }
+
     /// Paints never come closer than the floor where they weren't.
     @Test func paintsStayApart() {
         let palette = (0..<8).map { Self.paint(0.3 + 0.01 * Float($0), chroma: 0.004 * Float($0), hue: 40 * Float($0)) }

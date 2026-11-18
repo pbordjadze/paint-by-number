@@ -48,7 +48,8 @@ public enum PaintMix: String, Sendable, Hashable, Codable, CaseIterable {
             let share = palette.indices.map { k in faces.map { $0.share.count == palette.count ? $0.share[k] : 0 } ?? 0 }
             let hold = palette.indices.map { KitPaint.skinHold(palette[$0], face: share[$0]) }
             return BeautyPaint.mix(
-                rich, shares: shares, hold: hold, faceShare: share, importance: importance, space: space, minDistance: minDistance)
+                rich, shares: shares, hold: hold, faceShare: share, importance: importance, photo: palette, space: space,
+                minDistance: minDistance)
         }
     }
 }
