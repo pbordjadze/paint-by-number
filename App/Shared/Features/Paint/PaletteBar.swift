@@ -94,8 +94,6 @@ nonisolated struct PaletteWindow: Equatable, Sendable {
 /// in `order`, filling across the bar before along it (`lanes`), so the order reads along the
 /// way the bar scrolls; they scroll when they still don't fit, keeping the selected color in view,
 /// or the swatch a tap on its color's area just shook until the selected color paints again.
-/// Where it `keepsPlaces`, finished colors stay instead, each a spent well in its place, so no
-/// swatch ever moves.
 struct PaletteBar: View {
     let session: PaintingSession
     var axis: Axis = .horizontal
@@ -109,10 +107,6 @@ struct PaletteBar: View {
     var showsCurrentColor = false
     /// Every color in its order on screen (`PaintView.colorOrder`), finished ones too.
     let order: [Int]
-    /// Whether every color of the painting keeps its place for the whole painting, a finished
-    /// one as a spent well (`placedColors`; painting-company row 293); otherwise finished colors
-    /// leave, the swatches left are packed again and the bar shrinks to them.
-    var keepsPlaces = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -203,15 +197,9 @@ struct PaletteBar: View {
         return stride(from: 0, to: colors.count, by: size).map { Array(colors[$0..<min($0 + size, colors.count)]) }
     }
 
-    /// The colors of a palette that keeps its places: every paint with an area, finished or not
-    /// (and the selected one), so the bar is all through the painting what it was at its start.
-    static func placedColors(_ session: PaintingSession) -> [Int] {
-        (0..<session.paletteCount).filter { session.totalByColor[$0] > 0 || session.selectedColor == $0 }
-    }
-
-    /// The colors with a place in the bar, in the palette's order.
+    /// The colors still to paint (and the selected one), in the palette's order.
     private var shownColors: [Int] {
-        let shown = Set(keepsPlaces ? Self.placedColors(session) : Self.visibleColors(session))
+        let shown = Set(Self.visibleColors(session))
         return order.filter(shown.contains)
     }
 
@@ -403,10 +391,9 @@ struct PaletteBar: View {
     /// view of its own that renders only when one of them changed (`SwatchButton`).
     private func swatch(_ index: Int) -> some View {
         let scroll = scroll
-        let complete = session.isColorComplete(index), selected = session.selectedColor == index
         return SwatchButton(
             session: session, index: index, remaining: session.remainingByColor[index],
-            isComplete: complete, isSelected: selected, isSpent: keepsPlaces && complete && !selected,
+            isComplete: session.isColorComplete(index), isSelected: session.selectedColor == index,
             shake: shakes[index] ?? 0, axis: axis, metrics: metrics, reduceMotion: reduceMotion,
             onFrame: { scroll.selectedSwatch = $0 })
             .equatable()
@@ -426,9 +413,6 @@ private struct SwatchButton: View, Equatable {
     let remaining: Int
     let isComplete: Bool
     let isSelected: Bool
-    /// A finished color kept in its place (`PaletteBar.keepsPlaces`), no longer in hand: a spent
-    /// well, which selects nothing (there is nothing left to paint) and still shows its details.
-    let isSpent: Bool
     /// Bumped to shake it.
     let shake: Int
     let axis: Axis
@@ -441,19 +425,19 @@ private struct SwatchButton: View, Equatable {
 
     nonisolated static func == (a: SwatchButton, b: SwatchButton) -> Bool {
         a.session === b.session && a.index == b.index && a.remaining == b.remaining && a.isComplete == b.isComplete
-            && a.isSelected == b.isSelected && a.isSpent == b.isSpent && a.shake == b.shake && a.axis == b.axis && a.metrics == b.metrics
+            && a.isSelected == b.isSelected && a.shake == b.shake && a.axis == b.axis && a.metrics == b.metrics
             && a.reduceMotion == b.reduceMotion
     }
 
     var body: some View {
-        let session = session, index = index, selected = isSelected, spent = isSpent
+        let session = session, index = index, selected = isSelected
         let template = session.template
         let total = session.totalByColor[index]
         let painted = total - remaining
         let fraction = 1 - Double(remaining) / Double(max(total, 1))
         Button {
             // A long press that opened the details also ends in a release over the swatch.
-            guard !showsDetails, !spent else { return }
+            guard !showsDetails else { return }
             if selected {
                 session.showHint()
             } else {
@@ -463,14 +447,13 @@ private struct SwatchButton: View, Equatable {
         } label: {
             Swatch(
                 number: index + 1, color: PaletteBar.paint(template, index), ink: PaletteBar.numeralInk(template, index),
-                fraction: fraction, isComplete: isComplete, isSelected: selected, isSpent: spent, metrics: metrics,
-                reduceMotion: reduceMotion)
+                fraction: fraction, isComplete: isComplete, isSelected: selected, metrics: metrics, reduceMotion: reduceMotion)
                 .modifier(Shake(amount: CGFloat(shake)))
         }
         .buttonStyle(.plain)
         // Lit under a trackpad's pointer, as a system button would be.
         .contentShape(.hoverEffect, Circle())
-        .hoverEffect(.highlight, isEnabled: !spent)
+        .hoverEffect(.highlight)
         // Details take precedence over the button's selection gesture. Recognizing both
         // simultaneously let a held swatch select its color instead of opening the popover.
         .highPriorityGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in showsDetails = true })
@@ -482,18 +465,15 @@ private struct SwatchButton: View, Equatable {
         }
         .accessibilityLabel(session.colorLabels[index])
         .accessibilityValue(PaintSpeech.colorProgress(painted: painted, total: total))
-        // A spent well is read as its color, "finished": nothing to press, so no button and no hint.
-        .accessibilityHint(spent ? "" : PaintSpeech.swatchHint(selected: selected))
+        .accessibilityHint(PaintSpeech.swatchHint(selected: selected))
         .accessibilityAddTraits(selected ? .isSelected : [])
-        .accessibilityRemoveTraits(spent ? .isButton : [])
         .accessibilityAction(named: Text("Show Color Details")) { showsDetails = true }
         // Where the bar's tips point (`TipAnchors`): kept in the scroll state, so a scroll
         // renders nothing.
         .onGeometryChange(for: CGRect.self) { selected ? $0.frame(in: .global) : .null } action: { frame in
             if !frame.isNull { onFrame(frame) }
         }
-        // UI tests' `swatch-N` are the colors there are to paint; a spent well is `well-N`.
-        .accessibilityIdentifier(spent ? "well-\(index + 1)" : "swatch-\(index + 1)")
+        .accessibilityIdentifier("swatch-\(index + 1)")
         .accessibilityShowsLargeContentViewer {
             Text(session.numberedColorNames[index])
         }
@@ -589,23 +569,14 @@ private struct Swatch: View {
     let fraction: Double
     let isComplete: Bool
     let isSelected: Bool
-    /// A spent well (`SwatchButton.isSpent`): what is left of the paint, a thinner wash of its
-    /// own color inside a thin rim, set well in from the swatch's edge; no numeral, no check and
-    /// no progress ring, so the wells stay behind the swatches still to paint and read as the
-    /// paints used, not as a list ticked off.
-    let isSpent: Bool
     let metrics: PaletteMetrics
     let reduceMotion: Bool
 
     var body: some View {
         ZStack {
-            Circle().fill(color).opacity(isSpent ? 0.55 : 1)
-                .padding(isSpent ? 7 : 0)
-            Circle().strokeBorder(isSpent ? Color.primary.opacity(0.16) : Color.black.opacity(0.12), lineWidth: isSpent ? 1 : 0.5)
-                .padding(isSpent ? 7 : 0)
-            if isSpent {
-                EmptyView()
-            } else if isComplete {
+            Circle().fill(color)
+            Circle().strokeBorder(.black.opacity(0.12), lineWidth: 0.5)
+            if isComplete {
                 Image(systemName: "checkmark")
                     .font(.system(size: metrics.checkmarkSize, weight: .heavy))
             } else {
@@ -626,13 +597,11 @@ private struct Swatch: View {
                 .trim(from: 0, to: fraction)
                 .stroke(Color.primary.opacity(isSelected ? 0.85 : 0.4), style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-                .opacity(isSpent ? 0 : 1)
         }
-        .opacity(isComplete && !isSelected && !isSpent ? 0.4 : 1)
+        .opacity(isComplete && !isSelected ? 0.4 : 1)
         .scaleEffect(isSelected ? 1.14 : 1)
         .animation(reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.6), value: isSelected)
         .animation(reduceMotion ? nil : .easeOut(duration: 0.35), value: fraction)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.35), value: isSpent)
         // The touch area is the whole pitch, square: a tap between two swatches or in a corner
         // lands on the nearer one instead of on nothing. The layout keeps the swatch's size.
         .padding(PaletteMetrics.spacing / 2)
