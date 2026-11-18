@@ -267,25 +267,72 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
         var size: CGSize
         var colors: Int
         var isComplete: Bool
+        /// The doors after Finished it would show, finished (SideStore and Debug builds).
+        var doors: Doors? = nil
     }
+
+    /// The doors after Finished a finished painting shows (`FinishedDoors`, SideStore and Debug
+    /// builds): how many, and whether the screen is compact in height (`doorsShare`).
+    nonisolated struct Doors: Equatable, Sendable {
+        var count: Int
+        var compactHeight: Bool
+    }
+
+    /// The space a half-open Duo's book leaves between the painting's page and the controls'.
+    static let bookGap: CGFloat = 20
 
     /// The painting screen's inputs in a view of `size` inside the safe area `safe` (its
     /// `GeometryProxy`'s), the fold where `foldPlace` puts it or else where the window has it. One
     /// recipe for `PaintView`'s layout and for the thumbnail a painting opens on
     /// (`ArtworkPaintingView`), so the thumbnail lands where the canvas then puts the page and
     /// nothing moves as the painting takes its place (painting-company row 364).
+    ///
+    /// A finished painting's panel with its doors (SideStore and Debug builds) is counted at the
+    /// height it will have (`CompletionBar.panelHeight`), not only once it has been measured
+    /// (`completionHeight`): measured after the screen was built, it moved the page up and made it
+    /// smaller as a finished painting opened. A panel measured taller still counts as measured.
     @MainActor
     static func screen(
         size: CGSize, safe: EdgeInsets, regularWidth: Bool, dynamicTypeSize: DynamicTypeSize, rows: PaletteRows,
-        colors: Int, isComplete: Bool, completionHeight: CGFloat? = nil, foldPlace: FoldPlace?, rightToLeft: Bool
+        colors: Int, isComplete: Bool, completionHeight: CGFloat? = nil, doors: Doors? = nil, foldPlace: FoldPlace?,
+        rightToLeft: Bool
     ) -> Inputs {
-        Inputs(
+        var inputs = Inputs(
             size: size, safe: safe, regularWidth: regularWidth, dynamicTypeSize: dynamicTypeSize, rows: rows,
             colors: colors, isComplete: isComplete, completionHeight: isComplete ? completionHeight : nil,
             fold: foldPlace == nil
                 ? FoldWatch.shared.windowFold(rightToLeft: rightToLeft)
                 : fold(foldPlace, rightToLeft: rightToLeft, safe: safe))
+        #if UNRELEASED
+        if isComplete, let doors, let metrics = doorMetrics(doors, inputs: inputs) {
+            inputs.completionHeight = max(
+                CompletionBar.panelHeight(metrics, dynamicTypeSize: dynamicTypeSize), completionHeight ?? 0)
+        }
+        #endif
+        return inputs
     }
+
+    #if UNRELEASED
+    /// The doors after Finished in the room the painting screen gives them: most of the page under
+    /// the top bar, never so much that the painting has no room (on the whole screen, at most
+    /// `doorsShare` of it), or all of a fold's controls page. Nil where they don't fit: the bar
+    /// alone. What the room is made of (the controls' place, the mode, the bar's size) doesn't
+    /// hang on the completion bar's height, so `inputs` may carry any.
+    static func doorMetrics(_ doors: Doors, inputs: Inputs) -> DoorMetrics? {
+        let layout = PaintingLayout(inputs)
+        let screen = Self.screen(inputs)
+        let page = screen.height - layout.controls.top - layout.controls.bottom
+        let bars = topGap + barHeight(regularWidth: layout.regularChrome) + canvasGap + bottomGap + bookGap
+        let room = layout.mode == .whole ? page * doorsShare(compactHeight: doors.compactHeight) : page - bars
+        let controlsWidth = max(
+            0, screen.width - max(inputs.safe.leading, layout.controls.leading)
+                - max(inputs.safe.trailing, layout.controls.trailing))
+        let width = CompletionBar.doorsWidth(count: doors.count, available: controlsWidth - 2 * edge)
+        let height = room - CompletionBar.height - CompletionBar.doorsInset
+        return DoorMetrics.fitting(
+            count: doors.count, width: width, height: height, dynamicTypeSize: min(inputs.dynamicTypeSize, .xxLarge))
+    }
+    #endif
 
     /// The active fold of a half-open iPhone Duo in the whole screen's coordinates (x from the
     /// leading edge), from where it is in a view that stops at the safe area (`FoldPlace`, as

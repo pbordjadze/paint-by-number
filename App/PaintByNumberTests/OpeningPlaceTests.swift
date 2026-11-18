@@ -102,8 +102,10 @@ struct OpeningPlaceTests {
                 let session = PaintingSession(template: template)
                 let size = CGSize(width: template.width, height: template.height)
                 for (colors, isComplete) in [(8, false), (30, false), (22, true)] {
-                    let opening = PaintingLayout.Opening(size: size, colors: colors, isComplete: isComplete)
-                    let drawn = canvasPage(session, on: screen, colors: colors, isComplete: isComplete)
+                    let opening = PaintingLayout.Opening(
+                        size: size, colors: colors, isComplete: isComplete, doors: Self.doors(on: screen))
+                    let drawn = canvasPage(
+                        session, on: screen, colors: colors, isComplete: isComplete, doors: opening.doors)
                     for insets in [screen.shown, screen.hidden] {
                         let reader = CGSize(
                             width: screen.size.width - insets.leading - insets.trailing,
@@ -145,13 +147,60 @@ struct OpeningPlaceTests {
 
     /// The page a canvas laid out as `PaintView` lays it on `screen`, its status bar gone, fits
     /// for `session`, in the whole screen's coordinates.
-    private func canvasPage(_ session: PaintingSession, on screen: Screen, colors: Int, isComplete: Bool) -> CGRect {
+    #if UNRELEASED
+    /// A finished painting's panel, its doors under its row, is never taller than the painting
+    /// screen counts on before measuring it (`CompletionBar.panelHeight`): taller, the page moved
+    /// up as a finished painting opened. Four doors (a painter's photo) and five (a library
+    /// picture), on a phone, a phone on its side and an iPad both ways.
+    @Test func theDoorsPanelIsNoTallerThanTheLayoutCountsOn() throws {
+        let template = Fixtures.stripes()
+        let session = try PaintingSession(template: template, progress: ArtworkFactory.progress(painting: 1, of: template))
+        try #require(session.isComplete)
+        for screen in Self.screens where !screen.name.contains("bar down the side") {
+            for count in [4, 5] {
+                let doors = PaintingLayout.Doors(count: count, compactHeight: screen.size.height < 500)
+                let safe = screen.hidden
+                let inside = CGSize(
+                    width: screen.size.width - safe.leading - safe.trailing,
+                    height: screen.size.height - safe.top - safe.bottom)
+                let inputs = PaintingLayout.screen(
+                    size: inside, safe: safe, regularWidth: screen.regular, dynamicTypeSize: .large, rows: .auto,
+                    colors: 2, isComplete: true, doors: doors, foldPlace: nil, rightToLeft: false)
+                guard let metrics = PaintingLayout.doorMetrics(doors, inputs: inputs) else { continue }
+                let bar = CompletionBar(
+                    session: session, title: "October 6", share: CompletionShare(), sealBounces: 0, onReplay: {},
+                    onStopReplay: {}, onShareTimelapse: {}, onClose: {}, doors: metrics,
+                    onChange: count == 5 ? {} : nil, original: count == 5 ? OriginalWork.all.values.first : nil)
+                let host = UIHostingController(rootView: bar)
+                let width = inside.width - 2 * PaintingLayout.edge
+                let measured = host.sizeThatFits(in: CGSize(width: width, height: .greatestFiniteMagnitude)).height
+                let counted = CompletionBar.panelHeight(metrics, dynamicTypeSize: .large)
+                #expect(measured <= counted + 0.5, "\(screen.name), \(count) doors: measured \(measured), counted \(counted)")
+                #expect(inputs.completionHeight == counted, "\(screen.name): the layout counts on the panel's height")
+            }
+        }
+    }
+    #endif
+
+    /// The doors after Finished a painting of the library shows there, with Change It (SideStore
+    /// and Debug builds; none in the release).
+    private static func doors(on screen: Screen) -> PaintingLayout.Doors? {
+        #if UNRELEASED
+        PaintingLayout.Doors(count: 5, compactHeight: screen.size.height < 500)
+        #else
+        nil
+        #endif
+    }
+
+    private func canvasPage(
+        _ session: PaintingSession, on screen: Screen, colors: Int, isComplete: Bool, doors: PaintingLayout.Doors?
+    ) -> CGRect {
         let safe = screen.hidden
         let inside = CGSize(
             width: screen.size.width - safe.leading - safe.trailing, height: screen.size.height - safe.top - safe.bottom)
         let inputs = PaintingLayout.screen(
             size: inside, safe: safe, regularWidth: screen.regular, dynamicTypeSize: .large, rows: .auto,
-            colors: colors, isComplete: isComplete, foldPlace: nil, rightToLeft: false)
+            colors: colors, isComplete: isComplete, doors: doors, foldPlace: nil, rightToLeft: false)
         let layout = PaintingLayout(inputs)
         let canvasRect = layout.canvasRect(inputs: inputs, rightToLeft: false)
         let canvas = CanvasView(session: session)

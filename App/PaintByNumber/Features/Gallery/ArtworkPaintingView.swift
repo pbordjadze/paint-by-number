@@ -20,6 +20,7 @@ struct ArtworkPaintingView: View {
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
     @AppStorage(SettingsKey.paletteRows) private var paletteRows = PaletteRows.default
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.colorScheme) private var colorScheme
     @State private var autosaver: PaintingAutosaver?
@@ -277,12 +278,25 @@ struct ArtworkPaintingView: View {
         if let session = autosaver?.session {
             return PaintingLayout.Opening(
                 size: CGSize(width: session.template.width, height: session.template.height),
-                colors: PaletteBar.visibleColorCount(session.template), isComplete: session.isComplete)
+                colors: PaletteBar.visibleColorCount(session.template), isComplete: session.isComplete,
+                doors: finishedDoors(artwork))
         }
         guard artwork.width > 0, artwork.height > 0, artwork.colorCount > 0 else { return nil }
         return PaintingLayout.Opening(
             size: CGSize(width: artwork.width, height: artwork.height), colors: artwork.colorCount,
-            isComplete: artwork.isComplete)
+            isComplete: artwork.isComplete, doors: finishedDoors(artwork))
+    }
+
+    /// The doors after Finished the painting screen will show, as it counts them (`PaintView`'s
+    /// `onChange` is `changeAction`, its library picture the artwork's).
+    private func finishedDoors(_ artwork: Artwork) -> PaintingLayout.Doors? {
+        #if UNRELEASED
+        PaintingLayout.Doors(
+            count: FinishedDoor.shown(changes: changeAction != nil, original: OriginalWork.of(artwork.sampleName) != nil).count,
+            compactHeight: verticalSizeClass == .compact)
+        #else
+        nil
+        #endif
     }
 
     /// Safe-area insets read in a left-to-right view as they are in the painting's direction.
@@ -299,7 +313,8 @@ struct ArtworkPaintingView: View {
     ) -> CGRect {
         let inputs = PaintingLayout.screen(
             size: size, safe: safe, regularWidth: regularWidth, dynamicTypeSize: dynamicTypeSize, rows: rows,
-            colors: opening.colors, isComplete: opening.isComplete, foldPlace: foldPlace, rightToLeft: rightToLeft)
+            colors: opening.colors, isComplete: opening.isComplete, doors: opening.doors, foldPlace: foldPlace,
+            rightToLeft: rightToLeft)
         return PaintingLayout(inputs).page(of: opening.size, inputs: inputs, rightToLeft: rightToLeft)
     }
 

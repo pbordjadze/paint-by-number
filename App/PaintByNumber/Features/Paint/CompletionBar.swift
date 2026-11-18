@@ -66,6 +66,16 @@ struct CompletionBar: View {
     nonisolated static func doorsWidth(count: Int, available: CGFloat) -> CGFloat {
         min(widestPanel(doors: count), available) - 2 * doorsInset
     }
+
+    /// The panel's height with `doors` under its row, as the painting screen counts on it before
+    /// it is measured (`PaintingLayout.screen`): the row at its least, each row of doors a door and
+    /// its two lines (`DoorMetrics.labelHeight`), the gaps between and the foot.
+    nonisolated static func panelHeight(_ doors: DoorMetrics, dynamicTypeSize: DynamicTypeSize) -> CGFloat {
+        let rows = CGFloat(doors.rows)
+        let label = DoorMetrics.labelHeight(min(dynamicTypeSize, .xxLarge))
+        return height + rows * (doors.door.height + DoorMetrics.labelGap + label)
+            + max(0, rows - 1) * DoorMetrics.rowGap + doorsInset
+    }
     #endif
 
     var body: some View {
