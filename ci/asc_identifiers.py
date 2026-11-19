@@ -4,12 +4,12 @@
     ASC_KEY_ID=… ASC_ISSUER_ID=… ASC_KEY_P8=… python3 ci/asc_identifiers.py
 
 Run by `.github/workflows/testflight.yml` before the export, whose cloud signing makes the App
-Store profiles from these identifiers: the app (`com.pbordjadze.paintbynumber`) with App Groups
-and Group Activities (Paint Together's SharePlay), and its widgets and stickers (`.widgets`,
-`.stickers`, from 1.3) with App Groups. It registers a missing bundle id and turns on a missing
-capability; a second run changes nothing. Which group an identifier belongs to
-(`group.com.pbordjadze.paintbynumber`) is set in the developer website, which the API can't:
-the run says so when the export's profile lacks it. Uses ci/testflight_testers.py's client.
+Store profiles from these identifiers: the app (`com.pbordjadze.paintbynumber`) and its widgets
+and stickers (`.widgets`, `.stickers`, from 1.3), each with App Groups. It registers a missing
+bundle id and turns on a missing capability; a second run changes nothing. The API can't do the
+rest, which is done once in the developer website (Certificates, Identifiers & Profiles): the
+group `group.com.pbordjadze.paintbynumber` registered and chosen for all three identifiers, and
+the app's Group Activities (Paint Together's SharePlay) turned on. Uses ci/testflight_testers.py's client.
 """
 
 import os
@@ -20,7 +20,7 @@ from testflight_testers import APIError, Client, private_key  # noqa: E402
 
 APP = "com.pbordjadze.paintbynumber"
 WANTED = {
-    APP: ("Paint by Moonlight", ["APP_GROUPS", "GROUP_ACTIVITIES"]),
+    APP: ("Paint by Moonlight", ["APP_GROUPS"]),
     APP + ".widgets": ("Paint by Moonlight Widgets", ["APP_GROUPS"]),
     APP + ".stickers": ("Paint by Moonlight Stickers", ["APP_GROUPS"]),
 }
