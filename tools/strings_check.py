@@ -68,7 +68,7 @@ ERA_KEYS = []
 CATALOG = "App/PaintByNumber/Resources/Localizable.xcstrings"
 # Keys of the app's catalog that only Paint by Mosaic's own sources (App/Ravenna, never read here)
 # use as SwiftUI literals, which look up the app's catalog in both eras (App/CLAUDE.md › Ravenna).
-MOSAIC_ONLY_KEYS = {"Adjust"}
+MOSAIC_ONLY_KEYS = {"Adjust", "Paintings", "Paper", "Refine"}
 INFOPLIST_CATALOG = "App/PaintByNumber/Resources/InfoPlist.xcstrings"
 PROJECT = "App/PaintByNumber.xcodeproj/project.pbxproj"
 INFOPLIST_FILE = "App/Config/Info.plist"

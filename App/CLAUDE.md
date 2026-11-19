@@ -1278,8 +1278,8 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
   count again before it starts one; the money rule is Paul's,
   painting-company rows 234 and 235), the feedback relay and the
   `.moonlight` file type (a mosaic sent opens as a painting of tiles).
-- **Release:** the door ships (painting-company row 236): Release's `EXCLUDED_SOURCE_FILE_NAMES`
-  leaves out only the extensions (`*.appex`), and `ci/check_release.sh` requires
+- **Release:** the door ships (painting-company row 236): Release leaves out no source (the
+  extensions ship from 1.3), and `ci/check_release.sh` requires
   `RavennaResources.bundle`, `RavennaEra` and `EraClock` in the Release app. The `Ravenna` target defines `UNRELEASED` in every
   configuration, as Ravenna's own app did.
 - **Demos:** `-demo ravenna-<name>` opens the era on Ravenna's own scenario `<name>` (its

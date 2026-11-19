@@ -26,7 +26,7 @@ struct TipFormTests {
 
     /// The build's own answer: SideStore and Debug builds keep every tip off its subject on a
     /// compact width; the release's tips are as they were.
-    @Test func aCompactWidthKeepsEveryTipOffItsSubjectOnlyInUnreleasedBuilds() {
+    @Test func aCompactWidthKeepsEveryTipOffItsSubject() {
         for id in TipID.allCases {
             let compact = TipForm.of(id, isCompact: true, isAccessibilitySize: false)
             #expect(compact.keepsOffItsSubject, "\(id) is \(compact)")
