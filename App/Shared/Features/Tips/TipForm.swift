@@ -62,7 +62,7 @@ nonisolated enum TipForm: Equatable, Sendable {
         guard keepsOff, isCompact, !isAccessibilitySize else { return form }
         switch form {
         // Settings' tip is about two rows, and in a form every side of a row is another row's
-        // label: it lies among them (`SettingsView`), under the section's title.
+        // label: it lies among them (`SettingsView`), a section of its own.
         case .popover where id == .drawerWorthALook: return .inline
         case .popover: return .beside
         case .card: return .margin
