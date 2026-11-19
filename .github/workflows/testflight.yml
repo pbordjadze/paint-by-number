@@ -153,6 +153,14 @@ jobs:
           done
           codesign --force --sign - --entitlements App/Config/AppStore.entitlements "$APP"
           codesign -d --entitlements - "$APP" 2>/dev/null | grep -q com.apple.developer.group-session
+      - name: Identifiers
+        # The bundle ids and capabilities the profiles are made from (ci/asc_identifiers.py).
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet cryptography
+          "$RUNNER_TEMP/venv/bin/python" ci/asc_identifiers.py
       - name: Sign
         # Cloud signing happens here, into an IPA that the next steps validate and upload. (Xcode's
         # own upload asks App Store Connect for a store configuration that refuses the team key's
