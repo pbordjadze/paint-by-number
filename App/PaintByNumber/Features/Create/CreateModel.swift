@@ -423,11 +423,7 @@ final class CreateModel {
     /// in SideStore and Debug builds, until it is chosen for a release (painting-company rows
     /// 191, 326, 344, 360); the regions' own colors in the release. A drawing's paints come from its palette set. The
     /// painting records it, so it regenerates as it was made.
-    #if UNRELEASED
     nonisolated static let newPaintMix: PaintMix? = .beauty
-    #else
-    nonisolated static let newPaintMix: PaintMix? = nil
-    #endif
 
     /// How a new painting's subject is cut and what its suggestion values: in SideStore and
     /// Debug builds, as the paintings are with kit paint (painting-company row 191), the
@@ -436,13 +432,8 @@ final class CreateModel {
     /// so it scores a face's cells as importance sizes them, a few too many), and Auto scoring the finished painting (`AutoTaste.finished`), so its time band doesn't
     /// buy the detail back; the release's are the defaults. The tuning is recorded with the
     /// painting like the mix; the taste is in no painting (decisions are never stored).
-    #if UNRELEASED
     nonisolated static let newTuning = PipelineTuning(subjectCellSize: 2.5, faceCellSize: 3)
     nonisolated static let newTaste = AutoTaste.finished
-    #else
-    nonisolated static let newTuning = PipelineTuning()
-    nonisolated static let newTaste = AutoTaste.fidelity
-    #endif
 
     /// The mix and tuning of the settings: a new photo's (`newPaintMix`, `newTuning`), or the
     /// ones a resumed draft recorded, so a draft saved before keeps its kept base and paints.

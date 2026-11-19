@@ -59,11 +59,9 @@ struct AppShellView: View {
     /// the painting (`StartHandoff`).
     @State private var handoff = StartHandoff()
     @SceneStorage("openArtwork") private var openArtwork = ""
-    #if UNRELEASED
     /// How many times each painting has closed onto the gallery: its card is set down as it
     /// lands (`SetDown`).
     @State private var settledCards: [UUID: Int] = [:]
-    #endif
     #if DEBUG
     /// The `gallery-open` demo opens its painting once: the gallery's other seeds land later, and
     /// one landing after the painting was closed must not open it again.
@@ -115,7 +113,6 @@ struct AppShellView: View {
                         .navigationTransition(.zoom(sourceID: id, in: zoom))
                 }
         }
-        #if UNRELEASED
         .environment(\.paintPicture, paintAnother)
         .environment(\.settledCards, settledCards)
         .onChange(of: path) { old, new in
@@ -124,7 +121,6 @@ struct AppShellView: View {
             guard new.isEmpty, let closed = old.last, !isCreating, !handoff.shelfIsOutOfSight else { return }
             settledCards[closed, default: 0] += 1
         }
-        #endif
         .environment(\.startHandoff, handoff)
         // The app's menu bar commands (Settings…, ⌘N, ⌘F): the gear's sheet, the + and the search field.
         .focusedSceneValue(\.gallery, GalleryFocus(
@@ -178,11 +174,8 @@ struct AppShellView: View {
         .onAppear(perform: restoreOpenArtwork)
         // "Open in Paint by Moonlight" from the share sheet or Files.
         .onOpenURL(perform: openFile)
-        #if UNRELEASED
         .modifier(OutsideComings(library: library, open: path.last))
-        #endif
         .onChange(of: library.placeholders.isEmpty) { presentIncomingImage() }
-        #if UNRELEASED
         .task { await TogetherLink.shared.listen() }
         // Someone started painting a picture together: it is added as a painting they sent and
         // opens straight away, as an opened `.moonlight` file does.
@@ -201,7 +194,6 @@ struct AppShellView: View {
                 presentIncomingImage()
             }
         }
-        #endif
         // Metal setup off the main thread while the gallery shows, so the first painting opens instantly.
         .task {
             RenderContext.prewarm()
@@ -257,7 +249,6 @@ struct AppShellView: View {
             onContinueDraft: continueDraft, onPaint: paint, isAsking: $galleryAsks)
     }
 
-    #if UNRELEASED
     /// Another One, a door after Finished: the create flow paints the library picture as the
     /// shelf's do, over the finished painting, which Start replaces (`startPainting`); with none,
     /// it opens on the Paint page.
@@ -270,7 +261,6 @@ struct AppShellView: View {
             isCreating = true
         }
     }
-    #endif
 
     private var isShowingReceiveFailure: Binding<Bool> {
         Binding { receiveFailure != nil } set: { if !$0 { receiveFailure = nil } }
@@ -364,13 +354,11 @@ struct AppShellView: View {
     /// Only the first of several files opens (one painting per create flow); the others' inbox
     /// copies are just deleted.
     private func openFile(_ url: URL) {
-        #if UNRELEASED
         // A widget's link to its painting (`OutsideShelf.link`).
         if let id = OutsideShelf.painting(of: url) {
             if library.artwork(with: id) != nil, !isCreating, path.last != id { path = [id] }
             return
         }
-        #endif
         guard url.isFileURL else { return }
         guard !isReadingFile else {
             Task { await IncomingFile.discard(url) }
@@ -535,9 +523,7 @@ struct AppShellView: View {
         }
         guard let id = UUID(uuidString: openArtwork), library.artwork(with: id) != nil else { return }
         guardian.begin()
-        #if UNRELEASED
         StarsComeOut.skip()
-        #endif
         path = [id]
         Task {
             try? await Task.sleep(for: ReopenGuard.settleDelay)

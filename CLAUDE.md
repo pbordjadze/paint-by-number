@@ -34,7 +34,7 @@ before planning app work).
     estimate), `LineArtSettings` (`init(style:)` carries each style's own defaults; `normalized`
     keeps detail ≤ outline, and the generator reads normalized values) and `PipelineTuning`
     (`pbn --tuning` factors on `SegmentationParameters`' knobs: exactly 1 leaves every knob bit
-    for bit; the release sets none, SideStore builds `subjectCellSize` and `faceCellSize` (`CreateModel.newTuning`), and a
+    for bit; new paintings set `subjectCellSize` and `faceCellSize` from 1.3 (`CreateModel.newTuning`), and a
     painting's recorded tuning regenerates as it was made).
   - `Segmentation/`: photo → region label map + palette (`Segmenter.segment`; stages in its doc
     comment). `SegmentationParameters` holds the knobs derived from the settings and canvas size;
@@ -45,7 +45,7 @@ before planning app work).
     `SegmentationParameters`, so a refactor there that keeps templates byte-identical can still move
     Auto's decisions. Kit paint (`KitPaint`, `GenerationSettings.paintMix`, `pbn --paint-mix kit`,
     `tools/kit_eval.py`): the finished template's paints mixed bolder than the regions' means,
-    nothing else moved; nil is the photo's, and the app asks for a mix only under `UNRELEASED`
+    nothing else moved; nil is the photo's, and the app asks for one from 1.3
     (`CreateModel.newPaintMix`); with it the subject's body loosened (`subjectCellSize`) and Auto's
     `AutoTaste.finished`, which values the finished painting over ΔE. Lively paint (`LivelyPaint`,
     `--paint-mix lively`, `PaintMix.mixed`; painting-company row 326): kit paint's paints with their
@@ -55,7 +55,7 @@ before planning app work).
     recolors regions and adds paints, at the palette's end) with a pale face's shadows mixed warm
     (`KitPaint.shade`). Beauty paint (`--paint-mix beauty`, `PaintMix.beauty`; row 360): rich paint mixed
     for a pretty painting over a faithful one (`BeautyPaint`: greys mixed from color, vibrance, the subject a
-    little forward, from each paint's mean importance; a face held near the photo, row 363); SideStore builds ask for it (`tools/paint_mix_sheet.py` lays the mixes side by side). `Vectorizer` and `LayeredLines` rebuild `SegmentationParameters` without the
+    little forward, from each paint's mean importance; a face held near the photo, row 363); new paintings ask for it from 1.3 (`tools/paint_mix_sheet.py` lays the mixes side by side). `Vectorizer` and `LayeredLines` rebuild `SegmentationParameters` without the
     coloring-book flattening, which must therefore never change `minRadius`. Gradient rings
     (`BandRings`): `docs/gradient-rings.md`.
   - `Vector/`: label map → shared smoothed boundaries, fill mesh, labels (`Vectorizer`; the pipeline
@@ -144,7 +144,7 @@ before planning app work).
   `pbn drawing` here.
 - `App/`: `PaintByNumber.xcodeproj` (synchronized folders: adding files needs no project edit),
   `PaintByNumber/`, `Ravenna/` and `RavennaResources/` (the mosaic era), `Shared/` (the sources both compile: App/CLAUDE.md › Shared with Paint by Mosaic), `PaintByNumberTests` (Swift Testing), `PaintByNumberUITests` (XCTest),
-  `Config/Info.plist`; `Outside/`, `MoonlightWidgets/` and `MoonlightStickers/` (the widget and sticker extensions, SideStore's for now: App/CLAUDE.md › Outside the app); map and notes in `App/CLAUDE.md`.
+  `Config/Info.plist`; `Outside/`, `MoonlightWidgets/` and `MoonlightStickers/` (the widget and sticker extensions, shipped from 1.3: App/CLAUDE.md › Outside the app); map and notes in `App/CLAUDE.md`.
 - `tools/`: evaluation (`eval.py`, `compare.py`, `auto_sheet.py`), the quality gate (`regression.py`
   with `baseline/`), `strings_check.py`, `swift.sh` (SwiftPM in Docker) and `models/convert_*.py`
   (the app's Core ML models from their source weights); on a Mac with Xcode, `checks.sh` (every

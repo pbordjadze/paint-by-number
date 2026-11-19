@@ -26,12 +26,10 @@ struct RootView: View {
         // `era-passage`: the gallery as the clock is set back, the passage held half laid.
         .task {
             if DemoMode.scenario == "era-passage" { door.go(to: .byzantium) }
-            #if UNRELEASED
             // `era-passage-back`, `era-passage-night`: the way back, held at a moment each.
             if DemoMode.scenario == "era-passage-back" || DemoMode.scenario == "era-passage-night" {
                 door.playDemoWayBack()
             }
-            #endif
         }
         #endif
     }
@@ -48,12 +46,10 @@ struct RootView: View {
             PaintDemoView(scenario: scenario)
         case let scenario? where scenario.hasPrefix("making-of"):
             MakingOfDemoView(scenario: scenario)
-        #if UNRELEASED
         case let scenario? where scenario.hasPrefix("about-"):
             AboutPaintingDemo(scenario: scenario)
         case let scenario? where scenario.hasPrefix("print-preview"):
             PrintPreviewDemo(scenario: scenario)
-        #endif
         default:
             AppShellView()
         }

@@ -217,12 +217,7 @@ struct FinishedWithoutLinesTests {
         let chosen = try JSONEncoder().encode(artwork)
         let read = try JSONDecoder().decode(Artwork.self, from: chosen)
         #expect(read.hidesLines == true && read.id == artwork.id)
-        #if UNRELEASED
         #expect(read.paintsWithoutLines)
-        #else
-        // The release keeps the field as written and draws every painting with its lines.
-        #expect(!read.paintsWithoutLines)
-        #endif
 
         var newer = try #require(try JSONSerialization.jsonObject(with: chosen) as? [String: Any])
         newer["format"] = Artwork.currentFormat + 1
@@ -262,25 +257,18 @@ struct FinishedWithoutLinesTests {
         let done = Self.everyAreaPainted(t)
         library.saveProgress(done, for: id)
         await library.refreshThumbnail(id, template: t, progress: done)
-        #if UNRELEASED
         let version = try #require(library.artwork(with: id)?.thumbnailVersion)
-        #endif
         let inked = try drawingInThumbnail()
 
         await library.setHidesLines(id, true, template: t, progress: done)
         await library.flush()
         #expect(makeLibrary().artwork(with: id)?.hidesLines == true)
-        #if UNRELEASED
         #expect(library.artwork(with: id)?.thumbnailVersion == version + 1)
         #expect(try drawingInThumbnail() > inked + 10, "the gallery's picture lost its ink: \(inked)")
         let shared = try ArtworkExporter.paintingPNG(store: library.store, artwork: try #require(library.artwork(with: id)))
         let plain = try #require(TemplateRasterizer.pngData(
             t, style: .finished.hidingLines(true, painted: nil), maxPixelSize: ArtworkExporter.imagePixelSize))
         #expect(shared == plain, "Share Painting's picture is the painting as paint alone")
-        #else
-        // The release draws it again as it was.
-        #expect(try drawingInThumbnail() == inked)
-        #endif
 
         // Back with its lines.
         await library.setHidesLines(id, false, template: t, progress: done)

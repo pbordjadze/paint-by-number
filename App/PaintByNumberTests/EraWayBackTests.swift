@@ -9,7 +9,6 @@ import Testing
 /// whole wall. The release plays the way in's passage both ways.
 @MainActor
 struct EraWayBackTests {
-    #if UNRELEASED
     private let delays = stride(from: 0.0, through: 1.0, by: 0.05)
     private let screens = [CGSize(width: 393, height: 852), CGSize(width: 852, height: 393),
                            CGSize(width: 1032, height: 1376), CGSize(width: 1376, height: 1032),
@@ -166,17 +165,4 @@ struct EraWayBackTests {
         let time = EraWayBack.halfFallen
         #expect(EraWayBack.tile(delay: 0.6, index: 12, at: time) == EraWayBack.tile(delay: 0.6, index: 12, at: time))
     }
-    #else
-    /// The release has the one passage, both ways and under Reduce Motion.
-    @Test func theReleasePlaysTheSamePassageBothWays() {
-        for era in [Era.moonlight, .byzantium] {
-            for reduceMotion in [false, true] {
-                #expect(!EraPassage.isWayBack(to: era, reduceMotion: reduceMotion))
-                let moments = EraPassage.moments(to: era, reduceMotion: reduceMotion)
-                #expect(moments.covered == EraPassage.wait + EraPassage.cover)
-                #expect(moments.done == EraPassage.total)
-            }
-        }
-    }
-    #endif
 }

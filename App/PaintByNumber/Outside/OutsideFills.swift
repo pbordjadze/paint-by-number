@@ -1,4 +1,3 @@
-#if UNRELEASED
 import Foundation
 import PaintCore
 
@@ -28,4 +27,3 @@ nonisolated enum OutsideFills {
         return Array(byArea.prefix(count))
     }
 }
-#endif

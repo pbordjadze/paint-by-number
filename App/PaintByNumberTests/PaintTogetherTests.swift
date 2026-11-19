@@ -1,4 +1,3 @@
-#if UNRELEASED
 import Foundation
 import PaintCore
 import Testing
@@ -94,4 +93,3 @@ struct PaintTogetherTests {
         #expect(pair.painted.0.isEmpty)
     }
 }
-#endif

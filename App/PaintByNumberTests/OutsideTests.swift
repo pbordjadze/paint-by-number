@@ -99,7 +99,6 @@ struct OutsideShelfTests {
     }
 }
 
-#if UNRELEASED
 @MainActor
 struct OutsideDeskTests {
     let root = Fixtures.temporaryDirectory()
@@ -316,4 +315,3 @@ struct StickerMakerTests {
         #expect(try FileManager.default.contentsOfDirectory(atPath: shelf.root.path) == ["stickers.json"])
     }
 }
-#endif

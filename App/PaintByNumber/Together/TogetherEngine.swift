@@ -1,4 +1,3 @@
-#if UNRELEASED
 import Foundation
 import PaintCore
 import simd
@@ -123,4 +122,3 @@ final class TogetherEngine {
         session.applyFriend(painted: changed.painted, unpainted: changed.unpainted, from: from)
     }
 }
-#endif

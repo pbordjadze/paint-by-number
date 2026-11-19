@@ -1,4 +1,3 @@
-#if UNRELEASED
 import PaintCore
 import SwiftUI
 
@@ -124,4 +123,3 @@ struct FineTuneSheet: View {
         return made.normalized
     }
 }
-#endif

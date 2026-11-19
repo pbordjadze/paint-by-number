@@ -1,4 +1,3 @@
-#if UNRELEASED
 import CoreGraphics
 import Foundation
 import Observation
@@ -431,4 +430,3 @@ extension EnvironmentValues {
         set { self[PaintPictureKey.self] = newValue }
     }
 }
-#endif

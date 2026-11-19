@@ -112,14 +112,10 @@ nonisolated struct RefineGuidePage {
     var text: String
     var practice: RefinePracticeSetup
 
-    /// A page's words under the release's names, or under 1.3's in SideStore and Debug builds
-    /// (painting-company row 331: Refine is Edit, its Paint group and layer are Colors).
+    /// A page's words under 1.3's names (painting-company row 331: Refine is Edit, its Paint
+    /// group and layer are Colors); the first are the names before 1.3, kept with their pages.
     static func named(_ release: String, _ unreleased: String) -> String {
-        #if UNRELEASED
-        return unreleased
-        #else
-        return release
-        #endif
+        unreleased
     }
 
     // The practice pictures: a moonlit evening with a far hill, a near hill with a tree, a cottage

@@ -453,23 +453,14 @@ struct RefineView: View {
     /// Named for the way in (painting-company row 239): a blank page's drawing, or ✎ Change
     /// on a painting or a picture.
     private var screenTitle: Text {
-        #if UNRELEASED
         // 1.3's names (painting-company row 331): Edit, for Refine and ✎ Change alike.
         model.isScratch ? Text("Blank Page") : Text("Edit")
-        #else
-        model.isScratch ? Text("Blank Page") : Text("Change")
-        #endif
     }
 
     /// VoiceOver's name for the picture; Edit is 1.3's name for Refine (painting-company row 331).
     private static var canvasLabel: String {
-        #if UNRELEASED
         String(localized: "refine.canvas.edit", defaultValue: "Painting to edit",
                comment: "VoiceOver label of the Edit screen's picture (SideStore builds' name for Refine), where lines are drawn and erased; its value counts the changes")
-        #else
-        String(localized: "refine.canvas", defaultValue: "Painting to refine",
-               comment: "VoiceOver label of the Refine screen's picture, where lines are drawn and erased; its value counts the changes")
-        #endif
     }
 
     /// The number of changes, for VoiceOver.
@@ -517,11 +508,7 @@ struct RefineView: View {
             .accessibilityIdentifier("refine-cancel")
             .confirmationDialog(Text("Discard Your Changes?"), isPresented: $confirmsCancel, titleVisibility: .visible) {
                 Button("Discard Changes", role: .destructive, action: cancel)
-                #if UNRELEASED
                 Button("Keep Editing", role: .cancel) {}
-                #else
-                Button("Keep Refining", role: .cancel) {}
-                #endif
             }
     }
 

@@ -60,7 +60,7 @@ final class EraDoor {
         passage = nil
     }
 
-    #if DEBUG && UNRELEASED
+    #if DEBUG
     /// The `era-passage-back` and `era-passage-night` demos: the way back played over the gallery,
     /// with no Paint by Mosaic loaded to leave (their stills hold it where the night hides both).
     func playDemoWayBack() {
@@ -91,19 +91,13 @@ struct EraPassage: View {
     /// Whether the passage to `destination` is the way back's own: to Paint by Moonlight, with
     /// motion, in SideStore and Debug builds. Every other passage is the tiles set and lifted.
     static func isWayBack(to destination: Era, reduceMotion: Bool) -> Bool {
-        #if UNRELEASED
         return destination == .moonlight && !reduceMotion
-        #else
-        return false
-        #endif
     }
 
     /// When the screen is wholly covered, so the era can go in beneath, and when the passage is
     /// over (seconds from its start).
     static func moments(to destination: Era, reduceMotion: Bool) -> (covered: TimeInterval, done: TimeInterval) {
-        #if UNRELEASED
         if isWayBack(to: destination, reduceMotion: reduceMotion) { return (EraWayBack.swap, EraWayBack.total) }
-        #endif
         return (wait + cover, total)
     }
 
@@ -152,10 +146,8 @@ struct EraPassage: View {
     private static var demoHold: TimeInterval? {
         switch DemoMode.scenario {
         case "era-passage": return wait + cover * 0.67
-        #if UNRELEASED
         case "era-passage-back": return EraWayBack.halfFallen
         case "era-passage-night": return EraWayBack.clears
-        #endif
         default: return nil
         }
     }
@@ -179,12 +171,10 @@ struct EraPassage: View {
     }
 
     private func draw(in graphics: inout GraphicsContext, size: CGSize, elapsed: TimeInterval, destination: Era) {
-        #if UNRELEASED
         if Self.isWayBack(to: destination, reduceMotion: reduceMotion) {
             drawWayBack(in: &graphics, size: size, elapsed: elapsed)
             return
         }
-        #endif
         let apse = Color(red: 0.082, green: 0.075, blue: 0.059)
         if reduceMotion {
             let fade = 0.35
@@ -250,7 +240,6 @@ struct EraPassage: View {
                       with: .color(.black.opacity(0.18 * opacity)))
     }
 
-    #if UNRELEASED
     /// The night behind the wall: deepest overhead, a little of the dusk toward the horizon.
     private static let zenith = Color(red: 0.047, green: 0.043, blue: 0.098)
     private static let horizon = Color(red: 0.118, green: 0.086, blue: 0.243)
@@ -304,7 +293,6 @@ struct EraPassage: View {
             Self.set(tile, side: tile.side * CGFloat(state.scale), turn: turn, opacity: state.opacity, in: &graphics)
         }
     }
-    #endif
 
     struct Layout {
         let size: CGSize
@@ -367,7 +355,6 @@ struct EraPassage: View {
     }
 }
 
-#if UNRELEASED
 /// The way back from Paint by Mosaic to Paint by Moonlight (painting-company row 281), the way
 /// in's counterpart: when each thing happens and how far along it is, the drawing left to
 /// `EraPassage`. After the same wait, the wall's tiles come over the screen quickly (`cover`), in
@@ -507,7 +494,6 @@ enum EraWayBack {
         return t * t * (3 - 2 * t)
     }
 }
-#endif
 
 /// The passage's own little generator (SplitMix64), so it lays the same tiles every time.
 private struct PassageRandom {

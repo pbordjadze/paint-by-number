@@ -1,4 +1,3 @@
-#if UNRELEASED
 import Combine
 import Foundation
 import GroupActivities
@@ -170,4 +169,3 @@ final class TogetherLink {
         isActive = false
     }
 }
-#endif

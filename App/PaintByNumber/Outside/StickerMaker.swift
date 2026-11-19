@@ -1,4 +1,3 @@
-#if UNRELEASED
 import CoreGraphics
 import Foundation
 import os
@@ -207,4 +206,3 @@ nonisolated enum StickerMaker {
             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
     }
 }
-#endif

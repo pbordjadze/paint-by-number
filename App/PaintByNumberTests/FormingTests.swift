@@ -10,12 +10,7 @@ import UIKit
 @MainActor
 struct FormingTests {
     @Test func onlyAPictureWithAPhotoPickedOnThePaintPageForms() {
-        #if UNRELEASED
         #expect(FormingPlan.forms(paintsNow: true, isScratch: false, isDrawing: false))
-        #else
-        // The release's wait is the one it had: its drafts and its statuses.
-        #expect(!FormingPlan.forms(paintsNow: true, isScratch: false, isDrawing: false))
-        #endif
         // The settings' preview, a page from scratch and a drawing keep what they show.
         #expect(!FormingPlan.forms(paintsNow: false, isScratch: false, isDrawing: false))
         #expect(!FormingPlan.forms(paintsNow: true, isScratch: true, isDrawing: false))

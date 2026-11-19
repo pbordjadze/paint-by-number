@@ -1,4 +1,3 @@
-#if UNRELEASED
 import CoreGraphics
 import Foundation
 import os
@@ -268,5 +267,4 @@ struct AboutPaintingDemo: View {
             }
     }
 }
-#endif
 #endif

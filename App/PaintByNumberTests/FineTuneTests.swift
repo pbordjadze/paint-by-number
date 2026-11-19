@@ -1,4 +1,3 @@
-#if UNRELEASED
 import CoreGraphics
 import Foundation
 import PaintCore
@@ -63,4 +62,3 @@ struct FineTuneTests {
         #expect(more.minimumStrokeLength < art.minimumStrokeLength)
     }
 }
-#endif

@@ -147,7 +147,6 @@ struct OpeningPlaceTests {
 
     /// The page a canvas laid out as `PaintView` lays it on `screen`, its status bar gone, fits
     /// for `session`, in the whole screen's coordinates.
-    #if UNRELEASED
     /// A finished painting's panel, its doors under its row, is as tall as the painting screen
     /// counts on before building it (`CompletionBar.panelHeight`): taller, the page moved up as a
     /// finished painting opened. Four doors (a painter's photo) and five (a library picture), on
@@ -195,16 +194,11 @@ struct OpeningPlaceTests {
             }
         }
     }
-    #endif
 
     /// The doors after Finished a painting of the library shows there, The Original too (SideStore
     /// and Debug builds; none in the release).
     private static func doors(on screen: Screen) -> PaintingLayout.Doors? {
-        #if UNRELEASED
         PaintingLayout.Doors(count: 4, compactHeight: screen.size.height < 500)
-        #else
-        nil
-        #endif
     }
 
     private func canvasPage(

@@ -36,7 +36,6 @@ struct CompletionBar: View {
     /// Built out of sight (`FinishWarmup`): no tip hangs from it, and its share menu is made with
     /// no picture to share.
     var isWarmup = false
-    #if UNRELEASED
     /// The doors under the row (`FinishedDoors`), laid as these say; nil is the bar alone.
     var doors: DoorMetrics?
     /// The Original's work (`PaintView.libraryPicture`); nil leaves that door out.
@@ -45,14 +44,12 @@ struct CompletionBar: View {
     var onOriginal: ((OriginalWork) -> Void)?
     /// On Paper's way into Print's preview (`PaintView.printTemplate`); nil shares the PDF.
     var onPrint: (() -> Void)?
-    #endif
 
     /// The bar's widest, and the panel's with up to four doors.
     nonisolated static let panelWidth: CGFloat = 560
     /// The doors' margin inside the panel, at its sides and foot.
     nonisolated static let doorsInset: CGFloat = 16
 
-    #if UNRELEASED
     /// The panel's widest with so many doors: four fit `panelWidth`; a fifth would widen it by a
     /// door, so a row of five on an iPad would keep the arches of a row of four and their captions
     /// one line.
@@ -78,21 +75,15 @@ struct CompletionBar: View {
         return height + rows * (doors.door.height + DoorMetrics.labelGap + doors.labelRoom(dynamicTypeSize))
             + max(0, rows - 1) * DoorMetrics.rowGap + doorsInset
     }
-    #endif
 
     var body: some View {
-        #if UNRELEASED
         if let doors {
             panel(doors)
         } else {
             bar
         }
-        #else
-        bar
-        #endif
     }
 
-    #if UNRELEASED
     /// The bar grown into a panel: its row as it is, the doors under it (painting-company row 332).
     private func panel(_ doors: DoorMetrics) -> some View {
         VStack(spacing: 0) {
@@ -115,7 +106,6 @@ struct CompletionBar: View {
         .glassEffect(.regular, in: .rect(cornerRadius: 30, style: .continuous))
         .task(id: session.revision) { await share.prepare(for: session) }
     }
-    #endif
 
     private var bar: some View {
         // The row as it is where the painting's name fits on one line; on a narrower bar (a small
@@ -140,11 +130,7 @@ struct CompletionBar: View {
     /// Watch It Again's side in its small form (`TipForm.beside`): under the row while the doors
     /// lie under it, otherwise above, as everywhere.
     private var replayTipBesideEdge: Edge? {
-        #if UNRELEASED
         doors != nil ? .top : nil
-        #else
-        nil
-        #endif
     }
 
     private func row(seal: Bool, titleLines: Int, shares: Bool = true) -> some View {

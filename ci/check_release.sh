@@ -3,7 +3,7 @@
 #   ci/check_release.sh <path/to/PaintByNumber.app>
 # It carries the privacy manifest and export-compliance answer, the launch screen's paper, the making-of's spec (the screen
 # behind Settings' The Making-of ships), Paint by Mosaic's resources (Ravenna's era ships from 1.1), nothing of the
-# Marginarium, none of what the project leaves out of Release (no source since 1.1 ships Refine; the widget and sticker extensions), and none of the
+# Marginarium, the widget and sticker extensions (1.3), and none of the
 # Debug-only code. Run from the repository: the types it looks for
 # are read from the sources, so a file added to either set is checked without an edit here.
 set -euo pipefail
@@ -95,10 +95,12 @@ for symbol in RavennaEra EraClock; do
   if ! grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary lacks $symbol: the era door isn't in it"; fi
 done
 
-# The widgets and the stickers (painting-company rows 348 and 349) are SideStore's for now: the
-# app target's Release leaves the extensions out (`EXCLUDED_SOURCE_FILE_NAMES = "*.appex"`), and an
-# App Store upload with one would also need its app group and profiles.
-if [[ -n "$(ls -A "$APP/PlugIns" 2>/dev/null)" ]]; then fail "the Release app embeds extensions: $(ls "$APP/PlugIns" | tr '\n' ' ')"; fi
+# The widgets and the stickers (painting-company rows 348 and 349) ship from 1.3: the app embeds
+# both extensions, and the TestFlight workflow signs them with the app group
+# (`App/Config/Outside.entitlements`).
+for appex in MoonlightWidgets MoonlightStickers; do
+  [[ -d "$APP/PlugIns/$appex.appex" ]] || fail "the Release app lacks $appex.appex"
+done
 
 # Paul's decision (October 23): the Marginarium is private for now; it leaves every build and this
 # repository. Its archive is in the private painting-company repository. These checks keep any of

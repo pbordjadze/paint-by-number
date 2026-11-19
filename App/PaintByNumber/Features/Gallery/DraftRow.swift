@@ -93,11 +93,7 @@ struct DraftRow: View {
 
     /// 1.3's name for Refine is Edit (painting-company row 331).
     private var continueTitle: Text {
-        #if UNRELEASED
         Text("Continue Editing")
-        #else
-        Text("Continue Refining")
-        #endif
     }
 
     private func continueButton(fillsWidth: Bool) -> some View {
@@ -128,11 +124,7 @@ struct DraftRow: View {
                               comment: "Destructive button of the draft's discard confirmation; the argument is the draft's title"),
                        role: .destructive, action: onDiscard)
             } message: {
-                #if UNRELEASED
                 Text("Its photo and everything you changed in Edit will be lost.")
-                #else
-                Text("Its photo and everything you changed in Refine will be lost.")
-                #endif
             }
             .padding(.leading, 20)
     }

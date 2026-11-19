@@ -185,14 +185,15 @@ below name both alike.
   `PaintingMelody`, `HapticsPlayer`, `SoundPlayer`; the sky they play in is `App/Sky.swift`.
 - `Resources/`: asset catalog, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Models/` (the two
   `.mlpackage`s), `Samples/` (`library.json` and the pictures), `PrivacyInfo.xcprivacy`.
-- `Outside/` (`#if UNRELEASED`): the app's side of its widgets and stickers (Outside the app, below).
-- `Together/` (`#if UNRELEASED`; painting-company row 350, design `factory/pieces/shareplay/`):
+- `Outside/` (ships from 1.3): the app's side of its widgets and stickers (Outside the app, below).
+- `Together/` (ships from 1.3; painting-company row 350, design `factory/pieces/shareplay/`):
   Paint Together over SharePlay. `TogetherLink` starts and joins sessions and sends the painting
   through the journal (the guest's arrives as a received painting); `TogetherEngine` syncs one
   `PaintingSession` through PaintCore's `Together/` (ledger, messages, batcher), painting the
   friend's fills with `PaintingSession.applyFriend` (no undo, advance, Zen or haptic of theirs);
-  undo takes back the painter's own areas (`PaintingSession.unpaint`). The group-session
-  entitlement and `NSSupportsGroupActivities` wait on a device test; `PaintTogetherTests`.
+  undo takes back the painter's own areas (`PaintingSession.unpaint`). The App Store's build
+  carries the group-session entitlement (`Config/AppStore.entitlements`, signed in by
+  `testflight.yml`; SideStore's doesn't) and `NSSupportsGroupActivities`; `PaintTogetherTests`.
 - `App/Config/Info.plist` holds what the generated plist can't express: the image document type, the
   scene manifest, ProMotion on iPhone, and the launch screen's `Paper` color (a white launch screen
   flashed before the gallery's paper; `ci/check_release.sh` checks it).
@@ -1277,8 +1278,8 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
   count again before it starts one; the money rule is Paul's,
   painting-company rows 234 and 235), the feedback relay and the
   `.moonlight` file type (a mosaic sent opens as a painting of tiles).
-- **Release:** the door ships (painting-company row 236): Release's `EXCLUDED_SOURCE_FILE_NAMES`
-  leaves out only the extensions (`*.appex`), and `ci/check_release.sh` requires
+- **Release:** the door ships (painting-company row 236): Release leaves out no source (the
+  extensions ship from 1.3), and `ci/check_release.sh` requires
   `RavennaResources.bundle`, `RavennaEra` and `EraClock` in the Release app. The `Ravenna` target defines `UNRELEASED` in every
   configuration, as Ravenna's own app did.
 - **Demos:** `-demo ravenna-<name>` opens the era on Ravenna's own scenario `<name>` (its
@@ -1319,13 +1320,14 @@ Paintings, the frame, a painting a day, which StandBy shows too) and `App/Moonli
 - **A widget's tap** opens its painting: `OutsideShelf.link`, read in `AppShellView.openFile`.
 - **Its percentage** is the gallery card's (`OutsideShelf.percent`, `PaintSpeech.percent`
   written again for the extensions; `OutsideShelfTests` holds them to one answer).
-- **Kept out of the App Store's build.** The app target's Release and ReleaseTests leave the
-  extensions out (`EXCLUDED_SOURCE_FILE_NAMES = "*.appex"`, which the SideStore build clears, as
-  `ci.yml` and `tools/checks.sh` do); `ci/check_release.sh` fails on a Release app with PlugIns.
-  The extensions sign only in Debug, where the three targets carry the app group
-  (`Config/Outside.entitlements`). The `ipa` job signs the SideStore build ad hoc with that
-  entitlement, so SideStore, which signs again under the installer's team, gives the three a
-  group of that team; `OutsideShelf.groups(of:)` finds its name (`ALTAppGroups`).
+- **In the App Store's build from 1.3.** The app embeds both extensions in every configuration
+  (`ci/check_release.sh` fails on a Release app without them). The extensions sign only in Debug,
+  where the three targets carry the app group (`Config/Outside.entitlements`); `testflight.yml`
+  signs the archive's extensions with it and the app with `Config/AppStore.entitlements` (the
+  group and SharePlay) before the export, whose cloud signing makes the profiles. The `ipa` job
+  signs the SideStore build ad hoc with the group alone, so SideStore, which signs again under
+  the installer's team, gives the three a group of that team; `OutsideShelf.groups(of:)` finds its
+  name (`ALTAppGroups`).
 - **Demo and test launches lay nothing out** (`OutsideDesk.shelf` is nil); `OutsideTests` hand
   the desk, the plan and the sticker maker a shelf in a temporary folder.
 - **Words** are each extension's own `Localizable.xcstrings` (its literals are looked up in its

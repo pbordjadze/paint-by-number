@@ -1,4 +1,3 @@
-#if UNRELEASED
 import CoreGraphics
 import Foundation
 import SwiftUI
@@ -97,4 +96,3 @@ struct FinishedDoorsTests {
         }
     }
 }
-#endif

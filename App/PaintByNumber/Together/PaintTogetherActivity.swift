@@ -1,4 +1,3 @@
-#if UNRELEASED
 import CoreTransferable
 import Foundation
 import GroupActivities
@@ -51,4 +50,3 @@ extension EnvironmentValues {
     /// Nil where the painting can't be painted together.
     @Entry var paintTogether: PaintTogetherAction? = nil
 }
-#endif

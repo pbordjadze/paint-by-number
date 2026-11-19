@@ -204,11 +204,7 @@ final class CreateFlowTests: XCTestCase {
         XCTAssertTrue(reveal(first, in: app), "The first library painting can't be reached")
         XCTAssertTrue(app.staticTexts["The Library"].exists, "The page has no The Library")
         // SideStore builds have 1.3's names: the famous paintings are Art (painting-company row 331).
-        #if UNRELEASED
         let paintingsTitle = "Art"
-        #else
-        let paintingsTitle = "Paintings"
-        #endif
         for section in [paintingsTitle, "Photographs"] {
             XCTAssertTrue(app.staticTexts[section].exists, "The Library has no \(section) section")
         }

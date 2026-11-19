@@ -1101,11 +1101,7 @@ final class CanvasView: UIView, PaintingCanvas {
     /// photo whole inside a soft circle spreading from the page's top edge, and drawn back the
     /// same way. Reduce Motion and the release fade it.
     private var photoIsLantern: Bool {
-        #if UNRELEASED
         !reduceMotion
-        #else
-        false
-        #endif
     }
 
     private func fadePhoto(to target: Float) {

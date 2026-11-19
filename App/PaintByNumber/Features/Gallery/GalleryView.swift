@@ -37,9 +37,7 @@ struct GalleryView: View {
     @Environment(\.dynamicTypeSize) private var textSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.shelfIsOutOfSight) private var isOutOfSight
-    #if UNRELEASED
     @Environment(\.settledCards) private var settledCards
-    #endif
     @State private var width: CGFloat = 0
     /// Where an open iPhone Duo's fold runs through the pages (`FoldPlace`), flat or not.
     @State private var foldPlace: FoldPlace?
@@ -54,10 +52,8 @@ struct GalleryView: View {
     @State private var sharedFile: URL?
     /// The template the print dialog is up for (`printTemplate(of:)`), and the card it hangs from.
     @State private var printJob: TemplatePrintJob?
-    #if UNRELEASED
     /// Print's preview, up for a card's Print… (painting-company row 357).
     @State private var printPreview: PrintPreviewRequest?
-    #endif
     @State private var printingCard: Artwork.ID?
     /// The template's PDF being made for it; called off when the gallery is left.
     @State private var printTask: Task<Void, Never>?
@@ -163,13 +159,11 @@ struct GalleryView: View {
             printTask = nil
             dropUnshownPrint()
         }
-        #if UNRELEASED
         .sheet(item: $printPreview) { request in
             PrintPreviewSheet(request: request)
                 .pageSizedOnPad()
                 .besideTheFold()
         }
-        #endif
         .onChange(of: library.tipFacts) { PaintTips.shelfMoment(library) }
         .onChange(of: PaintTips.desk.answers) { PaintTips.shelfMoment(library) }
         .onChange(of: PaintTips.desk.shelfReturns) { PaintTips.shelfMoment(library) }
@@ -349,10 +343,8 @@ struct GalleryView: View {
     private func card(_ artwork: Artwork, leads: Bool = false) -> some View {
         link(artwork)
         .buttonStyle(PressableCardStyle())
-        #if UNRELEASED
         .comesOut(after: StarsComeOut.delay(for: artwork.id, among: shownIDs))
         .setsDown(count: settledCards[artwork.id] ?? 0)
-        #endif
         // A section's first card (`leads`: nothing but titles above it, no draft or preparing
         // card) has its tips hang above it in their small form on a phone (`TipForm.beside`):
         // below, the card's words reach past the row's gap over the next row's picture
@@ -524,7 +516,6 @@ struct GalleryView: View {
     private func printTemplate(of artwork: Artwork) {
         PaintTips.used(.shelfHold)
         guard printTask == nil else { return }
-        #if UNRELEASED
         // Print's preview, with the layout's choices, before the dialog.
         let store = library.store
         printTask = Task {
@@ -536,27 +527,6 @@ struct GalleryView: View {
             }
             if !Task.isCancelled { printTask = nil }
         }
-        #else
-        let store = library.store, paper = PDFExporter.Paper.default(for: Locale.current.region)
-        printTask = Task {
-            do {
-                let job = try await TemplatePrintJob.saved(store: store, artwork: artwork, paper: paper)
-                // The gallery was left meanwhile (a painting opened), which let go of this task:
-                // no dialog on coming back.
-                guard !Task.isCancelled else { return }
-                printingCard = artwork.id
-                printJob = job
-                // The dialog hangs from the card: one the gallery isn't showing (scrolled away,
-                // searched out, deleted) never opens it, and the job mustn't wait for it.
-                try? await Task.sleep(for: .seconds(2))
-                guard !Task.isCancelled else { return }
-                dropUnshownPrint()
-            } catch {
-                Log.library.error("Preparing a template to print failed: \(String(describing: error), privacy: .public)")
-            }
-            if !Task.isCancelled { printTask = nil }
-        }
-        #endif
     }
 
     /// Lets go of a template whose print dialog never came up.
