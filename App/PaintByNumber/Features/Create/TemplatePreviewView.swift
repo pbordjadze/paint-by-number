@@ -48,12 +48,10 @@ struct TemplatePreviewView: View {
     @State private var tunedSetting: Setting?
     /// The painter opened Fine-Tune, and the card shows its settings from then on (`foldsSettings`).
     @AppStorage(SettingsKey.previewShowsSettings) private var opensSettings = SettingsDefault.previewShowsSettings
-    #if UNRELEASED
     /// With the show on, the picture forming brings no lines: the show takes the photo.
     @AppStorage(SettingsKey.playsMakingOf) private var playsMakingOf = SettingsDefault.playsMakingOf
     /// VoiceOver has heard the picture forming's one status.
     @State private var hasAnnouncedForming = false
-    #endif
     @FocusState private var titleFocused: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
@@ -330,11 +328,7 @@ struct TemplatePreviewView: View {
     /// The drawing tools' button: Edit under 1.3's names (painting-company row 331), Refine in
     /// the release.
     private var refineName: Text {
-        #if UNRELEASED
         Text("Edit")
-        #else
-        Text("Refine")
-        #endif
     }
 
     @ToolbarContentBuilder
@@ -554,7 +548,6 @@ struct TemplatePreviewView: View {
     /// SideStore and Debug builds), the photo alone, and the template's lines over it once it
     /// is made: no draft and no painted picture ever shows there.
     private func comparison(of source: CreateModel.Source) -> CompareView {
-        #if UNRELEASED
         if isForming {
             return CompareView(
                 photo: source.preview, after: nil, afterID: "none", afterLabel: model.previewStyle.name,
@@ -563,7 +556,6 @@ struct TemplatePreviewView: View {
                 // The hand-off's lift waits for the lines to be drawn (`FormingPlan.liftWait`).
                 linesBegan: { [pictureProbe] in pictureProbe?.linesBegan = .now })
         }
-        #endif
         return CompareView(
             photo: source.preview, after: model.preview?.picture, afterID: model.preview?.id.uuidString ?? "none",
             afterLabel: model.previewStyle.name,
@@ -575,13 +567,10 @@ struct TemplatePreviewView: View {
     /// painting or a print, not a photo, in SideStore builds (the UI pass of Nov 18, 2026).
     private func beforeLabel(of source: CreateModel.Source) -> String {
         if model.isDrawing { return String(localized: "Drawing") }
-        #if UNRELEASED
         if source.sampleName != nil { return String(localized: "Original") }
-        #endif
         return String(localized: "Photo")
     }
 
-    #if UNRELEASED
     /// Whether the wait is the picture forming (`FormingPlan`).
     private var isForming: Bool {
         FormingPlan.forms(paintsNow: model.paintsNow, isScratch: model.isScratch, isDrawing: model.isDrawing)
@@ -636,19 +625,14 @@ struct TemplatePreviewView: View {
         }
         .animation(.easeInOut(duration: 0.2), value: shows)
     }
-    #endif
 
     @ViewBuilder
     private var status: some View {
-        #if UNRELEASED
         if isForming && !hasFailed {
             formingStatus
         } else {
             stagedStatus
         }
-        #else
-        stagedStatus
-        #endif
     }
 
     /// The status of each stage of the making, and of a change's.

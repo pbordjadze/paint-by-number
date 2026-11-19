@@ -26,7 +26,6 @@ struct CompareView: View {
     /// heavy as the canvas would draw it at the picture's size relative to that.
     var canvasSize: CGSize = .zero
     var fillsSpace = false
-    #if UNRELEASED
     /// The picture forming (`FormingPlan`): the lines of the template to be painted, which
     /// are drawn in across the photo in the canvas's ink while it calms toward the paper.
     var lines: LineArtDrawing?
@@ -36,7 +35,6 @@ struct CompareView: View {
     var linesBegan: (() -> Void)?
     /// The drawing whose lines are drawn in, or are being: another's start undrawn.
     @State private var drawnLines: UUID?
-    #endif
     /// Fraction of the picture's width showing the photo; purely presentational, so owned here.
     @State private var split: CGFloat = 0.5
     /// The layers' zoom (1 fits the picture in the frame) and offset from the frame's centre, as
@@ -79,11 +77,9 @@ struct CompareView: View {
                                 Rectangle().frame(width: max(0, x))
                             }
 
-                        #if UNRELEASED
                         if let lines {
                             formingLayers(lines, picture: picture, size: size, visible: visible)
                         }
-                        #endif
 
                         if after != nil, compares {
                             divider(at: x, in: visible, size: size)
@@ -101,7 +97,6 @@ struct CompareView: View {
                     placed(Self.cardShape.strokeBorder(Theme.hairline, lineWidth: 0.5), in: visible)
                         .allowsHitTesting(false)
 
-                    #if UNRELEASED
                     // On a compact width Compare Photo and Page hangs under the picture, pointing
                     // up at the divider's foot: from the handle it lay over the comparison it
                     // tells of (painting-company row 240; `TipForm.beside`). Wide, so it fits
@@ -111,7 +106,6 @@ struct CompareView: View {
                         placed(DividerTipFoot(), in: CGRect(x: foot - Self.footWidth / 2, y: visible.maxY - 1, width: Self.footWidth, height: 1))
                             .allowsHitTesting(false)
                     }
-                    #endif
                 }
                 .frame(width: size.width, height: size.height)
                 .coordinateSpace(.named(Self.space))
@@ -307,7 +301,6 @@ struct CompareView: View {
         }
     }
 
-    #if UNRELEASED
     /// The picture forming over the photo: its wash toward the page's paper, and the lines of
     /// `lines`, stroked once, drawn in by a mask moving over them. The drawing in begins as the
     /// layer of these lines appears, and is undone as it goes, so lines that come again (or
@@ -349,7 +342,6 @@ struct CompareView: View {
         .frame(width: width, height: visible.height)
         .offset(x: x, y: visible.minY)
     }
-    #endif
 
     private static let cardShape = RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
 
@@ -391,7 +383,6 @@ struct CompareView: View {
 
     private static let space = "compare"
 
-    #if UNRELEASED
     /// Where Compare Photo and Page hangs from on a compact width: the picture's foot. A view of
     /// its own with nothing passed in, so the picture's renders (a drag of the divider) don't run
     /// its tip's modifier.
@@ -403,7 +394,6 @@ struct CompareView: View {
 
     /// The width of the divider's foot the tip points at.
     private static let footWidth: CGFloat = 24
-    #endif
 
     /// The photo's first picture arrives from the trailing edge, the divider sweeping from there
     /// to the middle: before and after, shown rather than said. Once per photo, when the view

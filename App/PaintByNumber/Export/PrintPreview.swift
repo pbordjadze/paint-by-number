@@ -1,4 +1,3 @@
-#if UNRELEASED
 import CoreGraphics
 import Foundation
 import os
@@ -326,5 +325,4 @@ struct PrintPreviewDemo: View {
             }
     }
 }
-#endif
 #endif

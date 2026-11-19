@@ -297,12 +297,9 @@ struct CreateFlowView: View {
                 makingOf = MakingOfRequest(source: show, entry: entry)
             } else if let content = departing() {
                 departure = PictureDeparture(content: content, rect: entry, radius: Theme.cardRadius, opacity: 0)
-                #if UNRELEASED
                 departure?.lay(at: entry, lineScale: previewPicture.lineScale ?? 1)
-                #endif
             }
         }
-        #if UNRELEASED
         // The picture forming under Reduce Motion: the photo stays put, over the preview's, while
         // the flow's controls go and the layout follows the status bar.
         if show == nil, FormingPlan.passage(forms: isForming, reduceMotion: reduceMotion) == .crossFade,
@@ -311,9 +308,7 @@ struct CreateFlowView: View {
                 content: .forming(photo: photo, lines: nil), rect: home, radius: Theme.cardRadius, opacity: 0)
             staying?.lay(at: home, lineScale: 1)
         }
-        #endif
         handingOver = Task {
-            #if UNRELEASED
             // The picture forming's lines are still being drawn: the lift waits for the rest
             // (the painting was saved meanwhile).
             if let began = previewPicture.linesBegan {
@@ -321,7 +316,6 @@ struct CreateFlowView: View {
                 let wait = FormingPlan.liftWait(sinceLines: Double(elapsed.seconds) + Double(elapsed.attoseconds) * 1e-18)
                 if wait > 0 { try? await Task.sleep(for: .seconds(wait)) }
             }
-            #endif
             if entry != nil || staying != nil {
                 withAnimation(.easeOut(duration: StartHandoffPlan.lift)) {
                     departure?.opacity = 1
@@ -338,11 +332,9 @@ struct CreateFlowView: View {
             if let place { renderPage(of: template, size: place.size) }
             Log.create.notice("Hand-off: the page is expected at \(String(describing: place), privacy: .public)")
             if entry != nil {
-                #if UNRELEASED
                 // The forming picture is laid out where it is going, once, and carried there from
                 // where it is: its lines are stroked for the page here, before the move.
                 if let place { departure?.lay(at: place, lineScale: 1) }
-                #endif
                 // The show's place, a frame before it moves there: the move sets out from it.
                 try? await Task.sleep(for: .milliseconds(33))
             } else {
@@ -358,9 +350,7 @@ struct CreateFlowView: View {
                     }
                     departure = PictureDeparture(
                         content: content, rect: place, radius: 0, opacity: 0, showsPage: page != nil)
-                    #if UNRELEASED
                     departure?.lay(at: place, lineScale: 1)
-                    #endif
                     withAnimation(.easeOut(duration: StartHandoffPlan.glide)) { departure?.opacity = 1 }
                 }
                 withAnimation(.easeOut(duration: StartHandoffPlan.glide)) { staying?.opacity = 0 }
@@ -394,21 +384,17 @@ struct CreateFlowView: View {
     /// (`FormingPlan`), the photo under the template's lines. Reduce Motion and The Making-of
     /// bring no lines.
     private func departing() -> PictureDeparture.Content? {
-        #if UNRELEASED
         if isForming, let photo = model.source?.preview {
             let hasLines = FormingPlan.hasLines(reduceMotion: reduceMotion, playsShow: Preferences().playsMakingOf)
             return .forming(photo: photo, lines: hasLines ? model.preview?.drawing : nil)
         }
-        #endif
         return (model.preview?.picture).map { PictureDeparture.Content.preview($0) }
     }
 
-    #if UNRELEASED
     /// Whether this flow's picture forms on its way to the painting (`FormingPlan`).
     private var isForming: Bool {
         FormingPlan.forms(paintsNow: model.paintsNow, isScratch: model.isScratch, isDrawing: model.isDrawing)
     }
-    #endif
 
     /// Hides the status bar and waits until the window is laid out without it, and the flow too:
     /// the page's place is worked out from that layout. UIKit says the status bar is hidden a
@@ -599,14 +585,12 @@ private struct PictureDeparture {
     enum Content {
         /// The preview's picture.
         case preview(CreateModel.Picture)
-        #if UNRELEASED
         /// The picture forming (`FormingPlan`): the painter's photo, and over it, as the preview
         /// left them, its wash toward the paper (which goes on to plain paper under the lines as
         /// the page comes in, `FormingPlan.paperOpacity`) and the template's lines. All of it,
         /// and the page, is laid out once at `base` and carried by one transform
         /// (`FormingPlan.carry`), so nothing in it can part from the rest on the way.
         case forming(photo: CGImage, lines: LineArtDrawing?)
-        #endif
     }
 
     let content: Content
@@ -615,7 +599,6 @@ private struct PictureDeparture {
     var radius: CGFloat
     var opacity: Double
     var showsPage = false
-    #if UNRELEASED
     /// The forming picture's layout (window coordinates): where it is carried from to show at
     /// `rect`. Nil for the preview's picture, which is laid out at `rect` itself.
     var base: CGRect?
@@ -633,7 +616,6 @@ private struct PictureDeparture {
         self.base = base
         self.lineScale = lineScale
     }
-    #endif
 }
 
 private struct DepartingPicture: View {
@@ -643,15 +625,11 @@ private struct DepartingPicture: View {
     var body: some View {
         GeometryReader { geometry in
             let origin = geometry.frame(in: .global).origin
-            #if UNRELEASED
             if let base = departure.base {
                 carried(from: base, origin: origin)
             } else {
                 placed(origin: origin)
             }
-            #else
-            placed(origin: origin)
-            #endif
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
@@ -680,7 +658,6 @@ private struct DepartingPicture: View {
             .opacity(departure.opacity)
     }
 
-    #if UNRELEASED
     /// Laid out once, at `base`'s size, and carried to where it shows by one transform
     /// (`FormingPlan.carry`): the page coming in on the way travels with the rest.
     private func carried(from base: CGRect, origin: CGPoint) -> some View {
@@ -692,7 +669,6 @@ private struct DepartingPicture: View {
             .offset(x: travel.dx, y: travel.dy)
             .opacity(departure.opacity)
     }
-    #endif
 
     @ViewBuilder
     private var picture: some View {
@@ -705,7 +681,6 @@ private struct DepartingPicture: View {
         case .preview(.lineArt(let drawing)):
             LineArtLayer(drawing: drawing, picture: CGRect(origin: .zero, size: departure.rect.size), scale: 1)
                 .equatable()
-        #if UNRELEASED
         case .forming(let photo, let lines):
             Image(decorative: photo, scale: 1)
                 .resizable()
@@ -724,7 +699,6 @@ private struct DepartingPicture: View {
                     .equatable()
                     .frame(width: layout.width, height: layout.height)
             }
-        #endif
         }
     }
 }

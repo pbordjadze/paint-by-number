@@ -105,11 +105,7 @@ extension RefineView {
     /// The paint tools' group and layer: Colors under 1.3's names (painting-company row 331:
     /// "Paint" means filling alone), Paint in the release.
     static var paintName: Text {
-        #if UNRELEASED
         Text("Colors")
-        #else
-        Text("Paint")
-        #endif
     }
 
     static func groupName(_ kind: RefineGroup) -> Text {

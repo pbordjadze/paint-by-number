@@ -303,17 +303,14 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
             fold: foldPlace == nil
                 ? FoldWatch.shared.windowFold(rightToLeft: rightToLeft)
                 : fold(foldPlace, rightToLeft: rightToLeft, safe: safe))
-        #if UNRELEASED
         if isComplete, let doors, let metrics = doorMetrics(doors, inputs: base) {
             var counted = base
             counted.completionHeight = CompletionBar.panelHeight(metrics, dynamicTypeSize: dynamicTypeSize)
             return counted
         }
-        #endif
         return base
     }
 
-    #if UNRELEASED
     /// The doors after Finished in the room the painting screen gives them: most of the page under
     /// the top bar, never so much that the painting has no room (on the whole screen, at most
     /// `doorsShare` of it), or all of a fold's controls page. Nil where they don't fit: the bar
@@ -333,7 +330,6 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
         return DoorMetrics.fitting(
             count: doors.count, width: width, height: height, dynamicTypeSize: min(inputs.dynamicTypeSize, .xxLarge))
     }
-    #endif
 
     /// The active fold of a half-open iPhone Duo in the whole screen's coordinates (x from the
     /// leading edge), from where it is in a view that stops at the safe area (`FoldPlace`, as

@@ -14,15 +14,10 @@ extension Animation {
     /// The house curve: what the app slides in or out of its own panels arrives a little slower
     /// than `.snappy` and settles with about 1% of overshoot, like a sheet of paper laid down.
     nonisolated static var settle: Animation {
-        #if UNRELEASED
         .spring(duration: 0.6, bounce: 0.18)
-        #else
-        .snappy
-        #endif
     }
 }
 
-#if UNRELEASED
 /// Progress as the moon waxing from new to full, lit in the tint: a gallery card's in SideStore and
 /// Debug builds, where the release draws a `ProgressRing`.
 struct ProgressMoon: View {
@@ -180,4 +175,3 @@ extension View {
         modifier(SetDown(count: count))
     }
 }
-#endif

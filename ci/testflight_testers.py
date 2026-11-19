@@ -46,14 +46,14 @@ GROUP = "Friends & Family"
 TEAM = "Team"
 LINK_LIMIT = 100
 WHAT_TO_TEST = (
-    "Thank you for trying Paint by Moonlight 1.2 before anyone else.\n\n"
-    "This version is about smoothness and fixes; Tonight's Picture now waits in the gallery, and Print… is new. Please try:\n"
-    "- Starting a painting, from your own photo and from the library, and watch for any stutter as it opens.\n"
-    "- Zen Mode on a long painting, and finishing a painting.\n"
-    "- Leaving a painting and coming back: the paint you had should still be in your hand.\n"
-    "- The length menu under a painting you haven't begun.\n"
-    "- Tonight's Picture, under your paintings in the gallery.\n"
-    "- Print… in a painting's More menu, or holding a painting in the gallery: the pages to paint on paper.\n\n"
+    "Thank you for trying Paint by Moonlight 1.3 before anyone else.\n\n"
+    "This version is about delight. Please try:\n"
+    "- Paint Together: in a FaceTime call, More › Paint Together in a painting, and paint one picture with a friend.\n"
+    "- Print… in a painting's More menu: a preview of the pages before they print.\n"
+    "- The widget on your Home Screen, Lock Screen or StandBy, and stickers of finished paintings in Messages.\n"
+    "- Starting a painting: watch the picture form, and the new Blend paint.\n"
+    "- Finishing a painting, and what it offers you next.\n"
+    "- Paint by Mosaic's way back to Paint by Moonlight.\n\n"
     "Unlimited Paintings is free in TestFlight; nothing is charged.\n\n"
     "Anything odd, confusing or lovely: Give Feedback, in a painting's More menu, lets you mark the spot."
 )
@@ -238,10 +238,16 @@ def main():
         # quote an address, so only the call and its status are printed.
         brief = " ".join(str(error).split()[:3]) if isinstance(error, APIError) else type(error).__name__
         print(f"The internal group {TEAM!r} wasn't kept ({brief}).")
-    group = ensure_group(client, app_id, build["id"])
-    print(f"Build {version} is in {GROUP!r}.")
     ensure_what_to_test(client, build["id"], os.environ.get("WHAT_TO_TEST", "").strip() or WHAT_TO_TEST)
     print("What to Test is set.")
+    if os.environ.get("EXTERNAL", "true") == "false":
+        # Internal testers alone: Team has every build once it is processed, with no review.
+        print(f"Build {version} is for {TEAM!r} only: not given to {GROUP!r}, not submitted for review.")
+        summarize([f"### Build {version} is for {TEAM} only",
+                   "Internal testers can install it now; it was not submitted for Beta App Review."])
+        return
+    group = ensure_group(client, app_id, build["id"])
+    print(f"Build {version} is in {GROUP!r}.")
     state = ensure_submitted(client, build["id"])
     print(f"Beta App Review: {state}.")
     print(f"Once approved, copy the public link from App Store Connect › TestFlight › {GROUP}.")

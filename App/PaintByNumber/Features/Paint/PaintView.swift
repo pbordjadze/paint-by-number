@@ -64,9 +64,7 @@ struct PaintView: View {
     var onHidesLines: ((Bool) -> Void)?
 
     @State private var controller = CanvasController()
-    #if UNRELEASED
     @Environment(\.paintTogether) private var paintTogether
-    #endif
     @Environment(\.startHandoff) private var startHandoff
     @State private var chrome = PaintChromeState()
     @State private var showsNumbers = true
@@ -77,17 +75,13 @@ struct PaintView: View {
     @State private var timelapse: TimelapseRequest?
     /// The template the print dialog is up for (More › Print…).
     @State private var printJob: TemplatePrintJob?
-    #if UNRELEASED
     /// Print's preview, up for More › Print… (painting-company row 357).
     @State private var printPreview: PrintPreviewRequest?
-    #endif
     @State private var preparingPrint = false
     @State private var canvasUnavailable = false
     @State private var completionShare = CompletionShare()
-    #if UNRELEASED
     /// The work The Original's page is up for (`AboutPainting`, the last door after Finished).
     @State private var about: OriginalWork?
-    #endif
     /// Bumped once the completion bar is up after the painting was finished on this screen (not
     /// for a painting opened finished): its seal bounces.
     @State private var sealBounces = 0
@@ -301,7 +295,6 @@ struct PaintView: View {
         .sheet(item: $timelapse) { request in
             TimelapseExportSheet(request: request)
         }
-        #if UNRELEASED
         .sheet(item: $printPreview) { request in
             PrintPreviewSheet(request: request)
                 .pageSizedOnPad()
@@ -313,7 +306,6 @@ struct PaintView: View {
                 .pageSizedOnPad()
                 .besideTheFold()
         }
-        #endif
         .sheet(isPresented: reviewsFeedback, onDismiss: thankForFeedback) {
             if let feedback {
                 FeedbackSheet(draft: feedback, onSent: feedbackSent)
@@ -334,11 +326,7 @@ struct PaintView: View {
         // The bars' room within the safe area: all of it, or the controls' page beside a fold.
         let controls = Self.padding(layout.controls, within: geo.safeAreaInsets)
         let controlsWidth = max(0, geo.size.width - controls.leading - controls.trailing)
-        #if UNRELEASED
         let doors = session.isComplete ? finishedDoors.flatMap { PaintingLayout.doorMetrics($0, inputs: inputs(in: geo)) } : nil
-        #else
-        let doors: Never? = nil
-        #endif
         return ZStack {
             if layout.mode != .whole {
                 // The controls' page, on the painting's own surroundings.
@@ -550,13 +538,9 @@ struct PaintView: View {
     /// The doors after Finished this painting shows, finished (SideStore and Debug builds), for
     /// the layout to count on their panel before it is measured.
     private var finishedDoors: PaintingLayout.Doors? {
-        #if UNRELEASED
         PaintingLayout.Doors(
             count: FinishedDoor.shown(original: OriginalWork.of(libraryPicture) != nil).count,
             compactHeight: verticalSizeClass == .compact)
-        #else
-        nil
-        #endif
     }
 
     private func inputs(in geo: GeometryProxy) -> PaintingLayout.Inputs {
@@ -619,7 +603,6 @@ struct PaintView: View {
     /// to `quietRow`.
     private func topBar(width: CGFloat, regular: Bool, doorsShown: Bool) -> some View {
         let badges = badgeVariants(regular)
-        #if UNRELEASED
         // Hint, the rough-day helper, keeps its place: where both don't fit, Edit goes into More
         // first (the UI pass, November 18, 2026), and only then Hint on the narrowest windows.
         let narrow = onChange == nil ? [] : badges.suffix(1).map { BarVariant(badge: $0, showsHint: true, showsEdit: false) }
@@ -627,14 +610,6 @@ struct PaintView: View {
             ? badges.map { BarVariant(badge: $0, showsHint: false) }
             : badges.map { BarVariant(badge: $0, showsHint: true) } + narrow
                 + badges.suffix(1).map { BarVariant(badge: $0, showsHint: false, showsEdit: onChange == nil) }
-        #else
-        // ✎ Change stays in the bar with Hint (the board's critic: it mustn't push Hint out); on
-        // the narrowest windows Hint goes first, as it did before, and Change keeps its place.
-        let rows: [BarVariant] = session.isComplete
-            ? badges.map { BarVariant(badge: $0, showsHint: false) }
-            : badges.map { BarVariant(badge: $0, showsHint: true) }
-                + badges.suffix(1).map { BarVariant(badge: $0, showsHint: false) }
-        #endif
         let quiet = isQuiet
         return GlassEffectContainer(spacing: 10) {
             Group {
@@ -765,11 +740,7 @@ struct PaintView: View {
     private func changeButton(_ action: @escaping () -> Void, barHeight: CGFloat) -> some View {
         let locked = paintings?.locksRefine == true
         // 1.3's name for it (painting-company row 331): Edit, one name with Refine's.
-        #if UNRELEASED
         let name = LocalizedStringKey("Edit")
-        #else
-        let name = LocalizedStringKey("Change")
-        #endif
         return GlassIconButton(systemImage: "pencil", label: name, badge: locked ? "lock.fill" : nil, action: action)
             .frame(width: barHeight, height: barHeight)
             .disabled(session.isReplaying)
@@ -830,26 +801,21 @@ struct PaintView: View {
         let barHeight = self.barHeight(regular)
         return Menu {
             Toggle(isOn: $showsNumbers) { Label("Show Numbers", systemImage: "number") }
-            #if UNRELEASED
             // A finished coloring book with its drawing or as paint alone (painting-company row
             // 295). A replay shows the painting being made, lines and all; a classic template's
             // lines have dissolved under its paint already.
             if session.isComplete, !session.isReplaying, session.template.lineArt != nil {
                 Toggle(isOn: showsLines) { Label("Show Lines", systemImage: "scribble") }
             }
-            #endif
             Toggle(isOn: $zenMode) { Label("Zen Mode", systemImage: "leaf") }
-            #if UNRELEASED
             if let paintTogether, !session.isComplete {
                 Button { paintTogether() } label: { Label("Paint Together", systemImage: "shareplay") }
                     .accessibilityIdentifier("paint-together")
             }
-            #endif
             Button { controller.zoomToFit() } label: { Label("Fit to Screen", systemImage: "arrow.down.right.and.arrow.up.left") }
             if !barShowsHint, !session.isComplete {
                 Button { controller.showHint() } label: { Label("Show Hint", systemImage: "lightbulb") }
             }
-            #if UNRELEASED
             // Where a phone's bar keeps Hint over Edit (`topBar`).
             if !barShowsEdit, let onChange {
                 // Locked as the bar's ✎ is (`changeButton`): the tap opens the purchase.
@@ -870,31 +836,12 @@ struct PaintView: View {
                 Button(action: printTemplate) { Label("Print…", systemImage: "printer") }
                     .accessibilityIdentifier("print-template")
             }
-            #else
-            Divider()
-            if session.isReplaying {
-                Button(action: controller.stopReplay) { Label("Stop Replay", systemImage: "stop") }
-            } else if session.isComplete {
-                Button(action: replay) { Label("Replay Painting", systemImage: "play") }
-            } else {
-                paletteMenu
-            }
-            // Where newcomers looked for it first (painting-company row 240).
-            if offersPrint {
-                Button(action: printTemplate) { Label("Print…", systemImage: "printer") }
-                    .accessibilityIdentifier("print-template")
-            }
-            #endif
             Button(action: startFeedback) { Label("Give Feedback…", systemImage: "exclamationmark.bubble") }
             Divider()
-            #if UNRELEASED
             // Painting together, a restart would clear only this side.
             if !TogetherLink.shared.isActive {
                 Button(role: .destructive) { confirmRestart = true } label: { Label("Restart", systemImage: "arrow.counterclockwise") }
             }
-            #else
-            Button(role: .destructive) { confirmRestart = true } label: { Label("Restart", systemImage: "arrow.counterclockwise") }
-            #endif
         } label: {
             Image(systemName: "ellipsis")
                 .font(.body.weight(.semibold))
@@ -925,12 +872,10 @@ struct PaintView: View {
         }
     }
 
-    #if UNRELEASED
     /// More › Show Lines: on while the finished painting keeps its drawing.
     private var showsLines: Binding<Bool> {
         Binding(get: { !linesHidden }, set: { linesHidden = !$0 })
     }
-    #endif
 
     /// More › Palette: its rows and order.
     private var paletteMenu: some View {
@@ -959,17 +904,12 @@ struct PaintView: View {
 
     // MARK: Bottom
 
-    #if UNRELEASED
     typealias Doors = DoorMetrics
-    #else
-    typealias Doors = Never
-    #endif
 
     @ViewBuilder
     private func bottomBar(_ palette: PaletteLayout, doors: Doors?) -> some View {
         if session.isComplete {
             let transition: AnyTransition = reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity)
-            #if UNRELEASED
             CompletionBar(
                 session: session, title: title, showsTitle: !badgeShowsTitle, share: completionShare,
                 sealBounces: sealBounces, onReplay: replay, onStopReplay: controller.stopReplay,
@@ -978,13 +918,6 @@ struct PaintView: View {
                 onPrint: offersPrint ? { printTemplate() } : nil)
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { completionHeight = $0 }
                 .transition(transition)
-            #else
-            CompletionBar(
-                session: session, title: title, showsTitle: !badgeShowsTitle, share: completionShare,
-                sealBounces: sealBounces, onReplay: replay, onStopReplay: controller.stopReplay,
-                onShareTimelapse: shareTimelapse, onName: onName, isNamed: isNamed, onClose: onClose)
-                .transition(transition)
-            #endif
         } else {
             PaletteBar(
                 session: session, axis: palette.side ? .vertical : .horizontal, lines: palette.lines,
@@ -1036,21 +969,9 @@ struct PaintView: View {
         preparingPrint = true
         let template = session.template, nicknames = session.colorNicknames
         let name = title.isEmpty ? String(localized: "Painting") : title
-        #if UNRELEASED
         // Print's preview, with the layout's choices, before the dialog.
         printPreview = PrintPreviewRequest(template: template, title: name, nicknames: nicknames)
         preparingPrint = false
-        #else
-        let paper = PDFExporter.Paper.default(for: Locale.current.region)
-        Task {
-            defer { preparingPrint = false }
-            do {
-                printJob = try await TemplatePrintJob.open(template: template, title: name, nicknames: nicknames, paper: paper)
-            } catch {
-                Log.library.error("Preparing a template to print failed: \(String(describing: error), privacy: .public)")
-            }
-        }
-        #endif
     }
 
     private func handlePencil(_ action: PencilAction) {
@@ -1255,19 +1176,11 @@ private struct QuietRingButton: View {
 /// "Finished!" read as paint lost). The release's badge follows the replay (`shownPaintedCount`).
 private extension PaintingSession {
     var badgePaintedCount: Int {
-        #if UNRELEASED
         progress.paintedCount
-        #else
-        shownPaintedCount
-        #endif
     }
 
     var badgePaintedByColor: [Int] {
-        #if UNRELEASED
         zip(totalByColor, remainingByColor).map { $0 - $1 }
-        #else
-        shownPaintedByColor
-        #endif
     }
 }
 

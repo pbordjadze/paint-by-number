@@ -87,7 +87,6 @@ struct PrintLayoutTests {
         #expect(two.scale > one.scale)
     }
 
-    #if UNRELEASED
     /// The preview draws every page of the layout, painted or not, and Painted changes the
     /// template's pages alone.
     @Test func thePreviewDrawsEveryPage() async throws {
@@ -115,5 +114,4 @@ struct PrintLayoutTests {
         #expect(try pageCount(job.pdf) == 1)
         #expect(try firstPage(job.pdf).size == PDFExporter.Paper.a4.size)
     }
-    #endif
 }

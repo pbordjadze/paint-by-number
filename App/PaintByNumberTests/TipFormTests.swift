@@ -29,18 +29,10 @@ struct TipFormTests {
     @Test func aCompactWidthKeepsEveryTipOffItsSubjectOnlyInUnreleasedBuilds() {
         for id in TipID.allCases {
             let compact = TipForm.of(id, isCompact: true, isAccessibilitySize: false)
-            #if UNRELEASED
             #expect(compact.keepsOffItsSubject, "\(id) is \(compact)")
             #expect(compact != .popover && compact != .card, "\(id)")
-            #else
-            #expect(compact == TipForm.usual(id), "\(id) is \(compact)")
-            #endif
         }
-        #if UNRELEASED
         #expect(EraSeam.tipsKeepOffTheirSubject)
-        #else
-        #expect(!EraSeam.tipsKeepOffTheirSubject)
-        #endif
     }
 
     /// The rule itself, whatever the build: a popover becomes the small one beside its subject (but

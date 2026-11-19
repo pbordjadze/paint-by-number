@@ -166,13 +166,8 @@ struct ProgressCaption: View {
                     Text("Finished")
                 }
             } else if artwork.isStarted {
-                #if UNRELEASED
                 ProgressMoon(fraction: artwork.fractionComplete)
                     .frame(width: 14, height: 14)
-                #else
-                ProgressRing(fraction: artwork.fractionComplete, lineWidth: 2.4)
-                    .frame(width: 14, height: 14)
-                #endif
                 let percent = Self.percentText(artwork)
                 Text(String(localized: "gallery.card.percentPainted", defaultValue: "\(percent) painted",
                             comment: "Caption of a painting card in progress; the argument is the formatted percentage painted, e.g. 42%"))

@@ -1,4 +1,3 @@
-#if UNRELEASED
 import Foundation
 import Testing
 @testable import PaintByNumber
@@ -101,4 +100,3 @@ struct AboutPaintingTests {
         #expect(OriginalWork.listed(in: Data("{".utf8), samples: [Self.picture]).isEmpty)
     }
 }
-#endif

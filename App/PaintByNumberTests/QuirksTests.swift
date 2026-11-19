@@ -1,4 +1,3 @@
-#if UNRELEASED
 import CoreGraphics
 import SwiftUI
 import Testing
@@ -44,4 +43,3 @@ struct QuirksTests {
         #expect(abs(Double(share(0.5)) - .pi * 2500 / 2) < 150)
     }
 }
-#endif

@@ -60,11 +60,7 @@ struct SettingsView: View {
                         } label: {
                             // "Page" in SideStore builds: Print's Paper is Letter or A4 (the UI
                             // pass of Nov 18, 2026).
-                            #if UNRELEASED
                             SwiftUI.Label("Page", systemImage: "circle.lefthalf.filled")
-                            #else
-                            SwiftUI.Label("Paper", systemImage: "circle.lefthalf.filled")
-                            #endif
                         }
                         .accessibilityIdentifier("paper-appearance")
                         Picker(selection: $lineWeight) {

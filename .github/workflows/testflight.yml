@@ -2,11 +2,11 @@ name: TestFlight
 
 # A signed Release build for TestFlight, on request only (CI's IPA job keeps making the unsigned
 # SideStore builds). Every run archives, signs and has App Store Connect validate the app; only a
-# run from Actions › TestFlight › Run workflow with "Upload" ticked (from `main`, or the release
-# branch `claude/pbm-1.1-candidate`) uploads it, and
-# then its `testers` job waits for App Store Connect to process the build, puts it in the
-# Friends & Family group with its What to Test and submits it for Beta App Review
-# (ci/testflight_testers.py): one button from `main` to testers. A push to a
+# run from Actions › TestFlight › Run workflow with "Upload" ticked (from `main`) uploads it, and
+# then its `testers` job waits for App Store Connect to process the build, gives it its What to
+# Test and, with "Friends & Family" ticked, puts it in that group and submits it for Beta App
+# Review (ci/testflight_testers.py; the internal group Team gets every build without review):
+# one button from `main` to testers. A push to a
 # `claude/testflight-dryrun*` branch runs the dry run on its commit (ci.yml ignores those
 # branches), and so does a push to `main` that changes what the app bundles (`bundled` lists the
 # paths), so that an error only App Store Connect sees, like 90535 (a bundle's Info.plist naming
@@ -30,6 +30,10 @@ on:
       what_to_test:
         description: 'What to Test, shown to testers (empty: the standing text)'
         required: false
+      friends_and_family:
+        description: 'Also give it to Friends & Family (submits it for Beta App Review); unticked, only the internal group Team gets it'
+        type: boolean
+        default: true
   push:
     branches: ['claude/testflight-dryrun*', 'main']
 
@@ -98,12 +102,12 @@ jobs:
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
     steps:
-      - name: From main or the release branch only
+      - name: From main only
         # Upload sends App Store Connect and the testers what this run checked out: only main's
         # reviewed code goes (the header's rule).
-        if: github.event_name == 'workflow_dispatch' && inputs.upload && github.ref_name != 'main' && github.ref_name != 'claude/pbm-1.1-candidate'
+        if: github.event_name == 'workflow_dispatch' && inputs.upload && github.ref_name != 'main'
         run: |
-          echo "::error::Upload runs from main or claude/pbm-1.1-candidate only, and this run is on $GITHUB_REF_NAME: run it again from main, or without Upload for a dry run"
+          echo "::error::Upload runs from main only, and this run is on $GITHUB_REF_NAME: run it again from main, or without Upload for a dry run"
           exit 1
       - uses: actions/checkout@v5
       - name: Xcode
@@ -138,6 +142,17 @@ jobs:
           APP="$ARCHIVE/Products/Applications/PaintByNumber.app"
           /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" -c "Print CFBundleVersion" "$APP/Info.plist"
           ci/check_release.sh "$APP" 2>&1 | tee out/release-check.log
+      - name: Entitlements
+        # The archive is unsigned, and the export signs with what each bundle's own signature
+        # asks for: the widgets and the stickers share the app's group (Outside.entitlements), and
+        # the app adds Paint Together's SharePlay (AppStore.entitlements). Extensions first.
+        run: |
+          APP="$ARCHIVE/Products/Applications/PaintByNumber.app"
+          for appex in "$APP"/PlugIns/*.appex; do
+            codesign --force --sign - --entitlements App/Config/Outside.entitlements "$appex"
+          done
+          codesign --force --sign - --entitlements App/Config/AppStore.entitlements "$APP"
+          codesign -d --entitlements - "$APP" 2>/dev/null | grep -q com.apple.developer.group-session
       - name: Sign
         # Cloud signing happens here, into an IPA that the next steps validate and upload. (Xcode's
         # own upload asks App Store Connect for a store configuration that refuses the team key's
@@ -186,7 +201,7 @@ jobs:
         with: { name: testflight, path: out, if-no-files-found: ignore }
 
   testers:
-    name: Give the build to Friends & Family
+    name: Give the build to its testers
     needs: upload
     if: needs.upload.outputs.build != ''
     # In the uploads' queue, so the next upload waits for this one's testers.
@@ -205,6 +220,7 @@ jobs:
           BUILD: ${{ needs.upload.outputs.build }}
           WAIT_MINUTES: '50'
           WHAT_TO_TEST: ${{ inputs.what_to_test }}
+          EXTERNAL: ${{ inputs.friends_and_family && 'true' || 'false' }}
         run: |
           python3 -m venv "$RUNNER_TEMP/venv"
           "$RUNNER_TEMP/venv/bin/pip" install --quiet cryptography

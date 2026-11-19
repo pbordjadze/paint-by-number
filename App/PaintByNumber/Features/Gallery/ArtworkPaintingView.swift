@@ -71,10 +71,8 @@ struct ArtworkPaintingView: View {
         let template: Template
         let settings: GenerationSettings
     }
-    #if UNRELEASED
     /// Fine-Tune's sheet is up, from the length chip (`FineTuneSheet`).
     @State private var fineTuning = false
-    #endif
     /// What the failure toast says: the re-cut's, or ✎ Change's.
     @State private var recutFailedText = ""
     /// ✎ Change's drawing tools, open over the painting (`PaintingChangeView`), with the
@@ -290,13 +288,9 @@ struct ArtworkPaintingView: View {
     /// The doors after Finished the painting screen will show, as it counts them (its library
     /// picture is the artwork's), so the thumbnail waits where the finished painting opens.
     private func finishedDoors(_ artwork: Artwork) -> PaintingLayout.Doors? {
-        #if UNRELEASED
         PaintingLayout.Doors(
             count: FinishedDoor.shown(original: OriginalWork.of(artwork.sampleName) != nil).count,
             compactHeight: verticalSizeClass == .compact)
-        #else
-        nil
-        #endif
     }
 
     /// Safe-area insets read in a left-to-right view as they are in the painting's direction.
@@ -361,12 +355,10 @@ struct ArtworkPaintingView: View {
                     .background { RevisionObserver(session: autosaver.session, onChange: autosaver.sessionChanged) }
                     // A new template (a re-cut) is a new session: the screen starts afresh on it.
                     .id(ObjectIdentifier(autosaver.session))
-                    #if UNRELEASED
                     .environment(\.paintTogether, artwork.map { artwork in PaintTogetherAction(painting: artwork.id) { startTogether(artwork) } })
                     .task(id: ObjectIdentifier(autosaver.session)) {
                         TogetherLink.shared.paintingOpened(artworkID, session: autosaver.session)
                     }
-                    #endif
                     // Nothing is painted while the picture is cut again: it would be lost.
                     .overlay {
                         if recutting != nil || changing != nil { Color.clear.contentShape(.rect) }
@@ -439,7 +431,6 @@ struct ArtworkPaintingView: View {
             }
         }
         .modifier(RefineUnlockOffer(isPresented: $offersChangeUnlock) { openChange() })
-        #if UNRELEASED
         .sheet(isPresented: $fineTuning) {
             if let artwork {
                 FineTuneSheet(
@@ -450,7 +441,6 @@ struct ArtworkPaintingView: View {
                     .besideTheFold()
             }
         }
-        #endif
         .background { CanvasGesturesOverZoomDismissal(onAppear: land).frame(width: 0, height: 0) }
         .alert(namingUnnamed ? Text("Name Your Painting") : Text("Rename Painting"), isPresented: $isNaming) {
             TextField("Title", text: $nameText, prompt: Text(namingTitle))
@@ -466,9 +456,7 @@ struct ArtworkPaintingView: View {
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase != .active else {
-                #if UNRELEASED
                 absorbWidgetAreas()
-                #endif
                 return
             }
             FeedbackEngine.shared.rest()
@@ -476,15 +464,11 @@ struct ArtworkPaintingView: View {
             if phase == .background {
                 let library = library
                 BackgroundSaving.shared.hold { await library.flush() }
-                #if UNRELEASED
                 OutsideDesk.layOutOnLeaving(library)
-                #endif
             }
         }
         .onDisappear {
-            #if UNRELEASED
             TogetherLink.shared.paintingClosed(artworkID)
-            #endif
             regeneration?.cancel()
             recutting?.cancel()
             releaseHeldScreen()
@@ -492,7 +476,6 @@ struct ArtworkPaintingView: View {
         }
     }
 
-    #if UNRELEASED
     /// More › Paint Together: shares the painting as a `.moonlight` file would be sent (its
     /// template and title, never its photo), and the painting screen paints together as soon as the
     /// session is up (`TogetherLink.bind`).
@@ -519,17 +502,14 @@ struct ArtworkPaintingView: View {
             await OutsideDesk.layOut(library)
         }
     }
-    #endif
 
     private func open() async {
         guard autosaver == nil, failure == nil else { return }
         #if DEBUG
         TourLog.trace("mark", "open begin")
         #endif
-        #if UNRELEASED
         // Before the painting is read: what the widget painted while the app was away.
         await OutsideDesk.comeBack(to: library, open: nil, only: artworkID)
-        #endif
         do {
             let document = try await library.loadForPainting(artworkID)
             _ = await RenderContext.ready()
@@ -660,7 +640,6 @@ struct ArtworkPaintingView: View {
     /// `gallery-fine-tune` once Fine-Tune's sheet has risen over it.
     private func markDemoReady() {
         guard autosaver != nil, hasLanded, statusBarGone else { return }
-        #if UNRELEASED
         if ShellDemo.current == .galleryFineTune, !fineTuning {
             fineTuning = true
             Task {
@@ -669,7 +648,6 @@ struct ArtworkPaintingView: View {
             }
             return
         }
-        #endif
         guard ShellDemo.current == .galleryOpen || ShellDemo.current == .galleryOpenNew
             || ShellDemo.current == .galleryReceived else { return }
         DemoMode.markReady()
@@ -803,20 +781,12 @@ struct ArtworkPaintingView: View {
     /// sliders: no length's suggestion, so the cuts keep none of it. SideStore and Debug builds,
     /// with Fine-Tune: the release's chip is as it was.
     private var isCustomCut: Bool {
-        #if UNRELEASED
         return artwork?.settingsOrigin == SettingsOrigin.custom.rawValue
-        #else
-        return false
-        #endif
     }
 
     /// Fine-Tune's sheet, in SideStore and Debug builds.
     private var fineTune: (() -> Void)? {
-        #if UNRELEASED
         return { fineTuning = true }
-        #else
-        return nil
-        #endif
     }
 
     /// Cuts the painting again with the painter's own `settings`, from Fine-Tune

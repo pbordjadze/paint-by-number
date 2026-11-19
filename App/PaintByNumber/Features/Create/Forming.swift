@@ -20,11 +20,7 @@ import SwiftUI
 /// the page fades in at its place (`Passage.crossFade`). With Settings › The Making-of on, no
 /// lines arrive either and the show takes the photo as it always has.
 nonisolated enum FormingPlan {
-    #if UNRELEASED
     static let isOn = true
-    #else
-    static let isOn = false
-    #endif
 
     /// Whether the preview's wait is the picture forming: a picture picked on the Paint page
     /// (`CreateModel.paintsNow`). A page from scratch has no photo and a drawing is its own
@@ -119,7 +115,6 @@ nonisolated enum FormingPlan {
     static var dries: Double { StartHandoffPlan.settle }
 }
 
-#if UNRELEASED
 private extension Color {
     init(sheet color: SIMD3<Float>) {
         self.init(.sRGB, red: Double(color.x), green: Double(color.y), blue: Double(color.z))
@@ -186,4 +181,3 @@ struct FormingLines: View, Equatable {
         .allowsHitTesting(false)
     }
 }
-#endif

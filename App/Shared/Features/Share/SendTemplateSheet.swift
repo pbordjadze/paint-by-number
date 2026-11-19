@@ -44,15 +44,11 @@ struct SendTemplateSheet: View {
                     Toggle(isOn: $includesPhoto) {
                         // A library picture is a painting or a print, not a photo (SideStore
                         // builds; the UI pass of Nov 18, 2026).
-                        #if UNRELEASED
                         if artwork.sampleName != nil {
                             Label("Original", systemImage: "photo.on.rectangle")
                         } else {
                             Label("Original Photo", systemImage: "photo.on.rectangle")
                         }
-                        #else
-                        Label("Original Photo", systemImage: "photo.on.rectangle")
-                        #endif
                     }
                     .accessibilityIdentifier("send-photo")
                     .disabled(isPreparing)

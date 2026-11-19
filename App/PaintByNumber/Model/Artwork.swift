@@ -72,11 +72,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     /// its gallery thumbnail and in the pictures shared of it. The release draws every painting
     /// with its lines, whatever the file says.
     var paintsWithoutLines: Bool {
-        #if UNRELEASED
         hidesLines == true
-        #else
-        false
-        #endif
     }
 
     /// What this painting's derived paint names are seeded by (`ColorNickname.assign`).
