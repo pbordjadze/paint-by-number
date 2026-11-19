@@ -1,4 +1,5 @@
 #if DEBUG
+import Foundation
 import PaintCore
 import SwiftUI
 import TipKit
@@ -75,9 +76,16 @@ import TipKit
 /// folder, never the painter's, and Unlimited Paintings from the demos' stand-in store, so a
 /// preview buys nothing.
 private struct PreviewEnvironment: ViewModifier {
-    @State private var library = Library(store: ArtworkStore(
-        root: FileManager.default.temporaryDirectory.appending(path: "PreviewLibrary", directoryHint: .isDirectory)))
+    @State private var library = Library(store: ArtworkStore(root: Self.emptyRoot()))
     @State private var paintings = UnlockStoreStub.paintingsForLaunch()
+
+    /// Emptied for each preview, as `Library.forLaunch` empties the demos' library, so nothing an
+    /// earlier preview left shows.
+    private static func emptyRoot() -> URL {
+        let root = FileManager.default.temporaryDirectory.appending(path: "PreviewLibrary", directoryHint: .isDirectory)
+        try? FileManager.default.removeItem(at: root)
+        return root
+    }
 
     func body(content: Content) -> some View {
         content

@@ -1,12 +1,12 @@
 {
-  "_comment": "What the developer site (Certificates, Identifiers & Profiles) already has for the app and its extensions, read by ci/capabilities.py. Add an entry in the same change that adds an entitlement, once its developer-site step is done (by Xcode's Apple ID on the Mac or by hand): the API key can't make app groups or turn on SharePlay, so a missing step otherwise shows only on release night.",
-  "entitlements": {
-    "com.apple.security.application-groups": {
-      "step": "App Groups on the identifier, with the group registered and chosen",
-      "values": ["group.com.pbordjadze.paintbynumber"]
+  "_comment": "What the developer site (Certificates, Identifiers & Profiles) already has, per entitlements file (each file's identifiers: AppStore.entitlements the app, com.pbordjadze.paintbynumber; Outside.entitlements its .widgets and .stickers), read by ci/capabilities.py. Add an entry in the same change that adds an entitlement, once its developer-site step is done for those identifiers (by Xcode's Apple ID on the Mac or by hand): the API key can't make app groups or turn on SharePlay, so a missing step otherwise shows only on release night.",
+  "files": {
+    "App/Config/AppStore.entitlements": {
+      "com.apple.security.application-groups": ["group.com.pbordjadze.paintbynumber"],
+      "com.apple.developer.group-session": true
     },
-    "com.apple.developer.group-session": {
-      "step": "Group Activities (SharePlay) on com.pbordjadze.paintbynumber"
+    "App/Config/Outside.entitlements": {
+      "com.apple.security.application-groups": ["group.com.pbordjadze.paintbynumber"]
     }
   }
 }

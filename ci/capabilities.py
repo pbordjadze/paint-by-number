@@ -3,9 +3,10 @@
 
     python3 ci/capabilities.py [--self-test]
 
-Reads every `*.entitlements` under `App/` and compares each key (and each value of a list, such
-as an app group) with `ci/developer-site.json`, the record of what Certificates, Identifiers &
-Profiles already carries. App Store Connect's API can turn some capabilities on, but it can't
+Reads every `*.entitlements` under `App/` and compares each one's entitlements with its own
+entry in `ci/developer-site.json`, the record of what Certificates, Identifiers & Profiles already
+carries for the identifiers that file signs: a key and its value (each item of a list, such as an
+app group), so a capability the app has and an extension gains still warns. App Store Connect's API can turn some capabilities on, but it can't
 register an app group or choose one, and has no SharePlay (Group Activities) switch, so
 testflight.yml's export fails ("No profiles", "Authentication failed") until someone with an
 Apple ID does the step: Xcode signed in on the Mac (an archive signed with
@@ -25,7 +26,7 @@ RECORD = os.path.join(ROOT, "ci", "developer-site.json")
 
 
 def wanted(paths):
-    """(file, key, value) for each entitlement; value is None for a key that isn't a list."""
+    """(file, key, value) for each entitlement, a list giving one for each of its items."""
     found = []
     for path in sorted(paths):
         with open(path, "rb") as handle:
@@ -34,23 +35,28 @@ def wanted(paths):
             if isinstance(value, list):
                 found += [(path, key, str(item)) for item in value]
             else:
-                found.append((path, key, None))
+                found.append((path, key, str(value)))
     return found
 
 
 def missing(found, record):
-    known = record["entitlements"]
+    files = record["files"]
     gaps = []
     for path, key, value in found:
-        entry = known.get(key)
-        if entry is None or (value is not None and value not in entry.get("values", [])):
+        known = files.get(os.path.relpath(path, ROOT), {})
+        if key not in known:
+            gaps.append((path, key, value))
+            continue
+        have = known[key]
+        values = have if isinstance(have, list) else [have]
+        if value is not None and value not in [str(item) for item in values]:
             gaps.append((path, key, value))
     return gaps
 
 
 def report(found, gaps):
     for path, key, value in gaps:
-        what = f"{key} = {value}" if value is not None else key
+        what = f"{key} = {value}"
         print(f"::warning title=Developer site::{os.path.relpath(path, ROOT)} asks for {what}, which "
               "ci/developer-site.json doesn't list: the developer site needs it before the next "
               "TestFlight upload (Xcode's Apple ID on the Mac, or by hand), then add it there")
@@ -63,16 +69,22 @@ def report(found, gaps):
 
 def self_test():
     import tempfile
-    record = {"entitlements": {"a.groups": {"values": ["g1"]}, "b.flag": {}}}
-    with tempfile.TemporaryDirectory() as folder:
+    with tempfile.TemporaryDirectory(dir=ROOT) as folder:
         one = os.path.join(folder, "One.entitlements")
+        two = os.path.join(folder, "Two.entitlements")
         with open(one, "wb") as handle:
-            plistlib.dump({"a.groups": ["g1", "g2"], "b.flag": True, "c.new": True}, handle)
-        found = wanted([one])
-        assert len(found) == 4, found
-        gaps = missing(found, record)
-        assert [(k, v) for _, k, v in gaps] == [("a.groups", "g2"), ("c.new", None)], gaps
-        assert missing([found[0], found[2]], record) == [], "recorded entries pass"
+            plistlib.dump({"a.groups": ["g1", "g2"], "b.flag": True, "c.new": True, "d.env": "production"}, handle)
+        with open(two, "wb") as handle:
+            plistlib.dump({"b.flag": True}, handle)
+        rel = lambda path: os.path.relpath(path, ROOT)
+        record = {"files": {rel(one): {"a.groups": ["g1"], "b.flag": True, "d.env": "development"}}}
+        found = wanted([one, two])
+        gaps = [(rel(p), k, v) for p, k, v in missing(found, record)]
+        assert gaps == [(rel(one), "a.groups", "g2"), (rel(one), "c.new", "True"),
+                        (rel(one), "d.env", "production"), (rel(two), "b.flag", "True")], gaps
+        record["files"][rel(one)].update({"a.groups": ["g1", "g2"], "c.new": True, "d.env": "production"})
+        record["files"][rel(two)] = {"b.flag": True}
+        assert missing(found, record) == [], "recorded entries pass"
     print("capabilities self-test passed")
 
 
