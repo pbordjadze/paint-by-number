@@ -146,15 +146,20 @@ struct SettingsView: View {
                         }
                     }
 
-                    Section {
-                        // On a phone Worth a Look Here lies here, under the section's title, and the
-                        // rows make room: every popover's place covered some row's label (painting-company row 240).
-                        if showsDrawerTipInline {
+                    // On a phone Worth a Look Here lies here, in a section of its own over New
+                    // Paintings, and the rows make room: every popover's place covered some row's
+                    // label (painting-company row 240). Inside that section, the first row's
+                    // corners went square under it.
+                    if showsDrawerTipInline {
+                        Section {
                             GentleTipView(id: .drawerWorthALook)
                                 .listRowInsets(EdgeInsets())
                                 .listRowBackground(Color.clear)
-                                .transition(.opacity)
                         }
+                        .transition(.opacity)
+                    }
+
+                    Section {
                         Picker(selection: $paintingLength) {
                             ForEach(PaintingLength.allCases, id: \.self) { length in
                                 Text(length.name).tag(length)
