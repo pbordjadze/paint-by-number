@@ -5,6 +5,7 @@
 # fill takes to reach the friend.
 #
 #   tools/together-e2e/run.sh build  <ipad udid>         # signed Debug builds for the Mac and the iPad
+#                                                         # (REGISTER_MAC=1 the first time: registers this Mac)
 #   tools/together-e2e/run.sh mac                        # launch the Mac's app (-tourLog, -playHarness)
 #   tools/together-e2e/run.sh ipad   <ipad udid> <out>   # the iPad's side: TogetherE2ETests.testGuest
 #   tools/together-e2e/run.sh collect <ipad udid> <out>  # both logs into <out>, then summary.py
@@ -28,7 +29,9 @@ REPO="$(cd "$HERE/../.." && pwd)"
 WORK="${WORK:-$HOME/pbm-out/e2e/src}"
 DD="${DD:-$HOME/pbm-out/e2e/dd}"
 GUI_RUN="${GUI_RUN:-$HOME/pbm-out/tools/dispatcher/gui-run/gui-run.sh}"
+TEAM="${TEAM:-G4RX7UK5MJ}"   # the project sets no DEVELOPMENT_TEAM: automatic signing needs one
 BUNDLE=com.pbordjadze.paintbynumber
+XB_ENV=()
 cmd="${1:-}"; shift || true
 
 copy() { # <dir> [--mac]: the scratch copy at this checkout's HEAD, prepared
@@ -38,19 +41,23 @@ copy() { # <dir> [--mac]: the scratch copy at this checkout's HEAD, prepared
   python3 "$HERE/prepare.py" "$1/App/PaintByNumber.xcodeproj/project.pbxproj" ${2:-}
 }
 
-xb() { "$GUI_RUN" xcodebuild "$@"; }
+# xb <log> <xcodebuild args>: gui-run takes the log first and writes the build's output there; it
+# passes only PATH, HOME and DEVELOPER_DIR on, so the test's TEST_RUNNER_* go through env.
+xb() { local log="$1"; shift; "$GUI_RUN" "$log" env ${XB_ENV[@]+"${XB_ENV[@]}"} xcodebuild DEVELOPMENT_TEAM="$TEAM" "$@"; }
 
 case "$cmd" in
   build)
     UDID="$1"
     copy "$WORK"
     copy "$WORK-mac" --mac
-    xb -project "$WORK/App/PaintByNumber.xcodeproj" -scheme PaintByNumber -configuration Debug \
+    xb "$DD-ipad-build.log" -project "$WORK/App/PaintByNumber.xcodeproj" -scheme PaintByNumber -configuration Debug \
       -destination "id=$UDID" -derivedDataPath "$DD/ipad" -allowProvisioningUpdates build-for-testing \
-      > "$DD-ipad-build.log" 2>&1 || { tail -40 "$DD-ipad-build.log"; exit 1; }
-    xb -project "$WORK-mac/App/PaintByNumber.xcodeproj" -scheme PaintByNumber -configuration Debug \
+      || { tail -40 "$DD-ipad-build.log"; exit 1; }
+    # The Mac must be a registered device of the team (once, the owner's call: it takes a slot).
+    xb "$DD-mac-build.log" -project "$WORK-mac/App/PaintByNumber.xcodeproj" -scheme PaintByNumber -configuration Debug \
       -destination 'platform=macOS,variant=Designed for iPad' -derivedDataPath "$DD/mac" \
-      -allowProvisioningUpdates build > "$DD-mac-build.log" 2>&1 || { tail -40 "$DD-mac-build.log"; exit 1; }
+      -allowProvisioningUpdates ${REGISTER_MAC:+-allowProvisioningDeviceRegistration} build \
+      || { tail -40 "$DD-mac-build.log"; exit 1; }
     for app in "$DD"/ipad/Build/Products/Debug-iphoneos/PaintByNumber.app "$DD"/mac/Build/Products/Debug-iphoneos/PaintByNumber.app; do
       codesign -d --entitlements - "$app" 2>/dev/null | grep -q group-session \
         || { echo "$app lacks the group-session entitlement"; exit 1; }
@@ -63,10 +70,14 @@ case "$cmd" in
     echo "launched $APP" ;;
   ipad)
     UDID="$1"; OUT="$2"; mkdir -p "$OUT"
-    TEST_RUNNER_TOGETHER_E2E=guest xb -project "$WORK/App/PaintByNumber.xcodeproj" -scheme PaintByNumber \
+    XB_ENV=(TEST_RUNNER_TOGETHER_E2E=guest $(env | grep '^TEST_RUNNER_' || true))
+    : > "$OUT/ipad-test.log"
+    tail -f "$OUT/ipad-test.log" | grep --line-buffered -E "TOGETHER|error|failed|passed" & watcher=$!
+    xb "$OUT/ipad-test.log" -project "$WORK/App/PaintByNumber.xcodeproj" -scheme PaintByNumber \
       -destination "id=$UDID" -derivedDataPath "$DD/ipad" -resultBundlePath "$OUT/ipad.xcresult" \
-      -only-testing:PaintByNumberUITests/TogetherE2ETests test-without-building 2>&1 | tee "$OUT/ipad-test.log" \
-      | grep --line-buffered -E "TOGETHER|error|failed|passed" || true ;;
+      -only-testing:PaintByNumberUITests/TogetherE2ETests test-without-building || status=$?
+    kill "$watcher" 2>/dev/null || true
+    exit "${status:-0}" ;;
   collect)
     UDID="$1"; OUT="$2"; mkdir -p "$OUT/ipad-tmp"
     xcrun devicectl device copy from --device "$UDID" --domain-type appDataContainer --domain-identifier "$BUNDLE" \
