@@ -84,29 +84,6 @@ enum BookGeometry {
         return best
     }
 
-    /// A convex piece turned to lie flat, as it sits in a parts box: the edge it is narrowest across
-    /// laid level, its bounding box's corner at the origin.
-    static func flat(_ convex: [Point]) -> [Point] {
-        guard convex.count >= 3 else { return convex }
-        var best = Double.infinity, angle = 0.0
-        var j = convex.count - 1
-        for i in convex.indices {
-            let a = convex[j], b = convex[i]
-            let len = ((b - a) * (b - a)).sum().squareRoot()
-            if len > 1e-12 {
-                var far = 0.0
-                for p in convex { far = max(far, abs(cross(a, b, p)) / len) }
-                if far < best - 1e-9 { best = far; angle = atan2(b.y - a.y, b.x - a.x) }
-            }
-            j = i
-        }
-        let c = cos(-angle), s = sin(-angle)
-        let turned = convex.map { Point($0.x * c - $0.y * s, $0.x * s + $0.y * c) }
-        var lo = Point(.infinity, .infinity)
-        for p in turned { lo = pointwiseMin(lo, p) }
-        return turned.map { $0 - lo }
-    }
-
     /// A convex polygon with each edge moved `d` inward (a mitred inset), or nil when it vanishes:
     /// the polygon clipped by each edge's inner half-plane in turn.
     static func inset(_ convex: [Point], by d: Double) -> [Point]? {

@@ -36,6 +36,7 @@ extension StoneBook {
         /// `count` steps from `first`.
         case steps(first: Int, count: Int)
         case setting, finished
+        case lesson(Lesson)
         case stones(part: Int, of: Int)
     }
 
@@ -43,7 +44,7 @@ extension StoneBook {
 
     /// Every page in order, and the page (1-based) each step is on.
     static func assemble(sections: Int, steps: [Step], stones: Int) -> (kinds: [PageKind], stepPage: [Int]) {
-        var kinds: [PageKind] = [.cover, .needs, .method, .map]
+        var kinds: [PageKind] = [.cover, .needs] + Lesson.front.map { .lesson($0) } + [.method, .map]
         var stepPage = [Int](repeating: 0, count: steps.count)
         for s in 0..<sections {
             let idx = steps.indices.filter { steps[$0].section == s }
@@ -55,8 +56,10 @@ extension StoneBook {
                 kinds.append(.steps(first: idx[j], count: min(BookLayout.stepsPerPage, idx.count - j)))
             }
         }
+        kinds += Lesson.beforeSetting.map { .lesson($0) }
         kinds.append(.setting)
         kinds.append(.finished)
+        kinds += Lesson.afterFinished.map { .lesson($0) }
         let parts = max(1, (stones + stonesPerPage - 1) / stonesPerPage)
         for p in 0..<parts { kinds.append(.stones(part: p, of: parts)) }
         return (kinds, stepPage)
@@ -78,6 +81,7 @@ extension StoneBook {
         case .steps(let first, let count): stepsPage(&c, first, count)
         case .setting: setting(&c, strings)
         case .finished: finished(&c)
+        case .lesson(let l): lesson(&c, l, strings)
         case .stones(let part, let parts): stoneList(&c, part, parts, strings)
         }
         if number > 1 {
@@ -244,7 +248,7 @@ extension StoneBook {
         let m = BookLayout.margin, pw = BookLayout.pageWidth
         let n = strings.count(sections.count), one = strings.count(1)
         let tools: [(BookIcon, String)] = [(.nippers, "×" + one), (.mesh, "×" + n), (.film, "×" + n), (.tape, "×" + one),
-                                           (.glue, "×" + one), (.glasses, "×" + one), (.gloves, "×" + one), (.board, "×" + one),
+                                           (.glue, "×" + one), (.glasses, "×" + one), (.gloves, "×" + one), (.board, strings.size(widthMM / 10 + 4, heightMM / 10 + 4)),
                                            (.thinset, "×" + one), (.trowel, "×" + one), (.grout, strings.kilograms(groutKilograms)),
                                            (.float, "×" + one), (.sponge, "×" + strings.count(2)), (.bucket, "×" + one), (.cloth, "×" + one)]
         var cw = (pw - 2 * m) / 5
@@ -452,6 +456,9 @@ extension StoneBook {
         let x0 = BookLayout.margin
         let firstOfSection = steps.firstIndex { $0.section == s } ?? n
         c.text("\(n - firstOfSection + 1)", x0, y0 + 15, 15, 800, BookStyle.ink, face: .display)
+        // the sheet it belongs to, as the map numbers it
+        c.shape(.circle(Point(x0 + 5, y0 + 25), 4.2), fill: BookStyle.paper, stroke: BookStyle.ink, width: 0.5)
+        c.text("\(s + 1)", x0 + 5, y0 + 26.6, 4.2, 700, BookStyle.ink, .middle)
         // the parts box: this step's pieces at true size, by paint
         let chunk = step.pieces.map { pieces[$0] }
         let (placed, boxH) = BookLayout.parts(chunk, mm: mm, x: BookLayout.partsX, y: y0, width: BookLayout.partsWidth)
@@ -607,7 +614,7 @@ extension StoneBook {
         }
         for (i, k) in pageKinds.enumerated() {
             switch k {
-            case .setting, .finished, .stones: want.insert(i + 1)
+            case .setting, .finished, .stones, .lesson: want.insert(i + 1)
             default: break
             }
         }

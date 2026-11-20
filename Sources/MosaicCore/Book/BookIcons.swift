@@ -3,6 +3,7 @@
 enum BookIcon: String, CaseIterable {
     case nippers, mesh, glue, film, tape, board, trowel, float, sponge, bucket, thinset, grout, glasses
     case gloves, clock, cloth, ruler, tiles, pages, price
+    case brush, mask, knife, person, level, screw
 
     private enum Part {
         /// An SVG path's data, its fill (nil: none) and stroke width (nil: the icon's).
@@ -61,6 +62,21 @@ enum BookIcon: String, CaseIterable {
             }
         case .price:
             [.path("M3 12 L11 4 H20 V13 L12 21 Z", fill: 0xF3EAD2), .circle(16, 8, 1.6, fill: 0xFFFFFF)]
+        case .brush:
+            [.rect(9, 2, 6, 9, radius: 1, fill: 0xE3C99A), .rect(6, 11, 12, 4, radius: 0.6, fill: 0xCFCAC0),
+             .path("M7.5 15 V22 M10 15 V22 M12.5 15 V22 M15 15 V22 M17 15 V22", fill: nil, width: 0.8)]
+        case .mask:
+            [.path("M4 10 Q12 5 20 10 V15 Q12 21 4 15 Z", fill: 0xFFFFFF),
+             .path("M4 11 L1 9 M20 11 L23 9 M4 14 L1 16 M20 14 L23 16", fill: nil, width: 0.7),
+             .path("M8 12 H16 M8 14.5 H16", fill: nil, width: 0.6)]
+        case .knife:
+            [.path("M10 13 L19 3 L22 6 L13 16 Z", fill: 0xEEF3F7), .path("M3 21 L10 13 L13 16 L5 23 Z", fill: 0xE3C99A)]
+        case .person:
+            [.circle(12, 4.5, 3, fill: 0xFFFFFF), .path("M12 7.5 V15.5 M12 15.5 L8 23 M12 15.5 L16 23 M6.5 10.5 H17.5", fill: nil)]
+        case .level:
+            [.rect(2, 9, 20, 6, radius: 1, fill: 0xF3EAD2), .rect(10, 10.4, 4, 3.2, radius: 1.6, fill: 0xCFE0D4)]
+        case .screw:
+            [.path("M8 4 H16 M12 4 V21", fill: nil), .path("M10 8 L14 9.5 M10 11 L14 12.5 M10 14 L14 15.5 M10 17 L14 18.5", fill: nil, width: 0.8)]
         case .pages:
             [.path("M6 3 H16 L19 6 V21 H6 Z", fill: 0xFFFFFF), .path("M9 9 H16 M9 12 H16 M9 15 H14", fill: nil, width: 0.8)]
         }

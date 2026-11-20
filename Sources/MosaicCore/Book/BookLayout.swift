@@ -17,12 +17,12 @@ enum BookLayout {
 
     enum Placed {
         case badge(paint: Int, at: SIMD2<Double>)
-        /// The step's `index`th piece lying flat, its corners in millimetres on the page.
+        /// The step's `index`th piece as it sits in the picture, its corners in millimetres on the page.
         case piece(index: Int, corners: [SIMD2<Double>])
     }
 
-    /// Where each of a step's pieces sits in its parts box, true size and lying flat
-    /// (`BookGeometry.flat`), grouped by paint (the most used first), each group led by its paint's
+    /// Where each of a step's pieces sits in its parts box, true size and turned as
+    /// they sit in the picture, grouped by paint (the most used first), each group led by its paint's
     /// badge; and the box's height.
     static func parts(_ pieces: [StoneBook.Piece], mm: Double, x bx: Double, y y0: Double, width bw: Double) -> (placed: [Placed], height: Double) {
         var order: [Int] = [], groups: [Int: [Int]] = [:]
@@ -42,13 +42,16 @@ enum BookLayout {
             placed.append(.badge(paint: paint, at: SIMD2(gx + 2.4, gy + 2.4)))
             gx += 6.5
             for i in groups[paint]! {
-                let flat = BookGeometry.flat(pieces[i].corners).map { $0 * mm }
+                // turned as it sits in the picture, so a newcomer matches it to its outline at a glance
+                var lo = SIMD2<Double>(.infinity, .infinity)
+                for c in pieces[i].corners { lo = pointwiseMin(lo, c) }
+                let shape = pieces[i].corners.map { ($0 - lo) * mm }
                 var hi = SIMD2<Double>(0, 0)
-                for c in flat { hi = pointwiseMax(hi, c) }
+                for c in shape { hi = pointwiseMax(hi, c) }
                 let w = hi.x, h = hi.y
                 if gx + w > bx + bw - 3 { gx = bx + 3 + 6.5; gy += rowH + 2.5; rowH = 0 }
                 let at = SIMD2(gx, gy)
-                placed.append(.piece(index: i, corners: flat.map { $0 + at }))
+                placed.append(.piece(index: i, corners: shape.map { $0 + at }))
                 gx += w + 1.8
                 rowH = max(rowH, h)
             }

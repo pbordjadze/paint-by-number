@@ -42,15 +42,11 @@ struct StoneBookTests {
         #expect(BookPieces.cuttable(nick, medianArea: 100, joint: 0.5, minimumWidth: 2).count == 1)
     }
 
-    @Test func insetAndFlatKeepAConvexPiece() {
+    @Test func insetKeepsAConvexPiece() {
         let square: [P] = [P(0, 0), P(10, 0), P(10, 10), P(0, 10)]
         let inner = try! #require(BookGeometry.inset(square, by: 1))
         #expect(abs(BookGeometry.area(inner) - 64) < 1e-9)
         #expect(BookGeometry.inset(square, by: 6) == nil)
-        let tilted: [P] = [P(0, 0), P(8, 6), P(5, 10), P(-3, 4)]   // a 10 × 5 rectangle turned
-        let flat = BookGeometry.flat(tilted)
-        let hi = flat.reduce(P(0, 0)) { pointwiseMax($0, $1) }
-        #expect(abs(hi.y - 5) < 1e-9 && abs(hi.x - 10) < 1e-9, "lying on its long side")
     }
 
     @Test func fillersCloseAWideJointWithoutTouchingTheTiles() {
@@ -121,7 +117,7 @@ struct StoneBookTests {
             #expect(page.items.count > 2, "page \(n)")
             #expect(page.svg().hasPrefix("<svg"))
         }
-        #expect(kinds.count == 10, "\(kinds)")
+        #expect(kinds.count == 11, "\(kinds)")
         // the stone list is the only page with words
         let last = b.page(b.pageCount)
         #expect(last.items.contains { if case .text(let t) = $0 { t.string == BookStrings().altogether } else { false } })
