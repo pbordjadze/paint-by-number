@@ -60,7 +60,7 @@ nonisolated struct MuseumCatalog: Decodable, Sendable {
     }
 
     /// Where the app reads the catalog: the `museum` branch of the app's own repository.
-    static let source = URL(string: "https://raw.githubusercontent.com/pbordjadze/paint-by-number/museum/museum.json")!
+    static let source = URL(string: "https://raw.githubusercontent.com/pbordjadze/paint-by-number/refs/heads/museum/museum.json")!
 
     static func decode(_ data: Data) throws -> MuseumCatalog {
         try JSONDecoder().decode(MuseumCatalog.self, from: data)

@@ -3,6 +3,7 @@
 drawing and watercolor two museums offer that the app can paint, one record each, with the
 movement it belongs to and how colorful it is.
 
+    tools/museum/catalog.py wikidata
     tools/museum/catalog.py gather --out DIR [--sources aic,cma] [--limit N]
     tools/museum/catalog.py measure --out DIR [--workers 12]
     tools/museum/catalog.py write --out DIR
@@ -22,9 +23,10 @@ The Met's image CDN refuses cloud fetches (painting-company row 368), so it is n
 The rules are lighter than Tonight's Picture's (tools/nights/catalog.py, a picture everyone gets):
 the painter chooses here. A work needs a known maker or culture, an image at least 1500 px on its
 long edge, and no title or subject term of nudity or the erotic; prints and drawings need some
-color (a black-and-white etching makes a grey painting). The movement is the museum's own style
+color, a colorfulness of 21 (a black-and-white or sepia etching makes a grey painting). The movement is the museum's own style
 where it names one of the catalog's (`MOVEMENTS`), else the artist's (`ARTISTS`), else one read
-from where and when it was made (`movement_of`).
+from where and when it was made (`movement_of`). The artists' movements are Wikidata's
+(`wikidata` writes `artists.csv` from `artists.rq`; CC0), on the catalog's words (`WIKIDATA_MOVEMENTS`).
 
 Publishing: the file goes on the `museum` branch of this repository (orphan, `[skip ci]`), which
 the app reads at raw.githubusercontent.com (`MuseumCatalog.source`).
@@ -46,11 +48,11 @@ MIN_EDGE = 1500
 REFUSED_RE = re.compile(r"\b(nudes?|naked|nudity|erotic\w*|shunga|undress\w*)\b", re.IGNORECASE)
 
 
-def fetch(url, data=None, tries=8, pause=1.1, raw=False):
+def fetch(url, data=None, tries=8, pause=1.1, raw=False, timeout=60):
     for attempt in range(tries):
         try:
             req = urllib.request.Request(url, data=data, headers={"User-Agent": UA, "Content-Type": "application/json"})
-            with urllib.request.urlopen(req, timeout=60) as r:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
                 body = r.read()
             if pause:
                 time.sleep(pause)
@@ -108,10 +110,10 @@ def aic_record(r):
     iid = r.get("image_id")
     kind = {"Painting": "painting", "Miniature Painting": "painting", "Print": "print"}.get(
         r.get("artwork_type_title"), "drawing")
-    long = 3000
-    size = f"{long}," if w >= h else f",{long}"
-    if max(w, h) and max(w, h) < long:
-        size = "full"
+    # AIC's image server gives a CC0 work at 843, 1686 or 3000 pixels wide (other widths, "full"
+    # and heights are refused): the widest the image has, and a work under 1686 is left out
+    # (`rules`), 843 being too small to paint from.
+    size = "3000," if w >= 3000 else "1686,"
     return {
         "id": f"aic-{r['id']}", "source": "aic", "kind": kind,
         "title": r.get("title") or "", "artist": r.get("artist_title") or "",
@@ -119,13 +121,33 @@ def aic_record(r):
         "year": r.get("date_display") or "", "date": r.get("date_end"),
         "styles": r.get("style_titles") or [], "place": r.get("place_of_origin") or "",
         "image": f"https://www.artic.edu/iiif/2/{iid}/full/{size}/0/default.jpg",
-        "thumb": f"https://www.artic.edu/iiif/2/{iid}/full/400,/0/default.jpg",
+        "thumb": f"https://www.artic.edu/iiif/2/{iid}/full/600,/0/default.jpg",
         "probe": f"https://www.artic.edu/iiif/2/{iid}/full/120,/0/default.jpg",
         "page": f"https://www.artic.edu/artworks/{r['id']}",
-        "width": w, "height": h, "medium": r.get("medium_display") or "",
+        "width": w, "height": h, "medium": r.get("medium_display") or "", "narrow": w < 1686,
         "terms": (r.get("subject_titles") or []) + (r.get("term_titles") or []) + (r.get("classification_titles") or []),
         "department": r.get("department_title") or "",
+        "known": aic_known(r),
     }
+
+
+def aic_known(r):
+    """AIC measures each image's colorfulness itself, and its thumbnail carries a tiny preview
+    (`lqip`): from them, no image need be fetched. AIC's figure tracks this tool's closely (0.94
+    correlation on 104 works, Nov 20, 2026): the fit below puts it on this tool's scale."""
+    c = r.get("colorfulness")
+    lqip = (r.get("thumbnail") or {}).get("lqip") or ""
+    if c is None or not lqip.startswith("data:image"):
+        return None
+    import base64
+    from PIL import Image
+    try:
+        im = Image.open(io.BytesIO(base64.b64decode(lqip.split(",", 1)[1]))).convert("RGB")
+    except Exception:
+        return None
+    import numpy as np
+    mean = np.asarray(im, dtype=np.float64).reshape(-1, 3).mean(0)
+    return round(0.937 * c + 1.36, 1), "%02x%02x%02x" % tuple(int(x) for x in mean)
 
 
 # ---- The Cleveland Museum of Art -------------------------------------------------------------
@@ -191,6 +213,8 @@ def rules(c):
         return "maker unknown"
     if c["width"] and max(c["width"], c["height"]) < MIN_EDGE:
         return "image under 1500 px"
+    if c.get("narrow"):
+        return "image under 1686 px wide (AIC)"
     text = " ".join([c["title"]] + [t for t in c["terms"] if isinstance(t, str)])
     if REFUSED_RE.search(text):
         return "subject"
@@ -202,13 +226,56 @@ def rules(c):
 # The catalog's movements, in the order the app lists them (roughly by time, then the rest of
 # the world). Each is a word painters and museums use.
 MOVEMENTS = [
-    "Medieval", "Renaissance", "Baroque", "Dutch Golden Age", "Rococo", "Neoclassicism", "Romanticism",
-    "Hudson River School", "Realism", "Barbizon School", "Pre-Raphaelite", "Impressionism",
-    "Post-Impressionism", "Pointillism", "Symbolism", "Art Nouveau", "Arts and Crafts", "Nabis", "Fauvism",
-    "Expressionism", "Cubism", "Futurism", "Tonalism", "American Impressionism", "Ashcan School",
-    "Modernism", "Ukiyo-e", "Shin-hanga", "Japanese Painting", "Chinese Painting", "Korean Art",
-    "Indian Painting", "Persian & Islamic", "Folk Art",
+    "Medieval", "Early Netherlandish", "Renaissance", "Mannerism", "Baroque", "Dutch Golden Age", "Rococo",
+    "Neoclassicism", "Romanticism", "Orientalism", "Academic Art", "Barbizon School", "Hudson River School",
+    "Realism", "Hague School", "Pre-Raphaelites", "Impressionism", "American Impressionism",
+    "Post-Impressionism", "Pointillism", "Nabis", "Pont-Aven School", "Symbolism", "Art Nouveau",
+    "Arts and Crafts", "Tonalism", "Ashcan School", "Fauvism", "Expressionism", "Cubism", "Futurism",
+    "Art Deco", "Modernism", "Late 19th Century", "Early 20th Century", "Ukiyo-e", "Shin-hanga", "Nihonga",
+    "Japanese Painting", "Chinese Painting", "Korean Art", "Indian Painting", "Persian & Islamic", "Folk Art",
 ]
+
+# Wikidata's movements (P135, as `artists.rq` reads them) onto the catalog's.
+WIKIDATA_MOVEMENTS = {
+    "Pointillism": ["pointillism", "Neo-impressionism", "divisionism"],
+    "Nabis": ["Les Nabis"], "Pont-Aven School": ["Pont-Aven School"], "Fauvism": ["Fauvism"],
+    "Cubism": ["cubism", "Orphism"], "Futurism": ["Futurism"], "Art Deco": ["Art Deco"],
+    "Art Nouveau": ["Art Nouveau", "Catalan modernism", "École de Nancy", "Vienna Secession", "Jugendstil",
+                    "Viennese Secession", "Munich Secession", "Berlin Secession"],
+    "Arts and Crafts": ["Arts and Crafts movement"],
+    "Pre-Raphaelites": ["Pre-Raphaelite Brotherhood", "Aestheticism"],
+    "Barbizon School": ["Barbizon school"], "Hudson River School": ["Hudson River school", "Luminism"],
+    "Hague School": ["Hague School"], "Ashcan School": ["Ashcan School"], "Tonalism": ["Tonalism"],
+    "American Impressionism": ["American Impressionism"], "Impressionism": ["Impressionism"],
+    "Post-Impressionism": ["Post-impressionism", "cloisonnism", "synthetism"],
+    "Symbolism": ["Symbolism", "Russian symbolism"], "Expressionism": ["Expressionism", "Die Brücke", "Der Blaue Reiter"],
+    "Orientalism": ["Orientalism", "Orientalist painting"],
+    "Shin-hanga": ["shin-hanga"], "Ukiyo-e": ["ukiyo-e", "Utagawa school"], "Nihonga": ["Nihonga"],
+    "Japanese Painting": ["Kanō school", "Rimpa school", "Yōga", "Maruyama-Shijō school"],
+    "Chinese Painting": ["Wu School", "Xin'an School", "Southern School", "Shanghai School", "Zhe school"],
+    "Early Netherlandish": ["Early Netherlandish painting"],
+    "Dutch Golden Age": ["Dutch Golden Age painting", "Delft school", "fijnschilder"],
+    "Mannerism": ["Mannerism", "Northern Mannerism", "School of Fontainebleau"],
+    "Rococo": ["Rococo"], "Neoclassicism": ["Neoclassicism", "Classicism", "neo-Pompeian"],
+    "Romanticism": ["Romanticism", "Romantic painting", "Nazarene movement", "Norwich school of painters",
+                    "Düsseldorf school of painting", "Biedermeier", "Danish Golden Age", "Troubadour style",
+                    "romantic nationalism", "Post-romanticism"],
+    "Realism": ["realism", "French Realism", "Naturalism", "Costumbrismo", "Peredvizhniki", "social realism"],
+    "Academic Art": ["academic art", "Official Salon of Painting and Sculpture", "fairy painting", "Munich school"],
+    "Baroque": ["Baroque", "Baroque painting", "Flemish Baroque painting", "Utrecht Caravaggism", "Caravaggisti",
+                "tenebrism", "Bamboccianti", "Bolognese school", "Counter-Reformation"],
+    "Renaissance": ["Renaissance", "High Renaissance", "German Renaissance", "Venetian school", "Sienese school",
+                    "Veronese school", "Northern Renaissance", "Italian Renaissance", "Umbrian school",
+                    "Early Renaissance", "Spanish Renaissance", "School of Ferrara", "Florentine School",
+                    "Mantuan School"],
+    "Medieval": ["International Gothic", "Gothic art", "Cretan school"],
+    "Modernism": ["modernism", "modern art", "School of Paris", "avant-garde", "Constructivism", "Suprematism",
+                  "abstract art", "Russian avant-garde", "surrealism", "Dada", "primitivism", "Bloomsbury Group"],
+    "Folk Art": ["naïve art"],
+}
+WIKIDATA_TO = {w: m for m, ws in WIKIDATA_MOVEMENTS.items() for w in ws}
+# When an artist has several, the most particular wins: this order.
+PRIORITY = list(WIKIDATA_MOVEMENTS)
 
 # The museum's own style words, as AIC's `style_titles` write them, onto the catalog's.
 STYLE_WORDS = {
@@ -220,7 +287,7 @@ STYLE_WORDS = {
     "neoclassicism": "Neoclassicism", "renaissance": "Renaissance", "italian renaissance": "Renaissance",
     "northern renaissance": "Renaissance", "gothic": "Medieval", "medieval": "Medieval",
     "byzantine": "Medieval", "ukiyo-e": "Ukiyo-e", "shin hanga": "Shin-hanga", "shin-hanga": "Shin-hanga",
-    "pre-raphaelite": "Pre-Raphaelite", "arts and crafts movement": "Arts and Crafts",
+    "pre-raphaelite": "Pre-Raphaelites", "arts and crafts movement": "Arts and Crafts",
     "barbizon school": "Barbizon School", "hudson river school": "Hudson River School",
     "tonalism": "Tonalism", "ashcan school": "Ashcan School", "nabis": "Nabis", "les nabis": "Nabis",
     "modernism": "Modernism", "american impressionism": "American Impressionism",
@@ -257,7 +324,7 @@ ARTISTS = {
                     "Louis Rhead", "Ethel Reed", "Carlos Schwabe", "Jan Toorop", "Henry van de Velde", "Leonetto Cappiello"],
     "Symbolism": ["Gustave Moreau", "Pierre Puvis de Chavannes", "Arnold Böcklin", "Fernand Khnopff", "James Ensor",
                   "Ferdinand Hodler", "Giovanni Segantini", "Franz von Stuck", "Lucien Lévy-Dhurmer"],
-    "Pre-Raphaelite": ["Dante Gabriel Rossetti", "John Everett Millais", "William Holman Hunt", "Edward Burne-Jones",
+    "Pre-Raphaelites": ["Dante Gabriel Rossetti", "John Everett Millais", "William Holman Hunt", "Edward Burne-Jones",
                        "John William Waterhouse", "Ford Madox Brown", "Arthur Hughes", "Evelyn De Morgan"],
     "Arts and Crafts": ["William Morris", "Walter Crane", "Charles Rennie Mackintosh", "C. F. A. Voysey"],
     "Romanticism": ["J. M. W. Turner", "Joseph Mallord William Turner", "John Constable", "Caspar David Friedrich",
@@ -290,10 +357,44 @@ ARTISTS = {
     "Neoclassicism": ["Jacques-Louis David", "Jean-Auguste-Dominique Ingres", "Angelica Kauffman", "Antonio Canova",
                       "Anton Raphael Mengs", "Benjamin West", "Joshua Reynolds"],
 }
+ARTISTS["Arts and Crafts"] += ["Arthur Wesley Dow", "Helen Hyde", "Bertha Lum", "Margaret Jordan Patterson",
+                               "Frances Gearhart", "Pedro Joseph de Lemos", "Gustave Baumann", "B. J. O. Nordfeldt",
+                               "Ethel Mars", "Edna Boies Hopkins", "Blanche Lazzell", "Tod Lindenmuth",
+                               "William Seltzer Rice", "Elizabeth Colborne", "Arthur W. Dow"]
+ARTISTS["Art Nouveau"] += ["Carl Moll", "Emil Orlik", "Carl Thiemann", "Walter Klemm", "Ludwig Heinrich Jungnickel",
+                           "Franz von Zülow", "Josef Hoffmann", "Henri Rivière", "Maxfield Parrish", "Georges de Feure",
+                           "Manuel Orazi", "Paul Berthon", "Maurice Pillard Verneuil"]
+
+
+def name_key(name):
+    import unicodedata
+    n = unicodedata.normalize("NFKD", name or "")
+    n = "".join(ch for ch in n if not unicodedata.combining(ch)).lower()
+    return re.sub(r"[^a-z0-9]+", " ", n).strip()
+
+
 ARTIST_MOVEMENT = {}
 for _m, _names in ARTISTS.items():
     for _n in _names:
-        ARTIST_MOVEMENT[_n.lower()] = _m
+        ARTIST_MOVEMENT[name_key(_n)] = _m
+
+
+def wikidata_movements():
+    """Artist name → the catalog's movement, from `artists.csv` (written by `wikidata`)."""
+    import csv
+    path = Path(__file__).with_name("artists.csv")
+    if not path.exists():
+        return {}
+    found = {}
+    for row in csv.DictReader(path.open(encoding="utf-8")):
+        m = WIKIDATA_TO.get(row["movement"])
+        if m:
+            found.setdefault(name_key(row["name"]), set()).add(m)
+    # A name of no Latin letters (Chinese, Japanese, Cyrillic) folds to nothing: never a key.
+    return {k: min(v, key=PRIORITY.index) for k, v in found.items() if len(k) >= 4 and " " in k}
+
+
+WIKIDATA = wikidata_movements()
 
 EUROPE = ["france", "french", "italy", "italian", "germany", "german", "netherlands", "dutch", "flemish", "belgium",
           "belgian", "spain", "spanish", "england", "english", "british", "britain", "scotland", "austria", "austrian",
@@ -303,33 +404,40 @@ AMERICA = ["united states", "america", "american", "canada", "canadian"]
 
 
 def movement_of(c):
+    """The work's movement: its museum's own style, else its artist's (this file's lists, then
+    Wikidata's), else where and when it was made. A guess from the date alone names the period
+    ("Late 19th Century") rather than a movement the work may not belong to."""
+    d = c.get("date")
     for s in c["styles"]:
         m = STYLE_WORDS.get(s.lower())
         if m:
             return m
-    m = ARTIST_MOVEMENT.get((c["artist"] or "").lower())
+    m = artist_movement(c["artist"])
     if m:
+        if m == "Ukiyo-e" and d and d >= 1905:
+            return "Shin-hanga"
+        if m in ("Renaissance", "Early Netherlandish") and d and d < 1400:
+            return "Medieval"
+        if m == "Impressionism" and has_words(c, AMERICA):
+            return "American Impressionism"
         return m
-    where = " ".join([c["place"], c["artist_display"], c["department"]]).lower()
-    d = c.get("date")
-    has = lambda words: any(re.search(r"\b" + w + r"\b", where) for w in words)
-    if has(["japan", "japanese"]):
+    if has_words(c, ["japan", "japanese"]):
         if c["kind"] == "print":
             return "Shin-hanga" if d and d >= 1905 else "Ukiyo-e"
         return "Japanese Painting"
-    if has(["china", "chinese"]):
+    if has_words(c, ["china", "chinese"]):
         return "Chinese Painting"
-    if has(["korea", "korean"]):
+    if has_words(c, ["korea", "korean"]):
         return "Korean Art"
-    if has(["india", "indian", "pakistan", "nepal", "tibet", "mughal", "rajasthan", "deccan", "pahari"]):
+    if has_words(c, ["india", "indian", "pakistan", "nepal", "tibet", "tibetan", "himalayan", "mughal", "rajasthan",
+                     "deccan", "pahari", "south asian"]):
         return "Indian Painting"
-    if has(["iran", "persia", "persian", "turkey", "ottoman", "egypt", "syria", "iraq", "islamic", "uzbekistan",
-            "afghanistan", "arab"]):
+    if has_words(c, ["iran", "persia", "persian", "turkey", "ottoman", "egypt", "syria", "iraq", "islamic",
+                     "uzbekistan", "afghanistan", "arab"]):
         return "Persian & Islamic"
     if not d:
         return None
-    american = has(AMERICA)
-    dutch = has(["netherlands", "dutch", "flemish", "holland"])
+    dutch = has_words(c, ["netherlands", "dutch", "flemish", "holland"])
     if d < 1400:
         return "Medieval"
     if d < 1600:
@@ -342,16 +450,31 @@ def movement_of(c):
         return "Neoclassicism"
     if d < 1850:
         return "Romanticism"
-    if d < 1875:
-        return "Hudson River School" if american and c["kind"] == "painting" and re.search(
-            r"landscape|river|valley|mountain|lake|falls", c["title"], re.I) else "Realism"
-    if d < 1905:
-        if has(["norway", "sweden", "denmark", "finland", "russia"]):
-            return "Realism"
-        return "American Impressionism" if american else ("Impressionism" if d < 1890 else "Post-Impressionism")
-    if c["kind"] == "print" and american:
-        return "Modernism"
-    return "Modernism"
+    if c["kind"] == "print" and 1890 <= d <= 1912 and re.search(r"color lithograph|colour lithograph|poster", " ".join(
+            [c["medium"], c["title"]] + [t for t in c["terms"] if isinstance(t, str)]), re.I):
+        return "Art Nouveau"
+    if d < 1900:
+        return "Late 19th Century"
+    return "Early 20th Century"
+
+
+def artist_movement(name):
+    """The movement an artist's name finds, whole, then as its last two words and as its first
+    and last ("Hilaire Germain Edgar Degas" is Wikidata's "Edgar Degas", "Édouard Jean Vuillard"
+    its "Édouard Vuillard")."""
+    words = name_key(name).split()
+    if not words:
+        return None
+    for key in dict.fromkeys([" ".join(words), " ".join(words[-2:]), f"{words[0]} {words[-1]}"]):
+        m = ARTIST_MOVEMENT.get(key) or WIKIDATA.get(key)
+        if m and " " in key:
+            return m
+    return None
+
+
+def has_words(c, words):
+    where = " ".join([c["place"], c["artist_display"], c["department"]] + c["styles"]).lower()
+    return any(re.search(r"\b" + w + r"\b", where) for w in words)
 
 
 # ---- Colorfulness ----------------------------------------------------------------------------
@@ -371,7 +494,7 @@ def colorfulness(data):
 
 
 def measure_one(c):
-    data = fetch(c["probe"], pause=0, raw=True, tries=4)
+    data = fetch(c["probe"], pause=0, raw=True, tries=3, timeout=15)
     if not data:
         return c["id"], None, None
     try:
@@ -397,6 +520,22 @@ def records(out):
     return list(seen.values())
 
 
+def wikidata(a):
+    """Every artist Wikidata gives a movement (P135) and a death before 1960, with their English
+    names and aliases, into artists.csv beside this file (committed: the other steps read it)."""
+    query = Path(__file__).with_name("artists.rq").read_text()
+    body = fetch("https://query.wikidata.org/sparql?" + urllib.parse.urlencode({"query": query, "format": "json"}),
+                 raw=True, tries=3, timeout=120)
+    rows = json.loads(body)["results"]["bindings"]
+    import csv
+    with Path(__file__).with_name("artists.csv").open("w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["name", "movement"])
+        for r in sorted({(r["name"]["value"], r["mLabel"]["value"]) for r in rows}):
+            w.writerow(r)
+    print(f"{len(rows)} names", file=sys.stderr)
+
+
 def gather(a):
     (a.out / "raw").mkdir(parents=True, exist_ok=True)
     for name in a.sources.split(","):
@@ -410,10 +549,12 @@ def measure(a):
     done = set()
     if path.exists():
         done = {json.loads(l)["id"] for l in path.open()}
-    todo = [c for c in records(a.out) if not c["rejected"] and c["id"] not in done]
+    todo = [c for c in records(a.out) if not c["rejected"] and c["id"] not in done and not c.get("known")]
     print(f"measuring {len(todo)}", file=sys.stderr, flush=True)
     with path.open("a") as f, cf.ThreadPoolExecutor(a.workers) as pool:
-        for i, (cid, m, avg) in enumerate(pool.map(measure_one, todo)):
+        futures = [pool.submit(measure_one, c) for c in todo]
+        for i, future in enumerate(cf.as_completed(futures)):
+            cid, m, avg = future.result()
             f.write(json.dumps({"id": cid, "colorfulness": m, "average": avg}) + "\n")
             if i % 200 == 0:
                 f.flush()
@@ -431,9 +572,11 @@ def write(a):
     for c in records(a.out):
         why = c["rejected"]
         m = measured.get(c["id"], {})
+        if c.get("known") and m.get("colorfulness") is None:
+            m = {"colorfulness": c["known"][0], "average": c["known"][1]}
         if not why and m.get("colorfulness") is None:
             why = "not measured"
-        if not why and c["kind"] != "painting" and m["colorfulness"] < 14:
+        if not why and c["kind"] != "painting" and m["colorfulness"] < 21:
             why = "too grey for a print or drawing"
         if not why and not c["movement"]:
             why = "no movement"
@@ -468,6 +611,7 @@ def write(a):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("wikidata")
     for name in ("gather", "measure", "write"):
         s = sub.add_parser(name)
         s.add_argument("--out", required=True, type=Path)
@@ -477,7 +621,7 @@ def main():
         if name == "measure":
             s.add_argument("--workers", type=int, default=12)
     a = ap.parse_args()
-    {"gather": gather, "measure": measure, "write": write}[a.cmd](a)
+    {"wikidata": wikidata, "gather": gather, "measure": measure, "write": write}[a.cmd](a)
 
 
 if __name__ == "__main__":

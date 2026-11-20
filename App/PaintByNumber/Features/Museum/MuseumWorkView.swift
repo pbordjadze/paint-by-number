@@ -173,6 +173,9 @@ struct MuseumWorkView: View {
             if let large = await Background.run({ Self.decode(data, maxPixelSize: max(pixels, 900)) }) {
                 withAnimation(.easeOut(duration: 0.3)) { picture = large }
             }
+            #if DEBUG
+            if UserDefaults.standard.bool(forKey: "demoMuseumPaint") { wantsToPaint = true }
+            #endif
             if wantsToPaint {
                 wantsToPaint = false
                 onPaint(data, work.title)

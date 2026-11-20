@@ -1194,7 +1194,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   This closes the Museum and loads it as a picked photo named after the work
   (`CreateModel.load(imageData:title:)`, `paintsNow`). Pictures go through `MuseumImages`, a
   URL cache of their own on disk. Debug launches: `-demo create-samples -demoMuseum YES`
-  (`-demoMuseumMovement <name>`, `-demoMuseumWork YES` opens the first work).
+  (`-demoMuseumMovement <name>`, `-demoMuseumWork YES` opens the first work, `-demoMuseumPaint YES` paints it once fetched).
 - Start from a Drawing (SideStore and Debug builds, `#if UNRELEASED`; painting-company row 190;
   PaintCore's `docs/start-from-a-drawing.md`): its way in, the Paint page's A Drawing on Paper
   tile, is hidden since November 13, 2026 (the mode's generated colors; removal undecided), so
