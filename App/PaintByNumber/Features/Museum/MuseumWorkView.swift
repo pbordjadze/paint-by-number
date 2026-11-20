@@ -37,7 +37,6 @@ struct MuseumWorkView: View {
         }
         .background(Theme.paper)
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
-        .navigationTitle(Text(verbatim: work.title))
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) { paintButton }
         .task(id: attempt) { await fetch() }

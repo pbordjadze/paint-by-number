@@ -22,7 +22,6 @@ struct MuseumView: View {
     @State private var counts: [String: Int] = [:]
     @State private var width: CGFloat = 0
     @State private var path: [MuseumCatalog.Work] = []
-    @ScaledMetric(relativeTo: .subheadline) private var tileMinimumWidth: CGFloat = 150
     #if DEBUG
     @State private var demoIsReady = false
     #endif
@@ -123,11 +122,9 @@ struct MuseumView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
                     Section {
-                        countLine
+                        Color.clear
+                            .frame(height: isWide ? 12 : 8)
                             .id(Self.top)
-                            .padding(.horizontal, horizontalPadding)
-                            .padding(.top, 4)
-                            .padding(.bottom, 14)
                         if shown.isEmpty {
                             ContentUnavailableView.search(text: query.search)
                                 .padding(.top, 40)
@@ -136,7 +133,7 @@ struct MuseumView: View {
                                 .padding(.horizontal, horizontalPadding)
                         }
                     } header: {
-                        MovementRow(movements: catalog.movements, counts: counts, total: counts.values.reduce(0, +),
+                        MovementRow(movements: catalog.movements, counts: counts,
                                     selection: $query.movement, padding: horizontalPadding)
                     }
                 }
@@ -157,16 +154,9 @@ struct MuseumView: View {
 
     private static let top = "museum-top"
 
-    private var countLine: some View {
-        Text(String(localized: "museum.count", defaultValue: "\(shown.count) works",
-                    comment: "Under the Museum's movements: how many works the page shows for the movement, kind and search chosen; the argument is the count"))
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
-    }
-
     private var wall: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: tileWidth), spacing: isWide ? 28 : 18, alignment: .top)],
-                  alignment: .leading, spacing: isWide ? 36 : 26) {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: tileWidth), spacing: isWide ? 20 : 10, alignment: .bottom)],
+                  alignment: .leading, spacing: isWide ? 24 : 12) {
             ForEach(shown) { work in
                 NavigationLink(value: work) {
                     MuseumTile(work: work)
@@ -177,11 +167,11 @@ struct MuseumView: View {
         }
     }
 
-    /// The least tile width: two to a phone's row, four or five on an iPad's, one at the largest
-    /// text sizes.
+    /// The least tile width: three to a phone's row, five or more on an iPad's. The pictures
+    /// alone, no captions: a work's label is on its page.
     private var tileWidth: CGFloat {
         let column = max(0, width - 2 * horizontalPadding - 8)
-        let least = isWide ? max(tileMinimumWidth, 190) : tileMinimumWidth
+        let least: CGFloat = isWide ? 170 : 104
         return column > 0 ? min(least, column) : least
     }
 
@@ -226,11 +216,10 @@ struct MuseumView: View {
 }
 
 /// The movements, a row that scrolls under the navigation bar and stays there: All, then each
-/// with its count, the chosen one filled.
+/// that holds a work of the kind shown, the chosen one filled.
 private struct MovementRow: View {
     let movements: [String]
     let counts: [String: Int]
-    let total: Int
     @Binding var selection: String?
     let padding: CGFloat
 
@@ -238,10 +227,10 @@ private struct MovementRow: View {
         ScrollViewReader { proxy in
             ScrollView(.horizontal) {
                 HStack(spacing: 8) {
-                    chip(nil, count: total)
+                    chip(nil)
                     ForEach(movements, id: \.self) { movement in
                         if let count = counts[movement], count > 0 {
-                            chip(movement, count: count)
+                            chip(movement)
                         }
                     }
                 }
@@ -258,20 +247,17 @@ private struct MovementRow: View {
         .accessibilityLabel(Text("Movements"))
     }
 
-    private func chip(_ movement: String?, count: Int) -> some View {
+    private func chip(_ movement: String?) -> some View {
         let chosen = selection == movement
         return Button {
             withAnimation(.snappy(duration: 0.25)) { selection = movement }
         } label: {
-            HStack(spacing: 6) {
+            Group {
                 if let movement {
                     Text(verbatim: movement)
                 } else {
                     Text("All")
                 }
-                Text(count.formatted())
-                    .foregroundStyle(chosen ? AnyShapeStyle(.white.opacity(0.75)) : AnyShapeStyle(.tertiary))
-                    .monospacedDigit()
             }
             .font(.subheadline.weight(chosen ? .semibold : .regular))
             .foregroundStyle(chosen ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
@@ -291,34 +277,17 @@ private struct MovementRow: View {
 }
 
 /// A work on the wall: the picture whole at its own shape, standing on a shared line at the
-/// foot of a square, its title, artist and date under it.
+/// foot of a square. Its title, artist and date are its VoiceOver label and its page's.
 struct MuseumTile: View {
     let work: MuseumCatalog.Work
     @State private var image: CGImage?
     @Environment(\.displayScale) private var displayScale
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Color.clear
-                .aspectRatio(1, contentMode: .fit)
-                .overlay(alignment: .bottom) { picture }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: work.title)
-                    .font(.display(.subheadline, weight: .semibold))
-                    .foregroundStyle(.primary)
-                    .lineLimit(2)
-                Text(verbatim: work.artist)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                Text(verbatim: work.year)
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-                    .lineLimit(1)
-            }
-            .multilineTextAlignment(.leading)
-        }
-        .contentShape(.rect)
+        Color.clear
+            .aspectRatio(1, contentMode: .fit)
+            .overlay(alignment: .bottom) { picture }
+            .contentShape(.rect)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: [work.title, work.artist, work.year].filter { !$0.isEmpty }.joined(separator: ", ")))
     }
