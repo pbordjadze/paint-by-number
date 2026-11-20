@@ -11,15 +11,29 @@ import SwiftUI
 nonisolated enum GlassPicture {
     /// The dark room behind the window.
     static let nave = SIMD3<Float>(0.035, 0.035, 0.055)
-    /// Lead: near black, a little warm.
-    static let lead = SIMD3<Float>(0.10, 0.095, 0.09)
-    /// How much of its suggested glass an unglazed piece shows.
-    static let hint: Float = 0.2
+    /// Lead: near black, a little cool.
+    static let lead = SIMD3<Float>(0.045, 0.043, 0.05)
 
-    /// A piece not yet glazed, its suggested glass `suggested` (the template's paint).
+    /// A piece not yet glazed, its suggested glass `suggested` (the template's paint), as one
+    /// color (the glow, a pour's start): `GlassTexture`'s unlit glass without its grain.
     static func unlit(_ suggested: PaletteColor) -> SIMD3<Float> {
-        let dark = SIMD3<Float>(0.07, 0.07, 0.085)
-        return dark + (suggested.rgb - dark) * hint
+        GlassTexture.unlitBase + (suggested.rgb - GlassTexture.unlitBase) * GlassTexture.unlitTint
+    }
+
+    /// Each piece's glass for `GlassTexture`, and whether it is lit: its glass where glazed, else
+    /// the glass suggested for it, unlit.
+    static func glass(of t: Template, glazing: Glazing, offered: [PaletteColor]) -> (colors: [SIMD3<Float>], lit: [Bool]) {
+        let pieces = t.regions.indices.map { r -> (SIMD3<Float>, Bool) in
+            let g = r < glazing.glass.count ? Int(glazing.glass[r]) : -1
+            if g >= 0 && g < offered.count { return (offered[g].rgb, true) }
+            return (t.palette[Int(t.regions[r].colorIndex)].rgb, false)
+        }
+        return (pieces.map(\.0), pieces.map(\.1))
+    }
+
+    /// The glass of every piece, as a picture at the template's size.
+    static func picture(_ pixels: [UInt8], of t: Template) -> CGImage? {
+        PhotoLoader.cgImage(from: RGBAImage(width: t.width, height: t.height, pixels: pixels, colorSpace: t.colorSpace))
     }
 
     /// The color of each piece: its glass where glazed, else unlit.
@@ -63,7 +77,7 @@ nonisolated enum GlassPicture {
 
     /// The lead's width in canvas units: a fixed share of the window's long side, so a window
     /// reads alike at every size.
-    static func leadWidth(width: Int, height: Int) -> CGFloat { CGFloat(max(width, height)) * 0.0075 }
+    static func leadWidth(width: Int, height: Int) -> CGFloat { CGFloat(max(width, height)) * 0.012 }
 
     static func cgSpace(_ space: RGBColorSpace) -> CGColorSpace {
         CGColorSpace(name: space == .displayP3 ? CGColorSpace.displayP3 : CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
@@ -77,7 +91,7 @@ nonisolated enum GlassPicture {
     static func color(_ rgb: SIMD3<Float>, space: RGBColorSpace) -> Color { Color(cgColor: cgColor(rgb, space: space)) }
 
     /// The window as a picture `longSide` pixels on its long side: the shelf's card.
-    static func image(of t: Template, glazing: Glazing, offered: [PaletteColor], longSide: Int) -> CGImage? {
+    static func image(of t: Template, glazing: Glazing, offered: [PaletteColor], texture: GlassTexture, longSide: Int) -> CGImage? {
         guard t.width > 0, t.height > 0 else { return nil }
         let scale = CGFloat(longSide) / CGFloat(max(t.width, t.height))
         let w = max(1, Int((CGFloat(t.width) * scale).rounded())), h = max(1, Int((CGFloat(t.height) * scale).rounded()))
@@ -88,15 +102,15 @@ nonisolated enum GlassPicture {
         ctx.scaleBy(x: scale, y: -scale)
         ctx.setFillColor(cgColor(nave, space: t.colorSpace))
         ctx.fill(CGRect(x: 0, y: 0, width: t.width, height: t.height))
-        let colors = colors(of: t, glazing: glazing, offered: offered)
-        ctx.setLineJoin(.round)
-        ctx.setLineWidth(1 / scale)
-        for (r, path) in piecePaths(of: t).enumerated() {
-            let c = cgColor(colors[r], space: t.colorSpace)
-            ctx.setFillColor(c)
-            ctx.setStrokeColor(c)
-            ctx.addPath(path)
-            ctx.drawPath(using: .eoFillStroke)
+        let glass = glass(of: t, glazing: glazing, offered: offered)
+        if let picture = picture(texture.pixels(colors: glass.colors, lit: glass.lit), of: t) {
+            // Drawn upright in the flipped context.
+            ctx.saveGState()
+            ctx.translateBy(x: 0, y: CGFloat(t.height))
+            ctx.scaleBy(x: 1, y: -1)
+            ctx.interpolationQuality = .high
+            ctx.draw(picture, in: CGRect(x: 0, y: 0, width: t.width, height: t.height))
+            ctx.restoreGState()
         }
         // Light from behind: brightest at the middle, as a window against the sky is.
         if let light = CGGradient(colorsSpace: space, colors: [
@@ -110,7 +124,7 @@ nonisolated enum GlassPicture {
             ctx.restoreGState()
         }
         ctx.setStrokeColor(cgColor(lead, space: t.colorSpace))
-        ctx.setLineWidth(leadWidth(width: t.width, height: t.height) * 1.6)
+        ctx.setLineWidth(leadWidth(width: t.width, height: t.height) * 1.3)
         ctx.setLineCap(.round)
         ctx.addPath(leadPath(of: t))
         ctx.strokePath()

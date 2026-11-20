@@ -116,6 +116,37 @@ struct GlassTests {
         #expect(GlassPalette.offered(for: blue).count == GlassPalette.classics.count)
     }
 
+    // MARK: The glass
+
+    @Test func litGlassGlowsInsideAndUnlitStaysDark() throws {
+        let t = try Self.window().template
+        let texture = GlassTexture(template: t)
+        let r = t.regions.indices.max { t.regions[$0].area < t.regions[$1].area }!
+        let glass = SIMD3<Float>(0.8, 0.3, 0.2)
+        var lit = [UInt8](repeating: 0, count: t.width * t.height * 4), unlit = lit
+        texture.paint(r, rgb: glass, lit: true, into: &lit)
+        texture.paint(r, rgb: glass, lit: false, into: &unlit)
+        var inside = [Int](), edge = [Int](), outside = 0
+        for y in 0..<t.height {
+            for x in 0..<t.width {
+                let i = y * t.width + x
+                guard Self.region(at: x, y, in: t) == r else { outside += Int(lit[i * 4 + 3]); continue }
+                let k = Int(t.regionMap[x, y])
+                let border = x == 0 || y == 0 || x == t.width - 1 || y == t.height - 1
+                    || Int(t.regionMap[x - 1, y]) != k || Int(t.regionMap[x + 1, y]) != k
+                if border { edge.append(Int(lit[i * 4])) } else { inside.append(Int(lit[i * 4])) }
+                #expect(unlit[i * 4] < lit[i * 4], "unlit glass is darker than lit")
+            }
+        }
+        #expect(outside == 0, "only the piece is painted")
+        let mean = { (v: [Int]) in Double(v.reduce(0, +)) / Double(max(1, v.count)) }
+        #expect(mean(inside) > mean(edge) + 10, "lit glass glows deep in its piece")
+        // The same window, the same glass.
+        var again = [UInt8](repeating: 0, count: lit.count)
+        GlassTexture(template: t).paint(r, rgb: glass, lit: true, into: &again)
+        #expect(again == lit)
+    }
+
     // MARK: Glazing
 
     static func glasses(_ n: Int) -> [PaletteColor] {

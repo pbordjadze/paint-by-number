@@ -54,9 +54,9 @@ func runGlass(_ options: Options) throws {
     print(String(data: json, encoding: .utf8)!)
 }
 
-/// The window as glass: each glazed piece its glass, lit (brighter toward its middle, a little
-/// ripple), a piece not glazed dark with a hint of its suggested glass, and lead along every
-/// boundary and the frame. A preview for judging glasses, not the app's renderer.
+/// The window as glass: each piece's glass as the app draws it (`GlassTexture`: a glazed piece
+/// lit, brighter toward its middle and streaked, one not glazed dark with a hint of its suggested
+/// glass), and lead along every boundary and the frame.
 func glassRaster(_ t: Template, glazing: [Int16], offered: [PaletteColor]) -> RGBAImage {
     let w = t.width, h = t.height, n = w * h
     let map = t.regionMap.storage
@@ -84,27 +84,18 @@ func glassRaster(_ t: Template, glazing: [Int16], offered: [PaletteColor]) -> RG
             if y < h - 1 { d[i] = min(d[i], d[i + w] + 1); if x < w - 1 { d[i] = min(d[i], d[i + w + 1] + 1.414) }; if x > 0 { d[i] = min(d[i], d[i + w - 1] + 1.414) } }
         }
     }
-    var deepest = [Float](repeating: 1, count: t.regions.count)
-    for i in 0..<n { deepest[Int(map[i])] = max(deepest[Int(map[i])], d[i]) }
-    let lead = Float(max(w, h)) * 0.0045
+    let lead = Float(max(w, h)) * 0.006
+    // The glass as the app shows it (`GlassTexture`), the lead over it.
+    let colors = t.regions.indices.map { r -> SIMD3<Float> in
+        let g = Int(glazing[r])
+        return g >= 0 && g < offered.count ? offered[g].rgb : t.palette[Int(t.regions[r].colorIndex)].rgb
+    }
+    let lit = t.regions.indices.map { r in Int(glazing[r]) >= 0 && Int(glazing[r]) < offered.count }
+    let glass = GlassTexture(template: t).pixels(colors: colors, lit: lit)
     var px = [UInt8](repeating: 255, count: n * 4)
     for i in 0..<n {
-        let r = Int(map[i]), x = i % w, y = i / w
-        var c: SIMD3<Float>
-        if d[i] < lead {
-            c = SIMD3(0.105, 0.098, 0.125)
-        } else {
-            let depth = min(1, (d[i] - lead) / max(2, deepest[r] - lead))
-            let ripple = (sin(Float(x) * 0.07 + Float(r)) * sin(Float(y) * 0.023 + Float(r) * 1.7)) * 0.5 + 0.5
-            let g = Int(glazing[r])
-            if g >= 0, g < offered.count {
-                let f = 0.72 + 0.36 * depth.squareRoot() + (ripple - 0.5) * 0.18
-                c = offered[g].rgb * f + SIMD3(0.055, 0.047, 0.031) * depth
-            } else {
-                let hint = t.palette[Int(t.regions[r].colorIndex)].rgb
-                c = (hint * 0.17 + SIMD3(0.12, 0.12, 0.16) * 0.83) * (0.75 + 0.5 * ripple * 0.5)
-            }
-        }
+        let c = d[i] < lead ? SIMD3<Float>(0.07, 0.066, 0.08)
+            : SIMD3(Float(glass[i * 4]), Float(glass[i * 4 + 1]), Float(glass[i * 4 + 2])) / 255
         let b = bytes(c)
         px[i * 4] = b.x; px[i * 4 + 1] = b.y; px[i * 4 + 2] = b.z
     }

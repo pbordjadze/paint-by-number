@@ -265,32 +265,56 @@ struct EraPassage: View {
         let dark = t < Self.cover ? EraWayBack.ease(min(1, t / (Self.cover * 0.8)))
             : max(0, 1 - EraWayBack.ease((t - Self.cover - Self.hold) / Self.lift))
         graphics.fill(Path(CGRect(origin: .zero, size: size)), with: .color(nave.opacity(dark)))
-        // The rose: twelve petals of the glazier's colors round a gold heart, lit through the
-        // second half of the cover and the hold, gone as the dark lifts.
+        // The rose: twelve panes of jewel glass between lead spokes, an oculus in each, round a
+        // gold heart, in a ring of stone; lit through the second half of the cover and the hold,
+        // gone as the dark lifts. Drawn opaque in a layer that fades whole, so no pane shows
+        // through another.
         let lit = t < Self.cover * 0.45 ? 0 : t < Self.cover + Self.hold
             ? EraWayBack.ease(min(1, (t - Self.cover * 0.45) / (Self.cover * 0.55)))
             : max(0, 1 - (t - Self.cover - Self.hold) / (Self.lift * 0.6))
         guard lit > 0 else { return }
         let centre = CGPoint(x: size.width / 2, y: size.height / 2)
-        let radius = min(size.width, size.height) * 0.3
+        let radius = min(size.width, size.height) * 0.32
         let glasses: [Color] = [
-            Color(red: 0.11, green: 0.25, blue: 0.77), Color(red: 0.77, green: 0.09, blue: 0.22),
-            Color(red: 0.96, green: 0.71, blue: 0.14), Color(red: 0.09, green: 0.59, blue: 0.38),
+            Color(red: 0.07, green: 0.17, blue: 0.62), Color(red: 0.62, green: 0.05, blue: 0.15),
+            Color(red: 0.07, green: 0.17, blue: 0.62), Color(red: 0.06, green: 0.42, blue: 0.29),
         ]
-        var glow = graphics
-        glow.addFilter(.blur(radius: radius * 0.25))
-        glow.fill(Path(ellipseIn: CGRect(x: centre.x - radius * 1.1, y: centre.y - radius * 1.1, width: radius * 2.2, height: radius * 2.2)),
-                  with: .color(Self.glassGold.opacity(0.18 * lit)))
-        for k in 0..<12 {
-            let angle = Double(k) / 12 * 2 * .pi
-            let petal = Path(ellipseIn: CGRect(x: -radius * 0.17, y: radius * 0.2, width: radius * 0.34, height: radius * 0.78))
-                .applying(CGAffineTransform(translationX: centre.x, y: centre.y).rotated(by: angle))
-            graphics.fill(petal, with: .color(glasses[k % glasses.count].opacity(0.85 * lit)))
-            graphics.stroke(petal, with: .color(nave.opacity(lit)), lineWidth: radius * 0.04)
+        let lights: [Color] = [
+            Color(red: 0.86, green: 0.6, blue: 0.13), Color(red: 0.2, green: 0.45, blue: 0.85),
+            Color(red: 0.75, green: 0.12, blue: 0.22), Color(red: 0.86, green: 0.6, blue: 0.13),
+        ]
+        func circle(_ r: CGFloat, at c: CGPoint = centre) -> Path {
+            Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: 2 * r, height: 2 * r))
         }
-        let heart = Path(ellipseIn: CGRect(x: centre.x - radius * 0.22, y: centre.y - radius * 0.22, width: radius * 0.44, height: radius * 0.44))
-        graphics.fill(heart, with: .color(Self.glassGold.opacity(0.9 * lit)))
-        graphics.stroke(heart, with: .color(nave.opacity(lit)), lineWidth: radius * 0.04)
+        var glow = graphics
+        glow.addFilter(.blur(radius: radius * 0.3))
+        glow.fill(circle(radius * 1.15), with: .color(Self.glassGold.opacity(0.16 * lit)))
+        graphics.drawLayer { rose in
+            rose.opacity = lit
+            let inner = radius * 0.3, outer = radius * 0.92, lead = radius * 0.035
+            rose.fill(circle(radius * 1.06), with: .color(Color(red: 0.17, green: 0.16, blue: 0.18)))
+            rose.fill(circle(radius), with: .color(nave))
+            for k in 0..<12 {
+                let a0 = Angle.degrees(Double(k) * 30 - 90), a1 = Angle.degrees(Double(k + 1) * 30 - 90)
+                var pane = Path()
+                pane.addArc(center: centre, radius: outer, startAngle: a0, endAngle: a1, clockwise: false)
+                pane.addArc(center: centre, radius: inner, startAngle: a1, endAngle: a0, clockwise: true)
+                pane.closeSubpath()
+                rose.fill(pane, with: .color(glasses[k % glasses.count]))
+                rose.stroke(pane, with: .color(nave), lineWidth: lead)
+                let mid = (a0.radians + a1.radians) / 2
+                let at = CGPoint(x: centre.x + cos(mid) * radius * 0.63, y: centre.y + sin(mid) * radius * 0.63)
+                let oculus = circle(radius * 0.11, at: at)
+                rose.fill(oculus, with: .color(lights[k % lights.count]))
+                rose.stroke(oculus, with: .color(nave), lineWidth: lead * 0.8)
+            }
+            rose.stroke(circle(outer), with: .color(nave), lineWidth: lead * 1.4)
+            let heart = circle(inner)
+            rose.fill(heart, with: .color(Self.glassGold))
+            rose.stroke(heart, with: .color(nave), lineWidth: lead * 1.4)
+            rose.fill(circle(inner * 0.32), with: .color(Color(red: 0.62, green: 0.05, blue: 0.15)))
+            rose.stroke(circle(inner * 0.32), with: .color(nave), lineWidth: lead)
+        }
     }
 
     private static let glassGold = Color(red: 0.96, green: 0.78, blue: 0.36)

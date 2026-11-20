@@ -89,7 +89,7 @@ struct GlassEra: View {
     private func start(_ window: GlassWindow.Leaded, from lead: GlassLeadRoute) {
         Task {
             do {
-                let artwork = try await shelf.create(window, photo: lead.model.photo, title: GlassShelf.title())
+                let artwork = try await shelf.create(window, photo: lead.model.photo, title: shelf.title())
                 path = [.window(artwork.id)]
             } catch {
                 Log.library.error("Couldn't save a window: \(String(describing: error), privacy: .public)")
@@ -185,6 +185,11 @@ struct GlassCard: View {
     @State private var picture: CGImage?
     @State private var asksToDelete = false
 
+    private var progress: String {
+        String(localized: "glass.progress", defaultValue: "Glazed: \(artwork.paintedCount) of \(artwork.regionCount)",
+               comment: "VoiceOver value of a stained glass window: pieces glazed of all its pieces")
+    }
+
     var body: some View {
         Button(action: onOpen) {
             VStack(alignment: .leading, spacing: 8) {
@@ -201,13 +206,17 @@ struct GlassCard: View {
                     .font(.subheadline)
                     .foregroundStyle(.primary)
                     .lineLimit(2)
+                if !artwork.isComplete {
+                    Text(progress)
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                        .accessibilityHidden(true)
+                }
             }
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
-        .accessibilityValue(Text(String(
-            localized: "glass.progress", defaultValue: "Glazed: \(artwork.paintedCount) of \(artwork.regionCount)",
-            comment: "VoiceOver value of a stained glass window: pieces glazed of all its pieces")))
+        .accessibilityValue(Text(progress))
         .accessibilityIdentifier("glass-card")
         .contextMenu {
             Button("Delete", systemImage: "trash", role: .destructive) { asksToDelete = true }
@@ -244,9 +253,10 @@ struct GlassWindowScreen: View {
             guard model == nil, let artwork = shelf.window(id) else { return }
             do {
                 let opened = try await shelf.open(artwork)
-                let made = GlassGlazeModel(id: id, template: opened.template, glazing: opened.glazing, offered: opened.offered)
+                let made = GlassGlazeModel(id: id, template: opened.template, glazing: opened.glazing, offered: opened.offered,
+                                           texture: opened.texture)
                 made.onChange = { [shelf] glazing in
-                    Task { await shelf.save(glazing, of: id, template: opened.template, offered: opened.offered) }
+                    Task { await shelf.save(glazing, of: id, template: opened.template, offered: opened.offered, texture: opened.texture) }
                 }
                 #if DEBUG
                 GlassDemo.prepare(made)

@@ -24,6 +24,10 @@ final class GlassGlazeModel {
     let offered: [PaletteColor]
     @ObservationIgnored let paths: [CGPath]
     @ObservationIgnored let lead: CGPath
+    @ObservationIgnored private let texture: GlassTexture
+    /// The glass of every piece, pixel by pixel (`GlassTexture`), and as a picture.
+    @ObservationIgnored private var pixels: [UInt8]
+    private(set) var picture: CGImage?
     private(set) var glazing: Glazing
     /// Each piece's color as it stands: its glass, or unlit.
     private(set) var colors: [SIMD3<Float>]
@@ -41,14 +45,18 @@ final class GlassGlazeModel {
     static let pourDuration: TimeInterval = 0.45
     static let sunDuration: TimeInterval = 2.6
 
-    init(id: UUID, template: Template, glazing: Glazing, offered: [PaletteColor]) {
+    init(id: UUID, template: Template, glazing: Glazing, offered: [PaletteColor], texture: GlassTexture) {
         self.id = id
         self.template = template
         self.glazing = glazing
         self.offered = offered
+        self.texture = texture
         paths = GlassPicture.piecePaths(of: template)
         lead = GlassPicture.leadPath(of: template)
         colors = GlassPicture.colors(of: template, glazing: glazing, offered: offered)
+        let glass = GlassPicture.glass(of: template, glazing: glazing, offered: offered)
+        pixels = texture.pixels(colors: glass.colors, lit: glass.lit)
+        picture = GlassPicture.picture(pixels, of: template)
         // The bead in hand at first: the glass suggested for the largest piece left unglazed.
         let largest = template.regions.indices.filter { glazing.glass[$0] == Glazing.none }
             .max { template.regions[$0].area < template.regions[$1].area }
@@ -91,6 +99,7 @@ final class GlassGlazeModel {
         }
         glazing.glass[r] = glass
         colors[r] = offered[Int(glass)].rgb
+        repaint([r])
         if isComplete && !wasComplete { finishedAt = .now }
         if p == nil { endStroke() }
         changed()
@@ -110,6 +119,7 @@ final class GlassGlazeModel {
             glazing.glass[step.region] = step.glass
         }
         colors = GlassPicture.colors(of: template, glazing: glazing, offered: offered)
+        repaint(last.map(\.region))
         if !isComplete { finishedAt = nil }
         canUndo = !undoStack.isEmpty
         changed()
@@ -118,6 +128,17 @@ final class GlassGlazeModel {
     /// The window just finished, held at `elapsed` seconds of the sun's pass (demos).
     func finish(heldAt elapsed: TimeInterval) {
         finishedAt = Date.now.addingTimeInterval(-elapsed)
+    }
+
+    /// Paints pieces `regions` afresh in their glass, lit or not, and makes the picture again.
+    private func repaint(_ regions: [Int]) {
+        for r in Set(regions) {
+            let g = Int(glazing.glass[r])
+            let lit = g >= 0 && g < offered.count
+            texture.paint(r, rgb: lit ? offered[g].rgb : template.palette[Int(template.regions[r].colorIndex)].rgb,
+                          lit: lit, into: &pixels)
+        }
+        picture = GlassPicture.picture(pixels, of: template)
     }
 
     private func changed() {
@@ -151,14 +172,28 @@ struct GlassGlazeView: View {
     @Environment(\.scenePhase) private var scenePhase
     /// The sun has passed: the window stands still again.
     @State private var sunPassed = false
+    /// Whether the glasses are out: glazed whole, the window stands alone in the dark until a
+    /// touch brings them back.
+    @State private var showsBeads: Bool
+    /// A touch that brought the glasses back pours nothing.
+    @State private var touchShowedBeads = false
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
+
+    init(model: GlassGlazeModel, sunHold: TimeInterval? = nil) {
+        _model = State(initialValue: model)
+        self.sunHold = sunHold
+        _showsBeads = State(initialValue: !model.isComplete)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             GeometryReader { proxy in
                 let fit = GlassFit(width: model.template.width, height: model.template.height, in: proxy.size, margin: 28)
+                // Read here, so a glazed piece redraws the canvas even with the timeline paused.
+                let picture = model.picture
                 TimelineView(.animation(paused: !isMoving)) { context in
                     Canvas { graphics, size in
-                        draw(in: &graphics, size: size, fit: fit, now: context.date)
+                        draw(in: &graphics, size: size, fit: fit, picture: picture, now: context.date)
                     }
                 }
                 .gesture(glaze(fit: fit))
@@ -167,7 +202,9 @@ struct GlassGlazeView: View {
                 .accessibilityValue(Text(progressText))
                 .accessibilityChildren { pieceElements(fit: fit) }
             }
-            beads
+            if showsBeads || voiceOver {
+                beads.transition(.opacity)
+            }
         }
         .background(GlassPicture.color(GlassPicture.nave, space: .sRGB).ignoresSafeArea())
         .toolbar {
@@ -179,6 +216,7 @@ struct GlassGlazeView: View {
             }
         }
         .onChange(of: model.isComplete) { _, complete in
+            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.6)) { showsBeads = !complete }
             guard complete else { return }
             AccessibilityNotification.Announcement(String(
                 localized: "glass.finished", defaultValue: "The sun passes behind your window.",
@@ -209,41 +247,38 @@ struct GlassGlazeView: View {
 
     // MARK: Drawing
 
-    private func draw(in graphics: inout GraphicsContext, size: CGSize, fit: GlassFit, now: Date) {
+    private func draw(in graphics: inout GraphicsContext, size: CGSize, fit: GlassFit, picture: CGImage?, now: Date) {
         let space = model.template.colorSpace
         let toScreen = fit.transform
         let pieces = model.paths.map { Path($0).applying(toScreen) }
+        let glazed = model.glazing.glass
         let eo = FillStyle(eoFill: true)
         // Light spilling past the frame: the lit glass, blurred, behind the window.
         graphics.drawLayer { glow in
             glow.addFilter(.blur(radius: max(fit.rect.width, fit.rect.height) * 0.06))
-            for (r, path) in pieces.enumerated() where model.glazing.glass[r] != Glazing.none {
+            for (r, path) in pieces.enumerated() where glazed[r] != Glazing.none {
                 glow.fill(path, with: .color(GlassPicture.color(model.colors[r], space: space).opacity(0.55)), style: eo)
             }
         }
-        let pouring = Dictionary(model.pours.map { ($0.region, $0) }, uniquingKeysWith: { _, last in last })
-        for (r, path) in pieces.enumerated() {
-            let lit = model.glazing.glass[r] != Glazing.none
-            if let pour = pouring[r], !reduceMotion {
-                let t = min(1, now.timeIntervalSince(pour.at) / GlassGlazeModel.pourDuration)
-                graphics.fill(path, with: .color(GlassPicture.color(pour.from, space: space)), style: eo)
-                let bounds = path.boundingRect
-                let reach = hypot(bounds.width, bounds.height) * (1 - pow(1 - t, 3))
-                let centre = pour.point.applying(toScreen)
-                var poured = graphics
-                poured.clip(to: path, style: eo)
-                let disc = Path(ellipseIn: CGRect(x: centre.x - reach, y: centre.y - reach, width: 2 * reach, height: 2 * reach))
-                poured.fill(disc, with: .color(GlassPicture.color(model.colors[r], space: space)))
-                poured.fill(disc, with: .color(.white.opacity(0.45 * (1 - t))))
-            } else {
-                graphics.fill(path, with: .color(GlassPicture.color(model.colors[r], space: space)), style: eo)
-            }
-            if lit {
-                // The glass itself: thicker and thinner across a piece, so it isn't paint.
-                let b = path.boundingRect
-                graphics.fill(path, with: .linearGradient(
-                    Gradient(colors: [.white.opacity(0.16), .clear, .black.opacity(0.14)]),
-                    startPoint: CGPoint(x: b.minX, y: b.minY), endPoint: CGPoint(x: b.maxX, y: b.maxY)), style: eo)
+        // The glass, then each piece being poured: its old glass, the new one spreading from the
+        // finger with a flash of light at its front.
+        if let picture {
+            graphics.draw(Image(decorative: picture, scale: 1), in: fit.rect)
+            if !reduceMotion {
+                for pour in model.pours where pour.region < pieces.count {
+                    let path = pieces[pour.region]
+                    let t = min(1, now.timeIntervalSince(pour.at) / GlassGlazeModel.pourDuration)
+                    var poured = graphics
+                    poured.clip(to: path, style: eo)
+                    let bounds = path.boundingRect
+                    let reach = hypot(bounds.width, bounds.height) * (1 - pow(1 - t, 3))
+                    let centre = pour.point.applying(toScreen)
+                    let disc = Path(ellipseIn: CGRect(x: centre.x - reach, y: centre.y - reach, width: 2 * reach, height: 2 * reach))
+                    var outside = Path(bounds.insetBy(dx: -2, dy: -2))
+                    outside.addPath(disc)
+                    poured.fill(outside, with: .color(GlassPicture.color(pour.from, space: space)), style: eo)
+                    poured.fill(disc, with: .color(.white.opacity(0.45 * (1 - t))))
+                }
             }
         }
         // Light from behind, brightest a little above the middle.
@@ -258,7 +293,7 @@ struct GlassGlazeView: View {
         let lead = Path(model.lead).applying(toScreen)
         graphics.stroke(lead, with: .color(GlassPicture.color(GlassPicture.lead, space: .sRGB)),
                         style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))
-        graphics.stroke(lead, with: .color(.white.opacity(0.14)),
+        graphics.stroke(lead, with: .color(.white.opacity(0.08)),
                         style: StrokeStyle(lineWidth: max(1, width * 0.22), lineCap: .round, lineJoin: .round))
     }
 
@@ -291,8 +326,18 @@ struct GlassGlazeView: View {
 
     private func glaze(fit: GlassFit) -> some Gesture {
         DragGesture(minimumDistance: 0)
-            .onChanged { value in model.pour(at: fit.toCanvas(value.location), animated: !reduceMotion) }
-            .onEnded { _ in model.endStroke() }
+            .onChanged { value in
+                if !showsBeads && !voiceOver {
+                    touchShowedBeads = true
+                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.35)) { showsBeads = true }
+                }
+                guard !touchShowedBeads else { return }
+                model.pour(at: fit.toCanvas(value.location), animated: !reduceMotion)
+            }
+            .onEnded { _ in
+                touchShowedBeads = false
+                model.endStroke()
+            }
     }
 
     /// One element a piece for VoiceOver, at its number's place: its glass or none, and an
@@ -330,6 +375,7 @@ struct GlassGlazeView: View {
                 .padding(.vertical, 12)
             }
             .scrollIndicators(.hidden)
+            .defaultScrollAnchor(.center, for: .alignment)
             Text(progressText)
                 .font(.footnote.monospacedDigit())
                 .foregroundStyle(.secondary)
@@ -350,7 +396,7 @@ struct GlassGlazeView: View {
                     Circle().fill(RadialGradient(colors: [.white.opacity(0.55), .clear], center: UnitPoint(x: 0.32, y: 0.28),
                                                  startRadius: 0, endRadius: 16))
                 }
-                .overlay { Circle().strokeBorder(.white.opacity(isSelected ? 0.95 : 0.2), lineWidth: isSelected ? 3 : 1) }
+                .overlay { Circle().strokeBorder(.white.opacity(isSelected ? 0.95 : 0.32), lineWidth: isSelected ? 3 : 1) }
                 .shadow(color: color.opacity(0.6), radius: isSelected ? 10 : 4)
                 .frame(width: 40, height: 40)
                 .scaleEffect(isSelected ? 1.15 : 1)

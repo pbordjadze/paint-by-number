@@ -66,7 +66,8 @@ final class GlassShelf {
             let source = PhotoLoader.cgImage(from: photo).flatMap {
                 ImageCodec.jpegData(ImageCodec.downscaled($0, maxPixelSize: ArtworkStore.sourceMaxPixelSize), quality: 0.88)
             }
-            let thumbnail = GlassPicture.image(of: template, glazing: glazing, offered: offered, longSide: ArtworkStore.thumbnailMaxPixelSize)
+            let thumbnail = GlassPicture.image(of: template, glazing: glazing, offered: offered, texture: GlassTexture(template: template),
+                                               longSide: ArtworkStore.thumbnailMaxPixelSize)
                 .flatMap(ImageCodec.pngData)
             try store.create(
                 artwork, template: template, progress: PaintProgress(regionCount: template.regions.count),
@@ -84,6 +85,7 @@ final class GlassShelf {
         var template: Template
         var glazing: Glazing
         var offered: [PaletteColor]
+        var texture: GlassTexture
     }
 
     func open(_ artwork: Artwork) async throws -> Opened {
@@ -101,23 +103,23 @@ final class GlassShelf {
                     Log.library.error("Unreadable glazing of window \(artwork.id.uuidString, privacy: .public): starting it unglazed")
                 }
             }
-            return Opened(template: template, glazing: glazing, offered: glazing.offered)
+            return Opened(template: template, glazing: glazing, offered: glazing.offered, texture: GlassTexture(template: template))
         }
     }
 
     /// Writes a window's glazing, its picture on the shelf and its meta (the pieces glazed), after
     /// the window's saves before it, so an older glazing never lands over a newer one.
-    func save(_ glazing: Glazing, of id: UUID, template: Template, offered: [PaletteColor]) async {
+    func save(_ glazing: Glazing, of id: UUID, template: Template, offered: [PaletteColor], texture: GlassTexture) async {
         let previous = saving[id]
         let task = Task {
             await previous?.value
-            await write(glazing, of: id, template: template, offered: offered)
+            await write(glazing, of: id, template: template, offered: offered, texture: texture)
         }
         saving[id] = task
         await task.value
     }
 
-    private func write(_ glazing: Glazing, of id: UUID, template: Template, offered: [PaletteColor]) async {
+    private func write(_ glazing: Glazing, of id: UUID, template: Template, offered: [PaletteColor], texture: GlassTexture) async {
         guard var artwork = window(id) else { return }
         artwork.paintedCount = glazing.glazedCount
         artwork.modifiedAt = .now
@@ -129,7 +131,8 @@ final class GlassShelf {
         do {
             try await Background.run {
                 try glazing.encoded().write(to: store.directory(for: id).appending(path: Self.glazingFile), options: .atomic)
-                if let png = GlassPicture.image(of: template, glazing: glazing, offered: offered, longSide: ArtworkStore.thumbnailMaxPixelSize)
+                if let png = GlassPicture.image(of: template, glazing: glazing, offered: offered, texture: texture,
+                                                longSide: ArtworkStore.thumbnailMaxPixelSize)
                     .flatMap(ImageCodec.pngData) {
                     try? store.writeThumbnail(png, for: id)
                 }
@@ -160,11 +163,20 @@ final class GlassShelf {
         return await Background.run { store.thumbnail(id, maxPixelSize: 720) }
     }
 
-    /// A window's name: "Window, November 20".
-    static func title(on date: Date = .now) -> String {
+    /// A new window's name: "Window, November 20", and "Window 2, November 20" for the day's
+    /// second, so no two windows on the shelf share one.
+    func title(on date: Date = .now) -> String {
         let day = date.formatted(.dateTime.month(.wide).day())
-        return String(localized: "glass.windowTitle", defaultValue: "Window, \(day)",
-                      comment: "Name of a new stained glass window: the word Window and the day it was made, e.g. “Window, November 20”")
+        let taken = Set(windows.map(\.title))
+        let first = String(localized: "glass.windowTitle", defaultValue: "Window, \(day)",
+                           comment: "Name of a new stained glass window: the word Window and the day it was made, e.g. “Window, November 20”")
+        guard taken.contains(first) else { return first }
+        for n in 2... {
+            let title = String(localized: "glass.windowTitleNumbered", defaultValue: "Window \(n), \(day)",
+                               comment: "Name of a stained glass window made on a day that already has one: the word Window, its number that day and the day, e.g. “Window 2, November 20”")
+            if !taken.contains(title) { return title }
+        }
+        return first
     }
 }
 #endif

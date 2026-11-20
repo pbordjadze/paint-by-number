@@ -61,7 +61,8 @@ enum GlassDemo {
                     let artwork = try await window(on: shelf)
                     guard share > 0 else { continue }
                     let opened = try await shelf.open(artwork)
-                    await shelf.save(glazed(opened, share: share), of: artwork.id, template: opened.template, offered: opened.offered)
+                    await shelf.save(glazed(opened, share: share), of: artwork.id, template: opened.template, offered: opened.offered,
+                                     texture: opened.texture)
                 }
                 try? await Task.sleep(for: .seconds(1.5))
                 DemoMode.markReady()
@@ -82,7 +83,7 @@ enum GlassDemo {
                 photo: photo, width: size.width, height: size.height, colorSpace: photo.colorSpace,
                 lines: Self.lines(width: size.width, height: size.height), joining: Self.reach(width: size.width, height: size.height))
         }
-        return try await shelf.create(leaded, photo: photo, title: GlassShelf.title())
+        return try await shelf.create(leaded, photo: photo, title: shelf.title())
     }
 
     /// The window's largest pieces, `share` of them, glazed in the glasses suggested for them.
