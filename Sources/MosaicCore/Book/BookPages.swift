@@ -171,7 +171,7 @@ extension StoneBook {
     @discardableResult
     func minimap(_ c: inout PageCanvas, _ x: Double, _ y: Double, _ w: Double, current: Int? = nil, dot: Point? = nil, doneBefore: Int = 0) -> Double {
         let h = w * height / width
-        c.shape(.rect(x - 0.8, y - 0.8, w + 1.6, h + 1.6, radius: 1.4), fill: BookStyle.white, stroke: BookStyle.faint, width: 0.3)
+        c.shape(.rect(x - 0.8, y - 0.8, w + 1.6, h + 1.6), fill: BookStyle.white, stroke: BookStyle.ink, width: 0.25)
         c.image(minimaps[min(max(doneBefore, 0), minimaps.count - 1)], x, y, w, h)
         let k = w / width
         for col in 1..<max(columns, 1) {
@@ -223,8 +223,8 @@ extension StoneBook {
         return (w, h, out)
     }
 
-    func arrow(_ c: inout PageCanvas, _ x1: Double, _ y1: Double, _ x2: Double, _ y2: Double, _ color: BookColor = BookStyle.ink, _ w: Double = 0.6) {
-        let a = atan2(y2 - y1, x2 - x1), h = 2.2
+    func arrow(_ c: inout PageCanvas, _ x1: Double, _ y1: Double, _ x2: Double, _ y2: Double, _ color: BookColor = BookStyle.ink, _ w: Double = 0.9) {
+        let a = atan2(y2 - y1, x2 - x1), h = 3.6
         c.stroke(.line(Point(x1, y1), Point(x2 - cos(a) * h * 0.6, y2 - sin(a) * h * 0.6)), color, w)
         c.fill(.polygon([Point(x2, y2), Point(x2 - h * cos(a - 0.45), y2 - h * sin(a - 0.45)),
                          Point(x2 - h * cos(a + 0.45), y2 - h * sin(a + 0.45))]), color)
@@ -240,8 +240,7 @@ extension StoneBook {
 
     func cover(_ c: inout PageCanvas, _ strings: BookStrings) {
         let m = BookLayout.margin, pw = BookLayout.pageWidth
-        c.text(title, m, 30, 9.5, 400, BookStyle.ink, face: .serif)
-        c.stroke(.line(Point(m, 35), Point(pw - m, 35)), BookStyle.gold, 0.5)
+        c.text(title, m, 32, 15, 800, BookStyle.ink, face: .display)
         let h = 205.0, w = min(h * width / height, pw - 2 * m)
         let hh = w * height / width
         drawMosaic(&c, (pw - w) / 2, 44 + (h - hh) / 2, w, hh)
@@ -265,9 +264,8 @@ extension StoneBook {
         var cw = (pw - 2 * m) / 6
         for (i, t) in tools.enumerated() {
             let x = m + Double(i % 6) * cw, y = 18 + Double(i / 6) * 29
-            c.shape(.rect(x + 1.5, y, cw - 3, 26), fill: nil, stroke: BookStyle.ink, width: 0.3)
             t.icon.draw(into: &c, x + cw / 2 - 8, y + 2.2, 16)
-            c.text(t.amount, x + cw / 2, y + 23.4, 3.2, 600, BookStyle.ink, .middle)
+            c.text(t.amount, x + cw / 2, y + 23.4, 3.6, 400, BookStyle.ink, .middle)
         }
         // every stone, as a heap with its count to buy
         let rows = stones
@@ -279,7 +277,7 @@ extension StoneBook {
             let x = m + Double(i % 4) * cw, y = y0 + Double(i / 4) * rh
             heap(&c, r.paint, x + 2, y, 15 * rh / 19.5, 14 * rh / 19.5)
             badge(&c, x + 21, y + 4.5, 2.6, r.paint, size: 2.4)
-            c.text("×" + strings.count(r.buy), x + 25.5, y + 12.5, 4.2, 700)
+            c.text(strings.count(r.buy) + "x", x + 25.5, y + 12.5, 4.4, 400)
         }
     }
 
@@ -404,7 +402,7 @@ extension StoneBook {
         for p in order.sorted(by: { counts[$0]! != counts[$1]! ? counts[$0]! > counts[$1]! : $0 < $1 }) {
             if x > pw - m - 20 { x = m; y += 8 }
             badge(&c, x + 3, y, 3, p, size: 2.6)
-            c.text("×" + strings.count(counts[p]!), x + 7.5, y + 1.3, 3.4, 600)
+            c.text(strings.count(counts[p]!) + "x", x + 7.5, y + 1.3, 3.4, 400)
             x += 21
         }
     }
@@ -473,7 +471,7 @@ extension StoneBook {
         c.shape(.circle(Point(x0 + 5, y0 + 25), 4.2), fill: BookStyle.paper, stroke: BookStyle.ink, width: 0.5)
         c.text("\(s + 1)", x0 + 5, y0 + 26.6, 4.2, 700, BookStyle.ink, .middle)
         // the tray beside it is at true size
-        c.text("1:1", x0 + 5, y0 + 37, 3, 700, BookStyle.muted, .middle)
+        c.text("1:1", x0 + 5, y0 + 38, 4, 700, BookStyle.ink, .middle)
         // the parts box: this step's pieces at true size, by paint
         let chunk = step.pieces.map { pieces[$0] }
         let (placed, boxH) = BookLayout.parts(chunk, mm: mm, x: BookLayout.partsX, y: y0, width: BookLayout.partsWidth)
@@ -495,18 +493,18 @@ extension StoneBook {
         let crop = (cx - f.spanW / 2, cy - f.spanH / 2, f.spanW, f.spanH)
         let kk = min(vw / crop.2, vh / crop.3)
         let fw = crop.2 * kk, fh = crop.3 * kk
-        c.fill(.rect(x0 + (vw - fw) / 2, vy + (vh - fh) / 2, fw, fh, radius: 3), BookColor(hex: 0xF1EDE4))
+        c.fill(.rect(x0 + (vw - fw) / 2, vy + (vh - fh) / 2, fw, fh), BookColor(hex: 0xF2F2F2))
         let (tf, _) = drawMosaic(&c, x0, vy, vw, vh, style: { p in
             if p.step == n { return (self.colour(p.paint), BookStyle.gold, 0.55) }
             if p.section == s && p.step < n { return (self.colour(p.paint), nil, 0) }
             if p.section == s { return (BookStyle.white, BookColor(hex: 0xCFC8B9), 0.18) }
             if p.section < s { return (self.colour(p.paint, faded: 0.6), nil, 0) }
             return (BookColor(hex: 0xF7F4EE), nil, 0)
-        }, crop: crop, grout: false, radius: 3)
+        }, crop: crop, grout: false)
         // the sheet's edge where it shows
         let r = sectionRect(s)
         let e0 = tf(Point(r.x, r.y)), e1 = tf(Point(r.x + r.w, r.y + r.h))
-        c.clip(.rect(x0, vy, vw, vh, radius: 3))
+        c.clip(.rect(x0, vy, vw, vh))
         c.stroke(.rect(e0.x, e0.y, e1.x - e0.x, e1.y - e0.y), BookStyle.muted, 0.3, dash: [1.6, 1], round: false)
         c.endClip()
         // where we are
@@ -569,13 +567,13 @@ extension StoneBook {
     /// Everything the book uses but the stones, and how much: the needs page's pictures, and the
     /// tools list's rows.
     func kit(_ strings: BookStrings) -> [(icon: BookIcon, amount: String)] {
-        let n = strings.count(sections.count), one = "×" + strings.count(1)
+        let n = strings.count(sections.count), one = strings.count(1) + "x"
         let thinset = widthMM * heightMM / 1e6 * 4.4      // kg: 4 kg a square metre, and a tenth over
-        return [(.nippers, one), (.glasses, one), (.gloves, one), (.mask, one), (.brush, one), (.tub, "×" + strings.count(stones.count)),
-                (.scissors, one), (.mesh, "×" + n), (.film, "×" + n), (.tape, one), (.glue, one), (.cloth, "×" + strings.count(3)),
+        return [(.nippers, one), (.glasses, one), (.gloves, one), (.mask, one), (.brush, one), (.tub, strings.count(stones.count) + "x"),
+                (.scissors, one), (.mesh, n + "x"), (.film, n + "x"), (.tape, one), (.glue, one), (.cloth, strings.count(3) + "x"),
                 (.knife, one), (.board, strings.size(widthMM / 10 + 4, heightMM / 10 + 4)), (.thinset, strings.kilograms(thinset)),
-                (.trowel, one), (.grout, strings.kilograms(groutKilograms)), (.float, one), (.sponge, "×" + strings.count(2)),
-                (.bucket, "×" + strings.count(2)), (.level, one), (.cleat, one)]
+                (.trowel, one), (.grout, strings.kilograms(groutKilograms)), (.float, one), (.sponge, strings.count(2) + "x"),
+                (.bucket, strings.count(2) + "x"), (.level, one), (.cleat, one)]
     }
 
     /// The tools and materials by name, a page with words like the stone list.
@@ -584,7 +582,7 @@ extension StoneBook {
         c.text(strings.toolList, m, 24, 8, 400, BookStyle.ink, face: .serif)
         var y = 34.0
         // the stones themselves first, every one of them counted
-        let smalti = (icon: BookIcon.tiles, amount: "×" + strings.count(stones.reduce(0) { $0 + $1.buy }))
+        let smalti = (icon: BookIcon.tiles, amount: strings.count(stones.reduce(0) { $0 + $1.buy }) + "x")
         for t in [smalti] + kit(strings) {
             c.stroke(.line(Point(m, y), Point(pw - m, y)), BookStyle.faint, 0.25)
             t.icon.draw(into: &c, m + 1, y + 1, 9)

@@ -31,8 +31,7 @@ extension StoneBook {
         let ch = (BookLayout.pageHeight - top - 16) / Double(rows) - 4
         return (0..<count).map { i in
             let x = m + Double(i % columns) * cw + 3, y = top + Double(i / columns) * (ch + 4)
-            c.shape(.rect(x, y, cw - 6, ch), fill: nil, stroke: BookStyle.ink, width: 0.35)
-            c.text("\(i + 1)", x + 4, y + 10, 8, 800, BookStyle.ink, face: .display)
+            c.text("\(i + 1)", x + 1, y + 11, 11, 800, BookStyle.ink, face: .display)
             return Panel(x: x, y: y, w: cw - 6, h: ch)
         }
     }
@@ -44,7 +43,9 @@ extension StoneBook {
         if ok {
             c.stroke(BookPath(elements: [.move(Point(x - 3.6, y + 0.2)), .line(Point(x - 1, y + 3)), .line(Point(x + 3.8, y - 3.4))]), BookStyle.ink, 1.3)
         } else {
-            c.stroke(BookPath(elements: [.move(Point(x - 3.2, y - 3.2)), .line(Point(x + 3.2, y + 3.2)), .move(Point(x + 3.2, y - 3.2)), .line(Point(x - 3.2, y + 3.2))]), BookStyle.ink, 1.3)
+            // the wrong way crossed out whole, as an assembly book does
+            c.stroke(.line(Point(p.x + 8, p.y + 14), Point(p.x + p.w - 8, p.y + p.h - 4)), BookStyle.ink, 0.6)
+            c.stroke(.line(Point(p.x + p.w - 8, p.y + 14), Point(p.x + 8, p.y + p.h - 4)), BookStyle.ink, 0.6)
         }
     }
 
@@ -159,7 +160,7 @@ extension StoneBook {
         BookIcon.glasses.draw(into: &c, p[0].cx - 22, p[0].cy - 12, 22); nippers(&c, p[0].cx + 2, p[0].cy - 14, 26)
         mark(&c, p[0], ok: true)
         // cut inside a clear bag: the chips stay in it
-        c.shape(.rect(p[1].cx - 18, p[1].cy - 22, 36, 40, radius: 3), fill: BookColor(hex: 0xDBE7EF, alpha: 0.5), stroke: BookColor(hex: 0x9FB6C6), width: 0.4)
+        c.shape(.rect(p[1].cx - 18, p[1].cy - 22, 36, 40, radius: 3), fill: BookColor(hex: 0xF2F2F2), stroke: BookStyle.ink, width: 0.4)
         nippers(&c, p[1].cx - 12, p[1].cy - 18, 26)
         for i in 0..<6 { c.fill(.polygon([Point(p[1].cx - 12 + Double(i) * 4.5, p[1].cy + 14), Point(p[1].cx - 10 + Double(i) * 4.5, p[1].cy + 15.5), Point(p[1].cx - 11.5 + Double(i) * 4.5, p[1].cy + 16.5)]), colour(paint)) }
         mark(&c, p[1], ok: true)
@@ -193,7 +194,7 @@ extension StoneBook {
             // the bag
             let bx = q.cx - 28, by = q.cy - 13
             c.shape(.polygon([Point(bx, by + 3), Point(bx + 20, by + 3), Point(bx + 18.5, by + 24), Point(bx + 1.5, by + 24)]),
-                    fill: BookColor(hex: 0xEEF3F7, alpha: 0.8), stroke: BookColor(hex: 0x9FB6C6), width: 0.35)
+                    fill: BookColor(hex: 0xEEF3F7, alpha: 0.8), stroke: BookColor(hex: 0x8C8C8C), width: 0.35)
             for k in 0..<5 { smalto(&c, bx + 4.5 + Double(k % 3) * 5.5, by + 14 + Double(k / 3) * 5, 4.4, 3.6, colour(s.paint), degrees: Double(k * 17 % 30) - 15) }
             c.fill(.rect(bx + 3, by + 5, 14, 5, radius: 1), BookStyle.white)
             c.text(s.smalto?.code ?? "Au", bx + 10, by + 8.7, 3.2, 700, BookStyle.ink, .middle)
@@ -617,7 +618,7 @@ extension StoneBook {
         BookIcon.sponge.draw(into: &c, p[2].cx - 12, p[2].cy - 14, 24); mark(&c, p[2], ok: true)
         // dripping: it washes the grout out
         BookIcon.sponge.draw(into: &c, p[3].cx - 12, p[3].cy - 18, 24)
-        for k in 0..<4 { c.fill(.circle(Point(p[3].cx - 6 + Double(k) * 4, p[3].cy + 8 + Double(k % 2) * 3), 1), BookColor(hex: 0x9FB6C6)) }
+        for k in 0..<4 { c.fill(.circle(Point(p[3].cx - 6 + Double(k) * 4, p[3].cy + 8 + Double(k % 2) * 3), 1), BookColor(hex: 0x8C8C8C)) }
         mark(&c, p[3], ok: false)
         // a film dries on the stones: buffed off with a dry cloth
         for k in 0..<3 { smalto(&c, p[4].cx - 22 + Double(k) * 11, p[4].cy - 2, 10, 10, glass.mixed(toward: g, 0.45)) }
