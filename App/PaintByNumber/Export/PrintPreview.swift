@@ -96,6 +96,11 @@ struct PrintPreviewSheet: View {
             .safeAreaInset(edge: .bottom) { printButton }
         }
         .task(id: key) { await draw(key) }
+        // Numbers off or on changes the sizes offered (no legibility floor without them): a size
+        // no longer offered goes back to the smallest, so the row says what prints.
+        .onChange(of: layout.numbers) {
+            if !sizes.contains(where: { $0.across == layout.across }) { layout.across = nil }
+        }
     }
 
     // MARK: The pages

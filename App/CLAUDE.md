@@ -1371,13 +1371,13 @@ or the More button on an iPad. Share's Print Template… left on November 17, 20
 per menu: painting-company `process/design-budget.md`); Paint by Mosaic's card keeps its own. From 1.3 (painting-company row 357) Print… opens Print's preview first (`PrintPreviewSheet`,
 `Export/PrintPreview.swift`): the pages as they will print, drawn from the PDF itself
 (`PrintPages`), a Blank / Painted switch (`PDFExporter.Layout.painted`: the template's pages
-painted in, never printed), and two of `PDFExporter.Layout`'s choices: Size (`PDFExporter.sizes`:
-the fewest legible sheets, then the picture across more, with its printed size) and Layers, one menu (row 370: Lines, Numbers, Color Hints, Color Key; `Layout.templateStyle`;
-numbers off, no size needs more sheets than asked for)
-(the paper is the region's and the page turns the picture's way: the system's dialog asks for
-both after); its Print hands that layout's blank PDF to the dialog and closes once
+painted in, never printed), and two rows of `PDFExporter.Layout`'s choices: Size (`PDFExporter.sizes`:
+the fewest legible sheets, then the picture across more, with its printed size; without
+numbers there is no legibility floor) and Layers, one menu that stays open over the pages
+(row 370: Lines, Numbers, Color Hints, Color Key; `Layout.templateStyle`). The paper is the
+region's and the page turns the picture's way: the system's dialog asks for both after; its Print hands that layout's blank PDF to the dialog and closes once
 it has printed (`PrintSheet.onPrinted`). `Layout(paper:)` is the PDF as it always was.
-`print-preview` (with `-dark`, `-long-text`), `-painted` and `-sheets` are its screenshots,
+`print-preview` (with `-dark`, `-long-text`), `-painted`, `-sheets`, `-no-numbers` and `-hints` are its screenshots,
 `PrintLayoutTests` its tests.
 Printing takes no free painting. One dialog at a time (the controller is the system's one), and
 Print… is not offered where the device can't print, nor in Refine's Try Painting (More offers it

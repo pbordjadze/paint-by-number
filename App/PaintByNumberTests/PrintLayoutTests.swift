@@ -150,13 +150,14 @@ struct PrintLayoutTests {
             #expect(differ(usual, noLines) > 10)
             #expect(differ(usual, noNumbers) > 10)
             #expect(differ(usual, hints) > 200)
-            // A hint is a color, where the usual page is grey ink on white.
-            let colored = { (c: SIMD3<Int>) in max(c.x, c.y, c.z) - min(c.x, c.y, c.z) > 12 }
+            // A hint is a color, where the usual page is grey ink on white (its greys lean blue
+            // by 13 levels at most).
+            let colored = { (c: SIMD3<Int>) in max(c.x, c.y, c.z) - min(c.x, c.y, c.z) > 20 }
             #expect(count(usual, colored) == 0)
             #expect(count(hints, colored) > 200)
             // Nothing but the paper and the picture's frame.
             #expect(count(nothing) { $0.x < 150 } < 40)
-            record(hintsImage, "print-layers-hints")
+            record(hintsImage, "print-layers-hints-\(t.width)x\(t.height)")
         }
     }
 
