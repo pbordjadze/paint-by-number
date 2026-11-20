@@ -54,11 +54,15 @@ final class TogetherChannel {
         reportedColor = held
         guard presenceTask == nil else { return }
         flushPresence()
+        // Holds the gate while the finger keeps moving: each interval sends what came in it, and
+        // the gate opens only after an interval with nothing to send.
         presenceTask = Task { [weak self] in
-            try? await Task.sleep(for: Self.presenceInterval)
-            guard let self, !Task.isCancelled else { return }
-            presenceTask = nil
-            flushPresence()
+            while true {
+                try? await Task.sleep(for: Self.presenceInterval)
+                guard let self, !Task.isCancelled else { return }
+                guard flushPresence() else { break }
+            }
+            self?.presenceTask = nil
         }
     }
 
@@ -68,13 +72,21 @@ final class TogetherChannel {
         let held = holdsHand ? Self.handColor : (color ?? Self.noPaint)
         guard held != reportedColor else { return }
         reportedColor = held
+        // A touch still waiting to go out carries the paint held before: it goes with this one.
+        if let pending = pendingPresence {
+            pendingPresence = (pending.point, held)
+            return
+        }
         send?(.presence(point: nil, color: Int32(held)))
     }
 
-    private func flushPresence() {
-        guard let pending = pendingPresence else { return }
+    /// Sends the presence waiting, if any; true when it sent one.
+    @discardableResult
+    private func flushPresence() -> Bool {
+        guard let pending = pendingPresence else { return false }
         pendingPresence = nil
         send?(.presence(point: pending.point, color: Int32(pending.color)))
+        return true
     }
 
     /// With the hand, a tap: a ripple at `point` on both screens.
@@ -97,8 +109,11 @@ final class TogetherChannel {
         canvas?.friendArrived()
     }
 
-    func friendLeft() {
+    /// The friend left, or (`quietly`) the painter left the painting themselves, which says
+    /// nothing.
+    func friendLeft(quietly: Bool = false) {
         guard isTogether else { return }
+        let heldHand = holdsHand
         isTogether = false
         friendColor = nil
         holdsHand = false
@@ -106,7 +121,7 @@ final class TogetherChannel {
         presenceTask = nil
         pendingPresence = nil
         reportedColor = nil
-        canvas?.friendLeft()
+        canvas?.friendLeft(heldHand: heldHand, quietly: quietly)
     }
 
     /// A presence message: the friend's finger at `point` (nil: lifted, or only a change of
@@ -135,7 +150,9 @@ final class TogetherChannel {
 @MainActor
 protocol TogetherCanvas: AnyObject {
     func friendArrived()
-    func friendLeft()
+    /// The friend went; `heldHand`: the painter was holding the hand, which goes with them.
+    /// `quietly`: the painter is leaving the painting, so nothing is announced.
+    func friendLeft(heldHand: Bool, quietly: Bool)
     /// The friend's light moves to `point` (nil: their finger lifted, and it rests where it was)
     /// in the paint `color` (`TogetherChannel.handColor`: the hand; `noPaint`: nothing in hand).
     func friendMoved(to point: SIMD2<Float>?, color: Int)

@@ -1225,6 +1225,10 @@ final class CanvasView: UIView, PaintingCanvas {
         endNightfall()
         togetherFinaleTask?.cancel()
         togetherFinaleTask = nil
+        friendPresence?.remove()
+        friendPresence = nil
+        friendEdgeButton?.removeFromSuperview()
+        friendEdgeButton = nil
         #endif
     }
 
@@ -1240,6 +1244,9 @@ final class CanvasView: UIView, PaintingCanvas {
         replayTask = nil
         isReplaying = false
         session.showReplayed(nil)
+        #if UNRELEASED
+        friendPresence?.stopLights()
+        #endif
         numbersChanged()
         inkChanged()
         guard let renderer else { return }
@@ -1630,7 +1637,7 @@ final class CanvasView: UIView, PaintingCanvas {
             }
             session.together.touched(p, color: session.selectedColor)
             #endif
-            // No paint on the brush (a finished painting): no brush.
+            // No paint on the brush (a finished painting, a paint put down): no brush.
             guard session.selectedColor != nil else { return }
             FeedbackEngine.shared.selectionChanged()
             brushPoint = g.location(in: self)
@@ -1647,7 +1654,8 @@ final class CanvasView: UIView, PaintingCanvas {
             dragLast = p
         default:
             #if UNRELEASED
-            if dragLast != nil { session.together.touched(nil, color: session.selectedColor) }
+            // Whatever began the touch (a stroke, or a finger with no paint), the friend sees it lift.
+            session.together.touched(nil, color: session.selectedColor)
             #endif
             brushPoint = nil
             dragLast = nil
@@ -1858,7 +1866,13 @@ final class CanvasView: UIView, PaintingCanvas {
         element.accessibilityHint = session.isComplete ? nil : PaintSpeech.canvasHint
         element.accessibilityIdentifier = "canvas-placeholder"
         element.accessibilityFrameInContainerSpace = frame
+        #if UNRELEASED
+        // With the hand, the canvas's own way to do what a tap and a hold do.
+        element.accessibilityCustomActions = session.together.holdsHand
+            ? handActions + accessibilityActionList : accessibilityActionList
+        #else
         element.accessibilityCustomActions = accessibilityActionList
+        #endif
         element.accessibilityCustomRotors = [areasRotor]
         return element
     }
@@ -2151,13 +2165,14 @@ extension CanvasView: TogetherCanvas {
             comment: "VoiceOver announcement when a friend joins the painting over SharePlay (Paint Together)"))
     }
 
-    func friendLeft() {
-        // The hand goes with the friend: back to a paint.
-        if session.selectedColor == nil, !session.isComplete {
+    func friendLeft(heldHand: Bool, quietly: Bool) {
+        // The hand goes with the friend: back to a paint. A paint put down stays down.
+        if heldHand, session.selectedColor == nil, !session.isComplete {
             session.select(color: session.firstIncompleteColor())
         }
         friendPresence?.left()
         friendViewChanged()
+        guard !quietly else { return }
         Announcer.announce(String(
             localized: "together.left", defaultValue: "Your friend has left.",
             comment: "VoiceOver announcement when the friend painting together leaves (Paint Together)"))
@@ -2165,7 +2180,7 @@ extension CanvasView: TogetherCanvas {
 
     func friendMoved(to point: SIMD2<Float>?, color: Int) {
         presence.move(to: point, color: lightColor(color))
-        friendViewChanged()
+        friendViewChanged(gliding: true)
     }
 
     func showRipple(at point: SIMD2<Float>, fromFriend: Bool) {
@@ -2176,20 +2191,45 @@ extension CanvasView: TogetherCanvas {
         presence.star(from: point)
     }
 
-    /// The camera or the friend moved: their light lies inside the zooming view and keeps its
-    /// size on screen; out of view, the edge toward them glows.
-    func friendViewChanged() {
+    /// The camera or the friend moved (`gliding`: the friend, so the edge glow follows as
+    /// their light does): their light lies inside the zooming view and keeps its size on
+    /// screen; out of view, the edge toward them glows.
+    func friendViewChanged(gliding: Bool = false) {
         guard let friendPresence else { return }
         friendPresence.zoomed(to: scrollView.zoomScale)
         let place = friendPresence.edgePoint(toView: { self.viewPoint(forCanvas: $0) }, visible: bounds.inset(by: chromeInsets))
-        friendPresence.showEdge(at: place)
+        friendPresence.showEdge(at: place, gliding: gliding)
         guard let button = friendEdgeButton else { return }
         let shows = place != nil
         if let place, button.center != place { button.center = place }
         if button.isHidden == shows {
             button.isHidden = !shows
-            accessibilityChanged(post: false)
+            // The button rides outside the cached area elements (`accessibleElements`).
+            postLayoutChanged(nil)
         }
+    }
+
+    /// With the hand, VoiceOver's way to show the friend the middle of the view or send a star
+    /// from it.
+    private var handActions: [UIAccessibilityCustomAction] {
+        [
+            UIAccessibilityCustomAction(
+                name: String(localized: "together.action.showPlace", defaultValue: "Show Your Friend This Place",
+                             comment: "VoiceOver action on the canvas while the painter holds the hand (Paint Together): ripples at the middle of the view on both screens")
+            ) { [weak self] _ in
+                guard let self else { return false }
+                session.together.ripple(at: visibleCenter)
+                return true
+            },
+            UIAccessibilityCustomAction(
+                name: String(localized: "together.action.star", defaultValue: "Send a Star",
+                             comment: "VoiceOver action on the canvas while the painter holds the hand (Paint Together): a star drifts up from the middle of the view into the painting's sky on both screens")
+            ) { [weak self] _ in
+                guard let self else { return false }
+                session.together.star(at: visibleCenter)
+                return true
+            },
+        ]
     }
 
     /// The edge glow tapped: the view glides to the friend, at the same zoom.

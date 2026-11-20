@@ -120,8 +120,8 @@ final class TogetherEngine {
         flushing?.cancel()
         flushing = nil
         flush()
-        friendLeft()
         #if UNRELEASED
+        session?.together.friendLeft(quietly: true)
         session?.together.send = nil
         #endif
     }

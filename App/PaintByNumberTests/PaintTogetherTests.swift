@@ -110,11 +110,15 @@ struct PaintTogetherTests {
     /// What a canvas was asked to show of the friend.
     @MainActor
     private final class CanvasSpy: TogetherCanvas {
-        var arrived = 0, left = 0
+        var arrived = 0, left = 0, leftHolding = false, leftQuietly = false
         var moves: [(point: SIMD2<Float>?, color: Int)] = []
         var ripples: [(SIMD2<Float>, Bool)] = [], stars: [(SIMD2<Float>, Bool)] = []
         func friendArrived() { arrived += 1 }
-        func friendLeft() { left += 1 }
+        func friendLeft(heldHand: Bool, quietly: Bool) {
+            left += 1
+            leftHolding = heldHand
+            leftQuietly = quietly
+        }
         func friendMoved(to point: SIMD2<Float>?, color: Int) { moves.append((point, color)) }
         func showRipple(at point: SIMD2<Float>, fromFriend: Bool) { ripples.append((point, fromFriend)) }
         func showStar(from point: SIMD2<Float>, fromFriend: Bool) { stars.append((point, fromFriend)) }
@@ -222,6 +226,19 @@ struct PaintTogetherTests {
         #expect(!pair.a.together.holdsHand)
         #expect(pair.a.together.friendColor == nil)
         #expect(spy.left == 1)
+        #expect(spy.leftHolding)
+        #expect(!spy.leftQuietly)
+    }
+
+    @Test func leavingThePaintingSaysNothing() {
+        let pair = met()
+        let spy = CanvasSpy()
+        pair.a.together.canvas = spy
+        pair.engineA.stop()
+        #expect(!pair.a.together.isTogether)
+        #expect(spy.left == 1)
+        #expect(!spy.leftHolding)
+        #expect(spy.leftQuietly)
     }
     #endif
 }

@@ -334,6 +334,8 @@ final class PaintingSession {
         // Picking a paint puts the hand down, the paint in hand already too.
         if color != nil { together.holdsHand = false }
         together.held(color)
+        // The hand taken with no paint in hand: nothing to change but what VoiceOver offers.
+        if color == nil, selectedColor == nil { canvas?.sessionDidChangeSelection(self) }
         #endif
         guard color != selectedColor else { return }
         if let color, !(0..<paletteCount).contains(color) { return }

@@ -919,28 +919,13 @@ struct PaintView: View {
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { completionHeight = $0 }
                 .transition(transition)
         } else {
-            PaletteBar(
+            PaintPalette(
                 session: session, axis: palette.side ? .vertical : .horizontal, lines: palette.lines,
                 shakes: chrome.shakes, metrics: palette.metrics, showsCurrentColor: palette.caption,
-                together: paletteTogether, order: colorOrder)
+                order: colorOrder)
         }
     }
 
-    /// The palette's part in painting together: the hand and the friend's paint, while a friend
-    /// is here (`TogetherChannel`).
-    private var paletteTogether: PaletteTogether? {
-        #if UNRELEASED
-        let together = session.together
-        guard together.isTogether else { return nil }
-        let session = session
-        return PaletteTogether(friendColor: together.friendColor, holdsHand: together.holdsHand) {
-            session.together.holdsHand = true
-            session.select(color: nil)
-        }
-        #else
-        return nil
-        #endif
-    }
 
 
     // MARK: Actions
@@ -1229,5 +1214,38 @@ private struct PaintedRing: View {
             defer { start = end }
             return (PaletteBar.paint(session.template, color), start, end)
         }
+    }
+}
+
+/// The palette, with its part in painting together (the hand and the friend's paint, while a
+/// friend is here: `TogetherChannel`) read here, so the friend picking a paint renders the
+/// palette alone, not the painting screen.
+private struct PaintPalette: View {
+    let session: PaintingSession
+    let axis: Axis
+    let lines: Int
+    let shakes: [Int: Int]
+    let metrics: PaletteMetrics
+    let showsCurrentColor: Bool
+    let order: [Int]
+
+    var body: some View {
+        PaletteBar(
+            session: session, axis: axis, lines: lines, shakes: shakes, metrics: metrics,
+            showsCurrentColor: showsCurrentColor, together: together, order: order)
+    }
+
+    private var together: PaletteTogether? {
+        #if UNRELEASED
+        let together = session.together
+        guard together.isTogether else { return nil }
+        let session = session
+        return PaletteTogether(friendColor: together.friendColor, holdsHand: together.holdsHand) {
+            session.together.holdsHand = true
+            session.select(color: nil)
+        }
+        #else
+        return nil
+        #endif
     }
 }

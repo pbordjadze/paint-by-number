@@ -42,6 +42,8 @@ final class FriendPresence {
     static let edgeSide: CGFloat = 132
     /// A star at rest in the sky.
     static let starSide: CGFloat = 20
+    /// Stars kept in the sky at once.
+    static let mostStars = 30
     /// Light retargets take this long: a presence message comes every 50 ms, and a little more
     /// rides over the network's unevenness.
     static let follow: CFTimeInterval = 0.11
@@ -192,14 +194,26 @@ final class FriendPresence {
         return CGPoint(x: c.x + dx * s, y: c.y + dy * s)
     }
 
-    /// Shows the edge glow at `point` (nil hides it).
-    func showEdge(at point: CGPoint?) {
+    /// Shows the edge glow at `point` (nil hides it). `gliding`: the friend moved, so the glow
+    /// follows over the same time the light does; a scroll moves it with the finger, at once.
+    func showEdge(at point: CGPoint?, gliding: Bool = false) {
         guard let point else {
             if edge.opacity > 0 { fade(edge, to: 0, duration: 0.3) }
             return
         }
+        let shown = edge.opacity > 0.05
         CATransaction.begin()
         CATransaction.setDisableActions(true)
+        if gliding, shown, !reduceMotion {
+            let follow = CABasicAnimation(keyPath: "position")
+            follow.fromValue = NSValue(cgPoint: edge.presentation()?.position ?? edge.position)
+            follow.toValue = NSValue(cgPoint: point)
+            follow.duration = Self.follow
+            follow.timingFunction = CAMediaTimingFunction(name: .linear)
+            edge.add(follow, forKey: "follow")
+        } else {
+            edge.removeAnimation(forKey: "follow")
+        }
         edge.position = point
         if edge.colors == nil {
             edge.colors = Self.glow(lightColor, strength: 0.8)
@@ -279,6 +293,7 @@ final class FriendPresence {
         star.shadowOpacity = 0.8
         star.shadowRadius = 4
         star.shadowOffset = .zero
+        star.shadowPath = star.path
         star.transform = CATransform3DMakeScale(1 / zoom, 1 / zoom, 1)
         let from = CGPoint(x: CGFloat(point.x), y: CGFloat(point.y))
         let rest = skyPoint(above: point)
@@ -288,6 +303,16 @@ final class FriendPresence {
         world.addSublayer(star)
         CATransaction.commit()
         stars.append(star)
+        // A sky keeps its newest stars; the oldest fade out so it never fills.
+        if stars.count > Self.mostStars {
+            let oldest = stars.removeFirst()
+            oldest.removeAllAnimations()
+            CATransaction.begin()
+            CATransaction.setAnimationDuration(1)
+            CATransaction.setCompletionBlock { oldest.removeFromSuperlayer() }
+            oldest.opacity = 0
+            CATransaction.commit()
+        }
         let now = CACurrentMediaTime()
         if reduceMotion {
             let appear = CABasicAnimation(keyPath: "opacity")
@@ -342,13 +367,19 @@ final class FriendPresence {
             CATransaction.commit()
             let begin = first.time - 0.3
             let span = max(0.1, end - begin)
-            let times = steps.map { NSNumber(value: min(1, max(0, ($0.time - begin) / span))) }
+            // Core Animation spaces the keyframes evenly unless the times run from 0 to 1, so
+            // the first and last places are held at both ends.
+            let last = steps[steps.count - 1]
+            let held = [first] + steps + [last]
+            let times = [NSNumber(value: 0)]
+                + steps.map { NSNumber(value: min(1, max(0, ($0.time - begin) / span))) }
+                + [NSNumber(value: 1)]
             let move = CAKeyframeAnimation(keyPath: "position")
-            move.values = steps.map { NSValue(cgPoint: $0.point) }
+            move.values = held.map { NSValue(cgPoint: $0.point) }
             move.keyTimes = times
             move.calculationMode = .cubic
             let tint = CAKeyframeAnimation(keyPath: "colors")
-            tint.values = steps.map { Self.glow($0.color) }
+            tint.values = held.map { Self.glow($0.color) }
             tint.keyTimes = times
             let shine = CAKeyframeAnimation(keyPath: "opacity")
             shine.values = [0, 1, 1, 0]
@@ -362,6 +393,14 @@ final class FriendPresence {
             layer.add(group, forKey: "finale")
             passing.append((layer, end))
         }
+    }
+
+    /// The replay stopped: its lights go with it.
+    func stopLights() {
+        for item in passing where item.layer.animation(forKey: "finale") != nil {
+            item.layer.removeFromSuperlayer()
+        }
+        passing.removeAll { $0.layer.superlayer == nil }
     }
 
     /// Takes away the ripples and finale lights that have played out.

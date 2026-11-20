@@ -608,13 +608,17 @@ private struct Swatch: View {
         .foregroundStyle(ink)
         .frame(width: metrics.diameter, height: metrics.diameter)
         // The friend's paint: a soft halo of itself, as their light is on the page.
+        // Only while it shows, so a painter alone (and the release) carries no halo.
         .background {
-            Circle().fill(color)
-                .scaleEffect(1.3)
-                .blur(radius: 6 * metrics.scale)
-                .opacity(friendHolds ? 0.9 : 0)
-                .animation(reduceMotion ? .linear(duration: 0.2) : .easeInOut(duration: 0.45), value: friendHolds)
+            if friendHolds {
+                Circle().fill(color)
+                    .scaleEffect(1.3)
+                    .blur(radius: 6 * metrics.scale)
+                    .opacity(0.9)
+                    .transition(.opacity)
+            }
         }
+        .animation(reduceMotion ? .linear(duration: 0.2) : .easeInOut(duration: 0.45), value: friendHolds)
         .padding(4)
         .overlay {
             Circle()
