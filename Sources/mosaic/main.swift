@@ -1,6 +1,7 @@
 // mosaic <photo.ppm> <contours.pgm> <out prefix> [--features f.json]... [--long-side N] [--bed bed.ppm]
 //        [--eyes asTheyLook|asInThePhoto] [--mouth asInThePhoto|byzantine] [--face-cut L]
 //        [--mark kind:width:x,y;x,y;...]...
+// mosaic book <mosaic.json> <out dir> [--title T] [--tile-face cm²] [--pages 1,2,...|--all]
 //
 // Runs the engine on files, for comparison with the prototype: reads a binary PPM (P6) photo, its
 // contour map as a binary PGM (P5) and any faces' features (sketchbook/features.py's JSON), and
@@ -10,6 +11,7 @@
 // draws one of Refine's marks (`MosaicEngine.Mark`: line, unline, gold or ungold, its width a share
 // of the long side, its path in the photo's unit square) into the contours, or lays it on the tiles.
 import Foundation
+import MosaicCore
 import MosaicEngine
 import MosaicKit
 
@@ -122,6 +124,59 @@ func shrink(_ src: [Float], _ w: Int, _ h: Int, channels c: Int, to W: Int, _ H:
 func json(_ v: Double, _ places: Double) -> String {
     let r = (v * places).rounded() / places
     return r == r.rounded() && abs(r) < 1e15 ? String(Int(r)) + ".0" : "\(r)"
+}
+
+// MARK: The stone book
+
+/// `mosaic book`: lays out Set in Stone's book for a mosaic's JSON (a bundled one, or one the app
+/// saved) and writes its pages as SVG (page-NNN.svg) with book.json, the plan in numbers. By default
+/// a sample: the front pages, the middle section's opener, cartoon and first step pages, and the
+/// last pages.
+func book(_ arguments: [String]) {
+    var positional: [String] = [], title: String?, face = 1.5, pages: Set<Int>?, all = false
+    var args = arguments[...]
+    while let a = args.popFirst() {
+        switch a {
+        case "--title": title = args.popFirst()
+        case "--tile-face": guard let v = args.popFirst().flatMap(Double.init), v > 0 else { fail("--tile-face needs cm²") }; face = v
+        case "--pages": pages = Set((args.popFirst() ?? "").split(separator: ",").compactMap { Int($0) })
+        case "--all": all = true
+        default: positional.append(a)
+        }
+    }
+    guard positional.count == 2, let data = FileManager.default.contents(atPath: positional[0]) else {
+        fail("usage: mosaic book <mosaic.json> <out dir> [--title T] [--tile-face cm²] [--pages 1,2,...|--all]")
+    }
+    let mosaic: Mosaic
+    do { mosaic = try JSONDecoder().decode(Mosaic.self, from: data) } catch { fail("\(positional[0]): \(error)") }
+    let start = Date()
+    let name = title ?? URL(fileURLWithPath: positional[0]).deletingPathExtension().lastPathComponent
+    let b = StoneBook(mosaic: mosaic, title: name, names: [String?](repeating: nil, count: mosaic.palette.count),
+                      options: StoneBook.Options(tileFace: face))
+    let planned = Date().timeIntervalSince(start)
+    let out = URL(fileURLWithPath: positional[1])
+    try? FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
+    let want = all ? Set(1...b.pageCount) : pages ?? b.samplePages
+    for n in want.sorted() where (1...b.pageCount).contains(n) {
+        try? b.page(n).svg().write(to: out.appendingPathComponent(String(format: "page-%03d.svg", n)), atomically: true, encoding: .utf8)
+    }
+    let stones = b.stones.map { s -> [String: Any] in
+        ["paint": s.paint + 1, "count": s.count, "buy": s.buy, "cm2": (s.areaCM2 * 10).rounded() / 10,
+         "kg": (s.kilograms * 100).rounded() / 100, "code": s.smalto?.code ?? "", "deltaE": (s.distance * 1000).rounded() / 1000]
+    }
+    let summary: [String: Any] = ["title": name, "sizeCM": [(b.widthMM / 10 * 10).rounded() / 10, (b.heightMM / 10 * 10).rounded() / 10],
+                                  "pieces": b.pieces.count, "cutTiles": b.cutTiles, "fillers": b.fillerCount, "covered": (b.pieces.map(\.area).reduce(0, +) / (b.width * b.height) * 1000).rounded() / 1000, "sections": b.sections.count,
+                                  "steps": b.steps.count, "stepSizes": b.steps.map(\.pieces.count), "pages": b.pageCount, "groutKg": (b.groutKilograms * 10).rounded() / 10,
+                                  "planSeconds": (planned * 100).rounded() / 100, "stones": stones]
+    if let json = try? JSONSerialization.data(withJSONObject: summary, options: [.prettyPrinted, .sortedKeys]) {
+        try? json.write(to: out.appendingPathComponent("book.json"))
+    }
+    print("\(name): \(Int(b.widthMM / 10)) × \(Int(b.heightMM / 10)) cm, \(b.pieces.count) pieces (\(b.fillerCount) fillers, \(b.cutTiles) tiles cut), \(b.sections.count) sections, \(b.steps.count) steps, \(b.pageCount) pages; planned in \(String(format: "%.2f", planned)) s")
+}
+
+if CommandLine.arguments.count > 1, CommandLine.arguments[1] == "book" {
+    book(Array(CommandLine.arguments.dropFirst(2)))
+    exit(0)
 }
 
 // MARK: Arguments

@@ -51,6 +51,8 @@ import PaintCore
 ///   Look Here at The Making-of.
 /// - `settings-acknowledgements`: the settings sheet on its Acknowledgements screen.
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
+/// - `gallery-set-in-stone`, `gallery-set-in-stone-dark`, `gallery-set-in-stone-long-text`: Set in
+///   Stone's sheet over the gallery, on a painting in progress (SideStore and Debug builds).
 /// - `gallery-send`, `gallery-send-dark`, `gallery-send-long-text`: Send Template's sheet over
 ///   the gallery, for The Great Wave painted in part: the blank page, Original Photo on.
 /// - `gallery-received`, `gallery-received-dark`: a painting someone sent opened in the app, as
@@ -66,7 +68,7 @@ import PaintCore
 ///   shows where translations (German, Finnish, ...) would truncate or overflow.
 enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryFirstRun, galleryPreparing,
-         galleryOpen, gallerySend, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
+         galleryOpen, gallerySend, gallerySetInStone, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createCustom, createRefine, createFromFile,
          createUnlock, galleryTip, galleryTipGear, galleryTipsOff, settingsTips, settingsTip,
          settings, settingsLongText, settingsAcknowledgements
@@ -83,6 +85,7 @@ enum ShellDemo: Equatable {
         case "gallery-preparing": .galleryPreparing
         case "gallery-open": .galleryOpen
         case "gallery-send", "gallery-send-dark", "gallery-send-long-text": .gallerySend
+        case "gallery-set-in-stone", "gallery-set-in-stone-dark", "gallery-set-in-stone-long-text": .gallerySetInStone
         case "gallery-received", "gallery-received-dark": .galleryReceived
         case "gallery-damaged": .galleryDamaged
         case "gallery-timelapse": .galleryTimelapse
@@ -146,6 +149,8 @@ enum ShellDemo: Equatable {
     var sharesTimelapse: Bool { self == .galleryTimelapse || self == .galleryTimelapseLongText }
 
     var sendsTemplate: Bool { self == .gallerySend }
+
+    var setsInStone: Bool { self == .gallerySetInStone }
 
     var opensCreateFlow: Bool {
         self == .create || opensSamples || self == .createPreview || self == .createCustom || self == .createRefine
@@ -269,7 +274,7 @@ enum ShellDemo: Equatable {
             }
         case .galleryTimelapse, .galleryTimelapseLongText:
             library.seed([Library.SeedItem(sample: pictures[1], painted: 1, photoMaxPixelSize: 560)])
-        case .gallerySend:
+        case .gallerySend, .gallerySetInStone:
             library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
              .createCustom, .createRefine, .createFromFile, .createUnlock, .galleryReceived, .galleryEmpty, .settings,
