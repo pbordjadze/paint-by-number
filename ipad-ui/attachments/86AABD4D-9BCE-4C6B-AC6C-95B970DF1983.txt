@@ -1,0 +1,19 @@
+Attributes: Other, 0x112262580, {{inf, inf}, {0.0, 0.0}}, identifier: 'refine-canvas', label: 'Painting to edit', value: No changes
+Element subtree:
+ →Other, 0x112262580, {{inf, inf}, {0.0, 0.0}}, identifier: 'refine-canvas', label: 'Painting to edit', value: No changes
+Path to element:
+ →Application, 0x112261900, pid: 41565, label: 'Paint by Moonlight'
+  ↳Window (Main), 0x112261a40, {{inf, inf}, {0.0, 0.0}}
+   ↳Other, 0x112261b80, {{inf, inf}, {0.0, 0.0}}
+    ↳Other, 0x112261cc0, {{inf, inf}, {0.0, 0.0}}
+     ↳Other, 0x112261e00, {{inf, inf}, {0.0, 0.0}}
+      ↳Other, 0x112261f40, {{inf, inf}, {0.0, 0.0}}
+       ↳Other, 0x112262080, {{inf, inf}, {0.0, 0.0}}
+        ↳Other, 0x1122621c0, {{inf, inf}, {0.0, 0.0}}
+         ↳Other, 0x112262300, {{inf, inf}, {0.0, 0.0}}
+          ↳Other, 0x112262440, {{inf, inf}, {0.0, 0.0}}
+           ↳Other, 0x112262580, {{inf, inf}, {0.0, 0.0}}, identifier: 'refine-canvas', label: 'Painting to edit', value: No changes
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  ↪︎Find: Descendants matching type Any
+    ↪︎Find: Elements matching predicate '"refine-canvas" IN identifiers'
