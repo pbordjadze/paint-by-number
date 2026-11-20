@@ -2192,7 +2192,6 @@ extension CanvasView: TogetherCanvas {
     }
 
     func showStar(from point: SIMD2<Float>, fromFriend: Bool) {
-        Log.canvas.notice("Paint Together: a star from \(point.x, privacy: .public), \(point.y, privacy: .public), zoom \(self.scrollView.zoomScale, privacy: .public), in a window \(self.window != nil, privacy: .public)")
         presence.star(from: point)
     }
 
@@ -2308,9 +2307,7 @@ extension CanvasView: TogetherCanvas {
             let isFriends = theirs.contains(region)
             guard time - (isFriends ? lastFriend : lastMine) >= Self.finaleLightStride else { continue }
             let anchor = anchors[region]
-            let place = FriendPresence.Step(
-                point: CGPoint(x: CGFloat(anchor.x), y: CGFloat(anchor.y)), time: time,
-                color: lightColor(session.colorOf(region)))
+            let place = FriendPresence.Step(point: CGPoint(x: CGFloat(anchor.x), y: CGFloat(anchor.y)), time: time)
             if isFriends {
                 friend.append(place)
                 lastFriend = time
@@ -2319,7 +2316,13 @@ extension CanvasView: TogetherCanvas {
                 lastMine = time
             }
         }
-        presence.playLights(mine: mine, friend: friend, until: start + CFTimeInterval(span) + 0.6)
+        presence.playLights(mine: mine, friend: friend, mineColor: Self.finaleWarm, friendColor: Self.finaleCool,
+                            until: start + CFTimeInterval(span) + 0.6)
     }
+
+    /// The finale's two lights, as the design's finale has them: on each screen your own warm,
+    /// the friend's the moon's violet.
+    private static var finaleWarm: UIColor { UIColor(red: 1, green: 0.62, blue: 0.24, alpha: 1) }
+    private static var finaleCool: UIColor { UIColor(red: 0.58, green: 0.45, blue: 1, alpha: 1) }
 }
 #endif

@@ -41,7 +41,7 @@ final class FriendPresence {
     /// Across the edge glow.
     static let edgeSide: CGFloat = 240
     /// A star at rest in the sky.
-    static let starSide: CGFloat = 26
+    static let starSide: CGFloat = 30
     /// Stars kept in the sky at once.
     static let mostStars = 30
     /// Light retargets take this long: a presence message comes every 50 ms, and a little more
@@ -300,11 +300,13 @@ final class FriendPresence {
         let side = Self.starSide
         star.bounds = CGRect(x: 0, y: 0, width: side, height: side)
         star.path = Sparkle.starPath(in: star.bounds)
-        // `Theme.gold` (spelled out as the fill's sparkles do: the theme is SwiftUI), glowing.
-        star.fillColor = UIColor(red: 0.85, green: 0.69, blue: 0.32, alpha: 1).cgColor
-        star.shadowColor = UIColor(red: 1, green: 0.84, blue: 0.45, alpha: 1).cgColor
+        // A point of light: a pale core in a glow of `Theme.gold` (spelled out as the fill's
+        // sparkles do: the theme is SwiftUI). Filled with the gold itself it read as an ochre
+        // glyph on a pale sky (the build's third critic round).
+        star.fillColor = UIColor(red: 1, green: 0.97, blue: 0.86, alpha: 1).cgColor
+        star.shadowColor = UIColor(red: 0.98, green: 0.78, blue: 0.36, alpha: 1).cgColor
         star.shadowOpacity = 1
-        star.shadowRadius = 7
+        star.shadowRadius = 10
         star.shadowOffset = .zero
         star.shadowPath = star.path
         star.transform = CATransform3DMakeScale(1 / zoom, 1 / zoom, 1)
@@ -368,15 +370,20 @@ final class FriendPresence {
 
     /// The finale's two lights, one for each painter: each passes over the areas its painter
     /// painted at the times the replay paints them again. `steps` are the areas' places (canvas
-    /// units), their start times (`CACurrentMediaTime`'s clock) and paints.
-    func playLights(mine: [Step], friend: [Step], until end: CFTimeInterval) {
+    /// units) and start times (`CACurrentMediaTime`'s clock). Each light keeps its painter's
+    /// color the whole way, so two people are two lights to follow: one that took each area's
+    /// paint was lost over that paint, and two painters of one paint were one smudge (the build's
+    /// third critic round).
+    func playLights(mine: [Step], friend: [Step], mineColor: UIColor, friendColor: UIColor,
+                    until end: CFTimeInterval) {
         sweep()
-        for (steps, layer) in [(mine, makeFinaleLight()), (friend, makeFinaleLight())] {
-            guard let first = steps.first else { layer.removeFromSuperlayer(); continue }
+        for (steps, color) in [(mine, mineColor), (friend, friendColor)] {
+            guard let first = steps.first else { continue }
+            let layer = makeFinaleLight()
             CATransaction.begin()
             CATransaction.setDisableActions(true)
             layer.position = first.point
-            layer.colors = Self.glow(first.color)
+            layer.colors = Self.finaleGlow(color)
             CATransaction.commit()
             let begin = first.time - 0.3
             let span = max(0.1, end - begin)
@@ -391,14 +398,11 @@ final class FriendPresence {
             move.values = held.map { NSValue(cgPoint: $0.point) }
             move.keyTimes = times
             move.calculationMode = .cubic
-            let tint = CAKeyframeAnimation(keyPath: "colors")
-            tint.values = held.map { Self.glow($0.color) }
-            tint.keyTimes = times
             let shine = CAKeyframeAnimation(keyPath: "opacity")
             shine.values = [0, 1, 1, 0]
             shine.keyTimes = [0, NSNumber(value: min(0.3 / span, 0.2)), 0.85, 1]
             let group = CAAnimationGroup()
-            group.animations = reduceMotion ? [shine] : [move, tint, shine]
+            group.animations = reduceMotion ? [shine] : [move, shine]
             group.duration = span
             group.beginTime = begin
             group.fillMode = .both
@@ -429,16 +433,29 @@ final class FriendPresence {
     struct Step {
         var point: CGPoint
         var time: CFTimeInterval
-        var color: UIColor
     }
+
+    /// A finale light: a white spark and a pale core inside a wide bloom of the painter's color,
+    /// so it reads as light over any paint, its own included.
+    static func finaleGlow(_ color: UIColor) -> [CGColor] {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        color.getRed(&r, green: &g, blue: &b, alpha: &a)
+        let core = UIColor(red: r + (1 - r) * 0.6, green: g + (1 - g) * 0.6, blue: b + (1 - b) * 0.6, alpha: 1)
+        return [UIColor.white.cgColor, core.cgColor, color.withAlphaComponent(0.8).cgColor,
+                color.withAlphaComponent(0.45).cgColor, color.withAlphaComponent(0.16).cgColor,
+                color.withAlphaComponent(0).cgColor]
+    }
+
+    /// A finale light is wider than the friend's light, its bloom carrying across the painting.
+    static let finaleSide: CGFloat = 300
 
     private func makeFinaleLight() -> CAGradientLayer {
         let layer = CAGradientLayer()
         layer.type = .radial
         layer.startPoint = CGPoint(x: 0.5, y: 0.5)
         layer.endPoint = CGPoint(x: 1, y: 1)
-        layer.locations = Self.glowLocations
-        layer.bounds = CGRect(x: 0, y: 0, width: Self.lightSide, height: Self.lightSide)
+        layer.locations = [0, 0.04, 0.1, 0.22, 0.52, 1]
+        layer.bounds = CGRect(x: 0, y: 0, width: Self.finaleSide, height: Self.finaleSide)
         layer.transform = CATransform3DMakeScale(1 / zoom, 1 / zoom, 1)
         layer.opacity = 0
         world.addSublayer(layer)
