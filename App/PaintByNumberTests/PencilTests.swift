@@ -316,6 +316,22 @@ struct PencilTests {
         #expect(haptics.played() == ["tick"])
     }
 
+    /// Without Advance to Next Color a finished color is put down; the double tap then takes the
+    /// first color left.
+    @Test func doubleTapWithNothingInHandTakesAColor() throws {
+        let stripes = Fixtures.stripes(count: 3)
+        let session = PaintingSession(template: stripes)
+        session.autoAdvance = false
+        session.select(color: 0)
+        session.paint([0], from: .zero, animated: false)
+        try #require(session.selectedColor == nil)
+        let feedback = FeedbackEngine(haptics: HapticsPlayer(isSupported: true), sounds: SoundPlayer(playsAloud: false))
+
+        PencilAction.tap.perform(on: session, feedback: feedback, showHint: {}, pencilUsed: {})
+
+        #expect(session.selectedColor == 1)
+    }
+
     /// With one color left the double tap has nowhere to go and the color stays (its detent still
     /// plays, as it always has; the keyboard's `]` plays none there).
     @Test func doubleTapStaysOnTheLastColorLeft() throws {
