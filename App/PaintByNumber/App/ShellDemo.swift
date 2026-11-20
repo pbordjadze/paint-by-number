@@ -26,6 +26,11 @@ import PaintCore
 ///   (The Great Wave, refined as in `create-refine`), with its photo, "Continue Refining" and
 ///   Discard; the second with every localized string twice as long.
 /// - `create`: the photo picker step of the create flow.
+/// - `create-nights`, `-dark` (SideStore and Debug builds): the Paint page with the museums'
+///   schedule on the device (`Nights.demo`: the library's paintings as tonight's and the nine
+///   nights before it): Tonight's Picture, Your Own and Earlier Nights in the library's place.
+/// - `gallery-nights`, `-dark` (SideStore and Debug builds): the same schedule, tonight's picture
+///   painted and finished, and the shelf offering the vote for a coming night (`NightsBallotTile`).
 /// - `create-samples`, `create-samples-long-text`: the same step on its Samples pane (iPhone;
 ///   iPad shows both); the second with every localized string twice as long.
 /// - `create-samples-paintings`, `create-samples-photographs`: the Samples pane scrolled to its
@@ -111,7 +116,7 @@ import PaintCore
 ///   shows where translations (German, Finnish, ...) would truncate or overflow.
 enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryFirstRun, galleryPreparing,
-         galleryDraft, galleryOpen, galleryOpenNew, galleryFineTune, gallerySend, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
+         galleryDraft, galleryOpen, galleryOpenNew, galleryFineTune, gallerySend, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings, createNights, galleryNights,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createRefineCard, createRefineLayers, createRefineSelect, createRefineGuide, createRefineGuideWriting,
          createSuggested,
          createCustom, createForming, createFormingDrawing, createFormingLines, createFormingPage, createFromFile, createDrawing, createUnlock, createRefineUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
@@ -137,6 +142,8 @@ enum ShellDemo: Equatable {
         case "gallery-timelapse": .galleryTimelapse
         case "gallery-timelapse-long-text": .galleryTimelapseLongText
         case "create": .create
+        case "create-nights", "create-nights-dark": .createNights
+        case "gallery-nights", "gallery-nights-dark": .galleryNights
         case "create-samples", "create-samples-long-text": .createSamples
         case "create-samples-paintings": .createSamplesPaintings
         case "create-samples-photographs": .createSamplesPhotographs
@@ -215,7 +222,7 @@ enum ShellDemo: Equatable {
     var sendsTemplate: Bool { self == .gallerySend }
 
     var opensCreateFlow: Bool {
-        self == .create || opensSamples || self == .createPreview || self == .createLineArt || self == .createRefine
+        self == .create || self == .createNights || opensSamples || self == .createPreview || self == .createLineArt || self == .createRefine
             || opensColors || opensCard || opensLayers || selectsCell || opensGuide != nil || self == .createSuggested || self == .createCustom
             || self == .createTip || self == .createDrawing || self == .createRefineUnlock || formingHold != nil
     }
@@ -369,6 +376,20 @@ enum ShellDemo: Equatable {
             library.seed(Sample.starters.map { Library.SeedItem(sample: $0, photoMaxPixelSize: 560) }, completion: { _ in
                 DemoMode.markReady()
             })
+        case .galleryNights:
+            // Tonight's picture painted and finished: the shelf offers the vote.
+            #if UNRELEASED
+            guard let tonight = Sample.tonight(), let ballot = Nights.shared.openBallot() else { return }
+            library.seed([Library.SeedItem(sample: tonight, painted: 1, photoMaxPixelSize: 560)], completion: { _ in
+                Task {
+                    for id in ballot.choices {
+                        if let sample = Nights.shared.sample(id) { _ = await SampleImages.shared.load(sample, maxPixelSize: 320) }
+                    }
+                    try? await Task.sleep(for: .seconds(1))
+                    DemoMode.markReady()
+                }
+            })
+            #endif
         case .galleryPreparing:
             // The first launch's pages before they are made: nothing is made, the placeholders stay.
             library.holdPlaceholders(Sample.starters)
@@ -430,7 +451,7 @@ enum ShellDemo: Equatable {
             library.seed([Library.SeedItem(sample: pictures[1], painted: 1, photoMaxPixelSize: 560)])
         case .gallerySend:
             library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)])
-        case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
+        case .create, .createNights, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
              .createLineArt, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineLayers, .createRefineSelect, .createRefineGuide, .createRefineGuideWriting, .createSuggested, .createCustom,
              .createForming, .createFormingDrawing, .createFormingLines, .createFormingPage,
              .createFromFile, .createDrawing, .createUnlock, .createRefineUnlock, .galleryReceived, .galleryEmpty, .settings,
