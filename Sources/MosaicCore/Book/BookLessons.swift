@@ -492,9 +492,11 @@ extension StoneBook {
         BookIcon.bucket.draw(into: &c, p[1].x + 58, p[1].cy - 10, 14)
         c.text("3 : 1", p[1].cx, p[1].cy + 16, 4.4, 700, BookStyle.ink, .middle)
         // stirred, left, stirred again
-        BookIcon.bucket.draw(into: &c, p[2].cx - 28, p[2].cy - 12, 22)
-        BookIcon.clock.draw(into: &c, p[2].cx, p[2].cy - 12, 18)
-        c.text(strings.minutes(10), p[2].cx + 9, p[2].cy + 14, 4, 700, BookStyle.ink, .middle)
+        BookIcon.bucket.draw(into: &c, p[2].cx - 30, p[2].cy - 10, 18)
+        BookIcon.clock.draw(into: &c, p[2].cx - 9, p[2].cy - 9, 16)
+        c.text(strings.minutes(10), p[2].cx - 1, p[2].cy + 13, 4, 700, BookStyle.ink, .middle)
+        // gloves on: wet cement burns skin
+        BookIcon.gloves.draw(into: &c, p[2].cx + 12, p[2].cy - 9, 16)
         // as thick as peanut butter: a ridge stands
         c.fill(.rect(p[3].cx - 26, p[3].cy + 6, 52, 2), BookColor(hex: 0xECE6DA))
         for k in 0..<5 { c.fill(.polygon([Point(p[3].cx - 24 + Double(k) * 10, p[3].cy + 6), Point(p[3].cx - 19 + Double(k) * 10, p[3].cy - 4), Point(p[3].cx - 14 + Double(k) * 10, p[3].cy + 6)]), bed) }
@@ -513,6 +515,8 @@ extension StoneBook {
         BookIcon.trowel.draw(into: &c, bx + 30, by + 4, 22)
         // one batch: enough for two sheets, no more
         boardSheets(&c, p[6], filled: 2)
+        let batch = widthMM * heightMM / 1e6 * 4.4 / Double(max(sections.count, 1)) * 2
+        c.text("≈ " + strings.kilograms(batch), p[6].cx + 22, p[6].cy + 2, 3.6, 700, BookStyle.ink, .middle)
         // it skins over in half an hour: spread only what you will cover by then
         BookIcon.thinset.draw(into: &c, p[7].cx - 26, p[7].cy - 10, 18)
         arrow(&c, p[7].cx - 6, p[7].cy, p[7].cx + 2, p[7].cy)
@@ -591,8 +595,9 @@ extension StoneBook {
         let p = panels(&c, 6, rows: 3)
         let glass = colour(lessonPaints[0]), g = BookColor(grout)
         // stirred to toothpaste: a blob holds on the rubber float
-        BookIcon.float.draw(into: &c, p[0].cx - 14, p[0].cy - 14, 28)
-        c.fill(.circle(Point(p[0].cx, p[0].cy + 1), 5), g)
+        BookIcon.float.draw(into: &c, p[0].cx - 20, p[0].cy - 14, 28)
+        c.fill(.circle(Point(p[0].cx - 6, p[0].cy + 1), 5), g)
+        BookIcon.gloves.draw(into: &c, p[0].cx + 12, p[0].cy - 9, 16)
         mark(&c, p[0], ok: true)
         // pushed into the joints diagonally, the float at a slant
         for k in 0..<3 { for j in 0..<2 { smalto(&c, p[1].cx - 18 + Double(k) * 13, p[1].cy - 6 + Double(j) * 13, 12, 12, glass) } }
