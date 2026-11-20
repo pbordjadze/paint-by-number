@@ -21,7 +21,7 @@ struct PaintTogetherTests {
             for r in painted { a.paint([r], from: .zero, animated: false) }
             b = PaintingSession(template: t)
             engineA = TogetherEngine(session: a, painter: 1) { [unowned self] in self.toB.append($0) }
-            engineB = TogetherEngine(session: b, painter: 2) { [unowned self] in self.toA.append($0) }
+            engineB = TogetherEngine(session: b, painter: 2, isHost: false) { [unowned self] in self.toA.append($0) }
         }
 
         /// Hands every message across until neither side has anything to say.
@@ -105,4 +105,111 @@ struct PaintTogetherTests {
         #expect(chrome.quiet.contains(.filling))
         chrome.close()
     }
+
+    #if UNRELEASED
+    /// What a canvas was asked to show of the friend.
+    @MainActor
+    private final class CanvasSpy: TogetherCanvas {
+        var arrived = 0, left = 0
+        var moves: [(point: SIMD2<Float>?, color: Int)] = []
+        var ripples: [(SIMD2<Float>, Bool)] = [], stars: [(SIMD2<Float>, Bool)] = []
+        func friendArrived() { arrived += 1 }
+        func friendLeft() { left += 1 }
+        func friendMoved(to point: SIMD2<Float>?, color: Int) { moves.append((point, color)) }
+        func showRipple(at point: SIMD2<Float>, fromFriend: Bool) { ripples.append((point, fromFriend)) }
+        func showStar(from point: SIMD2<Float>, fromFriend: Bool) { stars.append((point, fromFriend)) }
+    }
+
+    /// Two painters who have met (the guest said hello, the host answered).
+    private func met() -> Pair {
+        let pair = Pair()
+        pair.engineB.start()
+        pair.deliver()
+        return pair
+    }
+
+    @Test func meetingMakesBothTogether() {
+        let pair = met()
+        #expect(pair.a.together.isTogether)
+        #expect(pair.b.together.isTogether)
+    }
+
+    /// The painter's finger, and the paint in it, reach the friend's canvas and palette.
+    @Test func aFingerAndItsPaintReachTheFriend() {
+        let pair = met()
+        let spy = CanvasSpy()
+        pair.b.together.canvas = spy
+        pair.a.together.touched(SIMD2(10, 20), color: 2)
+        pair.deliver()
+        #expect(pair.b.together.friendColor == 2)
+        #expect(spy.moves.last?.point == SIMD2(10, 20))
+        #expect(spy.moves.last?.color == 2)
+        // A paint picked with no finger down still glows on the friend's palette.
+        pair.a.select(color: 3)
+        pair.deliver()
+        #expect(pair.b.together.friendColor == 3)
+    }
+
+    /// The hand paints nothing: picked, it puts the paint down, and the friend sees a hand.
+    @Test func theHandPaintsNothing() {
+        let pair = met()
+        let spy = CanvasSpy()
+        pair.b.together.canvas = spy
+        let region = 0
+        let anchor = pair.a.template.anchor(ofRegion: region)
+        pair.a.select(color: pair.a.colorOf(region))
+        pair.a.together.holdsHand = true
+        pair.a.select(color: nil)
+        pair.a.tap(at: anchor, tolerance: 4)
+        pair.a.drag(from: anchor, to: anchor + SIMD2(30, 0), radius: 8)
+        pair.flush(); pair.deliver()
+        #expect(pair.painted.0.isEmpty)
+        #expect(pair.painted.1.isEmpty)
+        #expect(pair.b.together.friendColor == nil)
+        #expect(spy.moves.last?.color == TogetherChannel.handColor)
+        // Picking a paint puts the hand down.
+        pair.a.select(color: 1)
+        #expect(!pair.a.together.holdsHand)
+    }
+
+    @Test func ripplesAndStarsShowOnBothScreens() {
+        let pair = met()
+        let mine = CanvasSpy(), theirs = CanvasSpy()
+        pair.a.together.canvas = mine
+        pair.b.together.canvas = theirs
+        pair.a.together.ripple(at: SIMD2(5, 6))
+        pair.a.together.star(at: SIMD2(7, 8))
+        pair.deliver()
+        #expect(mine.ripples.map(\.1) == [false])
+        #expect(theirs.ripples.map(\.0) == [SIMD2(5, 6)])
+        #expect(theirs.ripples.map(\.1) == [true])
+        #expect(theirs.stars.map(\.0) == [SIMD2(7, 8)])
+    }
+
+    /// Who painted what, for the finale's two lights: what was painted before the guest came
+    /// is the host's.
+    @Test func eachKnowsWhatTheFriendPainted() {
+        let pair = Pair(painted: [0, 1])
+        pair.engineB.start()
+        pair.deliver()
+        pair.b.paint([3], from: .zero, animated: false)
+        pair.flush(); pair.deliver()
+        pair.a.paint([4], from: .zero, animated: false)
+        pair.flush(); pair.deliver()
+        #expect(pair.a.together.friendsAreas() == [3])
+        #expect(pair.b.together.friendsAreas() == [0, 1, 4])
+    }
+
+    @Test func aFriendLeavingPutsTheHandDown() {
+        let pair = met()
+        let spy = CanvasSpy()
+        pair.a.together.canvas = spy
+        pair.a.together.holdsHand = true
+        pair.engineA.friendLeft()
+        #expect(!pair.a.together.isTogether)
+        #expect(!pair.a.together.holdsHand)
+        #expect(pair.a.together.friendColor == nil)
+        #expect(spy.left == 1)
+    }
+    #endif
 }

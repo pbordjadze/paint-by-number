@@ -73,6 +73,17 @@ import simd
 /// - `paint-book-moon-dark`: `paint-book-dark-paper` in dark appearance by Moon (Settings › Music),
 ///   zoomed 2.5× onto the unpainted area with the most room, which is painted and its two stars
 ///   held at their fullest (fills and sparkles slowed)
+///
+/// Paint Together (SideStore and Debug builds; painting-company row 350), Delicate Arch ~55 %
+/// painted with a friend who is no engine but the demo, through the painting's `TogetherChannel`:
+/// - `paint-together` (with `-dark`): the friend's light on the paint they hold, a short stroke
+///   of theirs just landed, their paint glowing in the palette and the hand first in it
+/// - `paint-together-edge`: zoomed 3× onto the lower left while the friend paints at the upper
+///   right, out of view: the edge glows toward them
+/// - `paint-together-hand`: the painter holds the hand; the friend's star drifts up into the sky
+///   and the painter's tap ripples
+/// - `paint-together-finale`: the friend paints the last area, and the shared finale plays: the
+///   replay with a light for each painter (every other fill the friend's), mid-way
 struct PaintDemoView: View {
     let scenario: String
     @State private var demo: Demo?
@@ -268,6 +279,23 @@ private final class Demo {
                 camera = CanvasCamera(zoom: 3, center: Self.center(t, last))
                 lastArea = last
             }
+        #if UNRELEASED
+        case "paint-together", "paint-together-dark", "paint-together-hand", "paint-together-edge":
+            paint(fraction: 0.55)
+            if scenario == "paint-together-edge" {
+                camera = CanvasCamera(zoom: 3, center: SIMD2(Float(t.width) * 0.25, Float(t.height) * 0.72))
+            }
+        case "paint-together-finale":
+            // Everything but a mid-sized area near the middle, which the friend paints.
+            let middle = SIMD2(Float(t.width), Float(t.height)) * 0.5
+            let last = t.regions.indices.filter { t.regions[$0].inscribedRadius > 6 }
+                .min { simd_distance(Self.center(t, $0), middle) < simd_distance(Self.center(t, $1), middle) }
+            if let last {
+                session.paint(order.filter { $0 != last }, from: .zero, animated: false)
+                session.select(color: session.colorOf(last))
+                lastArea = last
+            }
+        #endif
         case "paint-replay":
             paint(fraction: 1)
             // Slowed so the CI screenshot lands mid-replay.
@@ -554,6 +582,12 @@ private final class Demo {
             #endif
             return
         }
+        #if UNRELEASED
+        if scenario.hasPrefix("paint-together") {
+            await paintTogether()
+            return
+        }
+        #endif
         if scenario == "paint-replay" {
             try? await Task.sleep(for: .seconds(1.5))
             (session.canvas as? CanvasView)?.replay()
@@ -599,6 +633,61 @@ private final class Demo {
     private static func center(_ t: Template, _ region: Int) -> SIMD2<Float> {
         t.labels(ofRegion: region).first?.position ?? .zero
     }
+
+    #if UNRELEASED
+    /// The friend of the `paint-together` scenarios, played through the channel as the engine
+    /// would: they arrive, move, paint, send stars; ready while it shows (the screenshot follows
+    /// about two seconds later).
+    private func paintTogether() async {
+        let session = session
+        let t = session.template, together = session.together
+        let size = SIMD2(Float(t.width), Float(t.height))
+        // Every other fill is the friend's, for the finale's two lights.
+        together.friendsAreas = {
+            Set(session.progress.log.enumerated().filter { $0.offset % 2 == 1 }.map { Int($0.element.region) })
+        }
+        try? await Task.sleep(for: .seconds(1))
+        together.friendArrived()
+        if scenario == "paint-together-finale", let last = lastArea {
+            session.applyFriend(painted: [last], unpainted: [], from: Self.center(t, last))
+            // The finale starts once the fill has landed; ready with both lights out over it.
+            try? await Task.sleep(for: .seconds(1.6))
+            return
+        }
+        // The friend holds another paint left to paint, and paints near the middle's right.
+        let mine = session.selectedColor
+        let paints = (0..<session.paletteCount).filter { $0 != mine && !session.isColorComplete($0) }
+        guard let friendColor = paints.max(by: {
+            session.remainingByColor[$0] < session.remainingByColor[$1]
+        }) else { return }
+        let aim = scenario == "paint-together-edge" ? size * SIMD2(0.85, 0.2) : size * SIMD2(0.64, 0.42)
+        let theirs = t.regions.indices.filter { session.colorOf($0) == friendColor && !session.isPainted($0) }
+            .sorted { simd_distance(Self.center(t, $0), aim) < simd_distance(Self.center(t, $1), aim) }
+        let place = theirs.first.map { Self.center(t, $0) } ?? aim
+        for k in 0..<8 {
+            let back = Float(7 - k)
+            together.friendMoved(
+                to: place + SIMD2(back * 14, back * 5), color: friendColor, paletteCount: session.paletteCount)
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+        let painted = Array(theirs.prefix(3))
+        if !painted.isEmpty { session.applyFriend(painted: painted, unpainted: [], from: place) }
+        guard scenario == "paint-together-hand" else {
+            try? await Task.sleep(for: .seconds(1))
+            return
+        }
+        // The painter takes the hand; the friend sends a star, and the painter shows them a place.
+        together.holdsHand = true
+        session.select(color: nil)
+        together.friendStarred(at: place)
+        let near = t.regions.indices.filter { !session.isPainted($0) && t.regions[$0].inscribedRadius > 8 }
+            .min { simd_distance(Self.center(t, $0), size * 0.42) < simd_distance(Self.center(t, $1), size * 0.42) }
+        Task {
+            try? await Task.sleep(for: .seconds(1.6))
+            together.ripple(at: near.map { Self.center(t, $0) } ?? size * 0.42)
+        }
+    }
+    #endif
 }
 
 /// A feedback scenario (`paint-feedback*`): the ink feedback starts with (drawn as large as

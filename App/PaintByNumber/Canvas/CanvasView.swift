@@ -198,6 +198,14 @@ final class CanvasView: UIView, PaintingCanvas {
     /// When the latest night over the finished painting was at its fullest (media time; demos
     /// wait for it).
     private(set) var nightfallPeak: CFTimeInterval?
+    /// The friend painting with you (Paint Together: `FriendPresence`), made when they first show.
+    private var friendPresence: FriendPresence?
+    /// Over the edge glow: a tap glides to the friend, and VoiceOver offers it as a button.
+    private var friendEdgeButton: UIButton?
+    /// This finishing has had its shared finale, the replay with the two lights: what follows is
+    /// the usual finish.
+    private var playedTogetherFinale = false
+    private var togetherFinaleTask: Task<Void, Never>?
     #endif
 
     // Camera
@@ -324,6 +332,9 @@ final class CanvasView: UIView, PaintingCanvas {
         registerForTraitChanges([UITraitUserInterfaceStyle.self], action: #selector(paperChanged))
         tracePaper()
         session.canvas = self
+        #if UNRELEASED
+        session.together.canvas = self
+        #endif
         session.onEvent { [weak self] event in self?.celebrate(event) }
     }
 
@@ -1123,6 +1134,16 @@ final class CanvasView: UIView, PaintingCanvas {
     /// session hears how many areas are on screen meanwhile (`ReplayProgress`), so the progress
     /// badge follows the canvas.
     func replay() {
+        #if UNRELEASED
+        replay(lights: session.together.isTogether)
+        #else
+        replay(lights: false)
+        #endif
+    }
+
+    /// The replay; with `lights`, painting together, two lights cross it, each passing over the
+    /// areas its painter painted as they paint again (`FriendPresence.playLights`).
+    private func replay(lights: Bool) {
         guard let renderer, !session.progress.log.isEmpty else { return }
         replayTask?.cancel()
         // The replay ends with a finish of its own.
@@ -1160,6 +1181,9 @@ final class CanvasView: UIView, PaintingCanvas {
             let span = min(10, max(4, Float(painted.count) * 0.02)) * fillDurationScale
             let step = span / Float(painted.count)
             let begin = now()
+            #if UNRELEASED
+            if lights { playFinaleLights(painted, step: step, span: span) }
+            #endif
             for (i, r) in painted.enumerated() {
                 let origin = anchors[r]
                 renderer.update(r, RegionState(
@@ -1177,6 +1201,10 @@ final class CanvasView: UIView, PaintingCanvas {
             session.showReplayed(nil)
             isReplaying = false
             numbersChanged()
+            #if UNRELEASED
+            // A replay ends in the usual finish, never in another shared finale.
+            playedTogetherFinale = true
+            #endif
             celebrate(.artworkCompleted)
         }
     }
@@ -1194,6 +1222,8 @@ final class CanvasView: UIView, PaintingCanvas {
         cancelFinish()
         #if UNRELEASED
         endNightfall()
+        togetherFinaleTask?.cancel()
+        togetherFinaleTask = nil
         #endif
     }
 
@@ -1228,6 +1258,9 @@ final class CanvasView: UIView, PaintingCanvas {
             guard !session.isComplete else { return }
             shine(color: color, after: 0.35)
         case .artworkCompleted:
+            #if UNRELEASED
+            if startsTogetherFinale() { return }
+            #endif
             finish()
         case .strokeEnded:
             guard finishAwaitsStroke else { return }
@@ -1463,6 +1496,10 @@ final class CanvasView: UIView, PaintingCanvas {
         if isReplaying { endReplay() }
         #if UNRELEASED
         endNightfall()
+        // No longer finished: finishing again earns another shared finale.
+        playedTogetherFinale = false
+        togetherFinaleTask?.cancel()
+        togetherFinaleTask = nil
         #endif
         // No longer finished: the lines are back.
         inkChanged()
@@ -1552,6 +1589,17 @@ final class CanvasView: UIView, PaintingCanvas {
             lastTap = (t, view, false)
             return
         }
+        #if UNRELEASED
+        if session.together.holdsHand {
+            // With the hand, a tap shows the friend a place. Counted as painted, so a second tap
+            // ripples again instead of zooming.
+            session.together.ripple(at: p)
+            lastTap = (t, view, true)
+            return
+        }
+        session.together.touched(p, color: session.selectedColor)
+        session.together.touched(nil, color: session.selectedColor)
+        #endif
         let event = session.tap(at: p, tolerance: Float(Self.tapTolerance / scrollView.zoomScale))
         var painted = false
         switch event {
@@ -1573,6 +1621,14 @@ final class CanvasView: UIView, PaintingCanvas {
                 onDismissPhoto?()
                 return
             }
+            #if UNRELEASED
+            // With the hand, a hold sends a star.
+            if session.together.holdsHand {
+                session.together.star(at: p)
+                return
+            }
+            session.together.touched(p, color: session.selectedColor)
+            #endif
             // No paint on the brush (a finished painting): no brush.
             guard session.selectedColor != nil else { return }
             FeedbackEngine.shared.selectionChanged()
@@ -1583,9 +1639,15 @@ final class CanvasView: UIView, PaintingCanvas {
         case .changed:
             guard let last = dragLast else { return }
             brushPoint = g.location(in: self)
+            #if UNRELEASED
+            session.together.touched(p, color: session.selectedColor)
+            #endif
             session.drag(from: last, to: p, radius: radius)
             dragLast = p
         default:
+            #if UNRELEASED
+            if dragLast != nil { session.together.touched(nil, color: session.selectedColor) }
+            #endif
             brushPoint = nil
             dragLast = nil
             session.endStroke()
@@ -1601,6 +1663,13 @@ final class CanvasView: UIView, PaintingCanvas {
                 onDismissPhoto?()
                 return
             }
+            #if UNRELEASED
+            if session.together.holdsHand {
+                session.together.ripple(at: p)
+                return
+            }
+            session.together.touched(p, color: session.selectedColor)
+            #endif
             dragLast = p
             session.beginStroke()
             if case let .rejected(region, _)? = session.tap(at: p, tolerance: Float(6 / scrollView.zoomScale)) {
@@ -1608,9 +1677,15 @@ final class CanvasView: UIView, PaintingCanvas {
             }
         case .changed:
             guard let last = dragLast else { return }
+            #if UNRELEASED
+            session.together.touched(p, color: session.selectedColor)
+            #endif
             session.drag(from: last, to: p, radius: Float(4 / scrollView.zoomScale))
             dragLast = p
         default:
+            #if UNRELEASED
+            if dragLast != nil { session.together.touched(nil, color: session.selectedColor) }
+            #endif
             // At the stroke's end, so nothing it triggers (a tip) lands mid-stroke.
             if dragLast != nil { onPencilAction?(.lifted) }
             dragLast = nil
@@ -1620,6 +1695,14 @@ final class CanvasView: UIView, PaintingCanvas {
 
     @objc private func handleHover(_ g: UIHoverGestureRecognizer) {
         var region = -1
+        #if UNRELEASED
+        // The Pencil hovering shows the friend where it is before it touches.
+        if g.state == .began || g.state == .changed {
+            session.together.touched(canvasPoint(g.location(in: zoomView)), color: session.selectedColor)
+        } else {
+            session.together.touched(nil, color: session.selectedColor)
+        }
+        #endif
         if g.state == .began || g.state == .changed {
             let p = canvasPoint(g.location(in: zoomView))
             if let r = template.region(at: p), !session.isPainted(r), session.colorOf(r) == session.selectedColor {
@@ -1646,6 +1729,16 @@ final class CanvasView: UIView, PaintingCanvas {
         // Read live: the camera and animation clock can change without a session event.
         if ProcessInfo.processInfo.arguments.contains("-playHarness") { return playHarnessElements() }
         #endif
+        #if UNRELEASED
+        // The way to the friend, while their light glows at the edge.
+        if let button = friendEdgeButton, !button.isHidden {
+            return cachedAccessibleElements() + [button]
+        }
+        #endif
+        return cachedAccessibleElements()
+    }
+
+    private func cachedAccessibleElements() -> [NSObject] {
         if let accessibleItems { return accessibleItems }
         let items = buildAccessibleElements()
         accessibleItems = items
@@ -1933,6 +2026,7 @@ extension CanvasView: UIScrollViewDelegate {
         requestRender()
         #if UNRELEASED
         nightfall?.follow(paintingFrame)
+        friendViewChanged()
         #endif
     }
 
@@ -1942,6 +2036,7 @@ extension CanvasView: UIScrollViewDelegate {
         requestRender()
         #if UNRELEASED
         nightfall?.follow(paintingFrame)
+        friendViewChanged()
         #endif
         onZoomChange?(relativeZoom)
     }
@@ -2014,3 +2109,166 @@ private final class DisplayLinkTarget: NSObject {
 
     @objc func tick(_ link: CADisplayLink) { view?.tick(link) }
 }
+
+#if UNRELEASED
+// MARK: - Painting together
+
+extension CanvasView: TogetherCanvas {
+    /// Light-trails between the finale's places come this far apart at most, so each light
+    /// glides from area to area instead of flickering over every one the replay paints.
+    private static let finaleLightStride: CFTimeInterval = 0.3
+
+    /// What shows the friend, made the first time it's needed.
+    private var presence: FriendPresence {
+        if let friendPresence {
+            friendPresence.reduceMotion = reduceMotion
+            return friendPresence
+        }
+        let made = FriendPresence(
+            zoomingLayer: zoomView.layer, screen: layer,
+            canvasSize: CGSize(width: CGFloat(template.width), height: CGFloat(template.height)))
+        made.reduceMotion = reduceMotion
+        made.zoomed(to: scrollView.zoomScale)
+        friendPresence = made
+        let button = UIButton(type: .custom)
+        button.bounds = CGRect(x: 0, y: 0, width: 72, height: 72)
+        button.isHidden = true
+        button.accessibilityLabel = String(
+            localized: "together.goToFriend", defaultValue: "Go to Your Friend",
+            comment: "VoiceOver label of the glow at the canvas's edge toward a friend painting out of view (Paint Together); activating it moves the view to them")
+        button.accessibilityIdentifier = "together-edge"
+        button.addTarget(self, action: #selector(goToFriend), for: .primaryActionTriggered)
+        addSubview(button)
+        friendEdgeButton = button
+        return made
+    }
+
+    func friendArrived() {
+        presence.arrived()
+        Announcer.announce(String(
+            localized: "together.arrived", defaultValue: "Your friend is painting with you.",
+            comment: "VoiceOver announcement when a friend joins the painting over SharePlay (Paint Together)"))
+    }
+
+    func friendLeft() {
+        // The hand goes with the friend: back to a paint.
+        if session.selectedColor == nil, !session.isComplete {
+            session.select(color: session.firstIncompleteColor())
+        }
+        friendPresence?.left()
+        friendViewChanged()
+        Announcer.announce(String(
+            localized: "together.left", defaultValue: "Your friend has left.",
+            comment: "VoiceOver announcement when the friend painting together leaves (Paint Together)"))
+    }
+
+    func friendMoved(to point: SIMD2<Float>?, color: Int) {
+        presence.move(to: point, color: lightColor(color))
+        friendViewChanged()
+    }
+
+    func showRipple(at point: SIMD2<Float>, fromFriend: Bool) {
+        presence.ripple(at: point, color: rippleColor)
+    }
+
+    func showStar(from point: SIMD2<Float>, fromFriend: Bool) {
+        presence.star(from: point)
+    }
+
+    /// The camera or the friend moved: their light lies inside the zooming view and keeps its
+    /// size on screen; out of view, the edge toward them glows.
+    func friendViewChanged() {
+        guard let friendPresence else { return }
+        friendPresence.zoomed(to: scrollView.zoomScale)
+        let place = friendPresence.edgePoint(toView: { self.viewPoint(forCanvas: $0) }, visible: bounds.inset(by: chromeInsets))
+        friendPresence.showEdge(at: place)
+        guard let button = friendEdgeButton else { return }
+        let shows = place != nil
+        if let place, button.center != place { button.center = place }
+        if button.isHidden == shows {
+            button.isHidden = !shows
+            accessibilityChanged(post: false)
+        }
+    }
+
+    /// The edge glow tapped: the view glides to the friend, at the same zoom.
+    @objc private func goToFriend() {
+        guard let point = friendPresence?.friendPoint else { return }
+        let zoom = scrollView.zoomScale
+        animateCamera(zoom: zoom, offset: offset(centering: point, zoom: zoom), duration: 0.6)
+    }
+
+    /// The light of a painter holding paint `color` (`TogetherChannel.handColor`: the hand): the
+    /// paint itself, deepened on light paper where a pale one would vanish into it.
+    private func lightColor(_ color: Int) -> UIColor {
+        let dark = canvasPalette.accentFloor > 0
+        guard template.palette.indices.contains(color) else {
+            // The hand: warm white by night, gold by day.
+            return dark ? UIColor(red: 1, green: 0.9, blue: 0.72, alpha: 1) : UIColor(red: 0.79, green: 0.64, blue: 0.29, alpha: 1)
+        }
+        var rgb = template.palette[color].rgb
+        let luminance = ColorScience.relativeLuminance(encoded: rgb, space: template.colorSpace)
+        if !dark, luminance > Self.palestLight { rgb *= Self.palestLight / luminance }
+        let r = CGFloat(rgb.x), g = CGFloat(rgb.y), b = CGFloat(rgb.z)
+        return template.colorSpace == .displayP3
+            ? UIColor(displayP3Red: r, green: g, blue: b, alpha: 1) : UIColor(red: r, green: g, blue: b, alpha: 1)
+    }
+
+    /// On light paper, lights no paler than this (relative luminance).
+    private static let palestLight: Float = 0.55
+
+    /// The hand's ripple: the sheet's own ink, softened.
+    private var rippleColor: UIColor {
+        canvasPalette.accentFloor > 0 ? UIColor(white: 0.92, alpha: 0.85) : UIColor(white: 0.22, alpha: 0.7)
+    }
+
+    /// The last area painted while together starts the shared finale on both screens: the
+    /// painting played back with a light for each painter. The side that painted it waits the
+    /// moment its fill takes to reach the friend, so the two begin together. False when the
+    /// usual finish should play.
+    func startsTogetherFinale() -> Bool {
+        guard session.together.isTogether, !playedTogetherFinale, !isReplaying, !isAnnotating else { return false }
+        playedTogetherFinale = true
+        let lead: Double = session.isApplyingFriend ? 0 : 0.35
+        let wait = Double(max(0, fillsLand - now())) + Double(Self.finishPause) + lead
+        friendPresence?.hideLight()
+        togetherFinaleTask?.cancel()
+        togetherFinaleTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(wait))
+            guard let self, !Task.isCancelled else { return }
+            togetherFinaleTask = nil
+            guard session.isComplete, !isAnnotating else { return }
+            replay(lights: true)
+        }
+        return true
+    }
+
+    /// The finale's two lights over a replay of `painted` beginning now, a fill every `step`
+    /// seconds over `span`.
+    private func playFinaleLights(_ painted: [Int], step: Float, span: Float) {
+        let presence = presence
+        presence.hideLight()
+        let theirs = session.together.friendsAreas()
+        let start = CACurrentMediaTime()
+        var mine: [FriendPresence.Step] = [], friend: [FriendPresence.Step] = []
+        var lastMine = -CFTimeInterval.infinity, lastFriend = -CFTimeInterval.infinity
+        for (i, region) in painted.enumerated() {
+            let time = start + CFTimeInterval(Float(i) * step)
+            let isFriends = theirs.contains(region)
+            guard time - (isFriends ? lastFriend : lastMine) >= Self.finaleLightStride else { continue }
+            let anchor = anchors[region]
+            let place = FriendPresence.Step(
+                point: CGPoint(x: CGFloat(anchor.x), y: CGFloat(anchor.y)), time: time,
+                color: lightColor(session.colorOf(region)))
+            if isFriends {
+                friend.append(place)
+                lastFriend = time
+            } else {
+                mine.append(place)
+                lastMine = time
+            }
+        }
+        presence.playLights(mine: mine, friend: friend, until: start + CFTimeInterval(span) + 0.6)
+    }
+}
+#endif

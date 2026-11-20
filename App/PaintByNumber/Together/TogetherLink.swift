@@ -93,7 +93,9 @@ final class TogetherLink {
     /// whichever of the three comes last.
     private func bind() {
         guard engine == nil, let open, open.id == painting, let messenger else { return }
-        let engine = TogetherEngine(session: open.session, painter: painter, ledger: ledgers[open.id]) { data in
+        let engine = TogetherEngine(
+            session: open.session, painter: painter, ledger: ledgers[open.id], isHost: hosting?.id == open.id
+        ) { data in
             Task { try? await messenger.send(data) }
         }
         self.engine = engine
@@ -128,6 +130,7 @@ final class TogetherLink {
                 let others = participants.count - 1
                 // Someone new arrived: they get everything painted.
                 if others > self.friends { self.engine?.sendSnapshot() }
+                if others < 1, self.friends > 0 { self.engine?.friendLeft() }
                 self.friends = max(0, others)
             }
         })

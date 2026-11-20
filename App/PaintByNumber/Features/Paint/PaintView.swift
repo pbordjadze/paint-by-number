@@ -922,8 +922,24 @@ struct PaintView: View {
             PaletteBar(
                 session: session, axis: palette.side ? .vertical : .horizontal, lines: palette.lines,
                 shakes: chrome.shakes, metrics: palette.metrics, showsCurrentColor: palette.caption,
-                order: colorOrder)
+                together: paletteTogether, order: colorOrder)
         }
+    }
+
+    /// The palette's part in painting together: the hand and the friend's paint, while a friend
+    /// is here (`TogetherChannel`).
+    private var paletteTogether: PaletteTogether? {
+        #if UNRELEASED
+        let together = session.together
+        guard together.isTogether else { return nil }
+        let session = session
+        return PaletteTogether(friendColor: together.friendColor, holdsHand: together.holdsHand) {
+            session.together.holdsHand = true
+            session.select(color: nil)
+        }
+        #else
+        return nil
+        #endif
     }
 
 
