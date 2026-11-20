@@ -174,6 +174,12 @@ struct MuseumWorkView: View {
                 withAnimation(.easeOut(duration: 0.3)) { picture = large }
             }
             #if DEBUG
+            if MuseumView.demoOpensWork {
+                try? await Task.sleep(for: .seconds(1))
+                DemoMode.markReady()
+            }
+            #endif
+            #if DEBUG
             if UserDefaults.standard.bool(forKey: "demoMuseumPaint") { wantsToPaint = true }
             #endif
             if wantsToPaint {

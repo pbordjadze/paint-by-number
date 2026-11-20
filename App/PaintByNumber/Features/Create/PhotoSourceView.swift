@@ -120,7 +120,7 @@ struct PhotoSourceView: View {
         }
         #if DEBUG
         .onAppear {
-            if UserDefaults.standard.bool(forKey: "demoMuseum") { isShowingMuseum = true }
+            if ShellDemo.current == .museum { isShowingMuseum = true }
         }
         #endif
         #endif

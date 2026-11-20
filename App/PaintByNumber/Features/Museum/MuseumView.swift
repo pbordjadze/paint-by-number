@@ -47,7 +47,7 @@ struct MuseumView: View {
         .onAppear {
             library.open()
             #if DEBUG
-            if let movement = UserDefaults.standard.string(forKey: "demoMuseumMovement") { query.movement = movement }
+            query.movement = Self.demoMovement
             #endif
         }
     }
@@ -87,8 +87,16 @@ struct MuseumView: View {
         shown = query.works(of: catalog)
         counts = query.counts(of: catalog)
         #if DEBUG
-        if UserDefaults.standard.bool(forKey: "demoMuseumWork"), path.isEmpty, let first = shown.first {
+        if Self.demoOpensWork, path.isEmpty, let first = shown.first {
             path = [first]
+        } else if ShellDemo.current == .museum, !Self.demoOpensWork {
+            let first = Array(shown.prefix(12))
+            Task {
+                // Ready once the first rows' pictures have come (they come from the museums).
+                for work in first { _ = try? await MuseumImages.shared.data(work.thumb) }
+                try? await Task.sleep(for: .seconds(2))
+                DemoMode.markReady()
+            }
         }
         #endif
     }
@@ -183,6 +191,19 @@ struct MuseumView: View {
         }
         .accessibilityIdentifier("museum-order")
     }
+
+    #if DEBUG
+    /// The demo scenarios' movement (`ShellDemo`'s `museum…`).
+    static var demoMovement: String? {
+        switch DemoMode.scenario {
+        case "museum-art-nouveau": "Art Nouveau"
+        case "museum-work", "museum-work-dark": "Ukiyo-e"
+        default: nil
+        }
+    }
+
+    static var demoOpensWork: Bool { DemoMode.scenario?.hasPrefix("museum-work") == true }
+    #endif
 
     private func museumName(of work: MuseumCatalog.Work) -> String {
         guard case .ready(let catalog) = library.state else { return "" }

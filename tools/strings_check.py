@@ -129,6 +129,8 @@ ALLOWED_LITERALS = {
     # `feedback.md`'s words for the developers (VERBATIM_FILES' FeedbackReport), which differ by era.
     ("App/SharedSeams.swift", "Paint by Moonlight \x00"),
     ("App/SharedSeams.swift", "Untitled painting"),
+    # A demo scenario's movement, a key of the Museum's catalog (DEBUG only), never shown as such.
+    ("Features/Museum/MuseumView.swift", "Art Nouveau"),
 }
 # Files whose text is shown verbatim in every language: license texts, and credits (names,
 # copyright lines and paper citations); and feedback's report (`feedback.md`), written for the
