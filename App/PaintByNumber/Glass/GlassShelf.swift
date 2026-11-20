@@ -3,6 +3,7 @@ import CoreGraphics
 import Foundation
 import Observation
 import PaintCore
+import os
 
 /// Stained Glass's windows (painting-company row 366), kept as the app keeps its paintings: an
 /// `ArtworkStore` of their own, `Application Support/StainedGlass/Windows/<uuid>/`, each a

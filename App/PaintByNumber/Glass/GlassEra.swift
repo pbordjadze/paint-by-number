@@ -4,6 +4,7 @@ import PaintCore
 import PhotosUI
 import Ravenna
 import SwiftUI
+import os
 
 /// Stained Glass, the era behind 1248 on the year wheel (painting-company row 366; SideStore and
 /// Debug builds). A mode of the app's own, not a copy of it: a window is a PaintCore `Template`

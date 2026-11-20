@@ -2,6 +2,7 @@
 import Foundation
 import PaintCore
 import SwiftUI
+import os
 
 /// Stained Glass's demo scenarios (Debug builds; `-demo glass-<name>`), on the monarch of the
 /// mockup and its lead (`GlassDemoLines`):
