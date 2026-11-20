@@ -72,9 +72,8 @@ struct SetInStoneSheet: View {
                                     comment: "Set in Stone's sheet: its title (a book for setting the mosaic in real stone)"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(String(localized: "stone.cancel", defaultValue: "Cancel", bundle: .ravenna,
-                                  comment: "Set in Stone's sheet: closes it")) { dismiss() }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(String(localized: "Done", bundle: .ravenna)) { dismiss() }
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button(String(localized: "stone.share", defaultValue: "Share", bundle: .ravenna,
@@ -110,7 +109,8 @@ struct SetInStoneSheet: View {
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            .frame(height: sizeClass == .regular ? 560 : 360)
+            // The page as large as the sheet has room for beside the picker and Print.
+            .containerRelativeFrame(.vertical) { height, _ in height * (sizeClass == .regular ? 0.72 : 0.55) }
             .overlay { if book == nil { ProgressView() } }
             .id(face)
             Text(caption)
@@ -128,11 +128,6 @@ struct SetInStoneSheet: View {
 
     private var caption: String {
         guard let book else { return " " }
-        if page == 1 {
-            let total = book.pageCount
-            return String(localized: "stone.caption.first", defaultValue: "\(total) pages · swipe through the book", bundle: .ravenna,
-                          comment: "Set in Stone's preview on its cover: how many pages the book has, and that the pages can be swiped")
-        }
         return pageCaption(page, of: book.pageCount)
     }
 
