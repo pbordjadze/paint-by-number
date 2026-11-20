@@ -84,6 +84,9 @@ final class TogetherEngine {
         guard let session, !session.isApplyingFriend else { return }
         switch event {
         case let .painted(regions, _):
+            #if DEBUG
+            TourLog.trace("together", "paint\tareas=%@", TogetherEngine.list(regions))
+            #endif
             queue(ledger.paint(regions))
         case let .undone(region):
             if let op = ledger.unpaint(region) { queue([op]) }
@@ -111,13 +114,27 @@ final class TogetherEngine {
     private func flush() {
         let ops = batcher.flush(at: now, force: true)
         guard !ops.isEmpty else { return }
+        #if DEBUG
+        TourLog.trace("together", "send\tops=%ld", ops.count)
+        #endif
         for message in TogetherMessage.chunked(ops, origin: nil) { send(message.encoded()) }
     }
+
+    #if DEBUG
+    /// Areas as the tour log writes them (`tools/together-e2e/summary.py` matches one device's
+    /// `paint` with the other's `receive` by them).
+    private static func list(_ regions: [Int]) -> String {
+        regions.map(String.init).joined(separator: ",")
+    }
+    #endif
 
     private func apply(_ ops: [TogetherOp], origin: SIMD2<Float>?) {
         guard let session else { return }
         let changed = ledger.apply(ops)
         guard !changed.painted.isEmpty || !changed.unpainted.isEmpty else { return }
+        #if DEBUG
+        TourLog.trace("together", "receive\tareas=%@\tunpainted=%ld", TogetherEngine.list(changed.painted), changed.unpainted.count)
+        #endif
         let from = origin ?? changed.painted.first.flatMap { session.template.labels(ofRegion: $0).first?.position } ?? .zero
         session.applyFriend(painted: changed.painted, unpainted: changed.unpainted, from: from)
     }

@@ -117,6 +117,9 @@ final class TogetherLink {
             painting = nil
         }
         session.join()
+        #if DEBUG
+        TourLog.trace("together", "join\thost=%@", isHost.description)
+        #endif
         isActive = true
         bind()
         tasks.append(Task { [weak self] in
@@ -126,6 +129,9 @@ final class TogetherLink {
             for await participants in session.$activeParticipants.values {
                 guard let self else { return }
                 let others = participants.count - 1
+                #if DEBUG
+                TourLog.trace("together", "friends\tcount=%ld", max(0, others))
+                #endif
                 // Someone new arrived: they get everything painted.
                 if others > self.friends { self.engine?.sendSnapshot() }
                 self.friends = max(0, others)
@@ -133,7 +139,13 @@ final class TogetherLink {
         })
         tasks.append(Task { [weak self] in
             for await state in session.$state.values {
-                if case .invalidated = state { self?.end(); return }
+                if case .invalidated = state {
+                    #if DEBUG
+                    TourLog.trace("together", "ended")
+                    #endif
+                    self?.end()
+                    return
+                }
             }
         })
         if isHost, let data = hosting?.data {
@@ -148,6 +160,9 @@ final class TogetherLink {
                     guard let first = attachments.first else { continue }
                     do {
                         let painting = try await first.load(TogetherPainting.self)
+                        #if DEBUG
+                        TourLog.trace("together", "arrived\tbytes=%ld", painting.data.count)
+                        #endif
                         if self?.painting == nil { self?.arrived = painting }
                     } catch {
                         Log.together.error("The shared painting didn't arrive: \(String(describing: error), privacy: .public)")
