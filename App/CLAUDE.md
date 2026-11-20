@@ -130,7 +130,8 @@ below name both alike.
 
 
 - `App/`: `PaintByNumberApp`, `RootView`, `Preferences`/`SettingsKey`, `Theme`, `Quirks`, `LineWeight`,
-  `PreviewStyle`, `Sky`; DEBUG `DemoMode`, `ShellDemo`, `MainThreadWatchdog`.
+  `PreviewStyle`, `Sky`; DEBUG `DemoMode`, `ShellDemo`, `MainThreadWatchdog`, `Previews` (Xcode
+  previews, mostly of demo scenarios, for the Mac to render: painting-company row 365).
 - `Model/`: `Library` (@Observable, in the environment), `ArtworkStore` (file IO), `Artwork`,
   `ArtworkFactory` (photo → template), `CreateDraft` (with `DraftStore`) and `Drafts` (`library.drafts`,
   see Create flow), `PaintingSession`, `PaintProgress`, `PaintingAutosaver`,

@@ -153,7 +153,7 @@ before planning app work).
   log, `analyze.py` a device trace beside it).
 - `ci/` scripts and `.github/workflows/ci.yml`: jobs `plan` (`ci/plan.py`: on `main`, the simulator
   entries that already passed on the same files are left out), `core` (Linux: PaintCore tests, the feedback relay's
-  tests, quality regression, string catalog, the design budget's warnings from `ci/budget.py`), the simulator matrix `apple` (every push: `ipad`, Debug build,
+  tests, quality regression, string catalog, the design budget's warnings from `ci/budget.py`, the developer site's from `ci/capabilities.py`), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;
   on `main`: `iphone` and `iphone-ui`, the iPhone's share alike, and `release-tests`, the unit tests in the
   App Store's build; a branch's `[compile]`, `[test …]`, `[duo]` or `[release-tests]` runs one entry instead, CI
