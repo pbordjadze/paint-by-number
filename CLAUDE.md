@@ -153,7 +153,7 @@ before planning app work).
   log, `analyze.py` a device trace beside it).
 - `ci/` scripts and `.github/workflows/ci.yml`: jobs `plan` (`ci/plan.py`: on `main`, the simulator
   entries that already passed on the same files are left out), `core` (Linux: PaintCore tests, the feedback relay's
-  tests, quality regression, string catalog, the design budget's warnings from `ci/budget.py`), the simulator matrix `apple` (every push: `ipad`, Debug build,
+  tests, quality regression, string catalog, the design budget's warnings from `ci/budget.py`, the developer site's from `ci/capabilities.py`), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;
   on `main`: `iphone` and `iphone-ui`, the iPhone's share alike, and `release-tests`, the unit tests in the
   App Store's build; a branch's `[compile]`, `[test …]`, `[duo]` or `[release-tests]` runs one entry instead, CI
@@ -545,9 +545,9 @@ any port of it, when changing the fitter: work from the paper.
    screenshots 43 of them, the other UI tests 70, a build 10 to 25), and waits for that runner
    first, an hour or more on a busy day, since only 5 macOS jobs run at once: a branch push
    takes 2, `main` up to 6 (four simulator jobs, `release-tests` and the IPA; each iPhone job
-   about 75 to 90 min, cut off at 160). With the repository variable `MAC_CI` `on`, a branch's run
-   gives one entry to a runner of our own, a Mac (label `pbm-mac`), when it has none already
-   (`ci/plan.py`; painting-company row 346); a Mac that doesn't take it in 15 minutes gets the run
+   about 75 to 90 min, cut off at 160). With the repository variable `MAC_CI` `on`, a branch's
+   compile check goes to a runner of our own, a Mac (label `pbm-mac`), when it has none already
+   (`ci/plan.py`, which says why only builds go; painting-company row 346); a Mac that doesn't take it in 15 minutes gets the run
    cancelled (`mac-watch`): start it again and GitHub's runners take every entry. `ci/fetch.sh` waits up to 180 min. A newer
    push to the same branch cancels the older run, which then never reports: `ci/fetch.sh` gives
    the newer push's report in its place. Nothing cancels `main`'s (painting-company row 345): each push starts `core`

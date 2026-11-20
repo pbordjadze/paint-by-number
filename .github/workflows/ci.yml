@@ -213,6 +213,14 @@ jobs:
         run: |
           mkdir -p out
           { python3 ci/budget.py --self-test && python3 ci/budget.py; } 2>&1 | tee out/design-budget.log || true
+      - name: Developer site
+        # An entitlement the developer site doesn't have yet (an app group, SharePlay) only fails at
+        # the TestFlight export: ci/capabilities.py warns the day it lands, never fails.
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          mkdir -p out
+          { python3 ci/capabilities.py --self-test && python3 ci/capabilities.py; } 2>&1 | tee out/capabilities.log || true
       - name: CI report script
         # The report job runs ci/report.py once, at the end: a break there costs every waiter the run.
         if: ${{ !cancelled() }}

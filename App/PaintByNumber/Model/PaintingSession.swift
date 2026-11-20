@@ -348,7 +348,15 @@ final class PaintingSession {
     /// imprecise tap still hit a small region of the selected color nearby.
     @discardableResult
     func tap(at point: SIMD2<Float>, tolerance: Float) -> PaintEvent? {
-        guard let color = brushColor, let hit = template.region(at: point) else { return nil }
+        guard let hit = template.region(at: point) else { return nil }
+        guard let color = brushColor else {
+            // Nothing in hand (a finished color put down): the tapped area's swatch shakes, so the
+            // painter sees which color it wants.
+            guard !progress.isPainted(hit) else { return nil }
+            let rejected = PaintEvent.rejected(region: hit, expectedColor: colorOf(hit))
+            emit(rejected)
+            return rejected
+        }
         let target: Int?
         if !progress.isPainted(hit) && colorOf(hit) == color {
             target = hit
@@ -451,6 +459,11 @@ final class PaintingSession {
             // The next along the palette, so the painter carries on where they were (the first
             // swatch left sent them back to 1 from the middle of a long palette).
             select(color: advancesToFirstLeft ? firstIncompleteColor() : nextIncompleteColor(after: selected))
+        } else if let selected = selectedColor, completed.contains(selected) {
+            // Without Advance to Next Color the finished color is put down, so its swatch leaves the
+            // palette like every other finished color's and the painter picks the next themselves
+            // (painting-company row 293). An undo picks it up again (`unpaint`).
+            select(color: nil)
         }
         // A stroke flies on when it ends (`endStroke`).
         if flowsToNextArea, !isStroking { showNextArea(near: origin, finishedColor: !completed.isEmpty) }
