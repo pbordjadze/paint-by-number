@@ -28,7 +28,7 @@ public struct BookStrings: Sendable {
     public var toolList = "Tools and materials"
     /// Each thing the book uses, by its pictogram's name (`StoneBook.kit`).
     public var tools: [String: String] = [
-        "nippers": "Wheeled mosaic nippers", "glasses": "Safety glasses", "gloves": "Work gloves, a pair", "mask": "Dust mask",
+        "tiles": "Smalti, by the stone list", "nippers": "Wheeled mosaic nippers", "glasses": "Safety glasses", "gloves": "Work gloves, a pair", "mask": "Dust mask",
         "brush": "Brush and dustpan", "tub": "Small tubs, one a colour", "scissors": "Scissors", "mesh": "Fibreglass mosaic mesh, a sheet's size",
         "film": "Clear film, a sheet's size", "tape": "Masking tape", "glue": "PVA glue", "cloth": "Soft cloths", "knife": "Craft knife",
         "board": "Board: 18 mm exterior plywood", "thinset": "Tile adhesive (thinset), powder", "trowel": "Notched trowel, 4 mm",
@@ -265,7 +265,7 @@ extension StoneBook {
         var cw = (pw - 2 * m) / 6
         for (i, t) in tools.enumerated() {
             let x = m + Double(i % 6) * cw, y = 18 + Double(i / 6) * 29
-            c.shape(.rect(x + 1.5, y, cw - 3, 26, radius: 3), fill: BookStyle.white, stroke: BookStyle.faint, width: 0.3)
+            c.shape(.rect(x + 1.5, y, cw - 3, 26), fill: nil, stroke: BookStyle.ink, width: 0.3)
             t.icon.draw(into: &c, x + cw / 2 - 8, y + 2.2, 16)
             c.text(t.amount, x + cw / 2, y + 23.4, 3.2, 600, BookStyle.ink, .middle)
         }
@@ -298,8 +298,8 @@ extension StoneBook {
         let own: Style = { p in p.section == s ? (self.colour(p.paint), nil, 0) : nil }
         for i in 0..<6 {
             let x = m + Double(i % 2) * cw + 3, y = 18 + Double(i / 2) * (ch + 4)
-            c.shape(.rect(x, y, cw - 6, ch, radius: 3), fill: BookStyle.white, stroke: BookStyle.faint, width: 0.3)
-            c.text("\(i + 1)", x + 5, y + 10, 7, 700)
+            c.shape(.rect(x, y, cw - 6, ch), fill: nil, stroke: BookStyle.ink, width: 0.35)
+            c.text("\(i + 1)", x + 4, y + 10, 8, 800, BookStyle.ink, face: .display)
             let bx = x + 14, by = y + 8, bw = cw - 30, bh = ch - 16
             switch i {
             case 0:     // the cartoon, taped down
@@ -477,7 +477,7 @@ extension StoneBook {
         // the parts box: this step's pieces at true size, by paint
         let chunk = step.pieces.map { pieces[$0] }
         let (placed, boxH) = BookLayout.parts(chunk, mm: mm, x: BookLayout.partsX, y: y0, width: BookLayout.partsWidth)
-        c.shape(.rect(BookLayout.partsX, y0, BookLayout.partsWidth, boxH, radius: 2.5), fill: BookStyle.white, stroke: BookStyle.faint, width: 0.35)
+        c.shape(.rect(BookLayout.partsX, y0, BookLayout.partsWidth, boxH), fill: BookStyle.white, stroke: BookStyle.ink, width: 0.35)
         for item in placed {
             switch item {
             case .badge(let paint, let at): badge(&c, at.x, at.y, 2.4, paint, size: 2.2)
@@ -522,8 +522,8 @@ extension StoneBook {
         let next = sections.count / 2
         for i in 0..<8 {
             let x = m + Double(i % 2) * cw + 3, y = 18 + Double(i / 2) * (ch + 4)
-            c.shape(.rect(x, y, cw - 6, ch, radius: 3), fill: BookStyle.white, stroke: BookStyle.faint, width: 0.3)
-            c.text("\(i + 1)", x + 5, y + 10, 7, 700)
+            c.shape(.rect(x, y, cw - 6, ch), fill: nil, stroke: BookStyle.ink, width: 0.35)
+            c.text("\(i + 1)", x + 4, y + 10, 8, 800, BookStyle.ink, face: .display)
             let cx = x + (cw - 6) / 2
             let h = ch - 16, w = h * width / height
             switch i {
@@ -583,12 +583,14 @@ extension StoneBook {
         let m = BookLayout.margin, pw = BookLayout.pageWidth
         c.text(strings.toolList, m, 24, 8, 400, BookStyle.ink, face: .serif)
         var y = 34.0
-        for t in kit(strings) {
+        // the stones themselves first, every one of them counted
+        let smalti = (icon: BookIcon.tiles, amount: "×" + strings.count(stones.reduce(0) { $0 + $1.buy }))
+        for t in [smalti] + kit(strings) {
             c.stroke(.line(Point(m, y), Point(pw - m, y)), BookStyle.faint, 0.25)
             t.icon.draw(into: &c, m + 1, y + 1, 9)
             c.text(strings.tools[t.icon.rawValue] ?? t.icon.rawValue, m + 16, y + 6.8, 3.8, 600)
             c.text(t.amount, pw - m, y + 6.8, 3.6, 700, BookStyle.ink, .end)
-            y += 11
+            y += 10.5
         }
     }
 

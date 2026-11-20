@@ -31,20 +31,20 @@ extension StoneBook {
         let ch = (BookLayout.pageHeight - top - 16) / Double(rows) - 4
         return (0..<count).map { i in
             let x = m + Double(i % columns) * cw + 3, y = top + Double(i / columns) * (ch + 4)
-            c.shape(.rect(x, y, cw - 6, ch, radius: 3), fill: BookStyle.white, stroke: BookStyle.faint, width: 0.3)
-            c.text("\(i + 1)", x + 5, y + 10, 7, 700)
+            c.shape(.rect(x, y, cw - 6, ch), fill: nil, stroke: BookStyle.ink, width: 0.35)
+            c.text("\(i + 1)", x + 4, y + 10, 8, 800, BookStyle.ink, face: .display)
             return Panel(x: x, y: y, w: cw - 6, h: ch)
         }
     }
 
     /// ✓ or ✗ in the panel's top corner.
     func mark(_ c: inout PageCanvas, _ p: Panel, ok: Bool) {
+        // a bare tick or cross in the corner, drawn in the book's ink
         let x = p.x + p.w - 9, y = p.y + 9
-        c.fill(.circle(Point(x, y), 4.6), ok ? StoneBook.okColour : StoneBook.noColour)
         if ok {
-            c.stroke(BookPath(elements: [.move(Point(x - 2.2, y + 0.2)), .line(Point(x - 0.6, y + 1.9)), .line(Point(x + 2.3, y - 1.6))]), BookStyle.white, 1)
+            c.stroke(BookPath(elements: [.move(Point(x - 3.6, y + 0.2)), .line(Point(x - 1, y + 3)), .line(Point(x + 3.8, y - 3.4))]), BookStyle.ink, 1.3)
         } else {
-            c.stroke(BookPath(elements: [.move(Point(x - 1.8, y - 1.8)), .line(Point(x + 1.8, y + 1.8)), .move(Point(x + 1.8, y - 1.8)), .line(Point(x - 1.8, y + 1.8))]), BookStyle.white, 1)
+            c.stroke(BookPath(elements: [.move(Point(x - 3.2, y - 3.2)), .line(Point(x + 3.2, y + 3.2)), .move(Point(x + 3.2, y - 3.2)), .line(Point(x - 3.2, y + 3.2))]), BookStyle.ink, 1.3)
         }
     }
 
@@ -381,12 +381,11 @@ extension StoneBook {
     func anatomy(_ c: inout PageCanvas) -> [Panel] {
         guard let n = steps.indices.first(where: { steps[$0].section == sampleSection && steps[$0].pieces.count >= 3 }) else { return [] }
         let m = BookLayout.margin, half = (BookLayout.pageHeight - 2 * m) / Double(BookLayout.stepsPerPage)
-        let blue = BookColor(hex: 0x2F6DB5)
         func callout(_ k: Int, _ at: Point, _ to: Point) {
-            c.stroke(.line(to, at), blue, 0.5)
-            c.fill(.circle(to, 1.1), blue)
-            c.shape(.circle(at, 4.2), fill: blue, stroke: BookStyle.white, width: 0.8)
-            c.text("\(k)", at.x, at.y + 1.6, 4.6, 800, BookStyle.white, .middle)
+            c.stroke(.line(to, at), BookStyle.ink, 0.35)
+            c.fill(.circle(to, 0.9), BookStyle.ink)
+            c.shape(.circle(at, 4.2), fill: BookStyle.white, stroke: BookStyle.ink, width: 0.6)
+            c.text("\(k)", at.x, at.y + 1.6, 4.6, 800, BookStyle.ink, .middle)
         }
         for j in 0..<BookLayout.stepsPerPage where n + j < steps.count && steps[n + j].section == sampleSection {
             let y0 = m + Double(j) * half
@@ -412,8 +411,8 @@ extension StoneBook {
         let p = panels(&c, 6, rows: 3)
         // numbered as the callouts on the page before
         for (i, q) in p.enumerated() {
-            c.shape(.circle(Point(q.x + 7, q.y + 7.6), 4.6), fill: BookColor(hex: 0x2F6DB5), stroke: BookStyle.white, width: 0.8)
-            c.text("\(i + 1)", q.x + 7, q.y + 9.4, 5, 800, BookStyle.white, .middle)
+            c.shape(.circle(Point(q.x + 7, q.y + 7.6), 4.6), fill: BookStyle.white, stroke: BookStyle.ink, width: 0.6)
+            c.text("\(i + 1)", q.x + 7, q.y + 9.4, 5, 800, BookStyle.ink, .middle)
         }
         guard let n = steps.indices.first(where: { steps[$0].section == sampleSection && steps[$0].pieces.count >= 3 }) else { return p }
         let step = steps[n], first = pieces[step.pieces[0]]
@@ -441,9 +440,20 @@ extension StoneBook {
             return nil
         }, crop: ccrop, grout: false)
         // the number by the steps counts within the sheet; the circle is the sheet
-        c.text("1", p[3].cx - 18, p[3].cy + 6, 15, 800, BookStyle.ink, face: .display)
-        c.shape(.circle(Point(p[3].cx + 10, p[3].cy), 6), fill: BookStyle.paper, stroke: BookStyle.ink, width: 0.6)
-        c.text("\(sampleSection + 1)", p[3].cx + 10, p[3].cy + 2.2, 6, 700, BookStyle.ink, .middle)
+        // the circled sheet is counted out in steps 1, 2, 3…: each a page's block, its number big
+        let sheet = "\(sampleSection + 1)"
+        c.shape(.circle(Point(p[3].cx - 24, p[3].cy), 5.5), fill: BookStyle.paper, stroke: BookStyle.ink, width: 0.6)
+        c.text(sheet, p[3].cx - 24, p[3].cy + 2, 5.5, 700, BookStyle.ink, .middle)
+        c.text("=", p[3].cx - 14.5, p[3].cy + 2, 6, 700, BookStyle.ink, .middle)
+        for k in 0..<3 {
+            let x = p[3].cx - 9 + Double(k) * 11, y = p[3].cy - 12
+            c.shape(.rect(x, y, 10, 22), fill: BookStyle.white, stroke: BookStyle.ink, width: 0.3)
+            c.text("\(k + 1)", x + 1.4, y + 7.5, 7, 800, BookStyle.ink, face: .display)
+            c.shape(.circle(Point(x + 3.6, y + 11.8), 2.1), fill: BookStyle.paper, stroke: BookStyle.ink, width: 0.3)
+            c.text(sheet, x + 3.6, y + 12.6, 2, 700, BookStyle.ink, .middle)
+            c.fill(.rect(x + 1.4, y + 15.5, 7.2, 4.5, radius: 0.6), BookColor(hex: 0xE4DED2))
+        }
+        c.text("…", p[3].cx + 26, p[3].cy + 2, 5, 700, BookStyle.ink, .middle)
         // the corner map: the sheet you are on, the dot where the step is
         let mw = min(34, (p[4].h - 22) / StoneBook.lessonZoom * width / height)
         minimap(&c, p[4].cx - mw / 2, p[4].cy - mw * height / width / 2, mw, current: sampleSection, dot: Point((lo.x + hi.x) / 2, (lo.y + hi.y) / 2), doneBefore: sampleSection)

@@ -37735,6 +37735,78 @@
         }
       }
     },
+    "stone.tools.tiles": {
+      "comment": "Set in Stone's tools list: the glass tiles themselves, as many as the stone list says to buy",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smalten, laut Steinliste"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smalti, by the stone list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esmaltes, según la lista de piedras"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smalts, selon la liste des pierres"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smalti, secondo la lista delle pietre"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スマルト（石のリストのとおり）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "스몰티, 돌 목록대로"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smalti, volgens de stenenlijst"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esmaltes, conforme a lista de pedras"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "玻璃马赛克，见石料清单"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "玻璃馬賽克，見石料清單"
+          }
+        }
+      }
+    },
     "stone.list.title": {
       "comment": "Set in Stone's book: the heading of its last pages, the stones to buy",
       "extractionState": "manual",

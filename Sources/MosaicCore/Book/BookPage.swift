@@ -209,9 +209,9 @@ struct PageCanvas {
 }
 
 enum BookStyle {
-    static let paper = BookColor(hex: 0xFBF9F5)
-    /// Paint by Mosaic's signature navy.
-    static let ink = BookColor(hex: 0x1F2A52)
+    static let paper = BookColor(hex: 0xFFFFFF)
+    /// Near-black: an assembly book's line art.
+    static let ink = BookColor(hex: 0x1C1C1C)
     static let gold = BookColor(hex: 0xC9A24A)
     static let faint = BookColor(hex: 0xD9D4CA)
     static let muted = BookColor(hex: 0x8A8578)

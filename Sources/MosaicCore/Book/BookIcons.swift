@@ -72,7 +72,9 @@ enum BookIcon: String, CaseIterable {
         case .knife:
             [.path("M10 13 L19 3 L22 6 L13 16 Z", fill: 0xEEF3F7), .path("M3 21 L10 13 L13 16 L5 23 Z", fill: 0xE3C99A)]
         case .person:
-            [.circle(12, 4.5, 3, fill: 0xFFFFFF), .path("M12 7.5 V15.5 M12 15.5 L8 23 M12 15.5 L16 23 M6.5 10.5 H17.5", fill: nil)]
+            [.path("M8.6 10.6 L5.6 16.6 M15.4 10.6 L18.4 16.6 M10 17.6 L9.6 23.2 M14 17.6 L14.4 23.2", fill: nil),
+             .path("M8.2 10 Q12 7.4 15.8 10 L16.8 17 Q12 19 7.2 17 Z", fill: 0xFFFFFF),
+             .circle(12, 4.6, 3.4, fill: 0xFFFFFF)]
         case .level:
             [.rect(2, 9, 20, 6, radius: 1, fill: 0xF3EAD2), .rect(10, 10.4, 4, 3.2, radius: 1.6, fill: 0xCFE0D4)]
         case .screw:
@@ -102,8 +104,12 @@ enum BookIcon: String, CaseIterable {
             case .circle(let cx, let cy, let r, let fl): path = BookPath.circle(SIMD2(cx, cy), r); fill = fl; width = nil
             case .rect(let rx, let ry, let rw, let rh, let r, let fl, let w): path = BookPath.rect(rx, ry, rw, rh, radius: r); fill = fl; width = w
             }
-            c.page.items.append(.shape(path.mapped(f), fill: fill.map { BookColor(hex: $0) },
-                                       stroke: BookStroke(color: BookStyle.ink, width: (width ?? 1.3) * k)))
+            // line art in black and greys, as assembly books draw it
+            let grey: BookColor? = fill.map {
+                let c = BookColor(hex: $0), l = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b
+                return BookColor(l, l, l)
+            }
+            c.page.items.append(.shape(path.mapped(f), fill: grey, stroke: BookStroke(color: BookStyle.ink, width: (width ?? 1.0) * k)))
         }
     }
 }

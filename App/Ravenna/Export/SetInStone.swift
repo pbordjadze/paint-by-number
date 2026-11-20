@@ -390,6 +390,8 @@ extension BookStrings {
         s.toolList = String(localized: "stone.tools.title", defaultValue: "Tools and materials", bundle: .ravenna,
                             comment: "Set in Stone's book: the heading of the page that names every tool and material the book's pictures show")
         s.tools = [
+            "tiles": String(localized: "stone.tools.tiles", defaultValue: "Smalti, by the stone list", bundle: .ravenna,
+                          comment: "Set in Stone's tools list: the glass tiles themselves, as many as the stone list says to buy"),
             "nippers": String(localized: "stone.tools.nippers", defaultValue: "Wheeled mosaic nippers", bundle: .ravenna,
                           comment: "Set in Stone's tools list: the cutter with two hard wheels that splits glass tiles"),
             "glasses": String(localized: "stone.tools.glasses", defaultValue: "Safety glasses", bundle: .ravenna,
