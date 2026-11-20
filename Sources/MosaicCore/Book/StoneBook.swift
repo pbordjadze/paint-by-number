@@ -83,9 +83,9 @@ public struct StoneBook: Sendable {
     static let kilogramsPerM2 = 15.0     // Orsoni smalti: about 1 kg per 25 × 25 cm (Mosaic Workshop)
     static let spare = 0.15              // tiles bought over the count: breakage at the nippers
     static let minimumPaintTiles = 8     // a paint with fewer tiles is set in its nearest paint's stone
-    static let minimumPieceMM = 4.0      // narrower than this, a piece is left to the grout
+    static let minimumPieceMM = 5.0      // narrower than this, a piece is left to the grout: smalti are 8 mm thick
     static let jointMM = 1.0             // the joint a cut leaves, and the joint fillers keep
-    static let reachMM = 2.5             // how far a piece may grow to close a joint
+    static let reachMM = 4.0             // how far a piece may grow to close a joint
     static let groutDepthCM = 0.6, groutGramsPerCM3 = 1.9
     static let stepMaximum = 12          // pieces in one step at most
 
@@ -153,9 +153,18 @@ public struct StoneBook: Sendable {
             }
         }
         cutTiles = cut
+        // a needle no one can nip goes to its neighbours, which grow into its room (an eye's
+        // round piece stays, however small)
+        let narrowest = StoneBook.minimumPieceMM / mm
+        pieces.removeAll { $0.stage != .eye && BookGeometry.minimumWidth($0.corners) < narrowest }
         // each cut to fit its neighbours, a joint apart
-        let fitted = BookPieces.fitted(pieces.map(\.corners), width: width, height: height, pixel: spacing / 20,
+        // twice: a piece held back the first time (its room's hull crossed a neighbour's) may grow
+        // once its neighbours have
+        var fitted = pieces.map(\.corners)
+        for _ in 0..<2 {
+            fitted = BookPieces.fitted(fitted, width: width, height: height, pixel: spacing / 20,
                                        joint: StoneBook.jointMM / mm, reach: StoneBook.reachMM / mm)
+        }
         for i in pieces.indices where fitted[i] != pieces[i].corners {
             pieces[i].corners = fitted[i]
             pieces[i].centre = BookGeometry.centre(fitted[i])

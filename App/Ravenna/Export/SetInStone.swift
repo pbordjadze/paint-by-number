@@ -335,13 +335,13 @@ extension BookStrings {
                               comment: "Set in Stone's stone list: the row of totals")
         s.glass = String(localized: "stone.list.glass", defaultValue: "glass", bundle: .ravenna,
                          comment: "Set in Stone's stone list: what a stone is made of, glass smalti")
-        s.stone = String(localized: "stone.list.stone", defaultValue: "marble or matte stone", bundle: .ravenna,
+        s.stone = String(localized: "stone.list.stone", defaultValue: "glass, or marble to match", bundle: .ravenna,
                          comment: "Set in Stone's stone list: what a stone is made of, for a face's matte tiles")
         s.gold = String(localized: "stone.list.gold", defaultValue: "gold leaf smalti", bundle: .ravenna,
                         comment: "Set in Stone's stone list: what a stone is made of, glass with gold leaf")
         let spare = 0.15.formatted(.percent)
         s.note = String(localized: "stone.list.note",
-                        defaultValue: "Codes are Orsoni smalti as Mosaic Workshop sells them, matched to each colour from photos: check them against samples before you order. Counts include \(spare) spare for breakage.",
+                        defaultValue: "Codes are Orsoni smalti as Mosaic Workshop sells them, matched to each colour from photos: check them against samples before you order; ≈ marks the nearest where none is close. Counts include \(spare) spare for breakage.",
                         bundle: .ravenna,
                         comment: "Set in Stone's stone list: the note under it; the argument is a percentage, like 15%. Orsoni (a Venetian glassworks) and Mosaic Workshop (a shop) are names")
         s.code = { code, near in

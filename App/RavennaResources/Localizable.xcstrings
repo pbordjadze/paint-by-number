@@ -36512,73 +36512,73 @@
       }
     },
     "stone.list.stone": {
-      "comment": "Set in Stone's stone list: what a stone is made of, for a face's matte tiles",
+      "comment": "Set in Stone's stone list: what a stone is made of, for a face's matte tiles: the glass code beside it, or a marble of that colour",
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Marmor oder matter Stein"
+            "value": "Glas oder passender Marmor"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "marble or matte stone"
+            "value": "glass, or marble to match"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "mármol o piedra mate"
+            "value": "vidrio, o mármol a juego"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "marbre ou pierre mate"
+            "value": "verre, ou marbre assorti"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "marmo o pietra opaca"
+            "value": "vetro, o marmo abbinato"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "大理石またはマットな石"
+            "value": "ガラス、または同じ色の大理石"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "대리석 또는 무광 돌"
+            "value": "유리, 또는 같은 색 대리석"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "marmer of matte steen"
+            "value": "glas, of bijpassend marmer"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "mármore ou pedra fosca"
+            "value": "vidro, ou mármore combinando"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "大理石或哑光石"
+            "value": "玻璃，或同色大理石"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "大理石或霧面石"
+            "value": "玻璃，或同色大理石"
           }
         }
       }
@@ -36662,67 +36662,67 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Codes sind Orsoni-Smalten, wie Mosaic Workshop sie verkauft, nach Fotos jeder Farbe zugeordnet: Vergleiche sie vor der Bestellung mit Mustern. Die Mengen enthalten %@ Reserve für Bruch."
+            "value": "Die Codes sind Orsoni-Smalten, wie Mosaic Workshop sie verkauft, nach Fotos jeder Farbe zugeordnet: Vergleiche sie vor der Bestellung mit Mustern; ≈ markiert die nächste, wo keine nah ist. Die Mengen enthalten %@ Reserve für Bruch."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Codes are Orsoni smalti as Mosaic Workshop sells them, matched to each colour from photos: check them against samples before you order. Counts include %@ spare for breakage."
+            "value": "Codes are Orsoni smalti as Mosaic Workshop sells them, matched to each colour from photos: check them against samples before you order; ≈ marks the nearest where none is close. Counts include %@ spare for breakage."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los códigos son esmaltes Orsoni tal como los vende Mosaic Workshop, elegidos para cada color a partir de fotos: compáralos con muestras antes de pedir. Las cantidades incluyen un %@ de repuesto por roturas."
+            "value": "Los códigos son esmaltes Orsoni tal como los vende Mosaic Workshop, elegidos para cada color a partir de fotos: compáralos con muestras antes de pedir; ≈ indica la más cercana cuando ninguna se parece mucho. Las cantidades incluyen un %@ de repuesto por roturas."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les codes sont des émaux Orsoni tels que Mosaic Workshop les vend, associés à chaque couleur d’après des photos : comparez-les à des échantillons avant de commander. Les quantités comprennent %@ de réserve pour la casse."
+            "value": "Les codes sont des émaux Orsoni tels que Mosaic Workshop les vend, associés à chaque couleur d’après des photos : comparez-les à des échantillons avant de commander ; ≈ indique la plus proche quand aucune n’est très ressemblante. Les quantités comprennent %@ de réserve pour la casse."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "I codici sono smalti Orsoni come li vende Mosaic Workshop, abbinati a ogni colore da foto: confrontali con dei campioni prima di ordinare. Le quantità includono il %@ di scorta per le rotture."
+            "value": "I codici sono smalti Orsoni come li vende Mosaic Workshop, abbinati a ogni colore da foto: confrontali con dei campioni prima di ordinare; ≈ indica la più vicina quando nessuna è simile. Le quantità includono il %@ di scorta per le rotture."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "コードはMosaic Workshopが販売するOrsoniのスマルトで、写真をもとに各色に合わせています。注文の前にサンプルと見比べてください。数量には割れに備えた%@の予備を含みます。"
+            "value": "コードはMosaic Workshopが販売するOrsoniのスマルトで、写真をもとに各色に合わせています。注文の前にサンプルと見比べてください。≈ は近い色がないときの最も近いものです。数量には割れに備えた%@の予備を含みます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "코드는 Mosaic Workshop에서 파는 Orsoni 스말티로, 사진을 보고 색마다 맞췄어요. 주문하기 전에 샘플과 비교해 보세요. 수량에는 깨질 때를 대비한 %@ 여유분이 들어 있어요."
+            "value": "코드는 Mosaic Workshop에서 파는 Orsoni 스말티로, 사진을 보고 색마다 맞췄어요. 주문하기 전에 샘플과 비교해 보세요. ≈ 표시는 가까운 색이 없을 때 가장 가까운 것이에요. 수량에는 깨질 때를 대비한 %@ 여유분이 들어 있어요."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "De codes zijn Orsoni-smalti zoals Mosaic Workshop ze verkoopt, bij elke kleur gezocht aan de hand van foto’s: vergelijk ze met monsters voordat je bestelt. De aantallen bevatten %@ reserve voor breuk."
+            "value": "De codes zijn Orsoni-smalti zoals Mosaic Workshop ze verkoopt, bij elke kleur gezocht aan de hand van foto’s: vergelijk ze met monsters voordat je bestelt; ≈ geeft de dichtstbijzijnde aan als geen enkele echt lijkt. De aantallen bevatten %@ reserve voor breuk."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Os códigos são esmaltes Orsoni como a Mosaic Workshop vende, escolhidos para cada cor a partir de fotos: compare com amostras antes de pedir. As quantidades incluem %@ a mais para quebras."
+            "value": "Os códigos são esmaltes Orsoni como a Mosaic Workshop vende, escolhidos para cada cor a partir de fotos: compare com amostras antes de pedir; ≈ indica a mais próxima quando nenhuma é parecida. As quantidades incluem %@ a mais para quebras."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "编号为 Mosaic Workshop 出售的 Orsoni 玻璃马赛克，按照片为每种颜色匹配：订购前请对照样品。数量含 %@ 的备用，以防碎裂。"
+            "value": "编号为 Mosaic Workshop 出售的 Orsoni 玻璃马赛克，按照片为每种颜色匹配：订购前请对照样品；≈ 表示没有接近的颜色时最接近的一种。数量含 %@ 的备用，以防碎裂。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "編號為 Mosaic Workshop 販售的 Orsoni 玻璃馬賽克，依照片為每種顏色配對：訂購前請對照樣品。數量含 %@ 的備用，以防碎裂。"
+            "value": "編號為 Mosaic Workshop 販售的 Orsoni 玻璃馬賽克，依照片為每種顏色配對：訂購前請對照樣品；≈ 表示沒有接近的顏色時最接近的一種。數量含 %@ 的備用，以防碎裂。"
           }
         }
       }

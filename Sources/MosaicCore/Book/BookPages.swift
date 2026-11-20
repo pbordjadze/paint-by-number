@@ -12,9 +12,9 @@ public struct BookStrings: Sendable {
     public var weight = "kg"
     public var altogether = "Altogether"
     public var glass = "glass"
-    public var stone = "marble or matte stone"
+    public var stone = "glass, or marble to match"
     public var gold = "gold leaf smalti"
-    public var note = "Codes are Orsoni smalti as Mosaic Workshop sells them, matched to each colour from photos: check them against samples before you order. Counts include 15% spare for breakage."
+    public var note = "Codes are Orsoni smalti as Mosaic Workshop sells them, matched to each colour from photos: check them against samples before you order; ≈ marks the nearest where none is close. Counts include 15% spare for breakage."
     /// "S23" as ordered; "≈ S23" for a match that is only near.
     public var code: @Sendable (String, Bool) -> String = { code, near in near ? "≈ Orsoni \(code)" : "Orsoni \(code)" }
     public var decimal: @Sendable (Double, Int) -> String = { String(format: "%.\($1)f", $0) }
@@ -346,7 +346,8 @@ extension StoneBook {
             c.shape(.circle(Point(cx, cy), 6), fill: BookStyle.paper, stroke: BookStyle.ink, width: 0.6)
             c.text("\(s + 1)", cx, cy + 2.2, 6, 700, BookStyle.ink, .middle)
             if let first = steps.firstIndex(where: { $0.section == s }) {
-                c.text("\(stepPage[first])", cx, cy + 11, 3, 500, BookStyle.ink, .middle)
+                c.fill(.rect(cx - 5, cy + 8, 10, 4.2, radius: 2.1), BookStyle.paper)
+                c.text("\(stepPage[first])", cx, cy + 11, 3, 600, BookStyle.ink, .middle)
             }
         }
     }

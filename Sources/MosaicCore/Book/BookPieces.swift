@@ -95,18 +95,16 @@ enum BookPieces {
         var none = [Int32](repeating: 0, count: n)
         Chamfer.run(&seam, w: w, h: h, carrying: &none)
         let half = Float(joint / pixel / 2)
-        var room = [[Point]](repeating: [], count: pieces.count)
+        var room = [[(Point, Float)]](repeating: [], count: pieces.count)
         for y in 0..<h {
             for x in 0..<w {
                 let i = y * w + x
                 guard near[i] >= 0, dist[i] > 0, dist[i] <= reachPx, seam[i] >= half + 0.5 else { continue }
-                room[Int(near[i])].append(Point((Double(x) + 0.5) * pixel, (Double(y) + 0.5) * pixel))
+                room[Int(near[i])].append((Point((Double(x) + 0.5) * pixel, (Double(y) + 0.5) * pixel), dist[i]))
             }
         }
-        return pieces.enumerated().map { index, piece in
-            guard !room[index].isEmpty else { return piece }
-            let grown = BookGeometry.simplified(BookGeometry.hull(piece + room[index]))
-            // the hull may not reach into a neighbour's room
+        // the hull may not reach into a neighbour's room: a piece that would tries a shorter reach
+        func clear(_ grown: [Point], _ index: Int) -> Bool {
             var lo = Point(.infinity, .infinity), hi = -lo
             for c in grown { lo = pointwiseMin(lo, c); hi = pointwiseMax(hi, c) }
             let x0 = max(0, Int(lo.x / pixel)), x1 = min(w - 1, Int(hi.x / pixel))
@@ -114,11 +112,21 @@ enum BookPieces {
             for y in y0...max(y0, y1) {
                 for x in x0...max(x0, x1) {
                     let i = y * w + x
-                    guard near[i] != Int32(index), near[i] >= 0, dist[i] <= reachPx || dist[i] == 0 else { continue }
-                    if BookGeometry.contains(grown, Point((Double(x) + 0.5) * pixel, (Double(y) + 0.5) * pixel)) { return piece }
+                    guard near[i] != Int32(index), near[i] >= 0, dist[i] <= reachPx else { continue }
+                    if BookGeometry.contains(grown, Point((Double(x) + 0.5) * pixel, (Double(y) + 0.5) * pixel)) { return false }
                 }
             }
-            return grown
+            return true
+        }
+        return pieces.enumerated().map { index, piece in
+            guard !room[index].isEmpty else { return piece }
+            for share in [Float(1), 0.6, 0.35] {
+                let points = room[index].filter { $0.1 <= reachPx * share }.map(\.0)
+                guard !points.isEmpty else { continue }
+                let grown = BookGeometry.simplified(BookGeometry.hull(piece + points))
+                if clear(grown, index) { return grown }
+            }
+            return piece
         }
     }
 

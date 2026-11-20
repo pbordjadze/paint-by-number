@@ -47,7 +47,7 @@ enum BookGeometry {
     /// of any), to at most `corners` or until the next would lose more than `loss` of the area
     /// all told: the straight cuts of nippers rather than a traced outline. Stays inside the
     /// polygon, and convex.
-    static func simplified(_ convex: [Point], corners: Int = 7, loss: Double = 0.05) -> [Point] {
+    static func simplified(_ convex: [Point], corners: Int = 6, loss: Double = 0.05) -> [Point] {
         var p = convex
         let budget = area(convex) * loss
         var lost = 0.0

@@ -91,7 +91,7 @@ struct StoneBookTests {
         #expect(b.widthMM / Double(b.columns) <= BookLayout.sectionMaxWidth && b.heightMM / Double(b.rows) <= BookLayout.sectionMaxHeight)
         #expect(b.fillerCount > 0)
         let covered = b.pieces.map(\.area).reduce(0, +) / (b.width * b.height)
-        #expect(covered > 0.7, "the joints are a mosaicist's, not the engine's: \(covered)")
+        #expect(covered > 0.75, "the joints are a mosaicist's, not the engine's: \(covered)")
         #expect(b.pageCount > 200)
     }
 
