@@ -24,6 +24,8 @@ public struct BookStrings: Sendable {
     public var kilograms: @Sendable (Double) -> String = { String(format: "%.1f kg", $0) }
     public var hours: @Sendable (Int) -> String = { "\($0) h" }
     public var minutes: @Sendable (Int) -> String = { "\($0) min" }
+    /// The stones' cost, pounds, already rounded: "£680".
+    public var pounds: @Sendable (Int) -> String = { "£\($0)" }
     public init() {}
 }
 
@@ -224,13 +226,17 @@ extension StoneBook {
         let h = 205.0, w = min(h * width / height, pw - 2 * m)
         let hh = w * height / width
         drawMosaic(&c, (pw - w) / 2, 44 + (h - hh) / 2, w, hh)
+        let hours = hoursToSet, cost = Int((stonePounds / 10).rounded()) * 10
         let facts: [(BookIcon, String)] = [(.ruler, strings.size(widthMM / 10, heightMM / 10)), (.tiles, strings.count(pieces.count)),
-                                           (.pages, strings.count(pageCount))]
+                                           (.clock, strings.count(hours.lowerBound) + "–" + strings.hours(hours.upperBound)),
+                                           (.price, "≈ " + strings.pounds(cost)), (.pages, strings.count(pageCount))]
         let cw = (pw - 2 * m) / Double(facts.count)
         for (i, (icon, s)) in facts.enumerated() {
-            let cx = m + cw * Double(i) + cw / 2
-            icon.draw(into: &c, cx - 16, 262, 9)
-            c.text(s, cx - 5, 268.6, 5, 600)
+            // icon and figure centred together in their fifth of the row (a figure about 0.55 em a character)
+            let wide = 8 + 1.5 + Double(s.count) * 4.3 * 0.55
+            let x = m + cw * Double(i) + (cw - wide) / 2
+            icon.draw(into: &c, x, 262.5, 8)
+            c.text(s, x + 9.5, 268.3, 4.3, 600)
         }
     }
 

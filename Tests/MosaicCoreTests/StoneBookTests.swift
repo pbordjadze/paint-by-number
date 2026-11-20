@@ -132,4 +132,15 @@ struct StoneBookTests {
         let big = StoneBook(mosaic: m, title: "", names: [String?](repeating: nil, count: m.palette.count), options: .init(tileFace: 2.25))
         #expect(abs(big.widthMM / Self.book.widthMM - 2.25.squareRoot() / 1.5.squareRoot()) < 1e-6)
     }
+
+    @Test func theCoverEstimatesHoursAndCost() {
+        let b = Self.book
+        let hours = b.hoursToSet
+        #expect(hours.lowerBound >= 5 && hours.lowerBound < hours.upperBound && hours.upperBound % 5 == 0, "\(hours)")
+        // every stone in whole 100 g bags, at £6 to £8 a bag but gold
+        let bags = b.stones.filter { $0.kind != .gold }.map { ($0.kilograms * 10).rounded(.up) }.reduce(0, +)
+        #expect(b.stonePounds >= bags * 6)
+        #expect(Smalti.orsoni.first { $0.code == "S01" }?.bagPounds == 6 && Smalti.orsoni.first { $0.code == "S55" }?.bagPounds == 8
+                && Smalti.orsoni.first { $0.code == "S90" }?.bagPounds == 7)
+    }
 }

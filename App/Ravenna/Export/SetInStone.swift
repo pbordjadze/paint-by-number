@@ -151,12 +151,22 @@ struct SetInStoneSheet: View {
                 Text(String(localized: "stone.tiles", defaultValue: "Tiles", bundle: .ravenna,
                             comment: "Set in Stone's one choice: how big each tile of the mosaic is"))
                 if let book {
-                    Text(Self.size(book.widthMM / 10, book.heightMM / 10))
+                    Text(Self.estimate(book))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
             }
         }
+    }
+
+    /// What the tile size makes of the mosaic: how big, how long to set and what the stones cost.
+    nonisolated static func estimate(_ book: StoneBook) -> String {
+        let strings = BookStrings.ravenna
+        let size = size(book.widthMM / 10, book.heightMM / 10), hours = book.hoursToSet
+        let time = strings.count(hours.lowerBound) + "–" + strings.hours(hours.upperBound)
+        let cost = strings.pounds(Int((book.stonePounds / 10).rounded()) * 10)
+        return String(localized: "stone.estimate", defaultValue: "\(size) · \(time) to set · about \(cost) of stone", bundle: .ravenna,
+                      comment: "Set in Stone's tile size row, under its name: how big the mosaic comes out (59 cm × 106 cm), the hours to set it (a range like 55–110 h) and what its stones cost (a price like £1,530)")
     }
 
     nonisolated static func length(_ centimetres: Double, digits: Int) -> String {
@@ -372,6 +382,7 @@ extension BookStrings {
         }
         s.hours = { Measurement(value: Double($0), unit: UnitDuration.hours).formatted(.measurement(width: .abbreviated)) }
         s.minutes = { Measurement(value: Double($0), unit: UnitDuration.minutes).formatted(.measurement(width: .abbreviated)) }
+        s.pounds = { Decimal($0).formatted(.currency(code: "GBP").precision(.fractionLength(0))) }
         return s
     }
 }

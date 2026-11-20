@@ -2,7 +2,7 @@
 /// square, outlined in the book's ink.
 enum BookIcon: String, CaseIterable {
     case nippers, mesh, glue, film, tape, board, trowel, float, sponge, bucket, thinset, grout, glasses
-    case gloves, clock, cloth, ruler, tiles, pages
+    case gloves, clock, cloth, ruler, tiles, pages, price
 
     private enum Part {
         /// An SVG path's data, its fill (nil: none) and stroke width (nil: the icon's).
@@ -59,6 +59,8 @@ enum BookIcon: String, CaseIterable {
             [0xC9A24A, 0x8C3B2F, 0x2C4A6B, 0xB9A98A, 0xC9A24A, 0x5D6E4A, 0x2C4A6B, 0xD8C9A6, 0x8C3B2F].enumerated().map { i, c in
                 .rect(3 + Double(i % 3) * 6.3, 3 + Double(i / 3) * 6.3, 5.3, 5.3, radius: 0.6, fill: UInt32(c), width: 0.7)
             }
+        case .price:
+            [.path("M3 12 L11 4 H20 V13 L12 21 Z", fill: 0xF3EAD2), .circle(16, 8, 1.6, fill: 0xFFFFFF)]
         case .pages:
             [.path("M6 3 H16 L19 6 V21 H6 Z", fill: 0xFFFFFF), .path("M9 9 H16 M9 12 H16 M9 15 H14", fill: nil, width: 0.8)]
         }
