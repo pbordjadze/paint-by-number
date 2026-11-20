@@ -149,6 +149,7 @@ func book(_ arguments: [String]) {
     }
     let mosaic: Mosaic
     do { mosaic = try JSONDecoder().decode(Mosaic.self, from: data) } catch { fail("\(positional[0]): \(error)") }
+    guard !mosaic.tiles.isEmpty else { fail("\(positional[0]): no tiles to set") }
     let start = Date()
     let name = title ?? URL(fileURLWithPath: positional[0]).deletingPathExtension().lastPathComponent
     let b = StoneBook(mosaic: mosaic, title: name, names: [String?](repeating: nil, count: mosaic.palette.count),

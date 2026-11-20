@@ -151,7 +151,7 @@ extension StoneBook {
     func minimap(_ c: inout PageCanvas, _ x: Double, _ y: Double, _ w: Double, current: Int? = nil, dot: Point? = nil, doneBefore: Int = 0) -> Double {
         let h = w * height / width
         c.shape(.rect(x - 0.8, y - 0.8, w + 1.6, h + 1.6, radius: 1.4), fill: BookStyle.white, stroke: BookStyle.faint, width: 0.3)
-        c.image(minimapImage(doneBefore: doneBefore), x, y, w, h)
+        c.image(minimaps[min(max(doneBefore, 0), minimaps.count - 1)], x, y, w, h)
         let k = w / width
         for col in 1..<max(columns, 1) {
             c.stroke(.line(Point(x + Double(col) * sectionWidth * k, y), Point(x + Double(col) * sectionWidth * k, y + h)), BookStyle.white, 0.5)
@@ -171,21 +171,21 @@ extension StoneBook {
 
     /// The minimap's picture: each pixel the paint of the piece over it, faded (less in the
     /// sections already set).
-    func minimapImage(doneBefore: Int) -> BookImage {
-        let raster = minimapRaster
+    static func minimapImage(_ raster: (w: Int, h: Int, piece: [Int32]), _ pieces: [Piece], _ palette: [SIMD3<Double>],
+                             doneBefore: Int) -> BookImage {
         var rgba = [UInt8](repeating: 255, count: raster.w * raster.h * 4)
         for i in 0..<(raster.w * raster.h) where raster.piece[i] >= 0 {
             let p = pieces[Int(raster.piece[i])]
-            let col = colour(p.paint, faded: p.section < doneBefore ? 0.15 : 0.72)
+            let col = BookColor(palette[p.paint]).mixed(toward: BookStyle.paper, p.section < doneBefore ? 0.15 : 0.72)
             rgba[4 * i] = UInt8((col.r * 255).rounded()); rgba[4 * i + 1] = UInt8((col.g * 255).rounded())
             rgba[4 * i + 2] = UInt8((col.b * 255).rounded())
         }
         return BookImage(width: raster.w, height: raster.h, rgba: rgba)
     }
 
-    /// Which piece is under each pixel of the minimap (-1: a joint), 240 pixels across.
+    /// Which piece is under each pixel of the minimap (-1: a joint), 200 pixels across.
     static func rasterize(_ pieces: [Piece], width: Double, height: Double) -> (w: Int, h: Int, piece: [Int32]) {
-        let w = 240, h = max(1, Int((240 * height / width).rounded()))
+        let w = 200, h = max(1, Int((200 * height / width).rounded()))
         let k = Double(w) / width
         var out = [Int32](repeating: -1, count: w * h)
         for (index, p) in pieces.enumerated() {

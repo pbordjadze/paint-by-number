@@ -110,7 +110,8 @@ public struct StoneBook: Sendable {
     let pageKinds: [PageKind]
     /// The page (1-based) each step is on.
     let stepPage: [Int]
-    let minimapRaster: (w: Int, h: Int, piece: [Int32])
+    /// The corner map, one per section: the sections before it set.
+    let minimaps: [BookImage]
 
     public var widthMM: Double { width * mm }
     public var heightMM: Double { height * mm }
@@ -160,9 +161,11 @@ public struct StoneBook: Sendable {
         // each cut to fit its neighbours, a joint apart
         // twice: a piece held back the first time (its room's hull crossed a neighbour's) may grow
         // once its neighbours have
+        // a raster of about 20 pixels to a tile's side, never more than 8 million pixels
+        let pixel = max(spacing / 20, (width * height / 8e6).squareRoot())
         var fitted = pieces.map(\.corners)
         for _ in 0..<2 {
-            fitted = BookPieces.fitted(fitted, width: width, height: height, pixel: spacing / 20,
+            fitted = BookPieces.fitted(fitted, width: width, height: height, pixel: pixel,
                                        joint: StoneBook.jointMM / mm, reach: StoneBook.reachMM / mm)
         }
         for i in pieces.indices where fitted[i] != pieces[i].corners {
@@ -171,7 +174,7 @@ public struct StoneBook: Sendable {
             pieces[i].area = BookGeometry.area(fitted[i])
         }
         // and the joints left wider than a mosaicist's, filled with pieces cut to fit
-        let fillers = BookPieces.fillers(pieces.map(\.corners), width: width, height: height, pixel: spacing / 20,
+        let fillers = BookPieces.fillers(pieces.map(\.corners), width: width, height: height, pixel: pixel,
                                          joint: StoneBook.jointMM / mm, minimumWidth: StoneBook.minimumPieceMM / mm,
                                          targetArea: median)
         for f in fillers {
@@ -209,7 +212,9 @@ public struct StoneBook: Sendable {
         var paints = Set<Int>()
         for p in laid { paints.insert(p.paint) }
         (pageKinds, stepPage) = StoneBook.assemble(sections: sections.count, steps: steps, stones: paints.count)
-        minimapRaster = StoneBook.rasterize(laid, width: width, height: height)
+        let raster = StoneBook.rasterize(laid, width: width, height: height)
+        let colours = palette
+        minimaps = (0...max(sections.count, 1)).map { StoneBook.minimapImage(raster, laid, colours, doneBefore: $0) }
     }
 
     // MARK: Sections and steps
@@ -337,7 +342,7 @@ public struct StoneBook: Sendable {
         var out: [Stone] = []
         for p in used {
             let cm2 = area[p] * mm * mm / 100
-            let isGold = (p < names.count ? names[p] : nil)?.lowercased().contains("gold") ?? false
+            let isGold = TileColor.isGold(SIMD3<Float>(palette[p]))
             let kind: Stone.Kind = isGold ? .gold : stone[p] * 2 > count[p] ? .stone : .glass
             let match = kind == .gold ? nil : Smalti.nearest(to: palette[p], excluding: taken)
             if let match { taken.insert(match.entry.code) }

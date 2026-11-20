@@ -16,9 +16,9 @@ nonisolated struct SetInStoneRequest: Identifiable, Sendable {
     /// A gallery card's; nil when the mosaic has no tiles saved (one sent from another device).
     @concurrent
     static func saved(store: ArtworkStore, artwork: Artwork) async throws -> SetInStoneRequest? {
-        guard let mosaic = try store.readMosaic(artwork.id) else { return nil }
+        guard let mosaic = try store.readMosaic(artwork.id), !mosaic.tiles.isEmpty else { return nil }
         let template = try store.readTemplate(artwork.id)
-        let names = ColorNameText.nicknames(for: template.palette, seed: ColorNickname.seed(for: artwork.id), version: 1)
+        let names = ColorNameText.nicknames(for: template.palette, seed: ColorNickname.seed(for: artwork.id), version: artwork.nicknameVersion)
         return SetInStoneRequest(
             mosaic: mosaic, title: artwork.title,
             names: (0..<mosaic.palette.count).map { $0 < names.count ? names[$0] : nil })
@@ -45,7 +45,9 @@ struct SetInStoneSheet: View {
     @State private var page = 1
     @State private var preparing = false
     @State private var shared: URL?
-    @State private var printing: Data?
+    @State private var printing: StonePrintJob?
+    /// The PDF being made for Print or Share: let go when the sheet closes.
+    @State private var work: Task<Void, Never>?
 
     /// How big a tile is: the median tile's side, as a mosaicist names a tessera's size.
     enum TileSize: CaseIterable {
@@ -85,6 +87,7 @@ struct SetInStoneSheet: View {
             .safeAreaInset(edge: .bottom) { printButton }
         }
         .task(id: face) { await layOut(face) }
+        .onDisappear { work?.cancel() }
         .background {
             ActivityShareSheet(item: shared) {
                 if let shared { ArtworkExporter.removeExport(at: shared) }
@@ -185,17 +188,18 @@ struct SetInStoneSheet: View {
         .disabled(book == nil || preparing || !UIPrintInteractionController.isPrintingAvailable)
         .accessibilityIdentifier("stone-print")
         .background {
-            StonePrintSheet(pdf: printing, name: request.title) { printing = nil }
+            StonePrintSheet(job: printing) { printing = nil }
         }
     }
 
     private func startPrinting() {
         guard let book, !preparing else { return }
         preparing = true
-        Task {
+        let name = request.title
+        work = Task {
             defer { preparing = false }
             let pdf = await StoneBookWork.render(book)
-            if !pdf.isEmpty { printing = pdf }
+            if !pdf.isEmpty, !Task.isCancelled { printing = StonePrintJob(name: name, pdf: pdf) }
         }
     }
 
@@ -203,10 +207,10 @@ struct SetInStoneSheet: View {
         guard let book, !preparing else { return }
         preparing = true
         let title = request.title
-        Task {
+        work = Task {
             defer { preparing = false }
             let pdf = await StoneBookWork.render(book)
-            guard !pdf.isEmpty else { return }
+            guard !pdf.isEmpty, !Task.isCancelled else { return }
             do {
                 shared = try ArtworkExporter.temporaryFile(pdf, name: Self.fileName(title), pathExtension: "pdf")
             } catch {
@@ -245,7 +249,7 @@ nonisolated enum StoneBookWork {
 
     @concurrent
     static func image(_ book: StoneBook, _ number: Int) async -> UIImage {
-        StoneBookRenderer.image(book, page: number, strings: .ravenna, width: 1000)
+        StoneBookRenderer.image(book, page: number, strings: .ravenna, width: 900)
     }
 }
 
@@ -267,6 +271,7 @@ private struct StonePageView: View {
         .shadow(color: .black.opacity(0.16), radius: 14, y: 8)
         .padding(.horizontal, 20)
         .padding(.vertical, 18)
+        .onDisappear { image = nil }
         .task {
             image = await StoneBookWork.image(book, number)
             #if DEBUG
@@ -276,33 +281,39 @@ private struct StonePageView: View {
     }
 }
 
+/// A book to print, once: its id tells a new job from the one already shown.
+struct StonePrintJob: Identifiable, Sendable {
+    let id = UUID()
+    let name: String
+    let pdf: Data
+}
+
 /// The system's print dialog for the book, from the view it lies behind (an iPad's points at it).
 private struct StonePrintSheet: UIViewControllerRepresentable {
-    let pdf: Data?
-    let name: String
+    let job: StonePrintJob?
     let onFinish: () -> Void
 
     func makeUIViewController(context: Context) -> Controller { Controller() }
 
     func updateUIViewController(_ controller: Controller, context: Context) {
         controller.onFinish = onFinish
-        guard let pdf, controller.shown != pdf else { return }
-        controller.shown = pdf
-        Task { @MainActor [weak controller] in controller?.present(pdf, name: name) }
+        guard let job, controller.shown != job.id else { return }
+        controller.shown = job.id
+        Task { @MainActor [weak controller] in controller?.present(job) }
     }
 
     final class Controller: UIViewController {
         var onFinish: (() -> Void)?
-        var shown: Data?
+        var shown: UUID?
 
-        func present(_ pdf: Data, name: String) {
+        func present(_ job: StonePrintJob) {
             guard let view = viewIfLoaded, view.window != nil else { shown = nil; onFinish?(); return }
             let info = UIPrintInfo.printInfo()
             info.outputType = .general
-            info.jobName = name
+            info.jobName = job.name
             let printer = UIPrintInteractionController.shared
             printer.printInfo = info
-            printer.printingItem = pdf
+            printer.printingItem = job.pdf
             let done: UIPrintInteractionController.CompletionHandler = { [weak self] _, _, _ in
                 Task { @MainActor in
                     self?.shown = nil
