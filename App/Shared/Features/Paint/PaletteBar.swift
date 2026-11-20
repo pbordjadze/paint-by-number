@@ -611,10 +611,10 @@ private struct Swatch: View {
         // Only while it shows, so a painter alone (and the release) carries no halo.
         .background {
             if friendHolds {
-                Circle().fill(color)
-                    .scaleEffect(1.3)
-                    .blur(radius: 6 * metrics.scale)
-                    .opacity(0.9)
+                // Light, not shadow: the paint lifted toward white, so a dark paint glows too.
+                Circle().fill(color.mix(with: .white, by: 0.4))
+                    .scaleEffect(1.32)
+                    .blur(radius: 7 * metrics.scale)
                     .transition(.opacity)
             }
         }

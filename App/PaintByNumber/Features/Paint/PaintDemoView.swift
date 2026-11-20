@@ -650,8 +650,10 @@ private final class Demo {
         together.friendArrived()
         if scenario == "paint-together-finale", let last = lastArea {
             session.applyFriend(painted: [last], unpainted: [], from: Self.center(t, last))
-            // The finale starts once the fill has landed; ready with both lights out over it.
-            try? await Task.sleep(for: .seconds(1.6))
+            // The replay played slowly, so a screenshot taken many seconds after ready (CI's often
+            // are) still finds it mid-way, both lights out over it.
+            (session.canvas as? CanvasView)?.fillDurationScale = 8
+            try? await Task.sleep(for: .seconds(3))
             return
         }
         // The friend holds another paint left to paint, and paints near the middle's right.

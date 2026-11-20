@@ -37,11 +37,11 @@ final class FriendPresence {
     var reduceMotion = false
 
     /// Across the light on screen, in points.
-    static let lightSide: CGFloat = 76
+    static let lightSide: CGFloat = 220
     /// Across the edge glow.
-    static let edgeSide: CGFloat = 132
+    static let edgeSide: CGFloat = 240
     /// A star at rest in the sky.
-    static let starSide: CGFloat = 20
+    static let starSide: CGFloat = 26
     /// Stars kept in the sky at once.
     static let mostStars = 30
     /// Light retargets take this long: a presence message comes every 50 ms, and a little more
@@ -74,16 +74,21 @@ final class FriendPresence {
 
     // MARK: The light
 
-    /// The colors of a light in `color`: a soft core lifted toward white, falling off to nothing.
+    /// The colors of a light in `color`: a small bright core of the paint itself, a little
+    /// lifted, inside a wide bloom of it falling off to nothing. A core lifted far toward white
+    /// read as grey haze on light paper (the build's first critic round): the paint has to show.
     static func glow(_ color: UIColor, strength: CGFloat = 1) -> [CGColor] {
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
         color.getRed(&r, green: &g, blue: &b, alpha: &a)
-        let core = UIColor(red: r + (1 - r) * 0.45, green: g + (1 - g) * 0.45, blue: b + (1 - b) * 0.45, alpha: 0.95 * strength)
-        return [core.cgColor, color.withAlphaComponent(0.62 * strength).cgColor,
-                color.withAlphaComponent(0.2 * strength).cgColor, color.withAlphaComponent(0).cgColor]
+        let spark = UIColor(red: r + (1 - r) * 0.55, green: g + (1 - g) * 0.55, blue: b + (1 - b) * 0.55, alpha: strength)
+        let core = UIColor(red: r + (1 - r) * 0.18, green: g + (1 - g) * 0.18, blue: b + (1 - b) * 0.18, alpha: strength)
+        return [spark.cgColor, core.cgColor, color.withAlphaComponent(0.55 * strength).cgColor,
+                color.withAlphaComponent(0.3 * strength).cgColor, color.withAlphaComponent(0.1 * strength).cgColor,
+                color.withAlphaComponent(0).cgColor]
     }
 
-    static let glowLocations: [NSNumber] = [0, 0.16, 0.46, 1]
+    /// The core is about an eighth of the light across; the bloom takes the rest.
+    static let glowLocations: [NSNumber] = [0, 0.05, 0.11, 0.24, 0.55, 1]
 
     func arrived() {
         isHere = true
@@ -287,11 +292,12 @@ final class FriendPresence {
         let side = Self.starSide
         star.bounds = CGRect(x: 0, y: 0, width: side, height: side)
         star.path = Sparkle.starPath(in: star.bounds)
-        // `Theme.gold`, spelled out as the fill's sparkles do: the theme is SwiftUI.
-        star.fillColor = UIColor(red: 0.788, green: 0.635, blue: 0.290, alpha: 1).cgColor
-        star.shadowColor = star.fillColor
-        star.shadowOpacity = 0.8
-        star.shadowRadius = 4
+        // A star of light: a pale gold, glowing in `Theme.gold` (spelled out as the fill's
+        // sparkles do: the theme is SwiftUI).
+        star.fillColor = UIColor(red: 1, green: 0.93, blue: 0.74, alpha: 1).cgColor
+        star.shadowColor = UIColor(red: 0.95, green: 0.76, blue: 0.33, alpha: 1).cgColor
+        star.shadowOpacity = 1
+        star.shadowRadius = 7
         star.shadowOffset = .zero
         star.shadowPath = star.path
         star.transform = CATransform3DMakeScale(1 / zoom, 1 / zoom, 1)
@@ -425,7 +431,7 @@ final class FriendPresence {
         layer.startPoint = CGPoint(x: 0.5, y: 0.5)
         layer.endPoint = CGPoint(x: 1, y: 1)
         layer.locations = Self.glowLocations
-        layer.bounds = CGRect(x: 0, y: 0, width: Self.lightSide * 1.3, height: Self.lightSide * 1.3)
+        layer.bounds = CGRect(x: 0, y: 0, width: Self.lightSide, height: Self.lightSide)
         layer.transform = CATransform3DMakeScale(1 / zoom, 1 / zoom, 1)
         layer.opacity = 0
         world.addSublayer(layer)
