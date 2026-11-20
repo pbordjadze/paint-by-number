@@ -25,6 +25,8 @@ final class PaintChromeState {
     /// Since when a finger has been moving or zooming the page (the canvas reports it).
     @ObservationIgnored private var handDownSince: ContinuousClock.Instant?
     @ObservationIgnored private var lastFill: ContinuousClock.Instant?
+    /// The last fill of a friend painting together (Paint Together).
+    @ObservationIgnored private var lastFriendFill: ContinuousClock.Instant?
     @ObservationIgnored private var finishedAt: ContinuousClock.Instant?
     @ObservationIgnored private var singleFills = 0
     @ObservationIgnored private var fillsThisVisit = 0
@@ -40,6 +42,9 @@ final class PaintChromeState {
     private static let handLimit: Duration = .seconds(10)
     /// A fill lands in this long.
     private static let fillSettle: Duration = .milliseconds(900)
+    /// A friend painting together keeps the hints away this long after their last fill: what
+    /// they paint is no moment of this painter's (painting-company row 350).
+    private static let friendSettle: Duration = .seconds(30)
     /// Zen Mode flies to the next area after a fill; after a finished color's shine first.
     private static let zenDrift: Duration = .seconds(3)
     /// The finish: the last fill, the camera's flight to the whole page and its shine.
@@ -65,6 +70,7 @@ final class PaintChromeState {
             if let session, !session.isApplyingFriend, let signal = PaintTips.signal(for: event, isStroking: session.isStroking) {
                 self?.tipSignal(signal)
             }
+            if let session, session.isApplyingFriend, case .painted = event { self?.friendFilled() }
             switch event {
             case let .painted(regions, _):
                 if let session, !session.isStroking, !session.isApplyingFriend { self?.registerUndo(of: regions, in: session) }
@@ -160,6 +166,13 @@ final class PaintChromeState {
         if fillsThisVisit > 0 { PaintTips.donate(TipEvents.sessions, limit: 20) }
     }
 
+    /// A friend painting together filled an area: a hint on screen goes, since the page is busy
+    /// with someone else's hand, and none comes while they paint (`quiet`).
+    private func friendFilled() {
+        lastFriendFill = ContinuousClock.now
+        PaintTips.desk.stopAll()
+    }
+
     private func filled() {
         lastFill = ContinuousClock.now
         // Strokes paint many times a second: set once, so the bar's observers aren't woken each time.
@@ -186,6 +199,9 @@ final class PaintChromeState {
     /// hint is the replay.
     private func pageFinished() {
         finishedAt = ContinuousClock.now
+        // A hint still up from before the last fill (the friend's, painting together) would lie
+        // over the Finished panel.
+        PaintTips.desk.stopAll()
         PaintTips.desk.finished()
         let wait = UIAccessibility.isReduceMotionEnabled ? Duration.milliseconds(1500) : Self.shine + .milliseconds(500)
         afterShine?.cancel()
@@ -230,8 +246,8 @@ final class PaintChromeState {
         PaintTips.desk.offer(ids, in: .bench, rest: rest) { [weak self] in self?.quiet ?? [] }
     }
 
-    /// What keeps the hints away just now (`TipPacing.Quiet`).
-    private var quiet: TipPacing.Quiet {
+    /// What keeps the hints away just now (`TipPacing.Quiet`; internal for tests).
+    var quiet: TipPacing.Quiet {
         guard let session = tipSession else { return [] }
         let now = ContinuousClock.now
         var quiet: TipPacing.Quiet = []
@@ -240,6 +256,7 @@ final class PaintChromeState {
         if let handDownSince, now - handDownSince < Self.handLimit { quiet.insert(.handOnPage) }
         if session.isStroking { quiet.insert(.handOnPage) }
         if let lastFill, now - lastFill < Self.fillSettle { quiet.insert(.filling) }
+        if let lastFriendFill, now - lastFriendFill < Self.friendSettle { quiet.insert(.filling) }
         if let lastFill, session.flowsToNextArea, now - lastFill < Self.zenDrift { quiet.insert(.zenDrifting) }
         if session.replayed != nil { quiet.insert(.replay) }
         if isGivingFeedback { quiet.insert(.feedback) }
