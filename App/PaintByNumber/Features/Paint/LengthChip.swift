@@ -60,14 +60,18 @@ struct LengthChip: View {
                 }
             }
             .font(.subheadline.weight(.medium))
-            // The bar's ink, never the accent: gold is for stars, sparkles and the crescent.
-            .foregroundStyle(.primary)
+            // The bar's ink, never the accent: gold is for stars, sparkles and the crescent. The
+            // color itself: a menu's label is tinted, and `.primary` there is the tint's, which
+            // drew the chip in gold on pale glass (Paint Together's test on an iPad, November 19).
+            .foregroundStyle(Color.primary)
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
             .contentShape(.capsule)
         }
         .disabled(progress != nil)
-        .glassEffect(.regular.interactive(), in: .capsule)
+        // Tinted with the paper, as `Toast` is: the chip hangs over the page, and clear glass
+        // took the cream sheet's light in dark appearance, leaving its white words faint.
+        .glassEffect(.regular.tint(Theme.paper.opacity(0.7)).interactive(), in: .capsule)
         .accessibilityLabel(Text("Painting Length"))
         .accessibilityValue(Text(progress == nil ? accessibilityValue : String(localized: "Cutting again…")))
         .accessibilityHint(Text("Cuts the picture again for a shorter or longer painting"))
