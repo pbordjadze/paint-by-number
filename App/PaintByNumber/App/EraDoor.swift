@@ -265,55 +265,72 @@ struct EraPassage: View {
         let dark = t < Self.cover ? EraWayBack.ease(min(1, t / (Self.cover * 0.8)))
             : max(0, 1 - EraWayBack.ease((t - Self.cover - Self.hold) / Self.lift))
         graphics.fill(Path(CGRect(origin: .zero, size: size)), with: .color(nave.opacity(dark)))
-        // The rose: twelve panes of jewel glass between lead spokes, an oculus in each, round a
-        // gold heart, in a ring of stone; lit through the second half of the cover and the hold,
-        // gone as the dark lifts. Drawn opaque in a layer that fades whole, so no pane shows
-        // through another.
+        // The rose: twelve lancets of jewel glass round a gold heart, on a cobalt ground with a
+        // roundel between each two, in a ring of stone. Every pane is glass lit from behind,
+        // brightest at its middle; the light grows through the cover and the hold, and the dark
+        // lifts with it. Drawn opaque in a layer that fades whole, so no pane shows through another.
         let lit = t < Self.cover * 0.45 ? 0 : t < Self.cover + Self.hold
             ? EraWayBack.ease(min(1, (t - Self.cover * 0.45) / (Self.cover * 0.55)))
             : max(0, 1 - (t - Self.cover - Self.hold) / (Self.lift * 0.6))
         guard lit > 0 else { return }
         let centre = CGPoint(x: size.width / 2, y: size.height / 2)
         let radius = min(size.width, size.height) * 0.32
-        let glasses: [Color] = [
-            Color(red: 0.07, green: 0.17, blue: 0.62), Color(red: 0.62, green: 0.05, blue: 0.15),
-            Color(red: 0.07, green: 0.17, blue: 0.62), Color(red: 0.06, green: 0.42, blue: 0.29),
-        ]
-        let lights: [Color] = [
-            Color(red: 0.86, green: 0.6, blue: 0.13), Color(red: 0.2, green: 0.45, blue: 0.85),
-            Color(red: 0.75, green: 0.12, blue: 0.22), Color(red: 0.86, green: 0.6, blue: 0.13),
-        ]
+        // Each glass as its light middle and its deep edge.
+        let ruby = (Color(red: 0.93, green: 0.25, blue: 0.3), Color(red: 0.42, green: 0.02, blue: 0.09))
+        let cobalt = (Color(red: 0.3, green: 0.5, blue: 0.98), Color(red: 0.04, green: 0.09, blue: 0.4))
+        let emerald = (Color(red: 0.3, green: 0.8, blue: 0.5), Color(red: 0.02, green: 0.25, blue: 0.16))
+        let amber = (Color(red: 1, green: 0.86, blue: 0.45), Color(red: 0.6, green: 0.33, blue: 0.03))
+        let lancets = [ruby, emerald, ruby, amber]
         func circle(_ r: CGFloat, at c: CGPoint = centre) -> Path {
             Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: 2 * r, height: 2 * r))
         }
+        func glass(_ g: (Color, Color), at c: CGPoint, reach: CGFloat) -> GraphicsContext.Shading {
+            .radialGradient(Gradient(colors: [g.0, g.1]), center: c, startRadius: 0, endRadius: reach)
+        }
         var glow = graphics
-        glow.addFilter(.blur(radius: radius * 0.3))
-        glow.fill(circle(radius * 1.15), with: .color(Self.glassGold.opacity(0.16 * lit)))
+        glow.addFilter(.blur(radius: radius * 0.35))
+        glow.fill(circle(radius * 1.2), with: .color(Self.glassGold.opacity(0.22 * lit)))
         graphics.drawLayer { rose in
             rose.opacity = lit
-            let inner = radius * 0.3, outer = radius * 0.92, lead = radius * 0.035
+            let hub = radius * 0.24, outer = radius * 0.94, lead = radius * 0.03
+            let ink = GraphicsContext.Shading.color(nave)
             rose.fill(circle(radius * 1.06), with: .color(Color(red: 0.17, green: 0.16, blue: 0.18)))
             rose.fill(circle(radius), with: .color(nave))
+            rose.fill(circle(outer), with: glass(cobalt, at: centre, reach: outer * 1.1))
             for k in 0..<12 {
-                let a0 = Angle.degrees(Double(k) * 30 - 90), a1 = Angle.degrees(Double(k + 1) * 30 - 90)
-                var pane = Path()
-                pane.addArc(center: centre, radius: outer, startAngle: a0, endAngle: a1, clockwise: false)
-                pane.addArc(center: centre, radius: inner, startAngle: a1, endAngle: a0, clockwise: true)
-                pane.closeSubpath()
-                rose.fill(pane, with: .color(glasses[k % glasses.count]))
-                rose.stroke(pane, with: .color(nave), lineWidth: lead)
-                let mid = (a0.radians + a1.radians) / 2
-                let at = CGPoint(x: centre.x + cos(mid) * radius * 0.63, y: centre.y + sin(mid) * radius * 0.63)
-                let oculus = circle(radius * 0.11, at: at)
-                rose.fill(oculus, with: .color(lights[k % lights.count]))
-                rose.stroke(oculus, with: .color(nave), lineWidth: lead * 0.8)
+                let angle = Double(k) / 12 * 2 * .pi
+                let turn = CGAffineTransform(translationX: centre.x, y: centre.y).rotated(by: angle)
+                // A lancet: from the heart, swelling, to a point at the ring.
+                var lancet = Path()
+                let base = hub * 0.95, tip = outer * 0.97, w = radius * 0.13
+                lancet.move(to: CGPoint(x: -w * 0.35, y: -base))
+                lancet.addCurve(to: CGPoint(x: 0, y: -tip), control1: CGPoint(x: -w * 1.3, y: -radius * 0.55),
+                                control2: CGPoint(x: -w * 0.7, y: -radius * 0.85))
+                lancet.addCurve(to: CGPoint(x: w * 0.35, y: -base), control1: CGPoint(x: w * 0.7, y: -radius * 0.85),
+                                control2: CGPoint(x: w * 1.3, y: -radius * 0.55))
+                lancet.closeSubpath()
+                let pane = lancet.applying(turn)
+                let middle = CGPoint(x: 0, y: -radius * 0.58).applying(turn)
+                rose.fill(pane, with: glass(lancets[k % lancets.count], at: middle, reach: radius * 0.4))
+                rose.stroke(pane, with: ink, lineWidth: lead)
+                // A roundel between this lancet and the next.
+                let at = CGPoint(x: 0, y: -radius * 0.8).applying(
+                    CGAffineTransform(translationX: centre.x, y: centre.y).rotated(by: angle + .pi / 12))
+                let roundel = circle(radius * 0.075, at: at)
+                rose.fill(roundel, with: glass(k.isMultiple(of: 2) ? amber : emerald, at: at, reach: radius * 0.09))
+                rose.stroke(roundel, with: ink, lineWidth: lead * 0.8)
             }
-            rose.stroke(circle(outer), with: .color(nave), lineWidth: lead * 1.4)
-            let heart = circle(inner)
-            rose.fill(heart, with: .color(Self.glassGold))
-            rose.stroke(heart, with: .color(nave), lineWidth: lead * 1.4)
-            rose.fill(circle(inner * 0.32), with: .color(Color(red: 0.62, green: 0.05, blue: 0.15)))
-            rose.stroke(circle(inner * 0.32), with: .color(nave), lineWidth: lead)
+            rose.stroke(circle(outer), with: ink, lineWidth: lead * 1.6)
+            let heart = circle(hub)
+            rose.fill(heart, with: glass(amber, at: centre, reach: hub * 1.1))
+            rose.stroke(heart, with: ink, lineWidth: lead * 1.6)
+            rose.fill(circle(hub * 0.4), with: glass(ruby, at: centre, reach: hub * 0.45))
+            rose.stroke(circle(hub * 0.4), with: ink, lineWidth: lead)
+            // Light from behind, strongest at the heart.
+            var light = rose
+            light.blendMode = .screen
+            light.fill(circle(outer), with: .radialGradient(
+                Gradient(colors: [Color(white: 1).opacity(0.22), .clear]), center: centre, startRadius: 0, endRadius: outer))
         }
     }
 

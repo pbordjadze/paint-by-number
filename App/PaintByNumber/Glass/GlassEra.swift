@@ -206,12 +206,15 @@ struct GlassCard: View {
                     .font(.subheadline)
                     .foregroundStyle(.primary)
                     .lineLimit(2)
-                if !artwork.isComplete {
-                    Text(progress)
-                        .font(.caption.monospacedDigit())
-                        .foregroundStyle(.secondary)
-                        .accessibilityHidden(true)
+                Group {
+                    if artwork.isComplete {
+                        Text("Finished").foregroundStyle(GlassEra.gold)
+                    } else {
+                        Text(progress).foregroundStyle(.secondary)
+                    }
                 }
+                .font(.caption.monospacedDigit())
+                .accessibilityHidden(true)
             }
         }
         .buttonStyle(.plain)

@@ -1,6 +1,7 @@
 /// How the glass of a Stained Glass window looks, pixel by pixel (painting-company row 366): lit
 /// glass brightest deep inside a piece and dimmer against its lead, streaked and seeded like
-/// cathedral glass; unlit glass dull, dark and grainy, with only a hint of its color, so a piece
+/// cathedral glass, light through it even where the glass is dark; unlit glass flat, dark and
+/// matte, with only a hint of its color, so a piece
 /// lights up when it is glazed and what is left to glaze is plain to see. Built once a window
 /// (the depth of every pixel from its lead, the streaks), then any piece is painted into an RGBA
 /// buffer in its own time.
@@ -89,7 +90,7 @@ public struct GlassTexture: Sendable {
                     + Self.noise(fx / 3.5, fy / 3.5, seed: 7 + k) * 0.4
                 shade[i] = 0.72 + 0.36 * t.squareRoot() + (ripple - 0.5) * 0.22
                 depth[i] = t
-                grain[i] = Self.noise(fx / 9 + Float(k), fy / 23, seed: k) * 0.5 + 0.75
+                grain[i] = Self.noise(fx / 9 + Float(k), fy / 23, seed: k) * 0.12 + 0.94
             }
         }
         self.shade = shade
@@ -112,7 +113,8 @@ public struct GlassTexture: Sendable {
     /// Paints piece `r` in `rgb`, lit (glazed) or not, into `pixels` (RGBA, `width` × `height`).
     public func paint(_ r: Int, rgb: SIMD3<Float>, lit: Bool, into pixels: inout [UInt8]) {
         guard r >= 0, r + 1 < start.count, pixels.count >= width * height * 4 else { return }
-        let warm = SIMD3<Float>(14, 12, 8) / 255
+        // Light through the glass, so even a dark glass glows in its middle.
+        let warm = SIMD3<Float>(30, 26, 18) / 255
         let tinted = rgb * Self.unlitTint + Self.unlitBase * (1 - Self.unlitTint)
         pixels.withUnsafeMutableBufferPointer { out in
             for j in start[r]..<start[r + 1] {

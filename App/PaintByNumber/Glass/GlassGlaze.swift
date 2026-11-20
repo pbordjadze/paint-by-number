@@ -293,8 +293,6 @@ struct GlassGlazeView: View {
         let lead = Path(model.lead).applying(toScreen)
         graphics.stroke(lead, with: .color(GlassPicture.color(GlassPicture.lead, space: .sRGB)),
                         style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))
-        graphics.stroke(lead, with: .color(.white.opacity(0.08)),
-                        style: StrokeStyle(lineWidth: max(1, width * 0.22), lineCap: .round, lineJoin: .round))
     }
 
     /// The sun passing behind the finished window: a band of light crossing it once, corner to
@@ -310,14 +308,14 @@ struct GlassGlazeView: View {
         // The band's front is the line x + 0.6 y = front (from the window's corner), crossing
         // from before the top-left corner to past the bottom-right one.
         let rect = fit.rect
-        let band = rect.width * 0.35
+        let band = rect.width * 0.6
         let depth = band * 1.36 // the band's own breadth along that measure
         let front = -depth + (rect.width + rect.height * 0.6 + depth) * t
         let start = CGPoint(x: rect.minX + front, y: rect.minY), end = CGPoint(x: rect.minX + front + band, y: rect.minY + band * 0.6)
         let strength = sin(.pi * t)
         sun.fill(Path(rect), with: .linearGradient(
             Gradient(stops: [
-                .init(color: .clear, location: 0), .init(color: Color(red: 1, green: 0.95, blue: 0.8).opacity(0.5 * strength), location: 0.5),
+                .init(color: .clear, location: 0), .init(color: Color(red: 1, green: 0.95, blue: 0.8).opacity(0.42 * strength), location: 0.5),
                 .init(color: .clear, location: 1),
             ]), startPoint: start, endPoint: end))
     }
@@ -368,6 +366,10 @@ struct GlassGlazeView: View {
             ScrollView(.horizontal) {
                 HStack(spacing: 14) {
                     ForEach(model.offered.indices, id: \.self) { g in
+                        // The window's own glasses, then a breath, then the glazier's classics.
+                        if g == model.template.palette.count && g > 0 {
+                            Color.clear.frame(width: 10, height: 1).accessibilityHidden(true)
+                        }
                         bead(g)
                     }
                 }

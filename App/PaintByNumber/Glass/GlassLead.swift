@@ -192,13 +192,18 @@ struct GlassLeadView: View {
                     }
                 }
                 .accessibilityIdentifier("glass-lead-photo")
-                Spacer()
+            }
+            ToolbarSpacer(.flexible, placement: .bottomBar)
+            ToolbarItem(placement: .bottomBar) {
                 Text(piecesText)
                     .font(.subheadline.monospacedDigit())
                     .foregroundStyle(.secondary)
                     .contentTransition(.numericText())
                     .accessibilityHidden(true)
-                Spacer()
+            }
+            .sharedBackgroundVisibility(.hidden)
+            ToolbarSpacer(.flexible, placement: .bottomBar)
+            ToolbarItem(placement: .bottomBar) {
                 Button {
                     Task {
                         if let window = await model.make() { onStart(window) }
@@ -244,8 +249,6 @@ struct GlassLeadView: View {
         }
         let ink = GlassPicture.color(GlassPicture.lead, space: .sRGB)
         graphics.stroke(lead, with: .color(ink), style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))
-        // A glint along the lead, as on rubbed lead came.
-        graphics.stroke(lead, with: .color(.white.opacity(0.18)), style: StrokeStyle(lineWidth: max(1, width * 0.22), lineCap: .round, lineJoin: .round))
     }
 
     private func lead(fit: GlassFit) -> some Gesture {
