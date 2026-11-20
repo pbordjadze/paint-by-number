@@ -92,4 +92,17 @@ struct PaintTogetherTests {
         pair.engineA.receive(Data([1, 2, 3]))
         #expect(pair.painted.0.isEmpty)
     }
+
+    /// A friend's fills are no moment of this painter's: while they paint, no hint may speak
+    /// (a Paint Several Areas tip sat over a joiner's canvas, November 19).
+    @Test func aFriendsFillsKeepTheHintsAway() {
+        let pair = Pair()
+        let chrome = PaintChromeState()
+        chrome.observe(pair.a)
+        #expect(!chrome.quiet.contains(.filling))
+        pair.b.paint([3], from: .zero, animated: false)
+        pair.flush(); pair.deliver()
+        #expect(chrome.quiet.contains(.filling))
+        chrome.close()
+    }
 }
