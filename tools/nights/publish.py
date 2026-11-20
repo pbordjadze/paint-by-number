@@ -16,7 +16,8 @@ painters for the 24 hours before it closes at D-1 08:00 UTC, which is before D b
 Earth (UTC+14 begins D at D-1 10:00 UTC). The relay counts the votes (feedback-relay/worker.js,
 GET /v1/ballots/<D>); the most votes win, a tie or no vote at all goes to the earliest choice. A
 picture is used once: the losers go back to the pool, so a later ballot can offer them again.
-The first run seeds the 30 nights before today straight from the pool, so Earlier Nights starts full.
+The first run seeds tonight and the six nights before it straight from the pool, so Earlier Nights
+starts with a week.
 
 Writes into STATE_DIR:
   nights.json   {"format": 1, "generated", "pictures": {id: record}, "nights": [{"date", "picture"}],
@@ -44,6 +45,9 @@ from PIL import Image, ImageOps
 UA = "PaintByMoonlight-nights/1.0 (open-access pictures)"
 CLOSE_HOUR = 8
 WINDOW_DAYS = 31
+# The nights the first run decides straight from the pool, up to tonight: a week of Earlier
+# Nights, without spending a month of the pool at once.
+SEED_DAYS = 7
 BALLOTS_AHEAD = 3
 LONG_EDGE, THUMB_EDGE = 2048, 640
 
@@ -72,11 +76,15 @@ def get(url, tries=6):
 
 
 def tally(relay, night):
-    """The votes for night D's ballot, {picture id: count}; {} without a relay or an answer."""
+    """The votes for night D's ballot, {picture id: count}; {} without a relay or an answer.
+
+    Asked for about four minutes before giving up: the night must be decided on this run, since
+    it begins in UTC+14 two hours after its ballot closes, so a relay that never answers leaves
+    the ballot to its first choice (and says so in the log)."""
     if not relay:
         return {}
     try:
-        body, _ = get(f"{relay.rstrip('/')}/v1/ballots/{night.isoformat()}", tries=3)
+        body, _ = get(f"{relay.rstrip('/')}/v1/ballots/{night.isoformat()}", tries=7)
         return json.loads(body).get("votes", {}) if body else {}
     except Exception as e:
         print(f"tally for {night}: {e}", file=sys.stderr)
@@ -128,9 +136,25 @@ def main():
     def offered():
         return {c for b in ballots for c in b["choices"]}
 
+    unusable = set()
+
     def take(n):
+        """The next n pictures of the pool not used or on a ballot, each prepared now: one whose
+        museum doesn't answer is passed over (and tried again on a later run), so a single outage
+        never holds up the night."""
         busy = used | offered()
-        picks = [r["id"] for r in pool if r["id"] not in busy][:n]
+        picks = []
+        for r in pool:
+            if len(picks) == n:
+                break
+            if r["id"] in busy or r["id"] in unusable:
+                continue
+            try:
+                prepare(r, state)
+                picks.append(r["id"])
+            except Exception as e:
+                print(f"passing over {r['id']}: {e}", file=sys.stderr)
+                unusable.add(r["id"])
         if len(picks) < n:
             raise SystemExit("the pool has run out: add pictures to pool.json")
         return picks
@@ -140,7 +164,7 @@ def main():
         used.add(picture)
 
     if not history:
-        for back in range(WINDOW_DAYS - 1, -1, -1):
+        for back in range(SEED_DAYS - 1, -1, -1):
             decide(today - dt.timedelta(days=back), take(1)[0])
 
     # Close the ballots whose time has come, oldest first.
@@ -173,7 +197,7 @@ def main():
                         "closes": iso(close), "choices": take(3)})
     ballots.sort(key=lambda b: b["night"])
 
-    first = today - dt.timedelta(days=WINDOW_DAYS)
+    first = today - dt.timedelta(days=WINDOW_DAYS - 1)
     window = [h for h in history if dt.date.fromisoformat(h["date"]) >= first]
     needed = {h["picture"] for h in window} | offered()
     pictures = {}

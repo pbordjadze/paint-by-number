@@ -15,7 +15,8 @@ import os
 /// Application Support/Nights; everything else reads what is on disk, so a painter offline keeps
 /// what came before, and with nothing at all Tonight's Picture is the bundled library's turn
 /// (`Sample.tonight`). The schedule is read as hostile input: a record it can't vouch for is
-/// dropped, and a picture is kept only when its checksum is the schedule's.
+/// dropped, and a full picture is kept only when its checksum is the schedule's (a thumbnail,
+/// from the same place, only shows on a tile).
 ///
 /// A vote is a night, a choice and nothing else (`vote(_:on:)`): the relay counts it
 /// (`feedback-relay/votes.js`), and this device remembers it, so a ballot takes one vote.
@@ -152,7 +153,9 @@ nonisolated final class Nights: Sendable {
     /// Records the painter's choice on `ballot` and sends it to the relay: once a ballot, and a
     /// vote lost on the way costs nothing but itself.
     func vote(_ choice: String, on ballot: Ballot) {
-        guard ballot.choices.contains(choice), self.choice(for: ballot.night) == nil else { return }
+        let now = Date.now
+        guard ballot.choices.contains(choice), ballot.opens <= now, now < ballot.closes, self.choice(for: ballot.night) == nil
+        else { return }
         var votes = (UserDefaults.standard.dictionary(forKey: Self.votesKey) as? [String: String]) ?? [:]
         votes[ballot.night] = choice
         // A month of votes is all "Your pick" ever looks back on.

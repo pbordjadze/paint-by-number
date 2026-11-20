@@ -47,8 +47,13 @@ REFUSED = [
     r"vanitas", r"ghosts?", r"demons?", r"devil", r"hell", r"shipwreck", r"wreck", r"fire", r"storm",
     r"kabuki", r"actors?", r"courtesans?", r"geisha", r"shunga", r"erotic\w*", r"lovers",
     r"slaves?", r"slavery",
+    # From the first eye pass (Cleveland, November 20): what the words above let through.
+    r"trinity", r"archangels?", r"triptych", r"altarpiece", r"sacrifice", r"church(es)?", r"cathedral", r"samaritan",
+    r"mystica", r"monks?", r"monastery", r"worship\w*", r"puja", r"putti", r"putto", r"siege", r"combat", r"hunters?",
+    r"dragoons?", r"cavalry", r"isaac", r"prophets?",
 ]
-REFUSED_RE = re.compile(r"\b(" + "|".join(REFUSED) + r")\b", re.IGNORECASE)
+# "St." ends on a stop, which `\b` can't follow: it gets its own pattern.
+REFUSED_RE = re.compile(r"\b(" + "|".join(w for w in REFUSED if w != r"st\.") + r")\b|\bst\.", re.IGNORECASE)
 
 
 def fetch(url, tries=8, pause=1.5, data=None):

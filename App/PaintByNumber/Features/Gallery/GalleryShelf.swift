@@ -12,7 +12,8 @@ import SwiftUI
 /// In SideStore and Debug builds, once the museums' schedule is on the device (`Nights`), the
 /// shelf keeps to one night: tonight's picture while the gallery doesn't hold it, and, once its
 /// painting is finished, the vote for a coming night's (`NightsBallotTile`, the mock's round 2:
-/// one time frame on the shelf), until the painter has chosen.
+/// one time frame on the shelf), until the painter has chosen; after that, while the gallery is
+/// small, the earlier nights it doesn't hold.
 struct GalleryShelf: View {
     /// The library pictures the gallery holds (`Artwork.sampleName`), offered no more.
     let held: Set<String>
@@ -50,7 +51,12 @@ struct GalleryShelf: View {
     private func nightsShelf(_ tonight: Sample) -> some View {
         let ballot = finished.contains(tonight.id) ? Nights.shared.openBallot() : nil
         let votable = ballot.flatMap { Nights.shared.choice(for: $0.night) == nil ? $0 : nil }
-        if !held.contains(tonight.id) || votable != nil {
+        // Tonight's held and nothing to vote on: the nights the gallery doesn't hold yet, as the
+        // library's shelf offers them, while there is room.
+        let earlier = held.contains(tonight.id) && votable == nil && hasRoom
+            ? Array(Nights.shared.earlierNights(before: .now).map(\.sample).filter { !held.contains($0.id) }.prefix(max(1, columns.count)))
+            : []
+        if !held.contains(tonight.id) || votable != nil || !earlier.isEmpty {
             VStack(alignment: .leading, spacing: 16) {
                 if let votable {
                     Text(NightsBallotSheet.heading(for: votable))
@@ -61,6 +67,18 @@ struct GalleryShelf: View {
                         Button { voting = votable } label: { NightsBallotTile(ballot: votable) }
                             .buttonStyle(PressableCardStyle())
                             .accessibilityIdentifier("gallery-vote")
+                    }
+                } else if !earlier.isEmpty {
+                    Text("Earlier Nights")
+                        .font(.display(.title2))
+                        .padding(.horizontal, 4)
+                        .accessibilityAddTraits(.isHeader)
+                    LazyVGrid(columns: columns, alignment: .leading, spacing: rowSpacing) {
+                        ForEach(earlier) { sample in
+                            Button { onPaint(sample) } label: { SampleTile(sample: sample) }
+                                .buttonStyle(PressableCardStyle())
+                                .accessibilityIdentifier("gallery-night")
+                        }
                     }
                 } else {
                     Text("Tonight’s Picture")

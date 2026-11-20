@@ -11,7 +11,7 @@
 //                           can't be read.
 //   GET  /v1/ballots/<date> {"night", "votes": {"<picture id>": n}} once the ballot has closed, for
 //                           the Nights workflow's tally (tools/nights/publish.py); 409 while open,
-//                           404 a date with no ballot in the schedule's window.
+//                           404 a malformed date or one closed more than 40 days ago.
 //
 // No painter is identified: a vote is a night, a choice and a count. The app keeps one vote a
 // ballot itself; the relay brakes floods per address (VOTE_LIMITER, wrangler.toml) and never
@@ -46,8 +46,8 @@ async function vote(request, env, now, deps) {
   if (!/^application\/json\b/i.test(request.headers.get("content-type") ?? "")) return bare(415);
   const length = request.headers.get("content-length");
   if (length !== null && Number(length) > MAX_VOTE) return bare(413);
-  const text = await request.text();
-  if (text.length > MAX_VOTE) return bare(413);
+  const text = await readCapped(request, MAX_VOTE);
+  if (text === null) return bare(413);
   let body;
   try {
     body = JSON.parse(text);
@@ -79,12 +79,39 @@ async function ballot(night, env, now, deps) {
   const closes = Date.parse(`${night}T08:00:00Z`) - 24 * 3600 * 1000;
   if (Number.isNaN(closes)) return bare(404);
   if (now.getTime() < closes) return bare(409);
+  // Only the nights a schedule could have held: the last 40 days.
+  if (now.getTime() - closes > 40 * 24 * 3600 * 1000) return bare(404);
   const votes = await (await stub(env, night).fetch("https://ballot/counts")).json();
   return json(200, { night, votes });
 }
 
 function stub(env, night) {
   return env.BALLOTS.get(env.BALLOTS.idFromName(night));
+}
+
+/** The body as text, or null once it passes `limit` bytes (read no further, chunked or not). */
+async function readCapped(request, limit) {
+  if (!request.body) return "";
+  const reader = request.body.getReader();
+  const chunks = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > limit) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(size);
+  let at = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, at);
+    at += chunk.byteLength;
+  }
+  return new TextDecoder().decode(bytes);
 }
 
 let cached = null;

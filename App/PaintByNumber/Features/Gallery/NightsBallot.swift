@@ -138,7 +138,7 @@ struct NightsBallotSheet: View {
     }
 
     private func choose(_ id: String) {
-        guard chosen == nil else { return }
+        guard chosen == nil, Date.now < ballot.closes else { return dismiss() }
         withAnimation(reduceMotion ? nil : .easeOut(duration: 0.25)) { chosen = id }
         AccessibilityNotification.Announcement(String(localized: "Chosen")).post()
         let ballot = ballot

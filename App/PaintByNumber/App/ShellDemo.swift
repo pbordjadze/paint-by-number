@@ -389,6 +389,8 @@ enum ShellDemo: Equatable {
                     DemoMode.markReady()
                 }
             })
+            #else
+            break
             #endif
         case .galleryPreparing:
             // The first launch's pages before they are made: nothing is made, the placeholders stay.

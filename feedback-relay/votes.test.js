@@ -95,6 +95,21 @@ test("methods and paths", async () => {
   assert.equal((await handle(new Request("https://relay.test/v1/votes"), env, deps())).status, 405);
   assert.equal((await handle(new Request("https://relay.test/v1/ballots/2026-11-22", { method: "POST" }), env, deps())).status, 405);
   assert.equal((await tally("nonsense", OPEN)).status, 404);
+  // A night long past is no ballot a schedule held: no object is made for it.
+  assert.equal((await tally("2001-01-01", OPEN)).status, 404);
+});
+
+test("a body past its limit is refused without a length to go by", async () => {
+  const chunked = new ReadableStream({
+    start(controller) {
+      for (let i = 0; i < 4; i += 1) controller.enqueue(new TextEncoder().encode("x".repeat(400)));
+      controller.close();
+    },
+  });
+  const request = new Request("https://relay.test/v1/votes", {
+    method: "POST", headers: { "content-type": "application/json" }, body: chunked, duplex: "half",
+  });
+  assert.equal((await handle(request, env, deps())).status, 413);
 });
 
 test("the rate limiter turns a flood away", async () => {
