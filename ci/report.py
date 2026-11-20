@@ -230,7 +230,7 @@ def main(argv):
         if job == "core":
             for label, path in (
                 ("regression", "regression/regression.txt"), ("strings", "strings-check.log"),
-                ("budget", "design-budget.log"),
+                ("budget", "design-budget.log"), ("developer site", "capabilities.log"),
             ):
                 last = last_line(os.path.join(job_dir, path))
                 if last:
