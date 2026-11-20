@@ -48,6 +48,7 @@ struct LengthChip: View {
             HStack(spacing: 8) {
                 if let progress {
                     ProgressView(value: progress)
+                        .tint(Color.primary)
                         .frame(width: 44)
                     Text("Cutting again…")
                 } else {
