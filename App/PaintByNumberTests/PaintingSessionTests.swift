@@ -687,6 +687,17 @@ struct PaintingSessionTests {
         #expect(PaletteBar.visibleColors(session).contains(4))
     }
 
+    /// With nothing in hand, a tap on an area paints nothing and shakes that area's swatch.
+    @Test func aTapWithNothingInHandShakesItsSwatch() {
+        let stripes = Fixtures.stripes(count: 3, stripeWidth: 20, height: 40)
+        let session = PaintingSession(template: stripes)
+        session.select(color: nil)
+        let events = recordEvents(session)
+        #expect(session.tap(at: SIMD2(30, 20), tolerance: 10) == .rejected(region: 1, expectedColor: 1))
+        #expect(events() == [.rejected(region: 1, expectedColor: 1)])
+        #expect(!session.isPainted(1))
+    }
+
     @Test func hintWithNothingLeftStaysQuiet() {
         let session = PaintingSession(template: template)
         session.autoAdvance = false

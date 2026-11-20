@@ -28,7 +28,8 @@ enum PencilAction {
     ) {
         switch self {
         case .tap:
-            if let current = session.selectedColor, let next = session.nextIncompleteColor(after: current) {
+            // With nothing in hand (a finished color put down) it takes the first color left.
+            if let next = session.nextIncompleteColor(after: session.selectedColor) {
                 session.select(color: next)
                 feedback.selectionChanged()
             }
