@@ -172,6 +172,18 @@ struct PaintTogetherTests {
         #expect(!pair.a.together.holdsHand)
     }
 
+    /// A paint put down (a finished color, without Advance to Next Color) is not the hand.
+    @Test func aPaintPutDownIsNotTheHand() {
+        let pair = met()
+        let spy = CanvasSpy()
+        pair.b.together.canvas = spy
+        pair.a.select(color: 1)
+        pair.a.select(color: nil)
+        pair.deliver()
+        #expect(spy.moves.last?.color == TogetherChannel.noPaint)
+        #expect(pair.b.together.friendColor == nil)
+    }
+
     @Test func ripplesAndStarsShowOnBothScreens() {
         let pair = met()
         let mine = CanvasSpy(), theirs = CanvasSpy()

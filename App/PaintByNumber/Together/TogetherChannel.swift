@@ -31,6 +31,9 @@ final class TogetherChannel {
 
     /// The colour a presence message gives the hand.
     nonisolated static let handColor = -1
+    /// The colour a presence message gives nothing in hand (a finished color put down): not
+    /// the hand, which is a choice to keep company.
+    nonisolated static let noPaint = -2
     /// Presence goes out at most this often; the last point always does (`flushPresence`).
     static let presenceInterval: Duration = .milliseconds(50)
 
@@ -46,7 +49,7 @@ final class TogetherChannel {
     func touched(_ point: SIMD2<Float>?, color: Int?) {
         if let point { lastTouch = point }
         guard isTogether else { return }
-        let held = holdsHand ? Self.handColor : (color ?? Self.handColor)
+        let held = holdsHand ? Self.handColor : (color ?? Self.noPaint)
         pendingPresence = (point, held)
         reportedColor = held
         guard presenceTask == nil else { return }
@@ -62,7 +65,7 @@ final class TogetherChannel {
     /// The painter picked a paint (or the hand): the friend's palette glows on it, finger or not.
     func held(_ color: Int?) {
         guard isTogether else { return }
-        let held = holdsHand ? Self.handColor : (color ?? Self.handColor)
+        let held = holdsHand ? Self.handColor : (color ?? Self.noPaint)
         guard held != reportedColor else { return }
         reportedColor = held
         send?(.presence(point: nil, color: Int32(held)))
@@ -107,11 +110,12 @@ final class TogetherChannel {
     }
 
     /// A presence message: the friend's finger at `point` (nil: lifted, or only a change of
-    /// paint), holding `color`. A color the painting doesn't have is taken as the hand.
+    /// paint), holding `color`. A color the painting doesn't have is taken as the hand, but for
+    /// `noPaint`.
     func friendMoved(to point: SIMD2<Float>?, color: Int, paletteCount: Int) {
         friendArrived()
-        let held = (0..<paletteCount).contains(color) ? color : Self.handColor
-        let paint: Int? = held == Self.handColor ? nil : held
+        let held = (0..<paletteCount).contains(color) || color == Self.noPaint ? color : Self.handColor
+        let paint: Int? = held < 0 ? nil : held
         if friendColor != paint { friendColor = paint }
         canvas?.friendMoved(to: point, color: held)
     }
@@ -133,7 +137,7 @@ protocol TogetherCanvas: AnyObject {
     func friendArrived()
     func friendLeft()
     /// The friend's light moves to `point` (nil: their finger lifted, and it rests where it was)
-    /// in the paint `color` (`TogetherChannel.handColor`: the hand).
+    /// in the paint `color` (`TogetherChannel.handColor`: the hand; `noPaint`: nothing in hand).
     func friendMoved(to point: SIMD2<Float>?, color: Int)
     func showRipple(at point: SIMD2<Float>, fromFriend: Bool)
     func showStar(from point: SIMD2<Float>, fromFriend: Bool)

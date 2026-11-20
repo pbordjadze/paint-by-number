@@ -2203,6 +2203,10 @@ extension CanvasView: TogetherCanvas {
     /// paint itself, deepened on light paper where a pale one would vanish into it.
     private func lightColor(_ color: Int) -> UIColor {
         let dark = canvasPalette.accentFloor > 0
+        if color == TogetherChannel.noPaint {
+            // Nothing in hand: a quiet light in the sheet's ink.
+            return dark ? UIColor(white: 0.85, alpha: 1) : UIColor(white: 0.35, alpha: 1)
+        }
         guard template.palette.indices.contains(color) else {
             // The hand: warm white by night, gold by day.
             return dark ? UIColor(red: 1, green: 0.9, blue: 0.72, alpha: 1) : UIColor(red: 0.79, green: 0.64, blue: 0.29, alpha: 1)
