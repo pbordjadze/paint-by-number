@@ -1,0 +1,8 @@
+SELECT DISTINCT ?p ?name ?mLabel WHERE {
+  ?p wdt:P135 ?m ; wdt:P570 ?d .
+  FILTER(YEAR(?d) < 1960)
+  ?p wdt:P106 ?occ . VALUES ?occ { wd:Q1028181 wd:Q1281618 wd:Q11569986 wd:Q644687 wd:Q15296811 wd:Q3391743 wd:Q329439 wd:Q10862983 wd:Q1925963 wd:Q627325 }
+  { ?p rdfs:label ?name } UNION { ?p skos:altLabel ?name }
+  FILTER(LANG(?name) = "en")
+  ?m rdfs:label ?mLabel . FILTER(LANG(?mLabel) = "en")
+}

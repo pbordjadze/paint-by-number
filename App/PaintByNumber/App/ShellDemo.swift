@@ -102,6 +102,10 @@ import PaintCore
 ///   "Open in Paint by Moonlight" does with a `.moonlight` file: The Great Wave refined as in
 ///   `create-refine`, sent with its photo as Send Template… makes it (`sentPaintingFile`), added
 ///   to the empty library and opened, blank.
+/// - `museum`, `museum-dark`: the Paint page's Museum (SideStore and Debug builds), Most Colorful
+///   first; `museum-art-nouveau` its Art Nouveau; `museum-work`, `museum-work-dark` the first
+///   Ukiyo-e work's page. Ready once the pictures in view have come (`MuseumView`): they come from
+///   the museums' servers.
 /// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.
 /// - `gallery-timelapse`: a finished painting's time-lapse being made (progress sheet).
 /// - `gallery-long-text`, `gallery-timelapse-long-text`, `settings-long-text`: the fixed
@@ -115,7 +119,7 @@ enum ShellDemo: Equatable {
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createRefineCard, createRefineLayers, createRefineSelect, createRefineGuide, createRefineGuideWriting,
          createSuggested,
          createCustom, createForming, createFormingDrawing, createFormingLines, createFormingPage, createFromFile, createDrawing, createUnlock, createRefineUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
-         settings, settingsLongText, settingsAcknowledgements, settingsClock
+         settings, settingsLongText, settingsAcknowledgements, settingsClock, museum
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -138,6 +142,7 @@ enum ShellDemo: Equatable {
         case "gallery-timelapse-long-text": .galleryTimelapseLongText
         case "create": .create
         case "create-samples", "create-samples-long-text": .createSamples
+        case "museum", "museum-dark", "museum-art-nouveau", "museum-work", "museum-work-dark": .museum
         case "create-samples-paintings": .createSamplesPaintings
         case "create-samples-photographs": .createSamplesPhotographs
         case "create-preview", "create-preview-dark": .createPreview
@@ -218,6 +223,7 @@ enum ShellDemo: Equatable {
         self == .create || opensSamples || self == .createPreview || self == .createLineArt || self == .createRefine
             || opensColors || opensCard || opensLayers || selectsCell || opensGuide != nil || self == .createSuggested || self == .createCustom
             || self == .createTip || self == .createDrawing || self == .createRefineUnlock || formingHold != nil
+            || self == .museum
     }
 
     /// Where a `create-forming` scenario holds the picture forming.
@@ -436,7 +442,7 @@ enum ShellDemo: Equatable {
              .createFromFile, .createDrawing, .createUnlock, .createRefineUnlock, .galleryReceived, .galleryEmpty, .settings,
              .settingsTips, .settingsLongText, .settingsAcknowledgements:
             break
-        case .settingsClock:
+        case .settingsClock, .museum:
             break
         }
     }
