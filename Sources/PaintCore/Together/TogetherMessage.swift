@@ -11,7 +11,7 @@ import Foundation
 ///   hello     UInt64 painter, UInt8 version
 ///   ops       point?, UInt32 count, count × op
 ///   snapshot  UInt32 count, count × op
-///   presence  point?, Int32 color (a paint's index, -1 the hand)
+///   presence  point?, Int32 color (a paint's index, -1 the hand, -2 nothing in hand)
 ///   ripple    Float32 x, Float32 y
 ///   star      Float32 x, Float32 y
 ///   finish    UInt64 clock
@@ -123,7 +123,7 @@ public enum TogetherMessage: Sendable, Equatable {
         case .presence:
             let point = try r.point()
             let color = Int32(bitPattern: try r.u32())
-            guard color >= -1 else { throw DecodingError.malformed }
+            guard color >= -2 else { throw DecodingError.malformed }
             self = .presence(point: point, color: color)
         case .ripple:
             self = .ripple(point: SIMD2(try r.f32(), try r.f32()))

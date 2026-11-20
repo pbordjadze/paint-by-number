@@ -195,6 +195,20 @@ below name both alike.
   undo takes back the painter's own areas (`PaintingSession.unpaint`). The App Store's build
   carries the group-session entitlement (`Config/AppStore.entitlements`, signed in by
   `testflight.yml`; SideStore's doesn't) and `NSSupportsGroupActivities`; `PaintTogetherTests`.
+  What it carries besides the fills is SideStore's and Debug's (`#if UNRELEASED`, until Paul has
+  tried it): `TogetherChannel`, one per `PaintingSession` (`session.together`), sends the
+  painter's finger and the paint in it (presence, at most every 50 ms), the hand's ripples and
+  stars, and knows who painted what (`friendsAreas`, from the engine's ledger); the canvas shows
+  the friend through `TogetherCanvas` with `FriendPresence` (Core Animation layers in the
+  scroll view's zooming view, so nothing costs the main thread a frame: their light in their
+  paint, the edge glow toward them out of view, a button VoiceOver offers, ripples, stars, the
+  finale's lights). The palette shows the hand first and the friend's paint glowing
+  (`PaletteTogether`, plain values from `PaintView`); the hand puts the paint down
+  (`select(color: nil)`), so a tap or stroke paints nothing and becomes a ripple or a star. The
+  last area painted together plays the shared finale instead of the finish
+  (`CanvasView.startsTogetherFinale`: the replay with a light per painter, then the usual
+  finish). GroupActivities gives no names, so no name shows. `paint-together` (with `-dark`),
+  `-edge`, `-hand` and `-finale` are its screenshots.
 - `App/Config/Info.plist` holds what the generated plist can't express: the image document type, the
   scene manifest, ProMotion on iPhone, and the launch screen's `Paper` color (a white launch screen
   flashed before the gallery's paper; `ci/check_release.sh` checks it).
