@@ -39,7 +39,6 @@ struct SetInStoneSheet: View {
     let request: SetInStoneRequest
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var face = TileSize.standard.face
     @State private var book: StoneBook?
     @State private var page = 1
@@ -58,16 +57,19 @@ struct SetInStoneSheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    preview
-                        .listRowBackground(Color.clear)
-                        .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
-                }
-                Section {
-                    tilePicker
-                }
+            // Not a Form: the page takes every point the picker and Print leave it, which a list's row
+            // can't be given.
+            VStack(spacing: 16) {
+                preview
+                tilePicker
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                    .background(Color(uiColor: .secondarySystemGroupedBackground), in: .rect(cornerRadius: 26))
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 8)
+            .padding(.bottom, 12)
+            .background { Color(uiColor: .systemGroupedBackground).ignoresSafeArea() }
             .navigationTitle(String(localized: "stone.title", defaultValue: "Set in Stone", bundle: .ravenna,
                                     comment: "Set in Stone's sheet: its title (a book for setting the mosaic in real stone)"))
             .navigationBarTitleDisplayMode(.inline)
@@ -109,8 +111,7 @@ struct SetInStoneSheet: View {
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            // The page as large as the sheet has room for beside the picker and Print.
-            .containerRelativeFrame(.vertical) { height, _ in height * (sizeClass == .regular ? 0.72 : 0.55) }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .overlay { if book == nil { ProgressView() } }
             .id(face)
             Text(caption)
@@ -146,10 +147,14 @@ struct SetInStoneSheet: View {
             .fixedSize()
             .accessibilityIdentifier("stone-tiles")
         } label: {
-            Text(String(localized: "stone.tiles", defaultValue: "Tiles", bundle: .ravenna,
-                        comment: "Set in Stone's one choice: how big each tile of the mosaic is"))
-            if let book {
-                Text(Self.size(book.widthMM / 10, book.heightMM / 10))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(String(localized: "stone.tiles", defaultValue: "Tiles", bundle: .ravenna,
+                            comment: "Set in Stone's one choice: how big each tile of the mosaic is"))
+                if let book {
+                    Text(Self.size(book.widthMM / 10, book.heightMM / 10))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
     }
