@@ -59,15 +59,10 @@ struct GalleryShelf: View {
         if !held.contains(tonight.id) || votable != nil || !earlier.isEmpty {
             VStack(alignment: .leading, spacing: 16) {
                 if let votable {
-                    Text(NightsBallotSheet.heading(for: votable))
-                        .font(.display(.title2))
-                        .padding(.horizontal, 4)
-                        .accessibilityAddTraits(.isHeader)
-                    LazyVGrid(columns: columns, alignment: .leading, spacing: rowSpacing) {
-                        Button { voting = votable } label: { NightsBallotTile(ballot: votable) }
-                            .buttonStyle(PressableCardStyle())
-                            .accessibilityIdentifier("gallery-vote")
-                    }
+                    // No heading of its own: the invitation names its night.
+                    Button { voting = votable } label: { NightsBallotTile(ballot: votable) }
+                        .buttonStyle(PressableCardStyle())
+                        .accessibilityIdentifier("gallery-vote")
                 } else if !earlier.isEmpty {
                     Text("Earlier Nights")
                         .font(.display(.title2))
@@ -95,6 +90,8 @@ struct GalleryShelf: View {
                 if hasRoom {
                     Button("More to Paint", systemImage: "plus", action: onMore)
                         .buttonStyle(.glass)
+                        // Apart from the vote above it, which it isn't part of.
+                        .padding(.top, votable == nil ? 0 : 12)
                         .accessibilityHint(Text("Opens the Paint page: your own photos, a blank page and the earlier nights"))
                         .accessibilityIdentifier("gallery-more-to-paint")
                 }
