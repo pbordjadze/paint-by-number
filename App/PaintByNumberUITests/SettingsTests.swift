@@ -273,26 +273,66 @@ final class SettingsTests: XCTestCase {
         attachScreenshot(of: app, named: "back-in-the-present")
     }
 
-    /// Flicks the year setter's one wheel to a year at either end of it (0547, the present), as a
-    /// painter does: `adjust(toPickerWheelValue:)` left the wheel reading the present on the way
-    /// back with no selection made, so the era never changed (CI, November 6).
+    /// Flicks the year setter's one wheel to `year`, as a painter does:
+    /// `adjust(toPickerWheelValue:)` left the wheel reading the present on the way back with no
+    /// selection made, so the era never changed (CI, November 6). The present is the wheel's end,
+    /// so flicks toward it can't pass it. In the release 0547 is the other end; in SideStore and
+    /// Debug builds the wheel reaches back to 0001, and an era's year is found as a painter finds
+    /// it: flicked near, and the wheel draws itself on to it (`EraClock.pulled`). Once there the
+    /// era changes and the wheel goes, so it is read only while it is there; the caller checks
+    /// the era it opened.
     @MainActor
     private func roll(_ wheels: XCUIElementQuery, to year: Int) {
         // The setter's row can be in the tree a moment before its wheel is.
         XCTAssertTrue(wheels.firstMatch.waitForExistence(timeout: 10), "The year setter has no wheel")
         XCTAssertEqual(wheels.count, 1, "The year setter has \(wheels.count) wheels")
-        // Both years are the wheel's ends, so flicks toward one can't pass it. Once there the era
-        // changes and the wheel goes, so it is only counted (a count of nothing fails nothing),
-        // never read; the caller checks the era it opened.
-        let reached = wheels.matching(NSPredicate(format: "value == %@", String(format: "%04d", year)))
-        let back = year == 547
+        let present = Calendar(identifier: .gregorian).component(.year, from: .now)
         // A flick returns while the wheel still turns, and the year counts once it has rested
         // (`EraClock.rest`, 0.7 s): each flick waits for the wheel to go before the next.
-        for _ in 0..<6 where wheels.count > 0 && reached.count == 0 {
-            if back { wheels.firstMatch.swipeDown(velocity: .fast) } else { wheels.firstMatch.swipeUp(velocity: .fast) }
+        for _ in 0..<24 where wheels.count > 0 {
+            guard let shown = (wheels.firstMatch.value as? String).flatMap({ Int($0.prefix(4)) }) else { break }
+            if shown == year {
+                _ = wheels.firstMatch.waitForNonExistence(timeout: 3)
+                continue
+            }
+            // To an end, flicks; to a year inside the wheel, a few rows at a time.
+            let far = year == present || (year == 547 && !Self.reachesBeforeByzantium)
+            let velocity: XCUIGestureVelocity = far ? .fast : .slow
+            if shown > year { wheels.firstMatch.swipeDown(velocity: velocity) } else { wheels.firstMatch.swipeUp(velocity: velocity) }
             _ = wheels.firstMatch.waitForNonExistence(timeout: 2.5)
         }
     }
+
+    /// Whether the wheel reaches back past 0547 (SideStore and Debug builds).
+    private static var reachesBeforeByzantium: Bool {
+        #if UNRELEASED
+        return true
+        #else
+        return false
+        #endif
+    }
+
+    #if UNRELEASED
+    /// Stained Glass (painting-company row 366): 1248 on the wheel opens it, with no windows yet,
+    /// and its own Year row rolled to the present brings Paint by Moonlight back.
+    @MainActor
+    func testTheClockAt1248OpensStainedGlass() throws {
+        let app = openSettings()
+        let presentYear = app.descendants(matching: .any)["about-year"]
+        scroll(app, to: presentYear)
+        presentYear.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["era-clock"].waitForExistence(timeout: 5), "The Year row brought out no year setter")
+        roll(app.pickerWheels, to: 1248)
+        XCTAssertTrue(app.buttons["glass-choose-photo"].waitForExistence(timeout: 30), "1248 didn't open Stained Glass")
+        attachScreenshot(of: app, named: "stained-glass-through-the-door")
+        app.buttons["glass-settings"].tap()
+        let year = app.descendants(matching: .any)["about-year"]
+        XCTAssertTrue(year.waitForExistence(timeout: 10), "Stained Glass's Settings has no Year row")
+        year.tap()
+        roll(app.pickerWheels, to: Calendar(identifier: .gregorian).component(.year, from: .now))
+        XCTAssertTrue(app.buttons["Paint"].waitForExistence(timeout: 30), "The present didn't bring Paint by Moonlight back")
+    }
+    #endif
 
     /// The form is a lazy list: rows below the fold exist once they are scrolled into view. Each
     /// drag moves the list by four fifths of its frame, less than what shows below the navigation

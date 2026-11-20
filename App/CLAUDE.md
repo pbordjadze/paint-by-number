@@ -1248,7 +1248,8 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
 
 - **The door** (`App/EraDoor.swift`, in every build from 1.1): Settings › About has a plain Year row
   (the present year); tapped, Ravenna's `EraClock` comes out under it, one wheel of years whose
-  first is 0547 (then the centuries, the decades and the last seven years: `EraClock.years`); its
+  first is 0547 (then the centuries, the decades and the last seven years: `EraClock.years`; 0001 in
+  SideStore and Debug builds, Stained Glass below); its
   numerals warm toward gold and its steps back weigh more the further back the year. Rolled to
   0547 and left (`EraClock.rest`), Settings closes and `EraDoor.go(to: .byzantium)` starts `EraPassage`
   (tiles set over the screen in an apse's courses, the era swapped under them, the tiles lifted;
@@ -1290,6 +1291,27 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
   its own in the app's targets: its engine's are the package's (Linux), the rest is screenshots.
 - **The App Review note** for the version that ships it (Guideline 2.3.1):
   `docs/ravenna/app-review-note.md`.
+
+## Stained Glass (1248)
+
+SideStore and Debug builds only (`#if UNRELEASED`; painting-company row 366): the first mode built
+on the app's own code rather than a copy of it, as Paint by Mosaic is. `Glass/`: `GlassEra` (the
+era's root: its gallery `GlassGalleryView`, New Window through the system photo picker, its
+Settings with the Year row), `GlassShelf` (an `ArtworkStore` of its own,
+`Application Support/StainedGlass/Windows/`, each window a painting's folder plus `glazing.bin`,
+PaintCore's `Glazing`), `GlassLead` (the Lead screen: the photo dimmed, the finger's lines laid
+one by one through PaintCore's `GlassWindow.Leading`, ends joined as the Pen joins, the pieces a
+line closes flashing; lead that closes nothing stays as drawn, Paul's choice), `GlassGlaze`
+(free glazing: any bead's glass in any piece, a pour from the finger, unlit pieces keeping a
+faint tint of the suggested glass, light spilling past the frame, the sun passing once when it is
+whole; VoiceOver has a piece element each), `GlassPicture` (pieces, lead and glass colors, and
+the shelf's pictures). The door: the year wheel (`EraClock`) reaches back to 0001 in these
+builds, lights the eras' years (`EraYear.modes`) and draws a wheel resting beside one on to it
+(`EraClock.pulled`); 1248 opens `Era.glass` (`Era.opened(by:)`), whose passage is a nave's dark
+with a rose window's light (`EraPassage.drawNave`); Paint by Mosaic's wheel reaches it too
+(`LeaveRavenna(for:)`). Demos: `glass-empty`, `glass-gallery`, `glass-lead`, `glass-glaze`,
+`glass-finished` (`GlassDemo`, on the mockup's monarch and lines, `GlassDemoLines`) and
+`era-passage-glass`; `EraDoorTests`, `SettingsTests.testTheClockAt1248OpensStainedGlass`.
 
 ## Outside the app: widgets and stickers
 

@@ -80,6 +80,23 @@ struct GlassTests {
         #expect(joined.template.regions.count == 2)
     }
 
+    /// Leading a line at a time is the window `leaded` makes, and each line says which pieces
+    /// it closed: none for the first, which closes the left half and the right.
+    @Test func leadingALineAtATimeSaysWhatItClosed() throws {
+        var leading = try GlassWindow.Leading(photo: Self.photo(), width: Self.width, height: Self.height, colorSpace: .sRGB)
+        let first = leading.add(Self.lines[0])
+        #expect(first.verdict.isMade && Set(first.closed).count == 2)
+        let whisker = leading.add([SIMD2(30, 30), SIMD2(60, 50)])
+        #expect(whisker.verdict.isMade && whisker.closed.isEmpty, "a line closing nothing stays as lead")
+        let second = leading.add(Self.lines[1])
+        #expect(second.closed.count == 2, "the right half, cut in two")
+        #expect(leading.lines.count == 3)
+        let all = try GlassWindow.leaded(
+            photo: Self.photo(), width: Self.width, height: Self.height, colorSpace: .sRGB,
+            lines: [Self.lines[0], [SIMD2(30, 30), SIMD2(60, 50)], Self.lines[1]])
+        #expect(leading.window().template.encoded() == all.template.encoded())
+    }
+
     @Test func noLinesIsOnePiece() throws {
         let w = try Self.window([])
         expectValid(w.template)

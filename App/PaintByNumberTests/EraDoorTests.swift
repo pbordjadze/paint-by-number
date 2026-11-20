@@ -73,14 +73,53 @@ struct EraDoorTests {
 
     @Test func theWheelStartsAt0547AndEndsAtThePresent() {
         let years = EraClock.years
+        #if UNRELEASED
+        #expect(years.first == 1, "SideStore's wheel reaches back to 0001")
+        #expect(years.contains(EraYear.byzantium) && years.contains(EraYear.stainedGlass))
+        #expect(years.count < 60, "a few flicks from end to end")
+        #else
         #expect(years.first == EraYear.byzantium)
+        #expect(years.count < 30, "the far end is a flick away, not a long scroll")
+        #endif
         #expect(years.last == EraYear.present)
         #expect(years == years.sorted() && Set(years).count == years.count)
-        #expect(years.count < 30, "the far end is a flick away, not a long scroll")
         #expect(Array(years.suffix(7)) == Array(EraYear.present - 6...EraYear.present))
         #expect(EraClock.text(of: EraYear.byzantium) == "0547")
         #expect(EraClock.nearest(to: EraYear.present) == EraYear.present)
         #expect(EraClock.nearest(to: 547) == 547)
         #expect(EraClock.nearest(to: 1550) == 1600, "a tie takes the later year")
     }
+
+    /// Stained Glass (painting-company row 366): 1248 opens it in SideStore and Debug builds, and
+    /// the wheel lights the eras' years and draws a wheel resting beside one on to it.
+    @Test func eachEraHasItsYear() {
+        #expect(Era.opened(by: 547) == .byzantium)
+        #expect(Era.opened(by: EraYear.present) == .moonlight)
+        #expect(Era.opened(by: 1600) == nil)
+        #if UNRELEASED
+        #expect(Era.opened(by: 1248) == .glass)
+        #expect(EraYear.modes == [547, 1248])
+        #expect(EraClock.isLit(1248) && EraClock.isLit(547) && !EraClock.isLit(1300))
+        #expect(EraClock.pulled(from: 1200) == 1248 && EraClock.pulled(from: 1300) == 1248)
+        #expect(EraClock.pulled(from: 500) == 547 && EraClock.pulled(from: 600) == 547)
+        #expect(EraClock.pulled(from: 1248) == nil && EraClock.pulled(from: 1100) == nil)
+        #expect(EraClock.pulled(from: EraYear.present) == nil)
+        #else
+        #expect(Era.opened(by: 1248) == nil)
+        #expect(EraYear.modes == [547])
+        #expect(!EraClock.isLit(547) && EraClock.pulled(from: 600) == nil, "the release's wheel is as it was")
+        #endif
+    }
+
+    #if UNRELEASED
+    @Test func theGlassEraOutlivesTheLaunch() throws {
+        let defaults = try freshDefaults()
+        let door = EraDoor(defaults: defaults)
+        door.go(to: .glass)
+        #expect(defaults.string(forKey: EraDoor.key) == "glass")
+        door.covered()
+        door.passed()
+        #expect(EraDoor(defaults: defaults).shown == .glass)
+    }
+    #endif
 }

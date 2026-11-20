@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import Ravenna
 import SwiftUI
 
 /// The secret door (painting-company row 234): the app's year, set back to 0547 in Settings ›
@@ -10,6 +11,19 @@ import SwiftUI
 enum Era: String {
     case moonlight
     case byzantium
+    /// Stained Glass, at 1248 (SideStore and Debug builds; painting-company row 366): a mode of
+    /// the app's own, not a copy of it (`GlassEra`).
+    case glass
+
+    /// The era a year on the clock opens, nil for a year that opens none.
+    static func opened(by year: Int) -> Era? {
+        if EraYear.opensByzantium(year) { return .byzantium }
+        #if UNRELEASED
+        if EraYear.opensStainedGlass(year) { return .glass }
+        #endif
+        if EraYear.returnsToThePresent(year) { return .moonlight }
+        return nil
+    }
 }
 
 /// Which era is on screen, kept across launches (UserDefaults `era`, absent for Paint by
@@ -33,7 +47,13 @@ final class EraDoor {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        shown = defaults.string(forKey: Self.key).flatMap(Era.init(rawValue:)) ?? .moonlight
+        let era = defaults.string(forKey: Self.key).flatMap(Era.init(rawValue:)) ?? .moonlight
+        #if UNRELEASED
+        shown = era
+        #else
+        // Stained Glass is SideStore's and Debug's: a release opening on it opens at home.
+        shown = era == .glass ? .moonlight : era
+        #endif
     }
 
     /// Sets the clock: the passage starts, and the era is the new one from now on, this launch's
@@ -146,6 +166,7 @@ struct EraPassage: View {
     private static var demoHold: TimeInterval? {
         switch DemoMode.scenario {
         case "era-passage": return wait + cover * 0.67
+        case "era-passage-glass": return wait + cover + hold * 0.5
         case "era-passage-back": return EraWayBack.halfFallen
         case "era-passage-night": return EraWayBack.clears
         default: return nil
@@ -176,6 +197,10 @@ struct EraPassage: View {
             return
         }
         let apse = Color(red: 0.082, green: 0.075, blue: 0.059)
+        if destination == .glass && !reduceMotion {
+            drawNave(in: &graphics, size: size, elapsed: elapsed)
+            return
+        }
         if reduceMotion {
             let fade = 0.35
             let t = elapsed - Self.wait
@@ -224,6 +249,45 @@ struct EraPassage: View {
             graphics.fill(whole, with: .color(apse.opacity(max(0, 1 - lifted * 1.4))))
         }
     }
+
+    /// The passage to Stained Glass: the screen goes as dark as a nave, and as it is darkest a
+    /// rose window's light comes and goes in the middle of it, then the dark lifts on the window.
+    private func drawNave(in graphics: inout GraphicsContext, size: CGSize, elapsed: TimeInterval) {
+        let nave = Color(red: 0.035, green: 0.035, blue: 0.055)
+        let t = elapsed - Self.wait
+        guard t > 0 else { return }
+        let dark = t < Self.cover ? EraWayBack.ease(min(1, t / (Self.cover * 0.8)))
+            : max(0, 1 - EraWayBack.ease((t - Self.cover - Self.hold) / Self.lift))
+        graphics.fill(Path(CGRect(origin: .zero, size: size)), with: .color(nave.opacity(dark)))
+        // The rose: twelve petals of the glazier's colors round a gold heart, lit through the
+        // second half of the cover and the hold, gone as the dark lifts.
+        let lit = t < Self.cover * 0.45 ? 0 : t < Self.cover + Self.hold
+            ? EraWayBack.ease(min(1, (t - Self.cover * 0.45) / (Self.cover * 0.55)))
+            : max(0, 1 - (t - Self.cover - Self.hold) / (Self.lift * 0.6))
+        guard lit > 0 else { return }
+        let centre = CGPoint(x: size.width / 2, y: size.height / 2)
+        let radius = min(size.width, size.height) * 0.3
+        let glasses: [Color] = [
+            Color(red: 0.11, green: 0.25, blue: 0.77), Color(red: 0.77, green: 0.09, blue: 0.22),
+            Color(red: 0.96, green: 0.71, blue: 0.14), Color(red: 0.09, green: 0.59, blue: 0.38),
+        ]
+        var glow = graphics
+        glow.addFilter(.blur(radius: radius * 0.25))
+        glow.fill(Path(ellipseIn: CGRect(x: centre.x - radius * 1.1, y: centre.y - radius * 1.1, width: radius * 2.2, height: radius * 2.2)),
+                  with: .color(Self.glassGold.opacity(0.18 * lit)))
+        for k in 0..<12 {
+            let angle = Double(k) / 12 * 2 * .pi
+            let petal = Path(ellipseIn: CGRect(x: -radius * 0.17, y: radius * 0.2, width: radius * 0.34, height: radius * 0.78))
+                .applying(CGAffineTransform(translationX: centre.x, y: centre.y).rotated(by: angle))
+            graphics.fill(petal, with: .color(glasses[k % glasses.count].opacity(0.85 * lit)))
+            graphics.stroke(petal, with: .color(nave.opacity(lit)), lineWidth: radius * 0.04)
+        }
+        let heart = Path(ellipseIn: CGRect(x: centre.x - radius * 0.22, y: centre.y - radius * 0.22, width: radius * 0.44, height: radius * 0.44))
+        graphics.fill(heart, with: .color(Self.glassGold.opacity(0.9 * lit)))
+        graphics.stroke(heart, with: .color(nave.opacity(lit)), lineWidth: radius * 0.04)
+    }
+
+    private static let glassGold = Color(red: 0.96, green: 0.78, blue: 0.36)
 
     /// Draws one tessera, `side` across, placed and turned by `turn`.
     private static func set(_ tile: Tile, side: CGFloat, turn: CGAffineTransform, opacity: Double,
@@ -489,7 +553,7 @@ enum EraWayBack {
     }
 
     /// Smoothstep, held at its ends.
-    private static func ease(_ x: Double) -> Double {
+    static func ease(_ x: Double) -> Double {
         let t = min(1, max(0, x))
         return t * t * (3 - 2 * t)
     }
