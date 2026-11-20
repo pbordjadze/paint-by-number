@@ -87,6 +87,14 @@ final class FriendPresence {
                 color.withAlphaComponent(0).cgColor]
     }
 
+    /// The edge glow: the paint lifted halfway to white, since it lies over whatever is painted
+    /// at the screen's edge, where a dark paint's own glow vanished into dark paint.
+    static func edgeGlow(_ color: UIColor) -> [CGColor] {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        color.getRed(&r, green: &g, blue: &b, alpha: &a)
+        return glow(UIColor(red: r + (1 - r) * 0.5, green: g + (1 - g) * 0.5, blue: b + (1 - b) * 0.5, alpha: 1), strength: 0.95)
+    }
+
     /// The core is about an eighth of the light across; the bloom takes the rest.
     static let glowLocations: [NSNumber] = [0, 0.05, 0.11, 0.24, 0.55, 1]
 
@@ -111,7 +119,7 @@ final class FriendPresence {
             CATransaction.setAnimationDuration(reduceMotion ? 0 : 0.3)
             light.colors = Self.glow(color)
             light.locations = Self.glowLocations
-            edge.colors = Self.glow(color, strength: 0.8)
+            edge.colors = Self.edgeGlow(color)
             edge.locations = Self.glowLocations
             CATransaction.commit()
         }
@@ -221,7 +229,7 @@ final class FriendPresence {
         }
         edge.position = point
         if edge.colors == nil {
-            edge.colors = Self.glow(lightColor, strength: 0.8)
+            edge.colors = Self.edgeGlow(lightColor)
             edge.locations = Self.glowLocations
         }
         CATransaction.commit()
@@ -292,10 +300,9 @@ final class FriendPresence {
         let side = Self.starSide
         star.bounds = CGRect(x: 0, y: 0, width: side, height: side)
         star.path = Sparkle.starPath(in: star.bounds)
-        // A star of light: a pale gold, glowing in `Theme.gold` (spelled out as the fill's
-        // sparkles do: the theme is SwiftUI).
-        star.fillColor = UIColor(red: 1, green: 0.93, blue: 0.74, alpha: 1).cgColor
-        star.shadowColor = UIColor(red: 0.95, green: 0.76, blue: 0.33, alpha: 1).cgColor
+        // `Theme.gold` (spelled out as the fill's sparkles do: the theme is SwiftUI), glowing.
+        star.fillColor = UIColor(red: 0.85, green: 0.69, blue: 0.32, alpha: 1).cgColor
+        star.shadowColor = UIColor(red: 1, green: 0.84, blue: 0.45, alpha: 1).cgColor
         star.shadowOpacity = 1
         star.shadowRadius = 7
         star.shadowOffset = .zero

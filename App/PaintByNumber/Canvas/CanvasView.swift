@@ -1205,6 +1205,7 @@ final class CanvasView: UIView, PaintingCanvas {
             #if UNRELEASED
             // A replay ends in the usual finish, never in another shared finale.
             playedTogetherFinale = true
+            session.together.playsFinale = false
             #endif
             celebrate(.artworkCompleted)
         }
@@ -1225,6 +1226,7 @@ final class CanvasView: UIView, PaintingCanvas {
         endNightfall()
         togetherFinaleTask?.cancel()
         togetherFinaleTask = nil
+        session.together.playsFinale = false
         friendPresence?.remove()
         friendPresence = nil
         friendEdgeButton?.removeFromSuperview()
@@ -1246,6 +1248,7 @@ final class CanvasView: UIView, PaintingCanvas {
         session.showReplayed(nil)
         #if UNRELEASED
         friendPresence?.stopLights()
+        session.together.playsFinale = false
         #endif
         numbersChanged()
         inkChanged()
@@ -1508,6 +1511,7 @@ final class CanvasView: UIView, PaintingCanvas {
         playedTogetherFinale = false
         togetherFinaleTask?.cancel()
         togetherFinaleTask = nil
+        session.together.playsFinale = false
         #endif
         // No longer finished: the lines are back.
         inkChanged()
@@ -2188,6 +2192,7 @@ extension CanvasView: TogetherCanvas {
     }
 
     func showStar(from point: SIMD2<Float>, fromFriend: Bool) {
+        Log.canvas.notice("Paint Together: a star from \(point.x, privacy: .public), \(point.y, privacy: .public), zoom \(self.scrollView.zoomScale, privacy: .public), in a window \(self.window != nil, privacy: .public)")
         presence.star(from: point)
     }
 
@@ -2240,7 +2245,7 @@ extension CanvasView: TogetherCanvas {
     }
 
     /// The light of a painter holding paint `color` (`TogetherChannel.handColor`: the hand): the
-    /// paint itself, deepened on light paper where a pale one would vanish into it.
+    /// paint itself, as light (`PaletteTogether.light`).
     private func lightColor(_ color: Int) -> UIColor {
         let dark = canvasPalette.accentFloor > 0
         if color == TogetherChannel.noPaint {
@@ -2251,16 +2256,12 @@ extension CanvasView: TogetherCanvas {
             // The hand: warm white by night, gold by day.
             return dark ? UIColor(red: 1, green: 0.9, blue: 0.72, alpha: 1) : UIColor(red: 0.79, green: 0.64, blue: 0.29, alpha: 1)
         }
-        var rgb = template.palette[color].rgb
-        let luminance = ColorScience.relativeLuminance(encoded: rgb, space: template.colorSpace)
-        if !dark, luminance > Self.palestLight { rgb *= Self.palestLight / luminance }
+        let rgb = template.palette[color].rgb
         let r = CGFloat(rgb.x), g = CGFloat(rgb.y), b = CGFloat(rgb.z)
-        return template.colorSpace == .displayP3
+        let paint = template.colorSpace == .displayP3
             ? UIColor(displayP3Red: r, green: g, blue: b, alpha: 1) : UIColor(red: r, green: g, blue: b, alpha: 1)
+        return PaletteTogether.light(of: paint)
     }
-
-    /// On light paper, lights no paler than this (relative luminance).
-    private static let palestLight: Float = 0.55
 
     /// The hand's ripple: the sheet's own ink, softened.
     private var rippleColor: UIColor {
@@ -2274,6 +2275,8 @@ extension CanvasView: TogetherCanvas {
     func startsTogetherFinale() -> Bool {
         guard session.together.isTogether, !playedTogetherFinale, !isReplaying, !isAnnotating else { return false }
         playedTogetherFinale = true
+        // The Finished panel waits for the finale (`TogetherChannel.playsFinale`).
+        session.together.playsFinale = true
         let lead: Double = session.isApplyingFriend ? 0 : 0.35
         let wait = Double(max(0, fillsLand - now())) + Double(Self.finishPause) + lead
         friendPresence?.hideLight()
@@ -2282,7 +2285,10 @@ extension CanvasView: TogetherCanvas {
             try? await Task.sleep(for: .seconds(wait))
             guard let self, !Task.isCancelled else { return }
             togetherFinaleTask = nil
-            guard session.isComplete, !isAnnotating else { return }
+            guard session.isComplete, !isAnnotating else {
+                session.together.playsFinale = false
+                return
+            }
             replay(lights: true)
         }
         return true

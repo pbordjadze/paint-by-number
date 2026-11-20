@@ -917,6 +917,14 @@ struct PaintView: View {
                 doors: doors, original: OriginalWork.of(libraryPicture), onOriginal: { about = $0 },
                 onPrint: offersPrint ? { printTemplate() } : nil)
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { completionHeight = $0 }
+                #if UNRELEASED
+                // Painting together, the shared finale plays out before the panel shows; it holds
+                // its place meanwhile, so the painting doesn't move as it comes.
+                .opacity(session.together.playsFinale ? 0 : 1)
+                .allowsHitTesting(!session.together.playsFinale)
+                .accessibilityHidden(session.together.playsFinale)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.6), value: session.together.playsFinale)
+                #endif
                 .transition(transition)
         } else {
             PaintPalette(

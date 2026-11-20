@@ -22,6 +22,9 @@ final class TogetherChannel {
         didSet { if holdsHand != oldValue { reportedColor = nil } }
     }
 
+    /// The shared finale is playing: the Finished panel waits for it.
+    var playsFinale = false
+
     /// Where the friend's light is shown.
     @ObservationIgnored weak var canvas: (any TogetherCanvas)?
     /// Hands a message to the friend (the engine's).

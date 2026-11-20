@@ -2,6 +2,7 @@ import CoreGraphics
 import Foundation
 import PaintCore
 import SwiftUI
+import UIKit
 
 /// Swatch geometry at a Dynamic Type size. Numerals grow with text up to 1.4×, so the palette
 /// keeps its place on screen at accessibility sizes; the Large Content Viewer covers the rest.
@@ -611,8 +612,8 @@ private struct Swatch: View {
         // Only while it shows, so a painter alone (and the release) carries no halo.
         .background {
             if friendHolds {
-                // Light, not shadow: the paint lifted toward white, so a dark paint glows too.
-                Circle().fill(color.mix(with: .white, by: 0.4))
+                // Light, not shadow: a dark paint glows too.
+                Circle().fill(Color(uiColor: PaletteTogether.light(of: UIColor(color))))
                     .scaleEffect(1.32)
                     .blur(radius: 7 * metrics.scale)
                     .transition(.opacity)
@@ -715,6 +716,17 @@ nonisolated struct PaletteTogether: Equatable {
 
     static func == (a: PaletteTogether, b: PaletteTogether) -> Bool {
         a.friendColor == b.friendColor && a.holdsHand == b.holdsHand
+    }
+
+    /// A paint as light, the friend's on the page and its halo here: its hue kept, never dull
+    /// or dark, so a dusky paint glows instead of reading as a shadow (the build's second critic
+    /// round), and a pale one still shows its color on the paper.
+    static func light(of paint: UIColor) -> UIColor {
+        var hue: CGFloat = 0, saturation: CGFloat = 0, brightness: CGFloat = 0, alpha: CGFloat = 0
+        guard paint.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha) else { return paint }
+        // A grey stays grey: no hue to lift.
+        let s = saturation * brightness < 0.04 ? saturation : min(1, max(saturation, 0.55))
+        return UIColor(hue: hue, saturation: s, brightness: max(brightness, 0.9), alpha: 1)
     }
 }
 
