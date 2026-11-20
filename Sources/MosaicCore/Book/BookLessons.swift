@@ -58,11 +58,24 @@ extension StoneBook {
 
     /// A smalto seen from the side: its body, and a gold leaf face on top or underneath.
     func sideStone(_ c: inout PageCanvas, _ x: Double, _ y: Double, _ w: Double, _ h: Double, _ fill: BookColor, gold: Bool? = nil) {
-        c.shape(.rect(x, y, w, h, radius: 0.6), fill: fill, stroke: BookColor(0, 0, 0, 0.3), width: 0.25)
-        if let up = gold {
-            c.fill(.rect(x, up ? y : y + h - 1.2, w, 1.2), BookColor(hex: 0xE2BE55))
-        }
+        let leaf = BookColor(hex: 0xE2BE55)
+        isoBox(&c, x, y, w, h, depth: h * 0.9, top: gold == true ? leaf : fill,
+               front: fill.mixed(toward: BookColor(0, 0, 0), 0.18), side: fill.mixed(toward: BookColor(0, 0, 0), 0.32))
+        if gold == false { c.fill(.rect(x, y + h - 1.2, w, 1.2), leaf) }
     }
+
+    /// A block drawn as an assembly book draws one: its front face, its top running back up and to
+    /// the right, its right side; black outlines.
+    func isoBox(_ c: inout PageCanvas, _ x: Double, _ y: Double, _ w: Double, _ h: Double, depth d: Double,
+                top: BookColor = BookStyle.white, front: BookColor = BookStyle.white, side: BookColor = BookColor(hex: 0xE6E6E6)) {
+        let dx = d * 0.7, dy = d * 0.4
+        c.shape(.polygon([Point(x, y), Point(x + dx, y - dy), Point(x + w + dx, y - dy), Point(x + w, y)]), fill: top, stroke: BookStyle.ink, width: 0.3)
+        c.shape(.polygon([Point(x + w, y), Point(x + w + dx, y - dy), Point(x + w + dx, y + h - dy), Point(x + w, y + h)]), fill: side, stroke: BookStyle.ink, width: 0.3)
+        c.shape(.rect(x, y, w, h), fill: front, stroke: BookStyle.ink, width: 0.3)
+    }
+
+    /// A hand gripping a tool's handle at (x, y), `s` mm.
+    func grip(_ c: inout PageCanvas, _ x: Double, _ y: Double, _ s: Double) { BookIcon.grip.draw(into: &c, x - s / 2, y - s * 0.4, s) }
 
     /// The nippers seen from above, their wheels at the top, `s` mm tall.
     func nippers(_ c: inout PageCanvas, _ x: Double, _ y: Double, _ s: Double) { BookIcon.nippers.draw(into: &c, x, y, s) }
@@ -286,6 +299,7 @@ extension StoneBook {
                           Point(p[3].cx + 14, p[3].cy + 8), Point(p[3].cx + 6, p[3].cy + 3)]), fill: glass, stroke: BookColor(0, 0, 0, 0.3), width: 0.25)
         // squeeze the handles gently, close to their ends
         nippers(&c, p[4].cx - 14, p[4].cy - 18, 30)
+        grip(&c, p[4].cx + 1, p[4].cy + 2, 16)
         arrow(&c, p[4].cx - 18, p[4].cy + 10, p[4].cx - 9, p[4].cy + 8)
         arrow(&c, p[4].cx + 18, p[4].cy + 10, p[4].cx + 9, p[4].cy + 8)
         // check it on its outline in the cartoon
@@ -495,8 +509,9 @@ extension StoneBook {
         let p = panels(&c, 8, rows: 4)
         let bed = BookColor(hex: 0xCFCAC0)
         // the board wiped clean and damp
-        c.shape(.rect(p[0].cx - 28, p[0].cy - 12, 56, 26, radius: 1), fill: BookColor(hex: 0xECE6DA), stroke: BookStyle.ink, width: 0.4)
-        BookIcon.sponge.draw(into: &c, p[0].cx - 4, p[0].cy - 18, 20)
+        isoBox(&c, p[0].cx - 30, p[0].cy + 4, 46, 4, depth: 24, top: BookColor(hex: 0xEDE6D6), front: BookColor(hex: 0xD8CBA8), side: BookColor(hex: 0xC4B795))
+        BookIcon.sponge.draw(into: &c, p[0].cx - 6, p[0].cy - 12, 16)
+        grip(&c, p[0].cx + 2, p[0].cy - 10, 13)
         // three of powder to one of water, by the cup
         for k in 0..<3 { BookIcon.thinset.draw(into: &c, p[1].x + 10 + Double(k) * 13, p[1].cy - 10, 14) }
         c.text("+", p[1].x + 52, p[1].cy, 6, 700)
@@ -524,6 +539,7 @@ extension StoneBook {
         for k in 0..<12 { c.stroke(.line(Point(bx + Double(k) * 4 - 24, by + 30), Point(bx + Double(k) * 4 + 6, by)), BookColor(hex: 0xA9A397), 0.7, round: false) }
         c.endClip()
         BookIcon.trowel.draw(into: &c, bx + 30, by + 4, 22)
+        grip(&c, bx + 46, by + 9, 14)
         // one batch: enough for two sheets, no more
         boardSheets(&c, p[6], filled: 2)
         let batch = widthMM * heightMM / 1e6 * 4.4 / Double(max(sections.count, 1)) * 2
@@ -560,13 +576,13 @@ extension StoneBook {
         let p = panels(&c, 8, rows: 4)
         let glass = colour(lessonPaints[0]), bed = BookColor(hex: 0xCFCAC0)
         func layers(_ q: Panel, meshDown: Bool) {
-            c.fill(.rect(q.cx - 28, q.cy + 6, 56, 4), BookColor(hex: 0xD8CBA8))
-            c.fill(.rect(q.cx - 28, q.cy + 3, 56, 3), bed)
+            isoBox(&c, q.cx - 28, q.cy + 6, 50, 4, depth: 12, top: BookColor(hex: 0xEDE6D6), front: BookColor(hex: 0xD8CBA8), side: BookColor(hex: 0xC4B795))
+            isoBox(&c, q.cx - 27, q.cy + 3, 48, 3, depth: 10, top: bed, front: bed.mixed(toward: BookColor(0, 0, 0), 0.12), side: bed.mixed(toward: BookColor(0, 0, 0), 0.2))
             for k in 0..<4 {
-                let sx = q.cx - 26 + Double(k) * 13.5
-                sideStone(&c, sx, meshDown ? q.cy - 5 : q.cy - 3.8, 12, 7, glass)
+                let sx = q.cx - 26 + Double(k) * 11.5
+                sideStone(&c, sx, q.cy - 1.8, 10, 4.6, glass)
             }
-            c.stroke(.line(Point(q.cx - 28, meshDown ? q.cy + 2.6 : q.cy - 5.4), Point(q.cx + 28, meshDown ? q.cy + 2.6 : q.cy - 5.4)),
+            c.stroke(.line(Point(q.cx - 28, meshDown ? q.cy + 2.8 : q.cy - 5.2), Point(q.cx + 24, meshDown ? q.cy + 2.8 : q.cy - 5.2)),
                      BookColor(hex: 0xA79F8C), 0.6, dash: [1.4, 0.8], round: false)
         }
         // mesh down into the bed, stones up
@@ -576,6 +592,7 @@ extension StoneBook {
         // pressed in with the float, over the whole sheet
         layers(p[2], meshDown: true)
         BookIcon.float.draw(into: &c, p[2].cx - 10, p[2].cy - 24, 20)
+        grip(&c, p[2].cx, p[2].cy - 17.5, 14)
         arrow(&c, p[2].cx + 16, p[2].cy - 20, p[2].cx + 16, p[2].cy - 8)
         // the next sheet a joint away from the last, its edge on the line
         smalto(&c, p[3].cx - 10, p[3].cy - 2, 19, 19, glass.mixed(toward: BookStyle.paper, 0.2))
