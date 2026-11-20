@@ -2,6 +2,7 @@ import CoreGraphics
 import Foundation
 import PaintCore
 import SwiftUI
+import UIKit
 
 /// Swatch geometry at a Dynamic Type size. Numerals grow with text up to 1.4×, so the palette
 /// keeps its place on screen at accessibility sizes; the Large Content Viewer covers the rest.
@@ -105,6 +106,9 @@ struct PaletteBar: View {
     /// Shows the selected color's number and name above the swatches, so the color can be
     /// told by name (horizontal bars only; wide layouts show it in the progress badge).
     var showsCurrentColor = false
+    /// Painting with a friend (Paint Together, Paint by Moonlight's alone): the hand comes first,
+    /// and the paint the friend holds glows.
+    var together: PaletteTogether?
     /// Every color in its order on screen (`PaintView.colorOrder`), finished ones too.
     let order: [Int]
 
@@ -227,6 +231,8 @@ struct PaletteBar: View {
         // without that layout takes no more lines than it has colors (`EraSeam.paletteKeepsItsLines`).
         let lineCount = max(1, EraSeam.paletteKeepsItsLines ? lines : min(lines, count))
         let lanes = Self.lanes(colors, lines: lineCount)
+        // The hand takes a lane of its own, ahead of the paints.
+        let handLanes = together == nil ? 0 : 1
         let horizontal = axis == .horizontal
         // Lanes run along the bar, each one swatch per line across it.
         let along = horizontal
@@ -258,6 +264,11 @@ struct PaletteBar: View {
             }
             ScrollView(axis == .horizontal ? .horizontal : .vertical, showsIndicators: false) {
                 along {
+                    if let together {
+                        HandSwatch(holds: together.holdsHand, metrics: metrics, reduceMotion: reduceMotion,
+                                   take: together.takeHand)
+                            .transition(transition)
+                    }
                     if lineCount == 1 {
                         // One line: the swatches themselves, by color, so a finished color leaves and
                         // the rest slide along. In lanes kept by position every later swatch moved to
@@ -315,8 +326,9 @@ struct PaletteBar: View {
         }
         .frame(width: axis == .vertical ? thickness : nil,
                height: axis == .horizontal ? thickness : nil)
-        .frame(maxWidth: axis == .horizontal ? max(metrics.length(count: count, lines: lineCount), minLength) : nil,
-               maxHeight: axis == .vertical ? metrics.length(count: count, lines: lineCount) : nil)
+        .frame(maxWidth: axis == .horizontal
+                   ? max(metrics.length(count: count + handLanes * lineCount, lines: lineCount), minLength) : nil,
+               maxHeight: axis == .vertical ? metrics.length(count: count + handLanes * lineCount, lines: lineCount) : nil)
         .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
             scroll.clip = frame
             revealPending()
@@ -340,6 +352,7 @@ struct PaletteBar: View {
                 .allowsHitTesting(false)
         }
         .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: colors)
+        .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: together == nil)
     }
 
     /// Scrolls the swatch of `color` whole into view, as little as it can. Not `ScrollViewReader`'s
@@ -357,7 +370,8 @@ struct PaletteBar: View {
         let colors = shownColors
         let lineCount = max(1, EraSeam.paletteKeepsItsLines ? lines : min(lines, colors.count))
         let lanes = Self.lanes(colors, lines: lineCount)
-        guard let lane = lanes.firstIndex(where: { $0.contains(color) }) else { return }
+        guard let found = lanes.firstIndex(where: { $0.contains(color) }) else { return }
+        let lane = found + (together == nil ? 0 : 1)
         let frameLength = horizontal ? scroll.frame.width : scroll.frame.height
         // Before the scroll view first reports its geometry it hasn't scrolled: the content sits at
         // its start, as long as the swatches lay it out.
@@ -366,7 +380,7 @@ struct PaletteBar: View {
             offset: geometry.map { horizontal ? $0.contentOffset.x : $0.contentOffset.y } ?? 0,
             viewport: geometry.map { horizontal ? $0.containerSize.width : $0.containerSize.height } ?? frameLength,
             content: geometry.map { horizontal ? $0.contentSize.width : $0.contentSize.height }
-                ?? metrics.length(count: max(colors.count, 1), lines: lineCount),
+                ?? metrics.length(count: max(colors.count, 1) + (together == nil ? 0 : lineCount), lines: lineCount),
             hiddenBefore: horizontal ? scroll.clip.minX - scroll.frame.minX : scroll.clip.minY - scroll.frame.minY,
             shown: horizontal ? scroll.clip.width : scroll.clip.height)
         guard let target = window.offset(revealing: lane, metrics: metrics) else { return }
@@ -394,8 +408,8 @@ struct PaletteBar: View {
         return SwatchButton(
             session: session, index: index, remaining: session.remainingByColor[index],
             isComplete: session.isColorComplete(index), isSelected: session.selectedColor == index,
-            shake: shakes[index] ?? 0, axis: axis, metrics: metrics, reduceMotion: reduceMotion,
-            onFrame: { scroll.selectedSwatch = $0 })
+            shake: shakes[index] ?? 0, friendHolds: together?.friendColor == index, axis: axis, metrics: metrics,
+            reduceMotion: reduceMotion, onFrame: { scroll.selectedSwatch = $0 })
             .equatable()
     }
 }
@@ -415,6 +429,8 @@ private struct SwatchButton: View, Equatable {
     let isSelected: Bool
     /// Bumped to shake it.
     let shake: Int
+    /// The friend painting together holds this paint: it glows.
+    let friendHolds: Bool
     let axis: Axis
     let metrics: PaletteMetrics
     let reduceMotion: Bool
@@ -425,7 +441,8 @@ private struct SwatchButton: View, Equatable {
 
     nonisolated static func == (a: SwatchButton, b: SwatchButton) -> Bool {
         a.session === b.session && a.index == b.index && a.remaining == b.remaining && a.isComplete == b.isComplete
-            && a.isSelected == b.isSelected && a.shake == b.shake && a.axis == b.axis && a.metrics == b.metrics
+            && a.isSelected == b.isSelected && a.shake == b.shake && a.friendHolds == b.friendHolds && a.axis == b.axis
+            && a.metrics == b.metrics
             && a.reduceMotion == b.reduceMotion
     }
 
@@ -447,7 +464,8 @@ private struct SwatchButton: View, Equatable {
         } label: {
             Swatch(
                 number: index + 1, color: PaletteBar.paint(template, index), ink: PaletteBar.numeralInk(template, index),
-                fraction: fraction, isComplete: isComplete, isSelected: selected, metrics: metrics, reduceMotion: reduceMotion)
+                fraction: fraction, isComplete: isComplete, isSelected: selected, friendHolds: friendHolds, metrics: metrics,
+                reduceMotion: reduceMotion)
                 .modifier(Shake(amount: CGFloat(shake)))
         }
         .buttonStyle(.plain)
@@ -569,6 +587,7 @@ private struct Swatch: View {
     let fraction: Double
     let isComplete: Bool
     let isSelected: Bool
+    let friendHolds: Bool
     let metrics: PaletteMetrics
     let reduceMotion: Bool
 
@@ -589,6 +608,20 @@ private struct Swatch: View {
         }
         .foregroundStyle(ink)
         .frame(width: metrics.diameter, height: metrics.diameter)
+        // The friend's paint: a soft halo of itself, as their light is on the page.
+        // Only while it shows, so a painter alone (and the release) carries no halo.
+        .background {
+            ZStack {
+                if friendHolds {
+                    // Light, not shadow: a dark paint glows too.
+                    Circle().fill(Color(uiColor: PaletteTogether.light(of: UIColor(color))))
+                        .scaleEffect(1.32)
+                        .blur(radius: 7 * metrics.scale)
+                        .transition(.opacity)
+                }
+            }
+            .animation(reduceMotion ? .linear(duration: 0.2) : .easeInOut(duration: 0.45), value: friendHolds)
+        }
         .padding(4)
         .overlay {
             Circle()
@@ -670,5 +703,74 @@ private extension View {
     /// Lays the view at `rect`'s origin in a top-leading overlay (at the overlay's own while nil).
     func placed(at rect: CGRect?) -> some View {
         padding(.leading, rect?.minX ?? 0).padding(.top, rect?.minY ?? 0)
+    }
+}
+
+/// What the palette shows of a friend painting with you (Paint Together): plain values, compared
+/// without the action, so the bar renders again only when the friend's paint or the hand changes.
+nonisolated struct PaletteTogether: Equatable {
+    /// The paint the friend holds, nil for none or the hand.
+    var friendColor: Int?
+    /// The painter holds the hand instead of a paint.
+    var holdsHand: Bool
+    /// Picks the hand up.
+    var takeHand: @MainActor () -> Void
+
+    static func == (a: PaletteTogether, b: PaletteTogether) -> Bool {
+        a.friendColor == b.friendColor && a.holdsHand == b.holdsHand
+    }
+
+    /// A paint as light, the friend's on the page and its halo here: its hue kept, never dull
+    /// or dark, so a dusky paint glows instead of reading as a shadow (the build's second critic
+    /// round), and a pale one still shows its color on the paper.
+    static func light(of paint: UIColor) -> UIColor {
+        var hue: CGFloat = 0, saturation: CGFloat = 0, brightness: CGFloat = 0, alpha: CGFloat = 0
+        guard paint.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha) else { return paint }
+        // A grey stays grey: no hue to lift.
+        let s = saturation * brightness < 0.04 ? saturation : min(1, max(saturation, 0.55))
+        return UIColor(hue: hue, saturation: s, brightness: max(brightness, 0.9), alpha: 1)
+    }
+}
+
+/// The hand, the palette's first swatch while painting together: picked instead of a paint, a
+/// tap on the page shows the friend a place and a hold sends a star. No words show (only
+/// VoiceOver names it): its first ripple says what it does.
+private struct HandSwatch: View {
+    let holds: Bool
+    let metrics: PaletteMetrics
+    let reduceMotion: Bool
+    let take: @MainActor () -> Void
+
+    var body: some View {
+        Button {
+            guard !holds else { return }
+            take()
+            FeedbackEngine.shared.selectionChanged()
+        } label: {
+            ZStack {
+                Circle().fill(.background)
+                Circle().strokeBorder(.black.opacity(0.12), lineWidth: 0.5)
+                Image(systemName: holds ? "hand.raised.fill" : "hand.raised")
+                    .font(.system(size: metrics.numeralSize + 2, weight: .medium))
+                    .foregroundStyle(.primary)
+            }
+            .frame(width: metrics.diameter, height: metrics.diameter)
+            .padding(4)
+            .overlay {
+                Circle().stroke(Color.primary.opacity(holds ? 0.85 : 0.08), lineWidth: 2.5)
+            }
+            .scaleEffect(holds ? 1.14 : 1)
+            .animation(reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.6), value: holds)
+            .padding(PaletteMetrics.spacing / 2)
+            .contentShape(.rect)
+            .padding(-PaletteMetrics.spacing / 2)
+        }
+        .buttonStyle(.plain)
+        .contentShape(.hoverEffect, Circle())
+        .hoverEffect(.highlight)
+        .accessibilityLabel("Keep Company")
+        .accessibilityHint("Instead of painting, a tap shows your friend a place, and a hold sends a star.")
+        .accessibilityAddTraits(holds ? .isSelected : [])
+        .accessibilityIdentifier("swatch-hand")
     }
 }
