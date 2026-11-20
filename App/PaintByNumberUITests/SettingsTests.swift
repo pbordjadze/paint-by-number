@@ -254,7 +254,7 @@ final class SettingsTests: XCTestCase {
         presentYear.tap()
         let clock = app.descendants(matching: .any)["era-clock"]
         XCTAssertTrue(clock.waitForExistence(timeout: 5), "The Year row brought out no year setter")
-        roll(app.pickerWheels, to: 547)
+        roll(app, to: 547)
         attachScreenshot(of: app, named: "clock-at-547")
         XCTAssertTrue(app.buttons["New Mosaic"].waitForExistence(timeout: 30), "547 didn't open Ravenna")
         attachScreenshot(of: app, named: "ravenna-through-the-door")
@@ -268,7 +268,7 @@ final class SettingsTests: XCTestCase {
         XCTAssertTrue(year.exists, "Ravenna's Settings has no Year row")
         year.tap()
         XCTAssertTrue(clock.waitForExistence(timeout: 5), "The Year row brought out no clock")
-        roll(app.pickerWheels, to: Calendar(identifier: .gregorian).component(.year, from: .now))
+        roll(app, to: Calendar(identifier: .gregorian).component(.year, from: .now))
         XCTAssertTrue(app.buttons["Paint"].waitForExistence(timeout: 30), "The present didn't bring Paint by Moonlight back")
         attachScreenshot(of: app, named: "back-in-the-present")
     }
@@ -282,10 +282,13 @@ final class SettingsTests: XCTestCase {
     /// era changes and the wheel goes, so it is read only while it is there; the caller checks
     /// the era it opened.
     @MainActor
-    private func roll(_ wheels: XCUIElementQuery, to year: Int) {
+    private func roll(_ app: XCUIApplication, to year: Int) {
+        let wheels = app.pickerWheels
         // The setter's row can be in the tree a moment before its wheel is.
         XCTAssertTrue(wheels.firstMatch.waitForExistence(timeout: 10), "The year setter has no wheel")
         XCTAssertEqual(wheels.count, 1, "The year setter has \(wheels.count) wheels")
+        // Wholly in the list: a swipe that starts below the sheet's edge turns nothing.
+        scroll(app, to: wheels.firstMatch)
         let present = Calendar(identifier: .gregorian).component(.year, from: .now)
         // A flick returns while the wheel still turns, and the year counts once it has rested
         // (`EraClock.rest`, 0.7 s): each flick waits for the wheel to go before the next.
@@ -296,9 +299,9 @@ final class SettingsTests: XCTestCase {
                 continue
             }
             // To an end, flicks; to a year inside the wheel, a few rows at a time.
-            // A long way back is a flick too: rested on the way, the wheel would open the era
-            // it stopped beside (1248 lies between the present and 0547).
-            let far = year == present || (year == 547 && !Self.reachesBeforeByzantium) || shown - year > 400
+            // Back to 0547 from past 1248, a flick to the wheel's far end first: rested on the
+            // way, the wheel would open the era it stopped beside.
+            let far = year == present || (year == 547 && (!Self.reachesBeforeByzantium || shown > 1248))
             let velocity: XCUIGestureVelocity = far ? .fast : .slow
             if shown > year { wheels.firstMatch.swipeDown(velocity: velocity) } else { wheels.firstMatch.swipeUp(velocity: velocity) }
             _ = wheels.firstMatch.waitForNonExistence(timeout: 2.5)
@@ -324,14 +327,14 @@ final class SettingsTests: XCTestCase {
         scroll(app, to: presentYear)
         presentYear.tap()
         XCTAssertTrue(app.descendants(matching: .any)["era-clock"].waitForExistence(timeout: 5), "The Year row brought out no year setter")
-        roll(app.pickerWheels, to: 1248)
+        roll(app, to: 1248)
         XCTAssertTrue(app.buttons["glass-choose-photo"].waitForExistence(timeout: 30), "1248 didn't open Stained Glass")
         attachScreenshot(of: app, named: "stained-glass-through-the-door")
         app.buttons["glass-settings"].tap()
         let year = app.descendants(matching: .any)["about-year"]
         XCTAssertTrue(year.waitForExistence(timeout: 10), "Stained Glass's Settings has no Year row")
         year.tap()
-        roll(app.pickerWheels, to: Calendar(identifier: .gregorian).component(.year, from: .now))
+        roll(app, to: Calendar(identifier: .gregorian).component(.year, from: .now))
         XCTAssertTrue(app.buttons["Paint"].waitForExistence(timeout: 30), "The present didn't bring Paint by Moonlight back")
     }
     #endif
