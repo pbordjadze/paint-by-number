@@ -611,15 +611,17 @@ private struct Swatch: View {
         // The friend's paint: a soft halo of itself, as their light is on the page.
         // Only while it shows, so a painter alone (and the release) carries no halo.
         .background {
-            if friendHolds {
-                // Light, not shadow: a dark paint glows too.
-                Circle().fill(Color(uiColor: PaletteTogether.light(of: UIColor(color))))
-                    .scaleEffect(1.32)
-                    .blur(radius: 7 * metrics.scale)
-                    .transition(.opacity)
+            ZStack {
+                if friendHolds {
+                    // Light, not shadow: a dark paint glows too.
+                    Circle().fill(Color(uiColor: PaletteTogether.light(of: UIColor(color))))
+                        .scaleEffect(1.32)
+                        .blur(radius: 7 * metrics.scale)
+                        .transition(.opacity)
+                }
             }
+            .animation(reduceMotion ? .linear(duration: 0.2) : .easeInOut(duration: 0.45), value: friendHolds)
         }
-        .animation(reduceMotion ? .linear(duration: 0.2) : .easeInOut(duration: 0.45), value: friendHolds)
         .padding(4)
         .overlay {
             Circle()

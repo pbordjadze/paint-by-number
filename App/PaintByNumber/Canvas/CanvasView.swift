@@ -2183,15 +2183,19 @@ extension CanvasView: TogetherCanvas {
     }
 
     func friendMoved(to point: SIMD2<Float>?, color: Int) {
+        // A message that comes after the screen went builds nothing on it.
+        guard window != nil else { return }
         presence.move(to: point, color: lightColor(color))
         friendViewChanged(gliding: true)
     }
 
     func showRipple(at point: SIMD2<Float>, fromFriend: Bool) {
+        guard window != nil else { return }
         presence.ripple(at: point, color: rippleColor)
     }
 
     func showStar(from point: SIMD2<Float>, fromFriend: Bool) {
+        guard window != nil else { return }
         presence.star(from: point)
     }
 
@@ -2289,6 +2293,8 @@ extension CanvasView: TogetherCanvas {
                 return
             }
             replay(lights: true)
+            // A replay that couldn't start leaves the Finished panel to show.
+            if !isReplaying { session.together.playsFinale = false }
         }
         return true
     }
