@@ -43,6 +43,8 @@ final class EraDoor {
     private(set) var shown: Era
     /// The era the passage is on its way to, while it plays (`EraPassage`).
     private(set) var passage: Era?
+    /// The era the passage leaves, while it plays: leaving Stained Glass is the nave's passage too.
+    private(set) var origin: Era?
     @ObservationIgnored private let defaults: UserDefaults
 
     init(defaults: UserDefaults = .standard) {
@@ -65,6 +67,7 @@ final class EraDoor {
         } else {
             defaults.set(era.rawValue, forKey: Self.key)
         }
+        origin = shown
         passage = era
     }
 
@@ -78,6 +81,7 @@ final class EraDoor {
     func passed() {
         if let passage { shown = passage }
         passage = nil
+        origin = nil
     }
 
     #if DEBUG
@@ -108,16 +112,17 @@ struct EraPassage: View {
     static let lift: TimeInterval = 1.0
     static var total: TimeInterval { wait + cover + hold + lift }
 
-    /// Whether the passage to `destination` is the way back's own: to Paint by Moonlight, with
-    /// motion, in SideStore and Debug builds. Every other passage is the tiles set and lifted.
-    static func isWayBack(to destination: Era, reduceMotion: Bool) -> Bool {
-        return destination == .moonlight && !reduceMotion
+    /// Whether the passage to `destination` is the way back's own: to Paint by Moonlight from
+    /// the mosaic era, with motion. Stained Glass's passages are the nave's, either way; every
+    /// other passage is the tiles set and lifted.
+    static func isWayBack(to destination: Era, from origin: Era? = nil, reduceMotion: Bool) -> Bool {
+        return destination == .moonlight && origin != .glass && !reduceMotion
     }
 
     /// When the screen is wholly covered, so the era can go in beneath, and when the passage is
     /// over (seconds from its start).
-    static func moments(to destination: Era, reduceMotion: Bool) -> (covered: TimeInterval, done: TimeInterval) {
-        if isWayBack(to: destination, reduceMotion: reduceMotion) { return (EraWayBack.swap, EraWayBack.total) }
+    static func moments(to destination: Era, from origin: Era? = nil, reduceMotion: Bool) -> (covered: TimeInterval, done: TimeInterval) {
+        if isWayBack(to: destination, from: origin, reduceMotion: reduceMotion) { return (EraWayBack.swap, EraWayBack.total) }
         return (wait + cover, total)
     }
 
@@ -125,9 +130,10 @@ struct EraPassage: View {
         if let destination = door.passage {
             TimelineView(.animation) { context in
                 let elapsed = Self.held(start.map { context.date.timeIntervalSince($0) } ?? 0)
-                let timing = Self.moments(to: destination, reduceMotion: reduceMotion)
+                let origin = door.origin
+                let timing = Self.moments(to: destination, from: origin, reduceMotion: reduceMotion)
                 Canvas { graphics, size in
-                    draw(in: &graphics, size: size, elapsed: elapsed, destination: destination)
+                    draw(in: &graphics, size: size, elapsed: elapsed, destination: destination, origin: origin)
                 }
                 .onChange(of: elapsed >= timing.covered) { _, covered in
                     if covered && !settledCover {
@@ -191,13 +197,13 @@ struct EraPassage: View {
         let color: Color
     }
 
-    private func draw(in graphics: inout GraphicsContext, size: CGSize, elapsed: TimeInterval, destination: Era) {
-        if Self.isWayBack(to: destination, reduceMotion: reduceMotion) {
+    private func draw(in graphics: inout GraphicsContext, size: CGSize, elapsed: TimeInterval, destination: Era, origin: Era?) {
+        if Self.isWayBack(to: destination, from: origin, reduceMotion: reduceMotion) {
             drawWayBack(in: &graphics, size: size, elapsed: elapsed)
             return
         }
         let apse = Color(red: 0.082, green: 0.075, blue: 0.059)
-        if destination == .glass && !reduceMotion {
+        if (destination == .glass || origin == .glass) && !reduceMotion {
             drawNave(in: &graphics, size: size, elapsed: elapsed)
             return
         }

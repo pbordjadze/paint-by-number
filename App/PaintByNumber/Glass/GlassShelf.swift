@@ -21,6 +21,8 @@ final class GlassShelf {
     /// Newest first.
     private(set) var windows: [Artwork] = []
     private(set) var isLoaded = false
+    /// Each window's last save, which its next waits for.
+    @ObservationIgnored private var saving: [UUID: Task<Void, Never>] = [:]
 
     init(root: URL = GlassShelf.defaultRoot) {
         store = ArtworkStore(root: root)
@@ -58,8 +60,8 @@ final class GlassShelf {
         let template = leaded.template
         let artwork = Artwork(title: title, template: template, settings: GenerationSettings())
         let store = store
-        let glazing = Glazing(pieces: template.regions.count)
         let offered = GlassPalette.offered(for: template)
+        let glazing = Glazing(pieces: template.regions.count, offered: offered)
         try await Background.run {
             let source = PhotoLoader.cgImage(from: photo).flatMap {
                 ImageCodec.jpegData(ImageCodec.downscaled($0, maxPixelSize: ArtworkStore.sourceMaxPixelSize), quality: 0.88)
@@ -88,24 +90,34 @@ final class GlassShelf {
         let store = store
         return try await Background.run {
             let template = try store.readTemplate(artwork.id)
-            let offered = GlassPalette.offered(for: template)
             let url = store.directory(for: artwork.id).appending(path: Self.glazingFile)
-            var glazing = Glazing(pieces: template.regions.count)
+            var glazing = Glazing(pieces: template.regions.count, offered: GlassPalette.offered(for: template))
             if let data = try? Data(contentsOf: url) {
                 do {
-                    glazing = try Glazing(encoded: data, pieces: template.regions.count, offered: offered.count)
+                    glazing = try Glazing(encoded: data, pieces: template.regions.count)
                 } catch Glazing.CodingError.newerVersion(let version) {
                     throw Glazing.CodingError.newerVersion(version)
                 } catch {
                     Log.library.error("Unreadable glazing of window \(artwork.id.uuidString, privacy: .public): starting it unglazed")
                 }
             }
-            return Opened(template: template, glazing: glazing, offered: offered)
+            return Opened(template: template, glazing: glazing, offered: glazing.offered)
         }
     }
 
-    /// Writes a window's glazing, its picture on the shelf and its meta (the pieces glazed).
+    /// Writes a window's glazing, its picture on the shelf and its meta (the pieces glazed), after
+    /// the window's saves before it, so an older glazing never lands over a newer one.
     func save(_ glazing: Glazing, of id: UUID, template: Template, offered: [PaletteColor]) async {
+        let previous = saving[id]
+        let task = Task {
+            await previous?.value
+            await write(glazing, of: id, template: template, offered: offered)
+        }
+        saving[id] = task
+        await task.value
+    }
+
+    private func write(_ glazing: Glazing, of id: UUID, template: Template, offered: [PaletteColor]) async {
         guard var artwork = window(id) else { return }
         artwork.paintedCount = glazing.glazedCount
         artwork.modifiedAt = .now

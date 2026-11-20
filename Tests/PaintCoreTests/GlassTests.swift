@@ -118,43 +118,55 @@ struct GlassTests {
 
     // MARK: Glazing
 
+    static func glasses(_ n: Int) -> [PaletteColor] {
+        (0..<n).map { i in PaletteColor(oklab: SIMD3(0.3 + 0.1 * Float(i), 0.05, -0.02), space: .sRGB) }
+    }
+
     @Test func glazingRoundTrips() throws {
-        var g = Glazing(pieces: 4)
+        var g = Glazing(pieces: 4, offered: Self.glasses(5))
         #expect(g.glazedCount == 0)
         g.glass[1] = 3
         g.glass[3] = 0
-        let back = try Glazing(encoded: g.encoded(), pieces: 4, offered: 5)
+        let back = try Glazing(encoded: g.encoded(), pieces: 4)
         #expect(back == g && back.glazedCount == 2)
+        // The glasses are the ones the window was made with, whatever is suggested now.
+        #expect(back.offered == Self.glasses(5))
         // Readers ignore trailing bytes: fields are only ever appended.
-        #expect(try Glazing(encoded: g.encoded() + Data([1, 2, 3]), pieces: 4, offered: 5) == g)
+        #expect(try Glazing(encoded: g.encoded() + Data([1, 2, 3]), pieces: 4) == g)
     }
 
     @Test func aGlassPastTheOfferedReadsAsNone() throws {
-        var g = Glazing(pieces: 3)
+        var g = Glazing(pieces: 3, offered: Self.glasses(3))
         g.glass = [2, 7, -5]
-        let back = try Glazing(encoded: g.encoded(), pieces: 3, offered: 3)
+        let back = try Glazing(encoded: g.encoded(), pieces: 3)
         #expect(back.glass == [2, Glazing.none, Glazing.none])
     }
 
     @Test func glazingIsReadAsHostile() throws {
-        var g = Glazing(pieces: 3)
+        var g = Glazing(pieces: 3, offered: Self.glasses(3))
         g.glass = [0, 1, 2]
         let data = g.encoded()
         for n in 0..<data.count {
-            #expect(throws: Glazing.CodingError.self) { try Glazing(encoded: data.prefix(n), pieces: 3, offered: 3) }
+            #expect(throws: Glazing.CodingError.self) { try Glazing(encoded: data.prefix(n), pieces: 3) }
         }
         var bad = data
         bad[0] ^= 0xFF
-        #expect(throws: Glazing.CodingError.corrupt) { try Glazing(encoded: bad, pieces: 3, offered: 3) }
+        #expect(throws: Glazing.CodingError.corrupt) { try Glazing(encoded: bad, pieces: 3) }
         var newer = data
         newer.replaceSubrange(4..<8, with: withUnsafeBytes(of: UInt32(9)) { Data($0) })
-        #expect(throws: Glazing.CodingError.newerVersion(9)) { try Glazing(encoded: newer, pieces: 3, offered: 3) }
+        #expect(throws: Glazing.CodingError.newerVersion(9)) { try Glazing(encoded: newer, pieces: 3) }
         var huge = data
         huge.replaceSubrange(8..<12, with: withUnsafeBytes(of: UInt32.max) { Data($0) })
-        #expect(throws: Glazing.CodingError.corrupt) { try Glazing(encoded: huge, pieces: 3, offered: 3) }
-        #expect(throws: Glazing.CodingError.otherWindow) { try Glazing(encoded: data, pieces: 4, offered: 3) }
+        #expect(throws: Glazing.CodingError.corrupt) { try Glazing(encoded: huge, pieces: 3) }
+        #expect(throws: Glazing.CodingError.otherWindow) { try Glazing(encoded: data, pieces: 4) }
+        var hugeOffer = data
+        hugeOffer.replaceSubrange(18..<22, with: withUnsafeBytes(of: UInt32.max) { Data($0) })
+        #expect(throws: Glazing.CodingError.corrupt) { try Glazing(encoded: hugeOffer, pieces: 3) }
+        var notANumber = data
+        notANumber.replaceSubrange(22..<26, with: withUnsafeBytes(of: Float.nan) { Data($0) })
+        #expect(throws: Glazing.CodingError.corrupt) { try Glazing(encoded: notANumber, pieces: 3) }
         // A slice not starting at zero reads the same.
         let sliced = (Data([9, 9]) + data).dropFirst(2)
-        #expect(try Glazing(encoded: sliced, pieces: 3, offered: 3) == g)
+        #expect(try Glazing(encoded: sliced, pieces: 3) == g)
     }
 }

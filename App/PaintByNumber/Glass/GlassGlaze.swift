@@ -149,6 +149,8 @@ struct GlassGlazeView: View {
     var sunHold: TimeInterval?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    /// The sun has passed: the window stands still again.
+    @State private var sunPassed = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -186,12 +188,18 @@ struct GlassGlazeView: View {
             if phase != .active { model.flush() }
         }
         .onDisappear { model.flush() }
+        .task(id: model.finishedAt) {
+            sunPassed = false
+            guard model.finishedAt != nil else { return }
+            try? await Task.sleep(for: .seconds(GlassGlazeModel.sunDuration + 0.5))
+            if !Task.isCancelled { sunPassed = true }
+        }
     }
 
     private var isMoving: Bool {
         if !model.pours.isEmpty && !reduceMotion { return true }
-        guard let at = model.finishedAt, !reduceMotion else { return false }
-        return sunHold == nil && Date.now.timeIntervalSince(at) < GlassGlazeModel.sunDuration + 0.5
+        guard model.finishedAt != nil, !reduceMotion else { return false }
+        return sunHold == nil && !sunPassed
     }
 
     private var progressText: String {

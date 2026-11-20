@@ -95,7 +95,15 @@ public enum GlassPalette {
         let total = Float(gw * gh)
         var labs = (0..<n).map { k -> SIMD3<Float> in
             let s = sum[k]
-            return s.w > 0 ? SIMD3(s.x, s.y, s.z) / s.w : SIMD3(1, 0, 0)
+            if s.w > 0 { return SIMD3(s.x, s.y, s.z) / s.w }
+            // A sliver too thin for the grid: the photo where its number would sit, never white.
+            let region = template.regions[k]
+            let at = region.labelCount > 0 && Int(region.labelStart) < template.labels.count
+                ? template.labels[Int(region.labelStart)].position : SIMD2<Float>(Float(template.width), Float(template.height)) / 2
+            let x = min(gw - 1, max(0, Int(at.x * Float(gw) / Float(template.width))))
+            let y = min(gh - 1, max(0, Int(at.y * Float(gh) / Float(template.height))))
+            let px = small[x, y]
+            return ColorScience.linearToOKLab(SIMD3(lut[Int(px.x)], lut[Int(px.y)], lut[Int(px.z)]), space: small.colorSpace)
         }
         let back = (0..<n).map { k in
             area[k] / total > backgroundShare && detail[k] / max(1, detailCount[k]) < backgroundDetail

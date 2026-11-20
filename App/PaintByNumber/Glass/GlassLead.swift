@@ -19,14 +19,17 @@ final class GlassLeadModel {
 
     /// The lines laid, as joined, in canvas units.
     private(set) var lines: [[CGPoint]] = []
-    /// A line lifted but not laid yet: drawn as it was, so the lead never lags the finger.
-    private(set) var waiting: [[CGPoint]] = []
+    /// Lines lifted but not laid yet, drawn as they were, so the lead never lags the finger.
+    private(set) var pending: [(id: Int, line: [CGPoint])] = []
     private(set) var pieces = 1
     /// The pieces the last line closed, and when, for their flash.
     private(set) var flash: (paths: [CGPath], at: Date)?
     private(set) var isMaking = false
     @ObservationIgnored private var leading: GlassWindow.Leading?
     @ObservationIgnored private var queue: Task<Void, Never>?
+    @ObservationIgnored private var nextID = 0
+    /// Lines taken back before they were laid: their work is skipped, or its result dropped.
+    @ObservationIgnored private var withdrawn: Set<Int> = []
 
     init(photo: RGBAImage, picture: CGImage) {
         self.photo = photo
@@ -36,24 +39,31 @@ final class GlassLeadModel {
         height = size.height
     }
 
-    var canUndo: Bool { !lines.isEmpty || !waiting.isEmpty }
+    var waiting: [[CGPoint]] { pending.map(\.line) }
+    var canUndo: Bool { !lines.isEmpty || !pending.isEmpty }
 
     /// Lays `line` (canvas units), its ends joined within `reach`.
     func add(_ line: [CGPoint], reach: CGFloat) {
         guard line.count >= 2 else { return }
-        waiting.append(line)
-        enqueue { [photo, width, height] current in
+        let id = nextID
+        nextID += 1
+        pending.append((id, line))
+        enqueue(id: id) { [photo, width, height] current in
             var leading = try current ?? GlassWindow.Leading(photo: photo, width: width, height: height, colorSpace: photo.colorSpace)
             let added = leading.add(line.map { SIMD2(Float($0.x), Float($0.y)) }, joining: Float(reach))
             return (leading, added.closed)
         }
     }
 
-    /// Takes the last line back: the window is leaded again from the lines before it.
+    /// Takes the last line back: one not laid yet is withdrawn; a laid one is taken up, the window
+    /// leaded again from the lines before it.
     func undo() {
-        guard canUndo else { return }
-        if !waiting.isEmpty { waiting.removeLast() }
-        enqueue(undoing: true) { [photo, width, height] current in
+        if let last = pending.popLast() {
+            withdrawn.insert(last.id)
+            return
+        }
+        guard !lines.isEmpty else { return }
+        enqueue(id: nil) { [photo, width, height] current in
             guard let leading = current, !leading.lines.isEmpty else { return (current, []) }
             var again = try GlassWindow.Leading(photo: photo, width: width, height: height, colorSpace: photo.colorSpace)
             for line in leading.lines.dropLast() { again.add(line) }
@@ -73,17 +83,25 @@ final class GlassLeadModel {
         }
     }
 
-    /// Runs `work` on the window after the work before it, off the main actor.
+    /// Runs `work` on the window after the work before it, off the main actor. `id` is the line
+    /// it lays, if any: withdrawn, the work is skipped or its result dropped.
     private func enqueue(
-        undoing: Bool = false,
+        id: Int?,
         _ work: @escaping @Sendable (GlassWindow.Leading?) throws -> (GlassWindow.Leading?, [Int])
     ) {
         let previous = queue
         queue = Task {
             await previous?.value
+            defer {
+                if let id {
+                    pending.removeAll { $0.id == id }
+                    withdrawn.remove(id)
+                }
+            }
+            if let id, withdrawn.contains(id) { return }
             let leading = self.leading
             let result = try? await Background.run { try work(leading) }
-            if !undoing, !waiting.isEmpty { waiting.removeFirst() }
+            if let id, withdrawn.contains(id) { return }
             guard let result, let laid = result.0 else { return }
             self.leading = laid
             lines = laid.lines.map { $0.map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) } }
@@ -127,9 +145,10 @@ struct GlassLeadView: View {
                         .opacity(0.72)
                         .accessibilityHidden(true)
                 }
+                let stroke = drawing
                 TimelineView(.animation(paused: model.flash == nil || reduceMotion)) { context in
                     Canvas { graphics, _ in
-                        draw(in: &graphics, fit: fit, now: context.date)
+                        draw(in: &graphics, fit: fit, stroke: stroke, now: context.date)
                     }
                 }
                 .accessibilityElement()
@@ -204,7 +223,7 @@ struct GlassLeadView: View {
                comment: "How many pieces of glass the lead drawn so far makes (plural)")
     }
 
-    private func draw(in graphics: inout GraphicsContext, fit: GlassFit, now: Date) {
+    private func draw(in graphics: inout GraphicsContext, fit: GlassFit, stroke: [CGPoint], now: Date) {
         let toScreen = fit.transform
         let width = max(3, GlassPicture.leadWidth(width: model.width, height: model.height) * fit.scale)
         if let flash = model.flash, !reduceMotion {
@@ -218,9 +237,9 @@ struct GlassLeadView: View {
         }
         var lead = Path(GlassPicture.leadPath(lines: model.lines + model.waiting, width: model.width, height: model.height))
             .applying(toScreen)
-        if drawing.count >= 2 {
+        if stroke.count >= 2 {
             var line = Path()
-            line.addLines(drawing.map { $0.applying(toScreen) })
+            line.addLines(stroke.map { $0.applying(toScreen) })
             lead.addPath(line)
         }
         let ink = GlassPicture.color(GlassPicture.lead, space: .sRGB)
