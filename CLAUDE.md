@@ -76,6 +76,11 @@ before planning app work).
     writing through `Writing`), `DrawingPalette` (the sets and how their paints are laid so
     neighbours differ); `Model/DrawingSettings.swift` is what a painting records. Nothing
     changes for a photo: `drawing` is nil and absent from its settings.
+  - `Glass/`: Stained Glass (painting-company row 366): `GlassWindow` (a photo leaded by the
+    painter's own lines, each line a Pen draw on `TemplateEditor.blank`), `GlassPalette` (the
+    glasses a window suggests, its background found by focus, and the classics offered after
+    them) and `Glazing` (free glazing's `glazing.bin`: any glass in any piece, read as hostile
+    input); `pbn glass` previews a window lit and unlit.
   - `Edit/`: `TemplateEditor`, the painter's pen, Cell Edge, Merge, Paint Brush, Bend Line and Move Edge (`reshape`), Move Number, eraser, line eraser, fill, Only
     This Area (`paintArea`), Looks and Edit Paint (looks and repaints, `Recolor.swift`) and the
     retired Color Splitter's splits made to a finished
