@@ -24,6 +24,7 @@ public struct BookStrings: Sendable {
     public var kilograms: @Sendable (Double) -> String = { String(format: "%.1f kg", $0) }
     public var hours: @Sendable (Int) -> String = { "\($0) h" }
     public var minutes: @Sendable (Int) -> String = { "\($0) min" }
+    public var hoursRange: @Sendable (Int, Int) -> String = { "\($0)–\($1) h" }
     public var toolList = "Tools and materials"
     /// Each thing the book uses, by its pictogram's name (`StoneBook.kit`).
     public var tools: [String: String] = [
@@ -246,7 +247,7 @@ extension StoneBook {
         drawMosaic(&c, (pw - w) / 2, 44 + (h - hh) / 2, w, hh)
         let hours = hoursToSet, cost = Int((stonePounds / 10).rounded()) * 10
         let facts: [(BookIcon, String)] = [(.ruler, strings.size(widthMM / 10, heightMM / 10)), (.tiles, strings.count(pieces.count)),
-                                           (.clock, strings.count(hours.lowerBound) + "–" + strings.hours(hours.upperBound)),
+                                           (.clock, strings.hoursRange(hours.lowerBound, hours.upperBound)),
                                            (.price, "≈ " + strings.pounds(cost)), (.pages, strings.count(pageCount))]
         let cw = (pw - 2 * m) / Double(facts.count)
         for (i, (icon, s)) in facts.enumerated() {

@@ -163,7 +163,7 @@ struct SetInStoneSheet: View {
     nonisolated static func estimate(_ book: StoneBook) -> String {
         let strings = BookStrings.ravenna
         let size = size(book.widthMM / 10, book.heightMM / 10), hours = book.hoursToSet
-        let time = strings.count(hours.lowerBound) + "–" + strings.hours(hours.upperBound)
+        let time = strings.hoursRange(hours.lowerBound, hours.upperBound)
         let cost = strings.pounds(Int((book.stonePounds / 10).rounded()) * 10)
         return String(localized: "stone.estimate", defaultValue: "\(size) · \(time) to set · about \(cost) of stone", bundle: .ravenna,
                       comment: "Set in Stone's tile size row, under its name: how big the mosaic comes out (59 cm × 106 cm), the hours to set it (a range like 55–110 h) and what its stones cost (a price like £1,530)")
@@ -382,6 +382,10 @@ extension BookStrings {
         }
         s.hours = { Measurement(value: Double($0), unit: UnitDuration.hours).formatted(.measurement(width: .abbreviated)) }
         s.minutes = { Measurement(value: Double($0), unit: UnitDuration.minutes).formatted(.measurement(width: .abbreviated)) }
+        s.hoursRange = { low, high in
+            String(localized: "stone.hoursRange", defaultValue: "\(low)–\(high) h", bundle: .ravenna,
+                   comment: "Set in Stone: how long setting the mosaic takes, a range of whole hours, like 55–110 h")
+        }
         s.pounds = { Decimal($0).formatted(.currency(code: "GBP").precision(.fractionLength(0))) }
         s.toolList = String(localized: "stone.tools.title", defaultValue: "Tools and materials", bundle: .ravenna,
                             comment: "Set in Stone's book: the heading of the page that names every tool and material the book's pictures show")

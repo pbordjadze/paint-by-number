@@ -37663,6 +37663,78 @@
         }
       }
     },
+    "stone.hoursRange": {
+      "comment": "Set in Stone: how long setting the mosaic takes, a range of whole hours, like 55–110 h",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld–%2$lld Std."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld–%2$lld h"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld–%2$lld h"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld à %2$lld h"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld–%2$lld h"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld～%2$lld時間"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld~%2$lld시간"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld–%2$lld uur"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld–%2$lld h"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld–%2$lld 小时"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld–%2$lld 小時"
+          }
+        }
+      }
+    },
     "stone.list.title": {
       "comment": "Set in Stone's book: the heading of its last pages, the stones to buy",
       "extractionState": "manual",

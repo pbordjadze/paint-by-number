@@ -445,7 +445,7 @@ extension StoneBook {
         c.shape(.circle(Point(p[3].cx + 10, p[3].cy), 6), fill: BookStyle.paper, stroke: BookStyle.ink, width: 0.6)
         c.text("\(sampleSection + 1)", p[3].cx + 10, p[3].cy + 2.2, 6, 700, BookStyle.ink, .middle)
         // the corner map: the sheet you are on, the dot where the step is
-        let mw = 34.0
+        let mw = min(34, (p[4].h - 22) / StoneBook.lessonZoom * width / height)
         minimap(&c, p[4].cx - mw / 2, p[4].cy - mw * height / width / 2, mw, current: sampleSection, dot: Point((lo.x + hi.x) / 2, (lo.y + hi.y) / 2), doneBefore: sampleSection)
         // a circle at the cartoon's edge is the next sheet: its first page
         c.stroke(.rect(p[5].cx - 28, p[5].cy - 14, 30, 28), BookStyle.muted, 0.4, dash: [1.6, 1], round: false)
@@ -642,7 +642,8 @@ extension StoneBook {
         // level
         BookIcon.level.draw(into: &c, p[3].cx - 16, p[3].cy - 16, 32)
         // up together
-        let w = 30.0, h = w * height / width
+        let fitH = (p[4].h - 22) / StoneBook.lessonZoom, fitW = (p[4].w - 20) / StoneBook.lessonZoom
+        let h = min(fitH, fitW * height / width), w = h * width / height
         drawMosaic(&c, p[4].cx - w / 2, p[4].cy - h / 2, w, h)
         arrow(&c, p[4].cx + w / 2 + 4, p[4].cy + 8, p[4].cx + w / 2 + 4, p[4].cy - 8)
         // on the wall
