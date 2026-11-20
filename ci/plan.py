@@ -14,12 +14,16 @@ scenarios), is left out; STATUS.md names the run it passed in. Anything else
 (another branch, a run started by hand, a commit with other files, an API that doesn't answer)
 keeps every entry: leaving one out needs proof, running it needs none.
 
-And it gives one entry of a branch's run to the Mac (painting-company row 346): a runner of our
+And it gives a branch's compile check to the Mac (painting-company row 346): a runner of our
 own, labelled `pbm-mac`, beside GitHub's five, which runs one job at a time. With the repository
 variable MAC_CI `on` (the workflow passes it as MAC) and no job of ours waiting for the Mac or
-running on it, the run's longest entry goes there (FOR_MAC, in order); every other entry, and
-every entry of main's runs, stays on GitHub's runners, so a Mac that is asleep, paused for a
-speed measurement (`ci-pause` there) or busy holds up one branch at most, and never main.
+running on it, the run's entry of FOR_MAC goes there; every other entry, and every entry of
+main's runs, stays on GitHub's runners. Only builds go: the Mac is also Paul's laptop, shared with
+other repositories' runners and with sessions using Xcode and simulators there, and on November 19
+its main thread stalled 13 to 15 s at a time under UI tests, which then failed on their waits
+(run 44637167447's ipad-ui; the same tests pass on GitHub's runners). A build only takes longer.
+A Mac that is asleep, paused for a speed measurement (`ci-pause` there) or busy holds up one
+branch's compile check at most, and never main.
 GitHub would keep a job waiting a day for a runner that isn't there, so the workflow's `mac-watch`
 job (`ci/plan.py --watch`) cancels a run whose entry the Mac hasn't taken in 15 minutes; an entry
 cancelled so, in the last six hours, keeps the Mac out of the plans after it. Start the run again
@@ -49,9 +53,9 @@ NAMES = {
 
 
 HOSTED, MAC = "xcode-27", "pbm-mac"
-# The entry the Mac takes, the first of these a run has: the longest, and the quick checks a
-# session waits on.
-FOR_MAC = ("ipad-ui", "compile", "test", "duo", "release-tests", "ipad")
+# The entries the Mac takes: builds alone, whose time a busy Mac stretches but never fails (the
+# docstring). Anything that waits on a simulator's screen stays on GitHub's runners.
+FOR_MAC = ("compile",)
 
 
 # How long the Mac has to take an entry, and how long one it never took keeps it out of the plans.
@@ -218,7 +222,8 @@ def self_test():
     assert passed(["ipad-ui"], runs, "70", any_push) == {"ipad-ui": "https://github.com/o/r/actions/runs/7/job/71"}
     # A run started by hand proves nothing: it may have taken only some scenarios.
     assert passed(list(NAMES), runs, "7", lambda run_id: run_id != "5") == {}
-    assert routed(["ipad", "ipad-ui"], True) == [{"job": "ipad", "on": HOSTED}, {"job": "ipad-ui", "on": MAC}]
+    assert routed(["ipad", "ipad-ui"], True) == [{"job": "ipad", "on": HOSTED}, {"job": "ipad-ui", "on": HOSTED}]
+    assert routed(["test"], True) == [{"job": "test", "on": HOSTED}]
     assert routed(["ipad", "ipad-ui"], False) == [{"job": "ipad", "on": HOSTED}, {"job": "ipad-ui", "on": HOSTED}]
     assert routed(["compile"], True) == [{"job": "compile", "on": MAC}]
     assert routed(["iphone", "iphone-ui"], True) == [{"job": "iphone", "on": HOSTED}, {"job": "iphone-ui", "on": HOSTED}]
