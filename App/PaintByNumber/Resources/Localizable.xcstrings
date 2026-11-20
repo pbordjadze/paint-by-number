@@ -6398,7 +6398,7 @@
       }
     },
     "Layers" : {
-      "comment" : "Refine screen: the button in the top bar that opens the Layers panel (what shows: the numbers, the ink, the paint, the photo), and the panel's title; also the Tool Guide's page about that panel",
+      "comment" : "Refine screen: the button in the top bar that opens the Layers panel (what shows: the numbers, the ink, the paint, the photo), and the panel's title; also the Tool Guide's page about that panel; and Print's preview's row (a menu) of what prints: lines, numbers, color hints, the color key",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -6926,7 +6926,7 @@
       }
     },
     "Numbers" : {
-      "comment" : "Refine screen: the group of tools about the areas' numbers (Move Number), a section of the tool rail on iPad and a tab above the tools on iPhone; and the Layers panel's layer of the numbers",
+      "comment" : "Refine screen: the group of tools about the areas' numbers (Move Number), a section of the tool rail on iPad and a tab above the tools on iPhone; and the Layers panel's layer of the numbers; and Print's preview's Layers menu: the areas' printed numbers",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -16184,7 +16184,7 @@
       }
     },
     "Color Key" : {
-      "comment" : "Title of the last page of a printed template: the list of colors with their numbers and names",
+      "comment" : "Title of the last page of a printed template: the list of colors with their numbers and names; and Print's preview's Layers menu: whether that page prints",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -28118,7 +28118,7 @@
       }
     },
     "Lines" : {
-      "comment" : "Create flow: label of the slider for how many of the photo's edges the template draws as lines",
+      "comment" : "Create flow: label of the slider for how many of the photo's edges the template draws as lines; and Print's preview's Layers menu: the template's printed lines",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -55509,6 +55509,210 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "微調"
+          }
+        }
+      }
+    },
+    "Color Hints" : {
+      "comment" : "Print's preview, Layers menu: the layer that washes each area of the printed template in a pale tint of its paint",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farbhauch"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toques de color"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touches de couleur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tocchi di colore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "色のヒント"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "색 힌트"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kleurtinten"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toques de cor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "颜色提示"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顏色提示"
+          }
+        }
+      }
+    },
+    "Each area a pale wash of its paint" : {
+      "comment" : "Print's preview, Layers menu, under Color Hints: what that layer prints",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jede Fläche in einem zarten Hauch ihrer Farbe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada zona con un tono suave de su pintura"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chaque zone teintée de sa peinture, en pâle"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ogni area in una tinta tenue del suo colore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "各エリアを絵の具の色でうっすら塗ります"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "각 영역을 물감 색으로 옅게 칠해요"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elk vlak in een zachte tint van zijn verf"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada área num tom suave da sua tinta"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每块区域淡淡涂上它的颜料色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每塊區域淡淡塗上它的顏料色"
+          }
+        }
+      }
+    },
+    "print.layers.none" : {
+      "comment" : "Print's preview, the Layers row with every layer turned off: nothing but the page's title prints",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nichts"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niente"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "なし"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "없음"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niets"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無"
           }
         }
       }
