@@ -17,7 +17,6 @@ struct GlassEra: View {
 
     @State private var shelf = GlassShelf.shared
     @State private var path: [GlassRoute] = []
-    @State private var leads: [UUID: GlassLeadModel] = [:]
     @State private var picking = false
     @State private var picked: PhotosPickerItem?
     @State private var showsSettings = false
@@ -29,10 +28,8 @@ struct GlassEra: View {
                              onOpen: { path.append(.window($0)) })
                 .navigationDestination(for: GlassRoute.self) { route in
                     switch route {
-                    case .lead(let key):
-                        if let model = leads[key] {
-                            GlassLeadView(model: model, onStart: { start($0, from: key) }, onCancel: { closeLead(key) })
-                        }
+                    case .lead(let lead):
+                        GlassLeadView(model: lead.model, onStart: { start($0, from: lead) }, onCancel: { closeLead(lead) })
                     case .window(let id):
                         GlassWindowScreen(shelf: shelf, id: id)
                     }
@@ -53,7 +50,7 @@ struct GlassEra: View {
         .task {
             await shelf.load()
             #if DEBUG
-            await GlassDemo.run(scenario: DemoMode.scenario, shelf: shelf, path: $path, leads: $leads)
+            await GlassDemo.run(scenario: DemoMode.scenario, shelf: shelf, path: $path)
             #endif
         }
         .tint(GlassEra.gold)
@@ -86,34 +83,39 @@ struct GlassEra: View {
 
     private func open(_ photo: RGBAImage) {
         guard let picture = PhotoLoader.cgImage(from: photo) else { return }
-        let key = UUID()
-        leads[key] = GlassLeadModel(photo: photo, picture: picture)
-        path.append(.lead(key))
+        path.append(.lead(GlassLeadRoute(model: GlassLeadModel(photo: photo, picture: picture))))
     }
 
-    private func start(_ window: GlassWindow.Leaded, from key: UUID) {
-        guard let model = leads[key] else { return }
+    private func start(_ window: GlassWindow.Leaded, from lead: GlassLeadRoute) {
         Task {
             do {
-                let artwork = try await shelf.create(window, photo: model.photo, title: GlassShelf.title())
+                let artwork = try await shelf.create(window, photo: lead.model.photo, title: GlassShelf.title())
                 path = [.window(artwork.id)]
-                leads[key] = nil
             } catch {
                 Log.library.error("Couldn't save a window: \(String(describing: error), privacy: .public)")
             }
         }
     }
 
-    private func closeLead(_ key: UUID) {
-        path.removeAll { $0 == .lead(key) }
-        leads[key] = nil
+    private func closeLead(_ lead: GlassLeadRoute) {
+        path.removeAll { $0 == .lead(lead) }
     }
 }
 
 enum GlassRoute: Hashable {
-    /// A photo being leaded, by its key in the era's leads.
-    case lead(UUID)
+    /// A photo being leaded: the route carries its model, so the screen never looks it up in
+    /// state the destination may not have seen yet.
+    case lead(GlassLeadRoute)
     case window(UUID)
+}
+
+/// A Lead screen's model as a route, equal by its own id.
+struct GlassLeadRoute: Hashable {
+    let id = UUID()
+    let model: GlassLeadModel
+
+    static func == (a: Self, b: Self) -> Bool { a.id == b.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
 }
 
 /// The windows: a card each, newest first; none yet, a way to make the first.

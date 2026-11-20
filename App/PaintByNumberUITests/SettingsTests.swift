@@ -296,7 +296,9 @@ final class SettingsTests: XCTestCase {
                 continue
             }
             // To an end, flicks; to a year inside the wheel, a few rows at a time.
-            let far = year == present || (year == 547 && !Self.reachesBeforeByzantium)
+            // A long way back is a flick too: rested on the way, the wheel would open the era
+            // it stopped beside (1248 lies between the present and 0547).
+            let far = year == present || (year == 547 && !Self.reachesBeforeByzantium) || shown - year > 400
             let velocity: XCUIGestureVelocity = far ? .fast : .slow
             if shown > year { wheels.firstMatch.swipeDown(velocity: velocity) } else { wheels.firstMatch.swipeUp(velocity: velocity) }
             _ = wheels.firstMatch.waitForNonExistence(timeout: 2.5)

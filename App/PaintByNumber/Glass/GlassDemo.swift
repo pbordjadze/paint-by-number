@@ -38,7 +38,7 @@ enum GlassDemo {
 
     nonisolated static func reach(width: Int, height: Int) -> Float { Float(max(width, height)) * 0.02 }
 
-    static func run(scenario name: String?, shelf: GlassShelf, path: Binding<[GlassRoute]>, leads: Binding<[UUID: GlassLeadModel]>) async {
+    static func run(scenario name: String?, shelf: GlassShelf, path: Binding<[GlassRoute]>) async {
         guard let name, name.hasPrefix("glass-") else { return }
         do {
             switch name {
@@ -52,9 +52,7 @@ enum GlassDemo {
                 for line in Self.lines(width: model.width, height: model.height) {
                     model.add(line.map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) }, reach: reach)
                 }
-                let key = UUID()
-                leads.wrappedValue[key] = model
-                path.wrappedValue = [.lead(key)]
+                path.wrappedValue = [.lead(GlassLeadRoute(model: model))]
                 _ = await model.make()
                 try? await Task.sleep(for: .seconds(1))
                 DemoMode.markReady()

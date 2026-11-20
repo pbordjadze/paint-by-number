@@ -272,9 +272,12 @@ struct GlassGlazeView: View {
         var sun = graphics
         sun.clip(to: Path(fit.rect))
         sun.blendMode = .plusLighter
-        let rect = fit.rect, span = rect.width + rect.height
-        let front = -rect.height + span * (t * 1.3 - 0.15)
+        // The band's front is the line x + 0.6 y = front (from the window's corner), crossing
+        // from before the top-left corner to past the bottom-right one.
+        let rect = fit.rect
         let band = rect.width * 0.35
+        let depth = band * 1.36 // the band's own breadth along that measure
+        let front = -depth + (rect.width + rect.height * 0.6 + depth) * t
         let start = CGPoint(x: rect.minX + front, y: rect.minY), end = CGPoint(x: rect.minX + front + band, y: rect.minY + band * 0.6)
         let strength = sin(.pi * t)
         sun.fill(Path(rect), with: .linearGradient(
