@@ -19,6 +19,8 @@ struct MuseumWorkView: View {
     @State private var wantsToPaint = false
     @State private var showsFailure = false
     @State private var size: CGSize = .zero
+    /// Counts the fetches: a retry is a new one, which leaving the page cancels as it does the first.
+    @State private var attempt = 0
     @Environment(\.displayScale) private var displayScale
 
     var body: some View {
@@ -38,7 +40,7 @@ struct MuseumWorkView: View {
         .navigationTitle(Text(verbatim: work.title))
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) { paintButton }
-        .task(id: work.id) { await fetch() }
+        .task(id: attempt) { await fetch() }
         .alert("Couldn’t Get This Picture", isPresented: $showsFailure) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -149,11 +151,11 @@ struct MuseumWorkView: View {
 
     private func paint() {
         if let full {
-            onPaint(full, work.title)
+            onPaint(full, work.paintingTitle)
         } else if fetchFailed {
             fetchFailed = false
             wantsToPaint = true
-            Task { await fetch() }
+            attempt += 1
         } else {
             wantsToPaint = true
         }
@@ -170,7 +172,7 @@ struct MuseumWorkView: View {
             guard !Task.isCancelled else { return }
             full = data
             let pixels = Int(max(fitted.width, fitted.height) * displayScale)
-            if let large = await Background.run({ Self.decode(data, maxPixelSize: max(pixels, 900)) }) {
+            if let large = await Background.run({ ImageCodec.image(data: data, maxPixelSize: max(pixels, 900)) }) {
                 withAnimation(.easeOut(duration: 0.3)) { picture = large }
             }
             #if DEBUG
@@ -184,27 +186,19 @@ struct MuseumWorkView: View {
             #endif
             if wantsToPaint {
                 wantsToPaint = false
-                onPaint(data, work.title)
+                onPaint(data, work.paintingTitle)
             }
         } catch {
             guard !Task.isCancelled else { return }
+            #if DEBUG
+            if MuseumView.demoOpensWork { DemoMode.markReady() }
+            #endif
             fetchFailed = true
             if wantsToPaint {
                 wantsToPaint = false
                 showsFailure = true
             }
         }
-    }
-
-    nonisolated private static func decode(_ data: Data, maxPixelSize: Int) -> CGImage? {
-        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
-        let options: [CFString: Any] = [
-            kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceCreateThumbnailWithTransform: true,
-            kCGImageSourceShouldCacheImmediately: true,
-            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
-        ]
-        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
     }
 }
 

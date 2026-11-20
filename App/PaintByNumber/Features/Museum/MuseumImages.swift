@@ -30,7 +30,7 @@ final class MuseumImages {
         let key = "\(url.absoluteString)@\(maxPixelSize)"
         if let cached = tiles.image(for: key) { return cached }
         guard let data = try? await data(url) else { return nil }
-        guard !Task.isCancelled, let image = await Background.run({ Self.decode(data, maxPixelSize: maxPixelSize) }) else {
+        guard !Task.isCancelled, let image = await Background.run({ ImageCodec.image(data: data, maxPixelSize: maxPixelSize) }) else {
             return nil
         }
         tiles.insert(image, for: key)
@@ -44,17 +44,6 @@ final class MuseumImages {
             throw URLError(.badServerResponse)
         }
         return data
-    }
-
-    nonisolated private static func decode(_ data: Data, maxPixelSize: Int) -> CGImage? {
-        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
-        let options: [CFString: Any] = [
-            kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceCreateThumbnailWithTransform: true,
-            kCGImageSourceShouldCacheImmediately: true,
-            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
-        ]
-        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
     }
 }
 #endif

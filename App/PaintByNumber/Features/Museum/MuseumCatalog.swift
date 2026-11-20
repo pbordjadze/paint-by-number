@@ -15,9 +15,31 @@ import os
 /// no failure while an older one is kept.
 nonisolated struct MuseumCatalog: Decodable, Sendable {
     let version: Int
+    /// The day the tool wrote it ("2026-11-20").
+    let made: String
     let museums: [String: String]
     let movements: [String]
     let works: [Work]
+    /// Each work's title, artist, movement and year as search words, folded as a query's are
+    /// (`MuseumQuery.words`), in `works`' order: made once, off the main actor, by `decode`.
+    private(set) var searchWords: [[Substring]] = []
+
+    private enum CodingKeys: String, CodingKey { case version, made, museums, movements, works }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        version = try container.decode(Int.self, forKey: .version)
+        made = try container.decodeIfPresent(String.self, forKey: .made) ?? ""
+        museums = try container.decode([String: String].self, forKey: .museums)
+        movements = try container.decode([String].self, forKey: .movements)
+        // A record this build can't read (a kind it doesn't know) is left out, not the catalog.
+        works = try container.decode([Lenient].self, forKey: .works).compactMap(\.work)
+    }
+
+    private struct Lenient: Decodable {
+        let work: Work?
+        init(from decoder: any Decoder) throws { work = try? Work(from: decoder) }
+    }
 
     /// One artwork, as the museum describes it. `title`, `artist`, `year` and `medium` are the
     /// museum's own words, shown verbatim.
@@ -42,7 +64,8 @@ nonisolated struct MuseumCatalog: Decodable, Sendable {
         let museum: String
         /// A rendition about 400 to 900 pixels wide, for the browser's tiles.
         let thumb: URL
-        /// The largest rendition the app paints from (about 3,000 pixels on its long side).
+        /// The largest rendition the app paints from (1,686 to 3,400 pixels across, as the
+        /// museum serves it).
         let image: URL
         /// The work's page on the museum's website.
         let page: URL?
@@ -50,6 +73,20 @@ nonisolated struct MuseumCatalog: Decodable, Sendable {
 
         enum Kind: String, Decodable, Sendable, CaseIterable {
             case painting, print, drawing
+        }
+
+        /// The work's title as a painting's name: the museum's, without a series it belongs to
+        /// (", from the series …", which runs long on prints), and at most about 60 characters.
+        var paintingTitle: String {
+            var title = title
+            for cut in [", from the series", " from the series", ", from the "] {
+                if let range = title.range(of: cut, options: .caseInsensitive) { title = String(title[..<range.lowerBound]) }
+            }
+            title = title.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
+            guard title.count > 60 else { return title.isEmpty ? self.title : title }
+            let short = title.prefix(60)
+            let end = short.lastIndex(of: " ") ?? short.endIndex
+            return String(short[..<end]) + "…"
         }
 
         /// Width over height, 1 when the museum gives no size.
@@ -63,7 +100,11 @@ nonisolated struct MuseumCatalog: Decodable, Sendable {
     static let source = URL(string: "https://raw.githubusercontent.com/pbordjadze/paint-by-number/refs/heads/museum/museum.json")!
 
     static func decode(_ data: Data) throws -> MuseumCatalog {
-        try JSONDecoder().decode(MuseumCatalog.self, from: data)
+        var catalog = try JSONDecoder().decode(MuseumCatalog.self, from: data)
+        catalog.searchWords = catalog.works.map {
+            MuseumQuery.words(of: "\($0.title) \($0.artist) \($0.movement) \($0.year)")
+        }
+        return catalog
     }
 }
 
@@ -94,19 +135,35 @@ nonisolated struct MuseumQuery: Equatable, Sendable {
     var seed: UInt64 = 1
 
     /// The works the browser shows, in its order. A search needs every word to start a word of
-    /// the title, the artist, the movement or the year, ignoring case and diacritics.
+    /// the title, the artist, the movement or the year, ignoring case and diacritics. Most
+    /// Colorful over all movements takes each movement's most colorful in turn.
     func works(of catalog: MuseumCatalog) -> [MuseumCatalog.Work] {
         let words = Self.words(of: search)
-        let kept = catalog.works.filter { work in
-            if let movement, work.movement != movement { return false }
-            guard kinds.admits(work.kind) else { return false }
-            guard !words.isEmpty else { return true }
-            let haystack = Self.words(of: "\(work.title) \(work.artist) \(work.movement) \(work.year)")
-            return words.allSatisfy { word in haystack.contains { $0.hasPrefix(word) } }
+        var kept: [MuseumCatalog.Work] = []
+        for (index, work) in catalog.works.enumerated() {
+            if let movement, work.movement != movement { continue }
+            guard kinds.admits(work.kind) else { continue }
+            if !words.isEmpty {
+                let haystack = index < catalog.searchWords.count ? catalog.searchWords[index] : []
+                guard words.allSatisfy({ word in haystack.contains { $0.hasPrefix(word) } }) else { continue }
+            }
+            kept.append(work)
         }
         switch order {
         case .colorful:
-            return kept.sorted { ($0.colorfulness, $1.id) > ($1.colorfulness, $0.id) }
+            let sorted = kept.sorted { ($0.colorfulness, $1.id) > ($1.colorfulness, $0.id) }
+            guard movement == nil else { return sorted }
+            // Every movement's most colorful work before any movement's second, and so on: the
+            // most colorful of all are one tradition's (India's bright borders), and a wall of it
+            // hid the rest of the museum.
+            var seen: [String: Int] = [:]
+            let ranks = sorted.map { work -> Int in
+                seen[work.movement, default: 0] += 1
+                return seen[work.movement]!
+            }
+            return zip(ranks, sorted).enumerated()
+                .sorted { ($0.element.0, $0.offset) < ($1.element.0, $1.offset) }
+                .map(\.element.1)
         case .oldest:
             return kept.sorted { ($0.date ?? .max, $0.id) < ($1.date ?? .max, $1.id) }
         case .newest:

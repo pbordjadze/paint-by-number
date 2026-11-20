@@ -23,6 +23,17 @@ struct MuseumView: View {
     @State private var width: CGFloat = 0
     @State private var path: [MuseumCatalog.Work] = []
     @ScaledMetric(relativeTo: .subheadline) private var tileMinimumWidth: CGFloat = 150
+    #if DEBUG
+    @State private var demoIsReady = false
+    #endif
+
+    init(onPaint: @escaping (Data, String) -> Void, onClose: @escaping () -> Void) {
+        self.onPaint = onPaint
+        self.onClose = onClose
+        #if DEBUG
+        _query = State(initialValue: MuseumQuery(movement: Self.demoMovement))
+        #endif
+    }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -46,9 +57,6 @@ struct MuseumView: View {
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
         .onAppear {
             library.open()
-            #if DEBUG
-            query.movement = Self.demoMovement
-            #endif
         }
     }
 
@@ -73,13 +81,14 @@ struct MuseumView: View {
         case .ready(let catalog):
             browser(catalog)
                 .searchable(text: $query.search, prompt: Text("Artists, titles, years"))
-                .onChange(of: Refresh(query: query, works: catalog.works.count), initial: true) { refresh(catalog) }
+                .onChange(of: Refresh(query: query, catalog: catalog.made, works: catalog.works.count), initial: true) { refresh(catalog) }
         }
     }
 
     /// What the shown works depend on: the query, and the catalog (a newer one replaces it).
     nonisolated private struct Refresh: Equatable {
         let query: MuseumQuery
+        let catalog: String
         let works: Int
     }
 
@@ -87,12 +96,15 @@ struct MuseumView: View {
         shown = query.works(of: catalog)
         counts = query.counts(of: catalog)
         #if DEBUG
-        if Self.demoOpensWork, path.isEmpty, let first = shown.first {
+        guard ShellDemo.current == .museum, !demoIsReady else { return }
+        demoIsReady = true
+        if Self.demoOpensWork, let first = shown.first {
             path = [first]
-        } else if ShellDemo.current == .museum, !Self.demoOpensWork {
+        } else {
             let first = Array(shown.prefix(12))
             Task {
-                // Ready once the first rows' pictures have come (they come from the museums).
+                // Ready once the first rows' pictures have come (they come from the museums;
+                // without them it is ready anyway, and the screenshot shows what failed).
                 for work in first { _ = try? await MuseumImages.shared.data(work.thumb) }
                 try? await Task.sleep(for: .seconds(2))
                 DemoMode.markReady()
@@ -132,8 +144,13 @@ struct MuseumView: View {
             }
             .scrollDismissesKeyboard(.immediately)
             .onChange(of: query.movement) { proxy.scrollTo(Self.top, anchor: .bottom) }
-            .onChange(of: query.order) { proxy.scrollTo(Self.top, anchor: .bottom) }
+            .onChange(of: query.order) { _, order in
+                // Each Shuffle a new order.
+                if order == .shuffled { query.seed = UInt64.random(in: 1...UInt64.max) }
+                proxy.scrollTo(Self.top, anchor: .bottom)
+            }
             .onChange(of: query.kinds) { proxy.scrollTo(Self.top, anchor: .bottom) }
+            // The top line's foot at the view's foot: the scroll stops at its top.
             .onChange(of: query.seed) { proxy.scrollTo(Self.top, anchor: .bottom) }
         }
     }
@@ -174,12 +191,9 @@ struct MuseumView: View {
                 Text("Most Colorful").tag(MuseumQuery.Order.colorful)
                 Text("Oldest First").tag(MuseumQuery.Order.oldest)
                 Text("Newest First").tag(MuseumQuery.Order.newest)
+                Text("Shuffle").tag(MuseumQuery.Order.shuffled)
             }
             .pickerStyle(.inline)
-            Button("Shuffle", systemImage: "shuffle") {
-                query.seed = UInt64.random(in: 1...UInt64.max)
-                query.order = .shuffled
-            }
             Picker("Show", selection: $query.kinds) {
                 Text("Everything").tag(MuseumQuery.Kinds.everything)
                 Text("Paintings").tag(MuseumQuery.Kinds.paintings)
@@ -307,7 +321,6 @@ struct MuseumTile: View {
         .contentShape(.rect)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: [work.title, work.artist, work.year].filter { !$0.isEmpty }.joined(separator: ", ")))
-        .accessibilityAddTraits(.isButton)
     }
 
     /// The picture, or its average color at its shape while it comes.
@@ -330,7 +343,7 @@ struct MuseumTile: View {
             .task(id: work.id) {
                 let pixels = Int(max(size.width, size.height) * displayScale)
                 guard pixels > 0 else { return }
-                let loaded = await MuseumImages.shared.picture(work.thumb, maxPixelSize: min(pixels, 900))
+                let loaded = await MuseumImages.shared.picture(work.thumb, maxPixelSize: min(pixels, 600))
                 if let loaded { withAnimation(.easeOut(duration: 0.25)) { image = loaded } }
             }
         }

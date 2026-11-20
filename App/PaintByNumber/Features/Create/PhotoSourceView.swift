@@ -120,7 +120,10 @@ struct PhotoSourceView: View {
         }
         #if DEBUG
         .onAppear {
-            if ShellDemo.current == .museum { isShowingMuseum = true }
+            if ShellDemo.current == .museum, !Self.demoOpenedMuseum {
+                Self.demoOpenedMuseum = true
+                isShowingMuseum = true
+            }
         }
         #endif
         #endif
@@ -244,6 +247,11 @@ struct PhotoSourceView: View {
     }
 
     #if UNRELEASED
+    #if DEBUG
+    /// The `museum` scenarios open the Museum once, not again as the page comes back.
+    private static var demoOpenedMuseum = false
+    #endif
+
     /// A work from the Museum, painted as a picked photo is, named after the work.
     private func paintMuseumPick() {
         guard let pick = museumPick else { return }

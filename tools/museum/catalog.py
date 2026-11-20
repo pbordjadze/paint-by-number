@@ -22,8 +22,9 @@ The Met's image CDN refuses cloud fetches (painting-company row 368), so it is n
 
 The rules are lighter than Tonight's Picture's (tools/nights/catalog.py, a picture everyone gets):
 the painter chooses here. A work needs a known maker or culture, an image at least 1500 px on its
-long edge, and no title or subject term of nudity or the erotic; prints and drawings need some
-color, a colorfulness of 21 (a black-and-white or sepia etching makes a grey painting). The movement is the museum's own style
+long edge and at most 3.5 times its short one, and no title or subject term of nudity or the
+erotic; prints and drawings need a colorfulness of 21 (a black-and-white or sepia etching makes a
+grey painting). AIC's works need 1686 px across (`aic_record`). The movement is the museum's own style
 where it names one of the catalog's (`MOVEMENTS`), else the artist's (`ARTISTS`), else one read
 from where and when it was made (`movement_of`). The artists' movements are Wikidata's
 (`wikidata` writes `artists.csv` from `artists.rq`; CC0), on the catalog's words (`WIKIDATA_MOVEMENTS`).
@@ -213,6 +214,8 @@ def rules(c):
         return "maker unknown"
     if c["width"] and max(c["width"], c["height"]) < MIN_EDGE:
         return "image under 1500 px"
+    if c["width"] and c["height"] and not 1 / 3.5 <= c["width"] / c["height"] <= 3.5:
+        return "a scroll or a strip (beyond 1:3.5)"
     if c.get("narrow"):
         return "image under 1686 px wide (AIC)"
     text = " ".join([c["title"]] + [t for t in c["terms"] if isinstance(t, str)])

@@ -77,6 +77,26 @@ struct MuseumQueryTests {
         #expect(Set(first) == Set(catalog.works.map(\.id)))
     }
 
+    @Test func aWorkOfAKindThisBuildDoesntKnowIsLeftOutAlone() throws {
+        let json = Self.json
+            .replacingOccurrences(of: #""id":"aic-3","title""#, with: #""id":"aic-3","kind":"sculpture","title""#)
+            .replacingOccurrences(of: #""movement":"Ukiyo-e","kind":"print""#, with: #""movement":"Ukiyo-e""#)
+        let lenient = try MuseumCatalog.decode(Data(json.utf8))
+        #expect(lenient.works.map(\.id) == ["aic-1", "cma-2", "cma-4"])
+    }
+
+    @Test func aPaintingIsNamedWithoutTheSeries() {
+        func named(_ title: String) -> String {
+            let json = Self.json.replacingOccurrences(of: "Water Lilies", with: title)
+            let catalog = try? MuseumCatalog.decode(Data(json.utf8))
+            return catalog?.works.first { $0.id == "aic-1" }?.paintingTitle ?? ""
+        }
+        #expect(named("Water Lilies") == "Water Lilies")
+        #expect(named("Evening Snow, from the series Eight Views of Ōmi") == "Evening Snow")
+        let long = named(String(repeating: "Garden of the Evening ", count: 6))
+        #expect(long.count <= 61 && long.hasSuffix("…"))
+    }
+
     @MainActor @Test func aBadAverageColorStillMakesAColor() {
         _ = Color(museumHex: "zz")
         _ = Color(museumHex: "6a8a7c")
