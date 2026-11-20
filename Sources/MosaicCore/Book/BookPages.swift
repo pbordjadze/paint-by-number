@@ -24,6 +24,16 @@ public struct BookStrings: Sendable {
     public var kilograms: @Sendable (Double) -> String = { String(format: "%.1f kg", $0) }
     public var hours: @Sendable (Int) -> String = { "\($0) h" }
     public var minutes: @Sendable (Int) -> String = { "\($0) min" }
+    public var toolList = "Tools and materials"
+    /// Each thing the book uses, by its pictogram's name (`StoneBook.kit`).
+    public var tools: [String: String] = [
+        "nippers": "Wheeled mosaic nippers", "glasses": "Safety glasses", "gloves": "Work gloves, a pair", "mask": "Dust mask",
+        "brush": "Brush and dustpan", "tub": "Small tubs, one a colour", "scissors": "Scissors", "mesh": "Fibreglass mosaic mesh, a sheet's size",
+        "film": "Clear film, a sheet's size", "tape": "Masking tape", "glue": "PVA glue", "cloth": "Soft cloths", "knife": "Craft knife",
+        "board": "Board: 18 mm exterior plywood", "thinset": "Tile adhesive (thinset), powder", "trowel": "Notched trowel, 4 mm",
+        "grout": "Grout, powder", "float": "Rubber grout float", "sponge": "Sponges", "bucket": "Buckets", "level": "Spirit level",
+        "cleat": "French cleat, with screws and wall fixings",
+    ]
     /// The stones' cost, pounds, already rounded: "£680".
     public var pounds: @Sendable (Int) -> String = { "£\($0)" }
     public init() {}
@@ -38,6 +48,7 @@ extension StoneBook {
         case setting, finished
         case lesson(Lesson)
         case stones(part: Int, of: Int)
+        case tools
     }
 
     static let stonesPerPage = 16
@@ -58,10 +69,12 @@ extension StoneBook {
         }
         kinds += Lesson.beforeSetting.map { .lesson($0) }
         kinds.append(.setting)
+        kinds += Lesson.afterSetting.map { .lesson($0) }
         kinds.append(.finished)
         kinds += Lesson.afterFinished.map { .lesson($0) }
         let parts = max(1, (stones + stonesPerPage - 1) / stonesPerPage)
         for p in 0..<parts { kinds.append(.stones(part: p, of: parts)) }
+        kinds.append(.tools)
         return (kinds, stepPage)
     }
 
@@ -83,6 +96,7 @@ extension StoneBook {
         case .finished: finished(&c)
         case .lesson(let l): lesson(&c, l, strings)
         case .stones(let part, let parts): stoneList(&c, part, parts, strings)
+        case .tools: toolList(&c, strings)
         }
         if number > 1 {
             if case .cartoon = pageKinds[number - 1] {
@@ -246,21 +260,17 @@ extension StoneBook {
 
     func needs(_ c: inout PageCanvas, _ strings: BookStrings) {
         let m = BookLayout.margin, pw = BookLayout.pageWidth
-        let n = strings.count(sections.count), one = strings.count(1)
-        let tools: [(BookIcon, String)] = [(.nippers, "×" + one), (.mesh, "×" + n), (.film, "×" + n), (.tape, "×" + one),
-                                           (.glue, "×" + one), (.glasses, "×" + one), (.gloves, "×" + one), (.board, strings.size(widthMM / 10 + 4, heightMM / 10 + 4)),
-                                           (.thinset, "×" + one), (.trowel, "×" + one), (.grout, strings.kilograms(groutKilograms)),
-                                           (.float, "×" + one), (.sponge, "×" + strings.count(2)), (.bucket, "×" + one), (.cloth, "×" + one)]
-        var cw = (pw - 2 * m) / 5
-        for (i, (icon, q)) in tools.enumerated() {
-            let x = m + Double(i % 5) * cw, y = 20 + Double(i / 5) * 34
-            c.shape(.rect(x + 2, y, cw - 4, 30, radius: 3), fill: BookStyle.white, stroke: BookStyle.faint, width: 0.3)
-            icon.draw(into: &c, x + cw / 2 - 9, y + 2.5, 18)
-            c.text(q, x + cw / 2, y + 26.5, 3.6, 600, BookStyle.ink, .middle)
+        let tools = kit(strings)
+        var cw = (pw - 2 * m) / 6
+        for (i, t) in tools.enumerated() {
+            let x = m + Double(i % 6) * cw, y = 18 + Double(i / 6) * 29
+            c.shape(.rect(x + 1.5, y, cw - 3, 26, radius: 3), fill: BookStyle.white, stroke: BookStyle.faint, width: 0.3)
+            t.icon.draw(into: &c, x + cw / 2 - 8, y + 2.2, 16)
+            c.text(t.amount, x + cw / 2, y + 23.4, 3.2, 600, BookStyle.ink, .middle)
         }
         // every stone, as a heap with its count to buy
         let rows = stones
-        let y0 = 128.0
+        let y0 = 18 + Double((tools.count + 5) / 6) * 29 + 8
         c.stroke(.line(Point(m, y0 - 6), Point(pw - m, y0 - 6)), BookStyle.faint, 0.3)
         cw = (pw - 2 * m) / 4
         let rh = min(19.5, (BookLayout.pageHeight - 16 - y0) / Double(max(1, (rows.count + 3) / 4)))
@@ -451,7 +461,9 @@ extension StoneBook {
         }
     }
 
-    func stepBlock(_ c: inout PageCanvas, _ n: Int, _ y0: Double) {
+    /// One step drawn at `y0`; returns where a point of the picture lands in its view.
+    @discardableResult
+    func stepBlock(_ c: inout PageCanvas, _ n: Int, _ y0: Double) -> Transform {
         let step = steps[n], s = step.section
         let x0 = BookLayout.margin
         let firstOfSection = steps.firstIndex { $0.section == s } ?? n
@@ -459,6 +471,8 @@ extension StoneBook {
         // the sheet it belongs to, as the map numbers it
         c.shape(.circle(Point(x0 + 5, y0 + 25), 4.2), fill: BookStyle.paper, stroke: BookStyle.ink, width: 0.5)
         c.text("\(s + 1)", x0 + 5, y0 + 26.6, 4.2, 700, BookStyle.ink, .middle)
+        // the tray beside it is at true size
+        c.text("1:1", x0 + 5, y0 + 37, 3, 700, BookStyle.muted, .middle)
         // the parts box: this step's pieces at true size, by paint
         let chunk = step.pieces.map { pieces[$0] }
         let (placed, boxH) = BookLayout.parts(chunk, mm: mm, x: BookLayout.partsX, y: y0, width: BookLayout.partsWidth)
@@ -497,6 +511,7 @@ extension StoneBook {
         // where we are
         let mw = 20.0, mh = mw * height / width
         minimap(&c, x0 + vw - mw - 3, vy + vh - mh - 3, mw, current: s, dot: Point(cx, cy), doneBefore: s)
+        return tf
     }
 
     /// The sheets onto the board by the map, then grout: wordless.
@@ -548,6 +563,32 @@ extension StoneBook {
         var h = 240.0, w = h * width / height
         if w > pw - 2 * BookLayout.margin { w = pw - 2 * BookLayout.margin; h = w * height / width }
         drawMosaic(&c, (pw - w) / 2, 28, w, h)
+    }
+
+    /// Everything the book uses but the stones, and how much: the needs page's pictures, and the
+    /// tools list's rows.
+    func kit(_ strings: BookStrings) -> [(icon: BookIcon, amount: String)] {
+        let n = strings.count(sections.count), one = "×" + strings.count(1)
+        let thinset = widthMM * heightMM / 1e6 * 4.4      // kg: 4 kg a square metre, and a tenth over
+        return [(.nippers, one), (.glasses, one), (.gloves, one), (.mask, one), (.brush, one), (.tub, "×" + strings.count(stones.count)),
+                (.scissors, one), (.mesh, "×" + n), (.film, "×" + n), (.tape, one), (.glue, one), (.cloth, "×" + strings.count(3)),
+                (.knife, one), (.board, strings.size(widthMM / 10 + 4, heightMM / 10 + 4)), (.thinset, strings.kilograms(thinset)),
+                (.trowel, one), (.grout, strings.kilograms(groutKilograms)), (.float, one), (.sponge, "×" + strings.count(2)),
+                (.bucket, "×" + strings.count(2)), (.level, one), (.cleat, one)]
+    }
+
+    /// The tools and materials by name, a page with words like the stone list.
+    func toolList(_ c: inout PageCanvas, _ strings: BookStrings) {
+        let m = BookLayout.margin, pw = BookLayout.pageWidth
+        c.text(strings.toolList, m, 24, 8, 400, BookStyle.ink, face: .serif)
+        var y = 34.0
+        for t in kit(strings) {
+            c.stroke(.line(Point(m, y), Point(pw - m, y)), BookStyle.faint, 0.25)
+            t.icon.draw(into: &c, m + 1, y + 1, 9)
+            c.text(strings.tools[t.icon.rawValue] ?? t.icon.rawValue, m + 16, y + 6.8, 3.8, 600)
+            c.text(t.amount, pw - m, y + 6.8, 3.6, 700, BookStyle.ink, .end)
+            y += 11
+        }
     }
 
     /// The one page with words: what to buy, with how much.
@@ -614,7 +655,7 @@ extension StoneBook {
         }
         for (i, k) in pageKinds.enumerated() {
             switch k {
-            case .setting, .finished, .stones, .lesson: want.insert(i + 1)
+            case .setting, .finished, .stones, .tools, .lesson: want.insert(i + 1)
             default: break
             }
         }

@@ -3,15 +3,16 @@ import Foundation
 /// The book's lessons: wordless pages for someone who has never held nippers, each a grid of
 /// panels, a ✓ or ✗ on the ones that show a right and a wrong way. They came from a newcomer's
 /// walk through the book (painting-company row 367): the front ones before the first sheet, the
-/// bed and the grout before the sheets go onto the board, hanging after the finished picture.
+/// bed before the sheets go onto the board, the grout after, hanging after the finished picture.
 extension StoneBook {
     public enum Lesson: Sendable, CaseIterable {
-        case safety, sorting, faces, cutting, shaping, gluing, reading, mending
+        case safety, sorting, faces, cutting, shaping, gluing, anatomy, reading, mending
         case bed, pressing, grouting
         case hanging
 
-        static let front: [Lesson] = [.safety, .sorting, .faces, .cutting, .shaping, .gluing, .reading, .mending]
-        static let beforeSetting: [Lesson] = [.bed, .pressing, .grouting]
+        static let front: [Lesson] = [.safety, .sorting, .faces, .cutting, .shaping, .gluing, .anatomy, .reading, .mending]
+        static let beforeSetting: [Lesson] = [.bed, .pressing]
+        static let afterSetting: [Lesson] = [.grouting]
         static let afterFinished: [Lesson] = [.hanging]
     }
 
@@ -104,6 +105,7 @@ extension StoneBook {
         case .cutting: cutting(&d)
         case .shaping: shaping(&d)
         case .gluing: gluing(&d, strings)
+        case .anatomy: anatomy(&d)
         case .reading: reading(&d)
         case .mending: mending(&d, strings)
         case .bed: bed(&d, strings)
@@ -165,12 +167,13 @@ extension StoneBook {
         nippers(&c, p[2].cx - 13, p[2].cy - 16, 26)
         shards(&c, p[2].cx, p[2].cy - 12, 24, paint)
         mark(&c, p[2], ok: false)
-        // never sweep chips with a hand
-        BookIcon.gloves.draw(into: &c, p[3].cx - 14, p[3].cy - 16, 26)
+        // never sweep chips with a bare hand
+        BookIcon.hand.draw(into: &c, p[3].cx - 14, p[3].cy - 16, 26)
         shards(&c, p[3].cx + 6, p[3].cy + 10, 10, paint)
         mark(&c, p[3], ok: false)
-        // a brush and a pan
-        BookIcon.brush.draw(into: &c, p[4].cx - 14, p[4].cy - 20, 24)
+        // a brush, in a gloved hand
+        BookIcon.gloves.draw(into: &c, p[4].cx - 26, p[4].cy - 16, 22)
+        BookIcon.brush.draw(into: &c, p[4].cx - 4, p[4].cy - 20, 24)
         shards(&c, p[4].cx + 4, p[4].cy + 10, 10, paint)
         mark(&c, p[4], ok: true)
         // a mask while powder is poured
@@ -240,11 +243,12 @@ extension StoneBook {
         c.text(strings.centimetres(5), p[4].cx, y0 + 9, 3.6, 700, BookStyle.ink, .middle)
         BookIcon.ruler.draw(into: &c, p[4].cx - 12, y0 - 26, 24)
         mark(&c, p[4], ok: true)
-        // a stone narrower than half a centimetre is left out: the grout fills it
-        smalto(&c, p[5].cx - 12, p[5].cy, 3, 14, glass, degrees: 20)
-        smalto(&c, p[5].cx + 8, p[5].cy, 10, 14, glass)
-        let a = Point(p[5].cx - 20, p[5].cy - 12), b = Point(p[5].cx - 4, p[5].cy + 12)
-        c.stroke(BookPath(elements: [.move(a), .line(b), .move(Point(b.x, a.y)), .line(Point(a.x, b.y))]), StoneBook.noColour, 0.8)
+        // each 1:1 cartoon cut out of the book along its edge, or copied at 100 %
+        c.shape(.rect(p[5].cx - 20, p[5].cy - 22, 30, 40, radius: 1), fill: BookStyle.white, stroke: BookStyle.ink, width: 0.4)
+        c.text("1:1", p[5].cx - 5, p[5].cy - 14, 4, 700, BookStyle.ink, .middle)
+        c.stroke(.line(Point(p[5].cx - 21, p[5].cy - 24), Point(p[5].cx - 21, p[5].cy + 20)), BookStyle.ink, 0.4, dash: [1.4, 1])
+        BookIcon.scissors.draw(into: &c, p[5].cx - 32, p[5].cy + 4, 16)
+        BookIcon.ruler.draw(into: &c, p[5].cx + 12, p[5].cy - 6, 16)
         mark(&c, p[5], ok: true)
         return p
     }
@@ -306,14 +310,13 @@ extension StoneBook {
         // too big for its outline: nip again
         c.shape(.polygon(piece.map { Point(p[1].cx + $0.x, p[1].cy + $0.y) }), fill: BookStyle.white, stroke: BookColor(hex: 0x9A9384), width: 0.4)
         c.shape(.polygon(piece.map { Point(p[1].cx + 2 + $0.x * 1.3, p[1].cy + $0.y * 1.3) }), fill: glass.with(alpha: 0.8), stroke: BookColor(0, 0, 0, 0.3), width: 0.25)
-        mark(&c, p[1], ok: false)
-        nippers(&c, p[1].cx + 14, p[1].cy + 2, 14)
+        nippers(&c, p[1].cx + 14, p[1].cy - 8, 12)
+        arrow(&c, p[1].cx + 16, p[1].cy + 8, p[1].cx + 24, p[1].cy + 8)
         // too small: to the spares, cut another
         c.shape(.polygon(piece.map { Point(p[2].cx - 8 + $0.x, p[2].cy + $0.y) }), fill: BookStyle.white, stroke: BookColor(hex: 0x9A9384), width: 0.4)
         c.shape(.polygon(piece.map { Point(p[2].cx - 8 + $0.x * 0.6, p[2].cy + $0.y * 0.6) }), fill: glass.with(alpha: 0.85), stroke: BookColor(0, 0, 0, 0.3), width: 0.25)
         arrow(&c, p[2].cx + 4, p[2].cy, p[2].cx + 14, p[2].cy)
-        BookIcon.bucket.draw(into: &c, p[2].cx + 15, p[2].cy - 10, 18)
-        mark(&c, p[2], ok: false)
+        BookIcon.tub.draw(into: &c, p[2].cx + 15, p[2].cy - 10, 18)
         // a millimetre between stones, as the cartoon's lines show
         let zx = p[3].cx, zy = p[3].cy
         smalto(&c, zx - 9, zy, 16, 20, glass); smalto(&c, zx + 9, zy, 16, 20, glass)
@@ -337,16 +340,18 @@ extension StoneBook {
         c.shape(.rect(r.0 - 4, r.1 - 4, r.2 + 8, r.3 + 8), fill: BookColor(hex: 0xF7F4EE), stroke: BookColor(hex: 0xC9C2B0), width: 0.4)
         c.stroke(.rect(r.0, r.1, r.2, r.3), BookStyle.ink, 0.4, dash: [1.6, 1], round: false)
         c.text(strings.centimetres(1), p[0].cx, r.1 + r.3 + 9, 3, 700, BookStyle.ink, .middle)
-        // the layers: cartoon, film, mesh, glue, stone
-        let lx = p[1].cx - 26, ly = p[1].cy + 10
-        c.fill(.rect(lx, ly, 52, 2.4), BookStyle.white); c.stroke(.rect(lx, ly, 52, 2.4), BookStyle.muted, 0.2)
-        c.fill(.rect(lx, ly - 1.4, 52, 1.4), BookColor(hex: 0xDBE7EF, alpha: 0.9))
-        c.stroke(.line(Point(lx, ly - 2.2), Point(lx + 52, ly - 2.2)), BookColor(hex: 0xA79F8C), 0.6, dash: [1.4, 0.8], round: false)
-        for k in 0..<3 {
-            let sx = lx + 4 + Double(k) * 16
-            c.fill(.circle(Point(sx + 6, ly - 3.4), 1.2), BookColor(hex: 0xF4F1EA))
-            sideStone(&c, sx, ly - 11.4, 12, 7, glass)
-        }
+        // the layers pulled apart, as they lie: stones, glue, mesh, film, the cartoon taped to the table
+        let lx = p[1].cx - 24, ly = p[1].cy - 20
+        for k in 0..<3 { sideStone(&c, lx + 3 + Double(k) * 16, ly, 12, 5, glass) }
+        for k in 0..<3 { c.fill(.circle(Point(lx + 9 + Double(k) * 16, ly + 9), 1.2), BookColor(hex: 0xF4F1EA)); c.stroke(.circle(Point(lx + 9 + Double(k) * 16, ly + 9), 1.2), BookStyle.muted, 0.2) }
+        c.stroke(.line(Point(lx, ly + 15), Point(lx + 48, ly + 15)), BookColor(hex: 0xA79F8C), 0.8, dash: [1.4, 0.8], round: false)
+        c.fill(.rect(lx, ly + 20, 48, 1.6), BookColor(hex: 0xBFD3E2))
+        c.shape(.rect(lx, ly + 26, 48, 3), fill: BookStyle.white, stroke: BookStyle.muted, width: 0.25)
+        for k in 0..<4 { c.stroke(.line(Point(lx + 6 + Double(k) * 12, ly + 26.6), Point(lx + 10 + Double(k) * 12, ly + 28.4)), BookColor(hex: 0x9A9384), 0.3) }
+        c.fill(.rect(lx - 3, ly + 25.5, 5, 4), BookColor(hex: 0xEFE1B8, alpha: 0.9))
+        c.fill(.rect(lx + 46, ly + 25.5, 5, 4), BookColor(hex: 0xEFE1B8, alpha: 0.9))
+        let icons: [BookIcon] = [.tiles, .glue, .mesh, .film, .pages]
+        for (k, icon) in icons.enumerated() { icon.draw(into: &c, lx + 50, ly - 1 + [0, 7, 12.5, 18, 24.5][k], 5) }
         // a dot of glue on the stone's back
         smalto(&c, p[2].cx, p[2].cy, 18, 24, glass.mixed(toward: BookColor(0, 0, 0), 0.15))
         c.shape(.circle(Point(p[2].cx, p[2].cy), 2), fill: BookColor(hex: 0xF4F1EA), stroke: BookStyle.muted, width: 0.25)
@@ -361,16 +366,55 @@ extension StoneBook {
         sideStone(&c, p[4].cx - 8, p[4].cy - 2, 16, 8, glass)
         c.fill(.rect(p[4].cx - 20, p[4].cy + 6, 40, 1.4), BookColor(hex: 0xC9C2B0))
         arrow(&c, p[4].cx, p[4].cy - 16, p[4].cx, p[4].cy - 4)
-        // wiped before it dries
-        BookIcon.cloth.draw(into: &c, p[5].cx - 12, p[5].cy - 14, 24)
+        // glue on a stone's face wiped off before it dries
+        smalto(&c, p[5].cx - 12, p[5].cy - 2, 16, 20, glass)
+        c.fill(.circle(Point(p[5].cx - 14, p[5].cy - 5), 2.6), BookColor(hex: 0xF4F1EA, alpha: 0.9))
+        BookIcon.cloth.draw(into: &c, p[5].cx + 2, p[5].cy - 14, 20)
         BookIcon.clock.draw(into: &c, p[5].cx - 14, p[5].cy + 12, 10)
         c.text(strings.minutes(10), p[5].cx - 2, p[5].cy + 19, 3.2, 700)
         return p
     }
 
     /// How to read a step: the parts, where they go, which sheet.
+    /// A real page of steps with numbered callouts, each number the panel of the next page that
+    /// explains it. Drawn at its own size: it has no panels to grow.
+    func anatomy(_ c: inout PageCanvas) -> [Panel] {
+        guard let n = steps.indices.first(where: { steps[$0].section == sampleSection && steps[$0].pieces.count >= 3 }) else { return [] }
+        let m = BookLayout.margin, half = (BookLayout.pageHeight - 2 * m) / Double(BookLayout.stepsPerPage)
+        let blue = BookColor(hex: 0x2F6DB5)
+        func callout(_ k: Int, _ at: Point, _ to: Point) {
+            c.stroke(.line(to, at), blue, 0.5)
+            c.fill(.circle(to, 1.1), blue)
+            c.shape(.circle(at, 4.2), fill: blue, stroke: BookStyle.white, width: 0.8)
+            c.text("\(k)", at.x, at.y + 1.6, 4.6, 800, BookStyle.white, .middle)
+        }
+        for j in 0..<BookLayout.stepsPerPage where n + j < steps.count && steps[n + j].section == sampleSection {
+            let y0 = m + Double(j) * half
+            let tf = stepBlock(&c, n + j, y0)
+            if j < BookLayout.stepsPerPage - 1 {
+                c.stroke(.line(Point(m, y0 + half - 3), Point(BookLayout.pageWidth - m, y0 + half - 3)), BookStyle.faint, 0.3)
+            }
+            guard j == 0 else { continue }
+            let x0 = BookLayout.margin, vy = y0 + BookLayout.partsHeight + 4
+            // 1 a paint's badge, 2 a piece at true size, 3 where it goes, 4 the step and its sheet, 5 the map
+            callout(1, Point(BookLayout.partsX - 6, y0 + 10), Point(BookLayout.partsX + 3 + 2.4, y0 + 3 + 2.4))
+            callout(2, Point(BookLayout.partsX + 30, y0 + BookLayout.partsHeight + 1), Point(BookLayout.partsX + 13, y0 + 8))
+            let g = tf(pieces[steps[n].pieces[0]].centre)
+            callout(3, Point(g.x + 22, g.y - 16), g)
+            callout(4, Point(x0 + 16, y0 + 24), Point(x0 + 9, y0 + 25))
+            let mw = 20.0, mh = mw * height / width
+            callout(5, Point(x0 + BookLayout.viewWidth - mw - 10, vy + BookLayout.viewHeight - mh - 8), Point(x0 + BookLayout.viewWidth - mw / 2 - 3, vy + BookLayout.viewHeight - mh / 2 - 3))
+        }
+        return []
+    }
+
     func reading(_ c: inout PageCanvas) -> [Panel] {
         let p = panels(&c, 6, rows: 3)
+        // numbered as the callouts on the page before
+        for (i, q) in p.enumerated() {
+            c.shape(.circle(Point(q.x + 7, q.y + 7.6), 4.6), fill: BookColor(hex: 0x2F6DB5), stroke: BookStyle.white, width: 0.8)
+            c.text("\(i + 1)", q.x + 7, q.y + 9.4, 5, 800, BookStyle.white, .middle)
+        }
         guard let n = steps.indices.first(where: { steps[$0].section == sampleSection && steps[$0].pieces.count >= 3 }) else { return p }
         let step = steps[n], first = pieces[step.pieces[0]]
         // a badge is a tub: pick up from that one
@@ -437,7 +481,7 @@ extension StoneBook {
     // MARK: The board
 
     func bed(_ c: inout PageCanvas, _ strings: BookStrings) -> [Panel] {
-        let p = panels(&c, 6, rows: 3)
+        let p = panels(&c, 8, rows: 4)
         let bed = BookColor(hex: 0xCFCAC0)
         // the board wiped clean and damp
         c.shape(.rect(p[0].cx - 28, p[0].cy - 12, 56, 26, radius: 1), fill: BookColor(hex: 0xECE6DA), stroke: BookStyle.ink, width: 0.4)
@@ -467,11 +511,38 @@ extension StoneBook {
         for k in 0..<12 { c.stroke(.line(Point(bx + Double(k) * 4 - 24, by + 30), Point(bx + Double(k) * 4 + 6, by)), BookColor(hex: 0xA9A397), 0.7, round: false) }
         c.endClip()
         BookIcon.trowel.draw(into: &c, bx + 30, by + 4, 22)
+        // one batch: enough for two sheets, no more
+        boardSheets(&c, p[6], filled: 2)
+        // it skins over in half an hour: spread only what you will cover by then
+        BookIcon.thinset.draw(into: &c, p[7].cx - 26, p[7].cy - 10, 18)
+        arrow(&c, p[7].cx - 6, p[7].cy, p[7].cx + 2, p[7].cy)
+        BookIcon.clock.draw(into: &c, p[7].cx + 4, p[7].cy - 11, 20)
+        c.text(strings.minutes(30), p[7].cx + 14, p[7].cy + 15, 4, 700, BookStyle.ink, .middle)
         return p
     }
 
+    /// The board in a panel, its sheets dashed and numbered as the map numbers them, the first
+    /// `filled` under a bed, the 2 cm border round them.
+    func boardSheets(_ c: inout PageCanvas, _ q: Panel, filled: Int = 0, placed: Int = 0, numbers: Bool = false) {
+        let k = StoneBook.lessonZoom
+        let bh = (q.h - 24) / k, bw = bh * (widthMM + 40) / (heightMM + 40)
+        let bx = q.cx - bw / 2, by = q.cy - bh / 2
+        let u = bh / (heightMM + 40), ix = bx + 20 * u, iy = by + 20 * u
+        c.shape(.rect(bx, by, bw, bh, radius: 0.6), fill: BookColor(hex: 0xECE6DA), stroke: BookStyle.ink, width: 0.4)
+        for t in 0..<sections.count {
+            let r = sectionRect(t)
+            let x = ix + r.x * mm * u, y = iy + r.y * mm * u, w = r.w * mm * u, h = r.h * mm * u
+            if t < placed { drawMosaic(&c, x, y, w, h, crop: (r.x, r.y, r.w, r.h)) }
+            else if t < filled { c.fill(.rect(x, y, w, h), BookColor(hex: 0xCFCAC0)) }
+            c.stroke(.rect(x, y, w, h), BookStyle.muted, 0.25, dash: [0.8, 0.5], round: false)
+            if numbers || t < max(filled, placed) {
+                c.text("\(t + 1)", x + w / 2, y + h / 2 + 1, min(w, h) * 0.45, 700, BookStyle.ink, .middle)
+            }
+        }
+    }
+
     func pressing(_ c: inout PageCanvas, _ strings: BookStrings) -> [Panel] {
-        let p = panels(&c, 6, rows: 3)
+        let p = panels(&c, 8, rows: 4)
         let glass = colour(lessonPaints[0]), bed = BookColor(hex: 0xCFCAC0)
         func layers(_ q: Panel, meshDown: Bool) {
             c.fill(.rect(q.cx - 28, q.cy + 6, 56, 4), BookColor(hex: 0xD8CBA8))
@@ -492,28 +563,36 @@ extension StoneBook {
         BookIcon.float.draw(into: &c, p[2].cx - 10, p[2].cy - 24, 20)
         arrow(&c, p[2].cx + 16, p[2].cy - 20, p[2].cx + 16, p[2].cy - 8)
         // the next sheet a joint away from the last, its edge on the line
-        smalto(&c, p[3].cx - 15, p[3].cy, 28, 30, glass.mixed(toward: BookStyle.paper, 0.2))
-        smalto(&c, p[3].cx + 15, p[3].cy, 28, 30, glass)
-        c.text("1 mm", p[3].cx, p[3].cy + 22, 3, 700, BookStyle.ink, .middle)
+        smalto(&c, p[3].cx - 10, p[3].cy - 2, 19, 19, glass.mixed(toward: BookStyle.paper, 0.2))
+        smalto(&c, p[3].cx + 10, p[3].cy - 2, 19, 19, glass)
+        c.text("1 mm", p[3].cx, p[3].cy + 13, 3, 700, BookStyle.ink, .middle)
         mark(&c, p[3], ok: true)
         // bed pushed up a joint: picked out before it sets
         sideStone(&c, p[4].cx - 15, p[4].cy - 6, 14, 8, glass); sideStone(&c, p[4].cx + 1, p[4].cy - 6, 14, 8, glass)
         c.fill(.rect(p[4].cx - 20, p[4].cy + 2, 40, 3), bed)
         c.fill(.rect(p[4].cx - 0.9, p[4].cy - 6, 1.8, 8), bed)
-        BookIcon.knife.draw(into: &c, p[4].cx + 2, p[4].cy - 26, 18)
-        BookIcon.clock.draw(into: &c, p[4].cx - 14, p[4].cy + 12, 10)
-        c.text(strings.minutes(30), p[4].cx - 2, p[4].cy + 19, 3.2, 700)
+        BookIcon.knife.draw(into: &c, p[4].cx + 2, p[4].cy - 19, 13)
+        BookIcon.clock.draw(into: &c, p[4].cx - 14, p[4].cy + 7, 8)
+        c.text(strings.minutes(30), p[4].cx - 4, p[4].cy + 12.5, 3.2, 700)
         // checked flat
         BookIcon.level.draw(into: &c, p[5].cx - 16, p[5].cy - 16, 32)
+        // sheet 1 first, in its corner, 2 cm in from the board's edges
+        boardSheets(&c, p[6], filled: 1, placed: 1)
+        let k = StoneBook.lessonZoom, bh = (p[6].h - 24) / k, bw = bh * (widthMM + 40) / (heightMM + 40)
+        let u = bh / (heightMM + 40), bx = p[6].cx - bw / 2, by = p[6].cy - bh / 2
+        c.text("2 cm", bx - 1, by + 10 * u + 1, 2.6, 700, BookStyle.ink, .end)
+        c.stroke(.line(Point(bx, by + 20 * u + 4), Point(bx + 20 * u, by + 20 * u + 4)), BookStyle.ink, 0.3)
+        // then by the map's numbers, each against the last
+        boardSheets(&c, p[7], numbers: true)
         return p
     }
 
     func grouting(_ c: inout PageCanvas, _ strings: BookStrings) -> [Panel] {
         let p = panels(&c, 6, rows: 3)
         let glass = colour(lessonPaints[0]), g = BookColor(grout)
-        // stirred to toothpaste: a blob holds on the trowel
-        BookIcon.trowel.draw(into: &c, p[0].cx - 14, p[0].cy - 10, 28)
-        c.fill(.circle(Point(p[0].cx, p[0].cy - 6), 5), g)
+        // stirred to toothpaste: a blob holds on the rubber float
+        BookIcon.float.draw(into: &c, p[0].cx - 14, p[0].cy - 14, 28)
+        c.fill(.circle(Point(p[0].cx, p[0].cy + 1), 5), g)
         mark(&c, p[0], ok: true)
         // pushed into the joints diagonally, the float at a slant
         for k in 0..<3 { for j in 0..<2 { smalto(&c, p[1].cx - 18 + Double(k) * 13, p[1].cy - 6 + Double(j) * 13, 12, 12, glass) } }
@@ -526,11 +605,11 @@ extension StoneBook {
         for k in 0..<4 { c.fill(.circle(Point(p[3].cx - 6 + Double(k) * 4, p[3].cy + 8 + Double(k % 2) * 3), 1), BookColor(hex: 0x9FB6C6)) }
         mark(&c, p[3], ok: false)
         // a film dries on the stones: buffed off with a dry cloth
-        for k in 0..<3 { smalto(&c, p[4].cx - 26 + Double(k) * 13, p[4].cy, 12, 12, glass.mixed(toward: g, 0.45)) }
-        arrow(&c, p[4].cx + 14, p[4].cy, p[4].cx + 20, p[4].cy)
-        BookIcon.cloth.draw(into: &c, p[4].cx + 20, p[4].cy - 10, 18)
-        BookIcon.clock.draw(into: &c, p[4].cx - 14, p[4].cy + 12, 10)
-        c.text(strings.hours(1), p[4].cx - 2, p[4].cy + 19, 3.2, 700)
+        for k in 0..<3 { smalto(&c, p[4].cx - 22 + Double(k) * 11, p[4].cy - 2, 10, 10, glass.mixed(toward: g, 0.45)) }
+        arrow(&c, p[4].cx + 11, p[4].cy - 2, p[4].cx + 16, p[4].cy - 2)
+        BookIcon.cloth.draw(into: &c, p[4].cx + 17, p[4].cy - 9, 14)
+        BookIcon.clock.draw(into: &c, p[4].cx - 12, p[4].cy + 7, 8)
+        c.text(strings.hours(1), p[4].cx - 2, p[4].cy + 12.5, 3.2, 700)
         // three days before it is lifted
         BookIcon.clock.draw(into: &c, p[5].cx - 12, p[5].cy - 18, 24)
         c.text(strings.hours(72), p[5].cx, p[5].cy + 16, 4.4, 700, BookStyle.ink, .middle)
@@ -540,20 +619,20 @@ extension StoneBook {
     // MARK: On the wall
 
     func hanging(_ c: inout PageCanvas, _ strings: BookStrings) -> [Panel] {
-        let p = panels(&c, 6, rows: 3)
+        let p = panels(&c, 8, rows: 4)
         // heavy: two people lift it
-        BookIcon.person.draw(into: &c, p[0].cx - 30, p[0].cy - 16, 28); BookIcon.person.draw(into: &c, p[0].cx + 2, p[0].cy - 16, 28)
-        c.text(strings.kilograms(hangingKilograms), p[0].cx, p[0].cy + 20, 4.4, 700, BookStyle.ink, .middle)
+        BookIcon.person.draw(into: &c, p[0].cx - 22, p[0].cy - 15, 20); BookIcon.person.draw(into: &c, p[0].cx + 2, p[0].cy - 15, 20)
+        c.text(strings.kilograms(hangingKilograms), p[0].cx, p[0].cy + 11, 4.4, 700, BookStyle.ink, .middle)
         // a cleat: one strip on the board's back, one on the wall, hooked
         let x = p[1].cx, y = p[1].cy
-        c.shape(.rect(x - 4, y - 22, 4, 44), fill: BookColor(hex: 0xD8CBA8), stroke: BookStyle.ink, width: 0.4)       // the wall
-        c.shape(.polygon([Point(x, y - 12), Point(x + 6, y - 12), Point(x + 6, y - 2), Point(x, y + 4)]), fill: BookColor(hex: 0xECE6DA), stroke: BookStyle.ink, width: 0.4)
-        c.shape(.rect(x + 14, y - 22, 4, 44), fill: BookColor(hex: 0xECE6DA), stroke: BookStyle.ink, width: 0.4)     // the board
-        c.shape(.polygon([Point(x + 14, y - 16), Point(x + 8, y - 10), Point(x + 8, y - 4), Point(x + 14, y - 4)]), fill: BookColor(hex: 0xECE6DA), stroke: BookStyle.ink, width: 0.4)
+        c.shape(.rect(x - 4, y - 15, 4, 30), fill: BookColor(hex: 0xD8CBA8), stroke: BookStyle.ink, width: 0.4)       // the wall
+        c.shape(.polygon([Point(x, y - 9), Point(x + 6, y - 9), Point(x + 6, y - 2), Point(x, y + 2)]), fill: BookColor(hex: 0xECE6DA), stroke: BookStyle.ink, width: 0.4)
+        c.shape(.rect(x + 14, y - 15, 4, 30), fill: BookColor(hex: 0xECE6DA), stroke: BookStyle.ink, width: 0.4)     // the board
+        c.shape(.polygon([Point(x + 14, y - 11), Point(x + 8, y - 7), Point(x + 8, y - 3), Point(x + 14, y - 3)]), fill: BookColor(hex: 0xECE6DA), stroke: BookStyle.ink, width: 0.4)
         // into a stud, not the plaster alone
-        c.shape(.rect(p[2].cx - 26, p[2].cy - 18, 52, 36), fill: BookColor(hex: 0xF4F1EA), stroke: BookStyle.ink, width: 0.4)
-        c.shape(.rect(p[2].cx - 6, p[2].cy - 18, 12, 36), fill: BookColor(hex: 0xD8CBA8), stroke: nil)
-        BookIcon.screw.draw(into: &c, p[2].cx - 8, p[2].cy - 12, 16)
+        c.shape(.rect(p[2].cx - 20, p[2].cy - 14, 40, 26), fill: BookColor(hex: 0xF4F1EA), stroke: BookStyle.ink, width: 0.4)
+        c.shape(.rect(p[2].cx - 5, p[2].cy - 14, 10, 26), fill: BookColor(hex: 0xD8CBA8), stroke: nil)
+        BookIcon.screw.draw(into: &c, p[2].cx - 6, p[2].cy - 10, 12)
         mark(&c, p[2], ok: true)
         // level
         BookIcon.level.draw(into: &c, p[3].cx - 16, p[3].cy - 16, 32)
@@ -566,6 +645,21 @@ extension StoneBook {
         c.fill(.rect(p[5].cx - (p[5].w - 8) / 2 / k, p[5].cy - (p[5].h - 22) / 2 / k, (p[5].w - 8) / k, (p[5].h - 22) / k), BookColor(hex: 0xF1EDE4))
         let hh = (p[5].h - 34) / k, ww = hh * width / height
         drawMosaic(&c, p[5].cx - ww / 2, p[5].cy - hh / 2, ww, hh)
+        // the board's strip screwed on from behind, screws shorter than the board is thick
+        func section(_ q: Panel, long: Bool) {
+            let x = q.cx - 6, y = q.cy
+            c.fill(.rect(x - 4, y - 13, 3, 26), colour(lessonPaints[0]))                                     // the stones
+            c.shape(.rect(x - 1, y - 13, 1.5, 26), fill: BookColor(hex: 0xCFCAC0), stroke: nil)                 // the bed
+            c.shape(.rect(x + 0.5, y - 13, 7, 26), fill: BookColor(hex: 0xECE6DA), stroke: BookStyle.ink, width: 0.4) // the board
+            c.shape(.polygon([Point(x + 7.5, y - 6), Point(x + 14, y - 11), Point(x + 14, y + 2), Point(x + 7.5, y + 2)]),
+                    fill: BookColor(hex: 0xECE6DA), stroke: BookStyle.ink, width: 0.4)                               // the strip
+            let tip = long ? x - 5 : x + 2.5
+            c.fill(.polygon([Point(x + 14, y - 5.4), Point(x + 14, y - 3.6), Point(tip, y - 4.2)]), BookStyle.ink)
+            c.fill(.rect(x + 14, y - 6.5, 1.4, 4.6), BookStyle.ink)
+            mark(&c, q, ok: !long)
+        }
+        section(p[6], long: false)
+        section(p[7], long: true)
         return p
     }
 }

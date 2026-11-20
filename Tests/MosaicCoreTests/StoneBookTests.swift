@@ -117,9 +117,9 @@ struct StoneBookTests {
             #expect(page.items.count > 2, "page \(n)")
             #expect(page.svg().hasPrefix("<svg"))
         }
-        #expect(kinds.count == 11, "\(kinds)")
-        // the stone list is the only page with words
-        let last = b.page(b.pageCount)
+        #expect(kinds.count == 12, "\(kinds)")
+        // the stone list and the tools list are the pages with words
+        let last = b.page(b.pageCount - 1)
         #expect(last.items.contains { if case .text(let t) = $0 { t.string == BookStrings().altogether } else { false } })
     }
 
