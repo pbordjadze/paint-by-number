@@ -353,7 +353,9 @@ below name both alike.
   view as little as it can (`PaletteBar.shaken`, `reveal`), so the shake is seen; the next fill
   or undo of the color in hand brings its swatch back (`selectedRemaining`). The palette's
   lines are counted from the painting's colors, not those left (`PaintingLayout.Inputs.colors`),
-  so they never change as colors finish.
+  so they never change as colors finish. A finished color leaves the palette once it is out of
+  hand: Advance to Next Color picks the next, and without it the finished color is put down,
+  nothing selected, until the painter picks one or an undo takes it up again (painting-company row 293).
 - `PaintCommands` is the Paint menu (iPadOS menu bar, single-key shortcuts: `]` `[` H N P Z for
   Zen Mode, R for Replay or Stop on a finished painting; ⌘[ is Back) fed by the focused
   `PaintingFocus`; fills are registered with the window's `UndoManager` (⌘Z/⇧⌘Z, Edit menu,

@@ -201,7 +201,10 @@ struct PaintingSessionTests {
         let clock = ContinuousClock()
         var ratios: [Double] = []
         var strokeTime = Duration.zero, stampTime = Duration.zero
+        // The stamps in a stroke too, so they keep their color once it's finished, as the stroke does
+        // (without Advance to Next Color a finished color is put down).
         session.beginStroke()
+        stamps.beginStroke()
         for (a, b) in zip(points, points.dropFirst()) {
             let t0 = clock.now
             stamps.drag(from: a, to: a, radius: 200)
@@ -213,6 +216,7 @@ struct PaintingSessionTests {
             strokeTime += t2 - t1
         }
         session.endStroke()
+        stamps.endStroke()
         ratios.sort()
         let median = ratios[ratios.count / 2]
         func rounded(_ ratio: Double) -> String { String(format: "%.2f", ratio) }
@@ -661,6 +665,26 @@ struct PaintingSessionTests {
         try await Task.sleep(for: .milliseconds(800))
         #expect(session.replayed == nil, "the replay played on after its canvas went")
         #expect(session.isComplete)
+    }
+
+    /// Without Advance to Next Color, finishing the color in hand puts it down: nothing is selected,
+    /// so its swatch leaves the palette like any finished color's (painting-company row 293), and
+    /// an undo picks it up again.
+    @Test func withoutAdvanceAFinishedColorIsPutDown() throws {
+        let session = PaintingSession(template: template)
+        session.autoAdvance = false
+        session.select(color: 4)
+        let areas = regions(ofColor: 4)
+        try #require(areas.count >= 2)
+        session.paint(Array(areas.dropLast()), from: .zero, animated: false)
+        #expect(session.selectedColor == 4)
+        session.paint([areas.last!], from: .zero, animated: false)
+        #expect(session.isColorComplete(4))
+        #expect(session.selectedColor == nil)
+        #expect(!PaletteBar.visibleColors(session).contains(4))
+        session.unpaint([areas.last!])
+        #expect(session.selectedColor == 4)
+        #expect(PaletteBar.visibleColors(session).contains(4))
     }
 
     @Test func hintWithNothingLeftStaysQuiet() {

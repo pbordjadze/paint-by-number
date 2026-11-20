@@ -441,6 +441,11 @@ final class PaintingSession {
             // The next along the palette, so the painter carries on where they were (the first
             // swatch left sent them back to 1 from the middle of a long palette).
             select(color: advancesToFirstLeft ? firstIncompleteColor() : nextIncompleteColor(after: selected))
+        } else if let selected = selectedColor, completed.contains(selected) {
+            // Without Advance to Next Color the finished color is put down, so its swatch leaves the
+            // palette like every other finished color's and the painter picks the next themselves
+            // (painting-company row 293). An undo picks it up again (`unpaint`).
+            select(color: nil)
         }
         // A stroke flies on when it ends (`endStroke`).
         if flowsToNextArea, !isStroking { showNextArea(near: origin, finishedColor: !completed.isEmpty) }
