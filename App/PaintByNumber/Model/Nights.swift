@@ -216,10 +216,10 @@ nonisolated final class Nights: Sendable {
             await Self.changed()
             let soon = [now, now.addingTimeInterval(86_400)].map { Self.day(of: $0, in: .current) }
             for picture in fresh.pictures.values.sorted(by: { $0.id < $1.id }) {
-                try? await fetch(picture.thumb, sha256: nil)
+                _ = try? await fetch(picture.thumb, sha256: nil)
             }
             for night in fresh.nights where soon.contains(night.date) {
-                if let picture = fresh.pictures[night.picture] { try? await fetch(picture.image, sha256: picture.sha256) }
+                if let picture = fresh.pictures[night.picture] { _ = try? await fetch(picture.image, sha256: picture.sha256) }
             }
             prune(keeping: fresh)
             await Self.changed()
