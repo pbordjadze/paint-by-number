@@ -103,6 +103,10 @@ final class PaintingSession {
     private(set) var isReplaying = false
 
     @ObservationIgnored weak var canvas: PaintingCanvas?
+    #if UNRELEASED
+    /// Paint Together's way between this painting's screen and the friend painting it too.
+    @ObservationIgnored let together = TogetherChannel()
+    #endif
     @ObservationIgnored private var observers: [(PaintEvent) -> Void] = []
     @ObservationIgnored private var lastInteraction: ContinuousClock.Instant?
     /// The sizes `isSmall` measured: a region's inscribed radius as searched up to `limit`, so
@@ -326,6 +330,13 @@ final class PaintingSession {
     // MARK: Selection
 
     func select(color: Int?) {
+        #if UNRELEASED
+        // Picking a paint puts the hand down, the paint in hand already too.
+        if color != nil { together.holdsHand = false }
+        together.held(color)
+        // The hand taken with no paint in hand: nothing to change but what VoiceOver offers.
+        if color == nil, selectedColor == nil { canvas?.sessionDidChangeSelection(self) }
+        #endif
         guard color != selectedColor else { return }
         if let color, !(0..<paletteCount).contains(color) { return }
         selectedColor = color

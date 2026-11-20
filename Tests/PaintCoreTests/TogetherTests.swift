@@ -166,6 +166,7 @@ struct TogetherTests {
         .snapshot([]),
         .presence(point: SIMD2(100, 200.25), color: 4),
         .presence(point: nil, color: -1),
+        .presence(point: nil, color: -2),
         .ripple(point: SIMD2(1, 2)),
         .star(point: SIMD2(-0.5, 1e6)),
         .finish(atClock: 77),
@@ -231,7 +232,7 @@ struct TogetherTests {
                 decoding: TogetherMessage.presence(point: SIMD2(0, .infinity), color: 0).encoded(), maxRegionCount: 1)
         }
         #expect(throws: TogetherMessage.DecodingError.malformed) {
-            try TogetherMessage(decoding: TogetherMessage.presence(point: nil, color: -2).encoded(), maxRegionCount: 1)
+            try TogetherMessage(decoding: TogetherMessage.presence(point: nil, color: -3).encoded(), maxRegionCount: 1)
         }
         // A count promising more ops than the bytes hold, or more than a message may carry.
         var huge = [UInt8](TogetherMessage.snapshot([]).encoded())
