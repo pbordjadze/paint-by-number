@@ -3,7 +3,8 @@ import Foundation
 /// Watercolor's Making Of (painting-company row 373): a new painting painted once by the real
 /// simulation, fast, before the painter paints it themselves. It is a tap log like a painter's
 /// (`WatercolorLog`, played into a `WatercolorSim` of its own by `play(_:to:cursor:)`), laid as a
-/// watercolorist lays a picture: the light washes first, the big ones of each value before the
+/// watercolorist lays a picture: its signature paints first (the picture's boldest colors, so
+/// something saturated and plainly wet happens in the first moment), then the light washes, the big ones of each value before the
 /// small, the darks last, in a few overlapping waves, and a few drops of clean water charged into
 /// the broad washes still damp, to bloom; and a clock (`step(at:)`) that shows it as a
 /// time-lapse, the floods a little faster than life and the drying hurried, until the sheet has
@@ -20,6 +21,8 @@ public struct WatercolorMakingOf: Sendable {
     /// Where the film pushes in as the sheet dries: the bloom nearest the middle, canvas units
     /// (nil without one), so the push never runs into a corner.
     public let focus: SIMD2<Float>?
+    /// The areas laid first, in order (`signatures`).
+    public let signatures: [Int]
 
     /// Washes, light to dark: few enough that each reads as a stage of the painting, enough that
     /// the darks come last.
@@ -29,6 +32,15 @@ public struct WatercolorMakingOf: Sendable {
     /// into the next.
     public static let waveSeconds: Float = 1.0
     public static let waveSpread: Float = 0.8
+    /// The signature paints: the paints covering most of the sheet in saturated color (OKLab
+    /// chroma at least `signatureChroma`), whatever their value (a picture's signature is often
+    /// its darkest blue), each laid in up to `signatureAreas` of its largest areas at once,
+    /// `signatureSeconds` apart from the start (critic round 2: the first second showed only
+    /// pale washes, and a paint split into many small areas showed as a fleck).
+    public static let signatureCount = 3
+    public static let signatureAreas = 4
+    public static let signatureSeconds: Float = 0.25
+    public static let signatureChroma: Float = 0.08
     /// Drops of water charged into the broadest mid-value washes as the darks go on.
     public static let blooms = 4
 
@@ -38,7 +50,7 @@ public struct WatercolorMakingOf: Sendable {
     /// in the first frames. The drying is hurried hardest (critic round 1: a still film
     /// once the paint was down), and the film pushes in toward a bloom meanwhile.
     public static let floodSpeed: Double = 1.6
-    public static let dryingSpeed: Double = 12
+    public static let dryingSpeed: Double = 9
     public static let easing: Double = 0.5
     public static let lead: Double = 0.25
     /// The share of the sheet still wet at which the Making Of has settled and may end: the last
@@ -74,10 +86,32 @@ public struct WatercolorMakingOf: Sendable {
         func bigFirst(_ a: Int, _ b: Int) -> Bool {
             t.regions[a].area != t.regions[b].area ? t.regions[a].area > t.regions[b].area : a < b
         }
+        // The signature paints: chroma by the paint's whole area, so what is laid first is big
+        // enough to spread visibly.
+        func chroma(_ r: Int) -> Float {
+            let c = Int(t.regions[r].colorIndex)
+            guard t.palette.indices.contains(c) else { return 0 }
+            let lab = t.palette[c].oklab
+            return (lab.y * lab.y + lab.z * lab.z).squareRoot()
+        }
+        var byPaint: [UInt32: [Int]] = [:]
+        for r in 0..<n where chroma(r) >= Self.signatureChroma { byPaint[t.regions[r].colorIndex, default: []].append(r) }
+        var weight: [UInt32: Float] = [:]
+        for (paint, members) in byPaint { weight[paint] = chroma(members[0]) * members.reduce(0) { $0 + t.regions[$1].area } }
+        let boldest = byPaint.keys.sorted { weight[$0]! != weight[$1]! ? weight[$0]! > weight[$1]! : $0 < $1 }
+        var signatures: [Int] = []
+        for (i, paint) in boldest.prefix(Self.signatureCount).enumerated() {
+            for r in byPaint[paint]!.sorted(by: bigFirst).prefix(Self.signatureAreas) {
+                let p = point(r)
+                taps.append(.init(step: step(Self.signatureSeconds * Float(i)), region: r, x: p.x, y: p.y, paint: true))
+                signatures.append(r)
+            }
+        }
+        let first = Set(signatures)
         for k in 0..<Self.waves {
             // Within a wave the big areas go first and the small ones are dotted in after, as a
             // brush lays the broad passages and then picks out the rest.
-            let members = (0..<n).filter { wave[$0] == k }.sorted(by: bigFirst)
+            let members = (0..<n).filter { wave[$0] == k && !first.contains($0) }.sorted(by: bigFirst)
             let begin = Float(k) * Self.waveSeconds
             for (i, r) in members.enumerated() {
                 let f = members.count > 1 ? Float(i) / Float(members.count - 1) : 0
@@ -105,6 +139,7 @@ public struct WatercolorMakingOf: Sendable {
         log = WatercolorLog(seed: sheet.seed, taps: taps)
         lastTapStep = taps.last?.step ?? 0
         self.focus = focus
+        self.signatures = signatures
     }
 
     /// Whether every tap is laid: from here the film is the drying.
