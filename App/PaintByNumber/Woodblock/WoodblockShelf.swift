@@ -125,7 +125,10 @@ final class WoodblockShelf {
                 } catch WoodblockBench.CodingError.newerVersion {
                     throw WoodblockBench.CodingError.newerVersion
                 } catch {
-                    Log.library.error("Unreadable bench of print \(id.uuidString, privacy: .public): starting it again")
+                    // Kept beside the print, so a later app that reads it can bring it back.
+                    let aside = url.appendingPathExtension("unread-\(Int(Date.now.timeIntervalSince1970))")
+                    try? FileManager.default.moveItem(at: url, to: aside)
+                    Log.library.error("Unreadable bench of print \(id.uuidString, privacy: .public): kept aside, starting it again")
                 }
             }
             return Opened(plan: plan, bench: bench)

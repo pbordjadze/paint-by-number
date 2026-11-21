@@ -278,8 +278,6 @@ public struct WoodblockBench: Sendable, Equatable {
         if step == .sheet { step = .rub }
     }
 
-    public var canPeel: Bool { step == .rub }
-
     /// Lifts the sheet: this block's ink, as far as the baren pressed it, is laid over the
     /// sheet's colour (multiplied in linear light, a little short of hiding it: washi takes
     /// pigment transparently). A light rub prints a speckle (gomazuri); the bokashi block's
@@ -316,7 +314,7 @@ public struct WoodblockBench: Sendable, Equatable {
     /// bokashi block, whose shape is its ground's colour block again (`field`, nil: the caller
     /// inks it when the field is made, `startInked`).
     public mutating func next(plan: WoodblockPlan, field: WoodblockField?) {
-        guard step == .peeled else { return }
+        guard step == .peeled, block < plan.blocks.count else { return }
         block += 1
         for i in carved.indices { carved[i] = 0 }
         for i in inked.indices { inked[i] = 0 }

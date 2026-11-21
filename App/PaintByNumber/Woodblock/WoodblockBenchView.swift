@@ -92,6 +92,8 @@ final class WoodblockBenchModel: CanvasTouches {
             mode.update(.inked, from: bench.inked, dirty: bench.ink(from: from, to: p, radius: brush, field: field))
         case .sheet:
             guard phase == .tap || phase == .began else { return false }
+            // The touch that lays the sheet rubs nothing.
+            last = nil
             laySheet()
             return true
         case .rub:
@@ -170,6 +172,12 @@ final class WoodblockBenchModel: CanvasTouches {
             if !reduceMotion { try? await Task.sleep(for: .seconds(Double(WoodblockMode.peelDuration) + 0.4)) }
             isTurning = false
             showsPrint = true
+            // The last block's print is the finished print.
+            if bench.block == plan.blocks.count - 1 {
+                bench.next(plan: plan, field: nil)
+                stepChanged()
+                changed()
+            }
             mode.show(.print, at: canvas?.canvasTime ?? 0, numbers: false, reduceMotion: reduceMotion)
             canvas?.requestRender()
         }
@@ -198,6 +206,8 @@ final class WoodblockBenchModel: CanvasTouches {
             showsPrint = false
             canPeel = false
             isTurning = false
+            step = bench.step
+            block = bench.block
             showAll()
             stepChanged()
             changed()
@@ -230,7 +240,7 @@ final class WoodblockBenchModel: CanvasTouches {
         mode.replace(.inked, with: bench.inked)
         mode.replace(.sheet, with: bench.sheet)
         for r in plan.template.regions.indices {
-            canvas.showMode(r, value: 0, painted: !plan.prints(region: r, block: block), from: nil, animated: false)
+            canvas.showMode(r, value: 0, painted: !plan.prints(region: r, block: bench.block), from: nil, animated: false)
         }
         if bench.step == .rub { canPeel = bench.rubbedFraction(field: field) >= WoodblockBench.rubbedAt }
         mode.show(showsPrint ? .print : view, at: canvas.canvasTime, numbers: showsNumbers && !showsPrint, reduceMotion: reduceMotion)
@@ -417,11 +427,12 @@ struct WoodblockBenchView: View {
                 if voiceOver && !model.canPeel {
                     Button("Rub It All") { model.finishStep() }
                         .buttonStyle(.glass)
+                        .disabled(model.isTurning)
                 }
                 Button("Lift the Sheet") { model.peel() }
                     .buttonStyle(.glassProminent)
                     .tint(Theme.signature)
-                    .disabled(model.isTurning)
+                    .disabled(model.isTurning || !model.canPeel)
                     .accessibilityIdentifier("woodblock-peel")
             }
         } else if voiceOver && (model.step == .carve || model.step == .ink) {

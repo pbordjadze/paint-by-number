@@ -13,7 +13,7 @@ import os
 /// rest painted, which hides their numbers); no outlines.
 nonisolated final class WoodblockMode: CanvasMode, @unchecked Sendable {
     /// Must match `WoodblockParameters` (Woodblock.metal).
-    struct Parameters {
+    nonisolated struct Parameters {
         var grid: SIMD4<Float>
         var view = SIMD4<Float>(0, 0, 0, 0)
         var ink = SIMD4<Float>(0, 0, 0, 1)
@@ -21,9 +21,9 @@ nonisolated final class WoodblockMode: CanvasMode, @unchecked Sendable {
         var anim = SIMD4<Float>(0, 1, -100, 0)
     }
 
-    enum View: Float { case block = 0, sheet = 1, peeling = 2, print = 3 }
+    nonisolated enum View: Float { case block = 0, sheet = 1, peeling = 2, print = 3 }
 
-    enum Layer: Int, CaseIterable { case carved, inked, sheet }
+    nonisolated enum Layer: Int, CaseIterable { case carved, inked, sheet }
 
     let drawsOutlines = false
     var drawsNumbers: Bool { state.withLockUnchecked { $0.numbers } }
@@ -88,9 +88,6 @@ nonisolated final class WoodblockMode: CanvasMode, @unchecked Sendable {
             parameters: Parameters(grid: SIMD4(Float(w), Float(h), plan.grid.cellSize, margin)),
             shape: keyTexture, key: keyTexture))
     }
-
-    /// The block's margin past the picture (canvas units): the camera should leave room for it.
-    var blockMargin: Float { margin }
 
     /// Takes the field of the block now on the bench (its shape), and how the block looks.
     func setBlock(_ field: WoodblockField, kind: WoodblockPlan.Kind, ink: SIMD3<Float>, opacity: Float, tint: SIMD3<Float>) {

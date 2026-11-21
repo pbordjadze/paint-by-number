@@ -138,13 +138,13 @@ static float3 wbBlock(float2 c, constant WoodblockParameters &w, WB_TEXTURES, co
     if (inside && h > 0.97) {
         // The drawing on the face: the key line in ink, or for a colour block the kyōgō, the key
         // line faint and the areas this block prints tinted.
-        float key = 1.0 - smoothstep(-0.6, 0.6, key.sample(wbLinear, uv).r);
+        float keyLine = 1.0 - smoothstep(-0.6, 0.6, key.sample(wbLinear, uv).r);
         float mine = 1.0 - smoothstep(-0.6, 0.6, shape.sample(wbLinear, uv).r);
         if (w.view.y < 0.5) {
-            col = mix(col, float3(0.025, 0.02, 0.02), key * 0.92);
+            col = mix(col, float3(0.025, 0.02, 0.02), keyLine * 0.92);
         } else {
             col = mix(col, col * mix(float3(1.0), w.tint.rgb * 1.6, w.tint.w), mine);
-            col = mix(col, float3(0.06, 0.04, 0.035), key * 0.45);
+            col = mix(col, float3(0.06, 0.04, 0.035), keyLine * 0.45);
         }
         // Wet ink on what stands: the pigment, and the lamp's sheen in it.
         float ink = inked.sample(wbLinear, uv).r * mine;

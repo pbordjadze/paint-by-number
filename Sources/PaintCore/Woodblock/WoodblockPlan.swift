@@ -113,13 +113,6 @@ public struct WoodblockGrid: Sendable, Equatable {
 
     public var count: Int { width * height }
 
-    /// The cell under a point in canvas units, nil off the grid.
-    public func cell(at p: SIMD2<Float>) -> Int? {
-        let x = Int((p.x / cellSize).rounded(.down)), y = Int((p.y / cellSize).rounded(.down))
-        guard x >= 0, y >= 0, x < width, y < height else { return nil }
-        return y * width + x
-    }
-
     /// A point in canvas units, in cells (cell centres at half-integers).
     public func cells(_ p: SIMD2<Float>) -> SIMD2<Float> { p / cellSize }
 }
