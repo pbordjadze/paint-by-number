@@ -56,6 +56,7 @@ struct PrintPreviewSheet: View {
         var layout = PDFExporter.Layout(paper: .default(for: Locale.current.region), across: across)
         layout.numbers = numbers
         layout.colorHints = colorHints
+        layout.colorKey = numbers
         _layout = State(initialValue: layout)
         _showsPainted = State(initialValue: showsPainted)
     }
