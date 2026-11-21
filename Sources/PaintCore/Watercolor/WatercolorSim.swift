@@ -18,9 +18,12 @@ import Foundation
 ///   paint, however the water moved it (the target solve, done where it is drawn).
 /// - Order and timing show at the edges: each cell's `E` is decided when the wash reaches it, by
 ///   what lies past the edge then. Still-wet paint: the wash runs on into it and the two bleed,
-///   no rim on either side (wet-in-wet). Dry paper or a dried wash: a crisp edge, a touch darker
-///   (wet-on-dry). And a tide-line as strong as the water the brush carried, quieter on a broad
-///   area, laid as one big wet wash. A quick painter's picture comes out soft, a slow one's crisp.
+///   no rim on either side, a dark paint carrying into a lighter one only a little (wet-in-wet).
+///   Dry paper or a dried wash: a crisp edge, a touch darker (wet-on-dry). And a tide-line as
+///   strong as the water the brush carried. Both are accents of broad, light washes: a small or
+///   dark area dries with a faint edge. A quick painter's picture comes out soft, a slow one's
+///   crisp. Every cell of an area is reached (each piece of it has its own front), so paper shows
+///   only where the template leaves it.
 /// - Time runs in fixed steps of `dt`, and taps land on a step, so a tap log replays to the same
 ///   painting on the same device (`replay`); nothing in it reads a clock.
 ///
@@ -164,8 +167,10 @@ public final class WatercolorSim {
         // A neighbour still wet: the wash runs on into it (wet-in-wet), further, feathering.
         var wetNear = [Bool](repeating: false, count: n)
         var reachHere = [Float](repeating: Self.reach, count: n)
-        var glintSeed = [Bool](repeating: false, count: n)
-        var anyDry = false, anyWet = false
+        var anyWet = false
+        // How dark this paint is: a dark wash bleeds into a lighter wet neighbour only a little.
+        let ownDark = sheet.want[r].x + sheet.want[r].y + sheet.want[r].z
+        var bleedLoad = [Float](repeating: 1, count: n)
         for j in 0..<n where !own[j] {
             let g = global(j)
             let lf = sheet.lowFrequency[g], p = sheet.paper[g]
@@ -173,28 +178,20 @@ public final class WatercolorSim {
                 wetNear[j] = true
                 anyWet = true
             }
-            reachHere[j] = Self.reach * (wetNear[j] ? 1.6 : 1) * min(max(0.5 + 0.6 * lf + 0.5 * (p - 0.5), 0.15), 1.3)
+            var further: Float = 1
+            if wetNear[j] {
+                // Into a wet neighbour as dark or darker, a little further; into a lighter one,
+                // less pigment the lighter it is, so a dark paint never swallows a small light one.
+                let o = sheet.want[Int(sheet.labels[g])]
+                let ratio = min(max((o.x + o.y + o.z) / max(ownDark, 1e-3), 0.15), 1)
+                further = 1 + 0.25 * ratio
+                bleedLoad[j] = 0.6 * ratio
+            }
+            reachHere[j] = Self.reach * further * min(max(0.5 + 0.6 * lf + 0.5 * (p - 0.5), 0.15), 1.3)
             creep[j] = out[j] <= reachHere[j]
             let d = D[g]
             if d.x + d.y + d.z > 0.05 && W[g] < Self.wetLine {
                 dryPainted[j] = true
-                anyDry = true
-                if sheet.group[Int(sheet.labels[g])] != sheet.group[r] { glintSeed[j] = true }
-            }
-        }
-        // A broad area (a sky, a background) is laid as a big wet wash: more water, so it stays
-        // open for its neighbours to run into, and a quieter rim, so it reads as one wash and
-        // not a field of ringed blotches.
-        let broad = min(max((sheet.workingArea[r].squareRoot() - 60) / 120, 0), 1)
-        if anyDry, broad < 0.5 {
-            // A hair of paper left white where this wash meets one already dry (the glints a
-            // painter leaves by not quite touching), here and there along the edge; never against
-            // a wash of the same group, where a glint read as a scratch in one soft passage.
-            let near = Self.chamfer(seeds: glintSeed, width: bw, height: bh)
-            for j in 0..<n {
-                let g = global(j)
-                let lf = sheet.lowFrequency[g]
-                if own[j], near[j] <= 1 + (lf > 0.3 ? 1.2 : 0), sheet.paper[g] + 0.3 * lf > 0.68 { own[j] = false }
             }
         }
         for j in 0..<n where dryPainted[j] { creep[j] = false }
@@ -246,6 +243,27 @@ public final class WatercolorSim {
             }
             swap(&ring, &next)
         }
+        for seed in 0..<n where own[seed] && dist[seed] < 0 {
+            // Another piece of the area: its own front, starting where the last one ended.
+            dist[seed] = d
+            ring = [seed]
+            while !ring.isEmpty {
+                d += 1
+                next.removeAll(keepingCapacity: true)
+                for j in ring {
+                    let x = j % bw, y = j / bw
+                    for dy in -1...1 {
+                        for dx in -1...1 where dx != 0 || dy != 0 {
+                            let nx = x + dx, ny = y + dy
+                            guard nx >= 0, ny >= 0, nx < bw, ny < bh else { continue }
+                            let k = ny * bw + nx
+                            if mask[k], dist[k] < 0 { dist[k] = d; next.append(k) }
+                        }
+                    }
+                }
+                swap(&ring, &next)
+            }
+        }
         let dmax = Float(max(d - 1, 1))
 
         var rng = SplitMix64(seed: sheet.seed ^ (UInt64(step) &* 0x9E37_79B9_7F4A_7C15) ^ (UInt64(r) &* 0xD1B5_4A32_D192_ED03))
@@ -258,7 +276,16 @@ public final class WatercolorSim {
         // laid damp dries flat. The tide-line's strength follows the water.
         let puddle = 0.7 + 0.75 * rng.nextFloat()
         let tide = min(max(0.05 + 1.5 * (puddle - 0.85) + 0.2 * normal, 0.04), 1.6)
-        let edge = tide * (1 - 0.55 * broad) * min(max(sheet.workingArea[r].squareRoot() / 45, 0.25), 1)
+        // A broad area (a sky, a background) is laid as a big wet wash: more water, so it stays
+        // open for its neighbours to run into. A ring is an accent of a broad, light wash: a
+        // small area or a dark paint dries with a faint edge, so a busy picture isn't a field of
+        // ringed shapes.
+        let side = sheet.workingArea[r].squareRoot()
+        let broad = min(max((side - 60) / 120, 0), 1)
+        let size = min(max((side - 25) / 110, 0.08), 1)
+        let light = min(max(1.25 - 0.45 * ownDark, 0.12), 1)
+        let accent = size * light
+        let edge = tide * accent
         let carried = puddle * (1 + 0.5 * broad)
         // How each edge dries depends on what the wash meets there: still-wet paint feathers
         // into it (no rim, the two bleed), dry paper or a dried wash stops it crisp and a touch
@@ -291,16 +318,21 @@ public final class WatercolorSim {
             // The drop lands where you touched: more water there pushes the pigment out, so the
             // touch stays a lighter bloom with the color gathered where the front comes to rest.
             let drop = 1 + 0.9 * exp(-df / (0.18 * dmax + 2))
-            let spread = own[j] ? 1 : 0.55 * min(max(1 - out[j] / (reachHere[j] + 1), 0.2), 1)
+            // Past the pencil the wash thins in pigment, not in water: a thinner film there drew the
+            // wash's water, and its pigment with it, out to the creep's edge, where it dried as a
+            // dark ring round every shape.
+            let taper = own[j] ? 1 : min(max(1 - out[j] / (reachHere[j] + 1), 0.2), 1)
+            let spread = own[j] ? 1 : 0.85 + 0.15 * taper
             let water = carried * drop * spread * min(max(1 + wobble * sheet.waterNoise[g], 0.3), 2)
             let wetIn = toWet.map { exp(-$0[j] / 2.5) } ?? 0
             let crisp = exp(-max(toHard[j] - 1, 0) / 0.8) * (1 - wetIn)
             var load = soften[j] ? 0 : min(max(1 + 0.15 * sheet.pigmentNoise[g], 0.4), 1.8)
-            load *= 1 + 0.55 * crisp
+            load *= (own[j] ? 1 : 0.45 * taper) * (1 + 0.5 * accent * crisp)
+            if creep[j], wetNear[j] { load *= bleedLoad[j] }
             // Over a neighbour's wash already dry (where it crept past the pencil), a thin glaze:
             // laid full, every such overlap read as a dark outline round every shape.
             let under = D[g]
-            if own[j], under.x + under.y + under.z > 0.05, W[g] < Self.wetLine { load *= 0.3 }
+            if own[j], under.x + under.y + under.z > 0.05, W[g] < Self.wetLine { load *= 0.2 }
             order.append((arrival, Int32(g), water, load, soften[j], edge * (1 - 0.75 * wetIn)))
         }
         order.sort { $0.0 != $1.0 ? $0.0 < $1.0 : $0.1 < $1.1 }
@@ -448,7 +480,8 @@ public final class WatercolorSim {
                     if y > b.y0 { water += fy[i - w]; s += py[i - w] }
                     var d = D[i]
                     if L[i] > 0 {
-                        let lift = d * (dt * 0.6 * L[i] * min(max(water - 0.2, 0), 1))
+                        // Gently: lifted fast, a dried wash's edge washed out to bare paper.
+                        let lift = d * (dt * 0.15 * L[i] * min(max(water - 0.2, 0), 1))
                         d -= lift
                         s += lift
                     }
