@@ -20,11 +20,10 @@ public struct EraClock: View {
     @State private var settling: Task<Void, Never>?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
-    /// The wheel and the rails' gap grow with the numerals' text size.
+    /// The wheel grows with the numerals' text size.
     /// Tall enough for two years above and below the one read, fading as a system wheel does.
     @ScaledMetric(relativeTo: .title2) private var wheelWidth: CGFloat = 120
     @ScaledMetric(relativeTo: .title2) private var wheelHeight: CGFloat = 176
-    @ScaledMetric(relativeTo: .title2) private var railGap: CGFloat = 36
 
     /// How long the wheel must rest on a year before it counts: a wheel spun past 0547 isn't a
     /// visit to it.
@@ -74,7 +73,6 @@ public struct EraClock: View {
         .pickerStyle(.wheel)
         .frame(width: wheelWidth, height: wheelHeight)
         .clipped()
-        .overlay { rails }
         .frame(maxWidth: .infinity)
         .sensoryFeedback(trigger: year) { old, new in
             // An era's year clicks into place, from either side; a step back otherwise weighs
@@ -97,18 +95,6 @@ public struct EraClock: View {
             }
         }
         .onDisappear { settling?.cancel() }
-    }
-
-    /// Two hairlines across the wheel, above and below the year read, in the numerals' warmth.
-    private var rails: some View {
-        let ink = Color.primary.mix(with: Self.gold, by: Self.age(of: year)).opacity(0.45)
-        return VStack(spacing: railGap) {
-            Rectangle().fill(ink).frame(height: 1)
-            Rectangle().fill(ink).frame(height: 1)
-        }
-        .frame(width: wheelWidth)
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
     }
 
     /// Smalti gold, as Ravenna's theme has it.
