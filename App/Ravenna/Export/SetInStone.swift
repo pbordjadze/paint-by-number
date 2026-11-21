@@ -389,6 +389,20 @@ extension BookStrings {
         s.pounds = { Decimal($0).formatted(.currency(code: "GBP").precision(.fractionLength(0))) }
         s.toolList = String(localized: "stone.tools.title", defaultValue: "Tools and materials", bundle: .ravenna,
                             comment: "Set in Stone's book: the heading of the page that names every tool and material the book's pictures show")
+        s.goldShades = [
+            String(localized: "stone.gold.pale", defaultValue: "Pale gold", bundle: .ravenna,
+                   comment: "Set in Stone's stone list: the name to order a gold by, the lightest of the gold leaf smalti"),
+            String(localized: "stone.gold.yellow", defaultValue: "Yellow gold", bundle: .ravenna,
+                   comment: "Set in Stone's stone list: the name to order a gold by, the usual bright gold leaf smalti"),
+            String(localized: "stone.gold.antique", defaultValue: "Antique gold", bundle: .ravenna,
+                   comment: "Set in Stone's stone list: the name to order a gold by, a deeper, aged-looking gold leaf smalti"),
+            String(localized: "stone.gold.dark", defaultValue: "Dark gold", bundle: .ravenna,
+                   comment: "Set in Stone's stone list: the name to order a gold by, the darkest gold leaf smalti, gold on dark glass"),
+        ]
+        s.goldNumber = { n in
+            String(localized: "stone.gold.numbered", defaultValue: "Gold \(n)", bundle: .ravenna,
+                   comment: "Set in Stone's stone list: a gold leaf smalto's name when a mosaic has more than four golds; the argument numbers them, lightest 1")
+        }
         s.tools = [
             "tiles": String(localized: "stone.tools.tiles", defaultValue: "Smalti, by the stone list", bundle: .ravenna,
                           comment: "Set in Stone's tools list: the glass tiles themselves, as many as the stone list says to buy"),

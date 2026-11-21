@@ -129,6 +129,20 @@ struct StoneBookTests {
         #expect(abs(big.widthMM / Self.book.widthMM - 2.25.squareRoot() / 1.5.squareRoot()) < 1e-6)
     }
 
+    @Test func everyGoldHasAShadeOfItsOwn() throws {
+        // Mother and Child sets four golds, the gilded wreath more
+        for name in ["mother-and-child-gold-glass-standard", "young-woman-gilded-wreath-standard"] {
+            let url = TemplateTests.mosaics.appendingPathComponent(name + ".json")
+            let m = try JSONDecoder().decode(Mosaic.self, from: Data(contentsOf: url))
+            let book = StoneBook(mosaic: m, title: "", names: [String?](repeating: nil, count: m.palette.count))
+            let golds = book.stones.filter { $0.kind == .gold }
+            #expect(golds.count > 1, "\(name)")
+            let shades = golds.compactMap(\.goldShade)
+            #expect(shades.count == golds.count && Set(shades).count == shades.count, "\(name): \(shades)")
+            #expect(book.stones.allSatisfy { ($0.kind == .gold) == ($0.goldShade != nil) })
+        }
+    }
+
     @Test func theCoverEstimatesHoursAndCost() {
         let b = Self.book
         let hours = b.hoursToSet
