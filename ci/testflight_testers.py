@@ -44,6 +44,9 @@ GROUP = "Friends & Family"
 # The internal group: every App Store Connect user of the account, given every build the moment it
 # is processed, with no Beta App Review (Apple's rule for internal testers).
 TEAM = "Team"
+# The nightly's train (testflight.yml's NIGHTLY_VERSION): the SideStore build, for Team alone. A
+# build of it is never given to external testers nor submitted for review, whoever asks.
+NIGHTLY_TRAIN = os.environ.get("NIGHTLY_VERSION") or "99.0"
 LINK_LIMIT = 100
 WHAT_TO_TEST = (
     "Thank you for trying Paint by Moonlight 1.3 before anyone else.\n\n"
@@ -240,6 +243,10 @@ def main():
         print(f"The internal group {TEAM!r} wasn't kept ({brief}).")
     ensure_what_to_test(client, build["id"], os.environ.get("WHAT_TO_TEST", "").strip() or WHAT_TO_TEST)
     print("What to Test is set.")
+    train = client.call("GET", f"/builds/{build['id']}/preReleaseVersion")["data"]["attributes"]["version"]
+    if train == NIGHTLY_TRAIN and os.environ.get("EXTERNAL", "true") != "false":
+        sys.exit(f"Build {version} is a nightly ({train}), for {TEAM!r} alone: it is never given to "
+                 f"{GROUP!r} nor submitted for review. Name a release build in BUILD.")
     if os.environ.get("EXTERNAL", "true") == "false":
         # Internal testers alone: Team has every build once it is processed, with no review.
         print(f"Build {version} is for {TEAM!r} only: not given to {GROUP!r}, not submitted for review.")
