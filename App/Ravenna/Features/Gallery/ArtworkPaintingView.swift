@@ -329,6 +329,7 @@ struct ArtworkPaintingView: View {
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase != .active else { return }
+            FeedbackEngine.shared.rest()
             autosaver?.saveNow(refreshThumbnail: true)
             if phase == .background {
                 let library = library

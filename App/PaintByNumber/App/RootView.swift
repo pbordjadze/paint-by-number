@@ -12,7 +12,9 @@ import SwiftUI
 /// `print-preview…` Print's preview (`PrintPreviewDemo`). In SideStore and Debug builds Stained Glass
 /// (`GlassEra`) shows while the clock is at 1248, and for its scenarios, `-demo glass-<name>`
 /// (`GlassDemo`); `era-passage-glass` holds the way to it at the rose window's light. Woodblock
-/// (`WoodblockEra`) shows at 1765 and for `-demo woodblock-<name>` (`WoodblockDemo`).
+/// (`WoodblockEra`) shows at 1765 and for `-demo woodblock-<name>` (`WoodblockDemo`). Watercolor
+/// (`WatercolorEra`) shows at 1502 and for `-demo watercolor-<name>` (`WatercolorDemo`);
+/// `era-passage-watercolor` holds the way to it as its wash floods in.
 struct RootView: View {
     @State private var door = EraDoor.shared
 
@@ -24,6 +26,8 @@ struct RootView: View {
                 glass
             } else if showsWoodblock {
                 woodblock
+            } else if showsWatercolor {
+                watercolor
             } else {
                 moonlight
             }
@@ -36,6 +40,8 @@ struct RootView: View {
             #if UNRELEASED
             // `era-passage-glass`: the way to Stained Glass, held at the rose window's light.
             if DemoMode.scenario == "era-passage-glass" { door.go(to: .glass) }
+            // `era-passage-watercolor`: the way to Watercolor, held as its wash floods in.
+            if DemoMode.scenario == "era-passage-watercolor" { door.go(to: .watercolor) }
             #endif
             // `era-passage-back`, `era-passage-night`: the way back, held at a moment each.
             if DemoMode.scenario == "era-passage-back" || DemoMode.scenario == "era-passage-night" {
@@ -65,6 +71,10 @@ struct RootView: View {
     private var showsWoodblock: Bool {
         #if UNRELEASED
         return door.shown == .woodblock || WoodblockEra.isDemoScenario
+    /// Whether Watercolor is on screen: its era, or one of its demo scenarios (`watercolor-…`).
+    private var showsWatercolor: Bool {
+        #if UNRELEASED
+        return door.shown == .watercolor || WatercolorEra.isDemoScenario
         #else
         return false
         #endif
@@ -74,6 +84,10 @@ struct RootView: View {
     @ViewBuilder private var woodblock: some View {
         #if UNRELEASED
         WoodblockEra(leave: { year in door.go(to: Era.opened(by: year) ?? .moonlight) })
+    /// Watercolor (SideStore and Debug builds; `WatercolorEra`).
+    @ViewBuilder private var watercolor: some View {
+        #if UNRELEASED
+        WatercolorEra(leave: { year in door.go(to: Era.opened(by: year) ?? .moonlight) })
         #endif
     }
 

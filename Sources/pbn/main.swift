@@ -49,6 +49,16 @@
 //       WoodblockBench. Writes print.ppm (every block rubbed in full), print-light.ppm (a light
 //       pass of the baren on each) and woodblock.json (the blocks, their inks, the cells each
 //       keeps standing, the grid).
+//   pbn watercolor <photo | template.pbnt> --out <dir> [--seed N] [--spacing S] [--order paint|sweep]
+//       [--frames t1,t2,…] [generate options]
+//       a Watercolor painting (painting-company row 373; WatercolorSim): every area tapped once,
+//       paint by paint (sweep: top left down, any paint), S seconds apart (0.12), and the sheet drawn as the app draws it
+//       (Watercolor.swift's doc comment): painting.ppm dried, frame-<t>.ppm wet at each time,
+//       watercolor.json (the tap log), and the steps' and the replay's timings printed.
+//       With --making-of [--fps N]: the app's Making Of instead (WatercolorMakingOf), frame-NNNN.ppm
+//       every 1/N second shown (15) until it settles and on through the app's ending,
+//       making-of.csv, and its steps' cost printed;
+//       tools/watercolor_making_of.py makes its contact sheet and film.
 //   pbn drawing <photo.ppm> <outdir> [--palette crayons|pastels|earth|sea|garden] [--paints N]
 //       [--seed N] [--detail F] [--smooth F] [--cleaned]
 //       starts a painting from a drawing (GenerationSettings.drawing): the photo of a line
@@ -186,6 +196,7 @@ func run(_ command: String, _ options: Options) throws {
     case "drawing": try runDrawing(options)
     case "glass": try runGlass(options)
     case "woodblock": try runWoodblock(options)
+    case "watercolor": try runWatercolor(options)
     case "edit": try runEdit(options)
     case "refine": try runRefine(options)
     case "practice": try runPractice(options)

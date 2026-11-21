@@ -87,7 +87,7 @@ struct EraDoorTests {
         #expect(EraClock.text(of: EraYear.byzantium) == "0547")
         #expect(EraClock.nearest(to: EraYear.present) == EraYear.present)
         #expect(EraClock.nearest(to: 547) == 547)
-        #expect(EraClock.nearest(to: 1550) == 1600, "a tie takes the later year")
+        #expect(EraClock.nearest(to: 1750) == 1800, "a tie takes the later year")
     }
 
     /// Stained Glass (painting-company row 366): 1248 opens it in SideStore and Debug builds, and
@@ -99,8 +99,10 @@ struct EraDoorTests {
         #if UNRELEASED
         #expect(Era.opened(by: 1248) == .glass)
         #expect(Era.opened(by: 1765) == .woodblock)
-        #expect(EraYear.modes == [547, 1248, 1765])
         #expect(EraClock.isLit(1765) && EraClock.pulled(from: 1700) == 1765 && EraClock.pulled(from: 1800) == 1765)
+        #expect(Era.opened(by: 1502) == .watercolor)
+        #expect(EraYear.modes == [547, 1248, 1502, 1765])
+        #expect(EraClock.isLit(1502) && EraClock.pulled(from: 1500) == 1502 && EraClock.pulled(from: 1600) == 1502)
         #expect(EraClock.isLit(1248) && EraClock.isLit(547) && !EraClock.isLit(1300))
         #expect(EraClock.pulled(from: 1200) == 1248 && EraClock.pulled(from: 1300) == 1248)
         #expect(EraClock.pulled(from: 500) == 547 && EraClock.pulled(from: 600) == 547)
@@ -109,6 +111,7 @@ struct EraDoorTests {
         #else
         #expect(Era.opened(by: 1248) == nil)
         #expect(Era.opened(by: 1765) == nil)
+        #expect(Era.opened(by: 1502) == nil)
         #expect(EraYear.modes == [547])
         #expect(!EraClock.isLit(547) && EraClock.pulled(from: 600) == nil, "the release's wheel is as it was")
         #endif
@@ -134,6 +137,15 @@ struct EraDoorTests {
         door.covered()
         door.passed()
         #expect(EraDoor(defaults: defaults).shown == .woodblock)
+    /// Watercolor (painting-company row 373) is kept across launches as Stained Glass is.
+    @Test func theWatercolorEraOutlivesTheLaunch() throws {
+        let defaults = try freshDefaults()
+        let door = EraDoor(defaults: defaults)
+        door.go(to: .watercolor)
+        #expect(defaults.string(forKey: EraDoor.key) == "watercolor")
+        door.covered()
+        door.passed()
+        #expect(EraDoor(defaults: defaults).shown == .watercolor)
     }
     #endif
 }

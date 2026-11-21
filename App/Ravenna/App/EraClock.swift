@@ -9,60 +9,89 @@ import SwiftUI
 /// toward the gold of a smalto, and the heavier each step back is in the hand. In SideStore and
 /// Debug builds (painting-company row 366) it reaches back to 0001, the years that open an era
 /// (`EraYear.modes`) lit in gold among quieter ones, and a wheel left on a year beside one of
-/// them is drawn on to it (`pull`), so the eras are found without being shown.
+/// them is drawn on to it (`pull`), where it clicks into place, so the eras are found without
+/// being shown.
 public struct EraClock: View {
     private let onSettle: (Int) -> Void
+    /// The wheel's rows, made once, not at each turn (the wheel's body runs again at every year
+    /// it rests on, and a row's ink reads the calendar).
+    private let rows: [Row]
     @State private var year: Int
     @State private var settling: Task<Void, Never>?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// The wheel and the rails' gap grow with the numerals' text size.
-    /// Tall enough for two years above and below the one read, fading as a system wheel does.
-    @ScaledMetric(relativeTo: .title2) private var wheelWidth: CGFloat = 120
-    @ScaledMetric(relativeTo: .title2) private var wheelHeight: CGFloat = 176
-    @ScaledMetric(relativeTo: .title2) private var railGap: CGFloat = 36
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
 
     /// How long the wheel must rest on a year before it counts: a wheel spun past 0547 isn't a
     /// visit to it.
     static let rest: Duration = .milliseconds(700)
     /// How long a wheel rests beside an era's year before it is drawn on to it.
     static let pull: Duration = .milliseconds(320)
+    /// The rest with VoiceOver, which steps the wheel a year a swipe and says each: long enough
+    /// to hear a year and swipe on past it. Nothing is pulled then, or a lit year beside the one
+    /// spoken would take the wheel from under the next swipe.
+    static let spokenRest: Duration = .seconds(2)
 
     public init(year: Int, onSettle: @escaping (Int) -> Void) {
         self.onSettle = onSettle
+        rows = Self.rows()
         _year = State(initialValue: Self.nearest(to: year))
+    }
+
+    /// One year of the wheel as it is drawn.
+    private struct Row: Identifiable {
+        let year: Int
+        let text: String
+        let isLit: Bool
+        let ink: Color
+        /// Its ink while it is the year read: a quiet year at full strength, as a system wheel
+        /// draws the row under its band.
+        let readInk: Color
+        var id: Int { year }
+    }
+
+    private static func rows() -> [Row] {
+        let present = EraYear.present
+        return years.map { year in
+            Row(year: year, text: text(of: year), isLit: isLit(year), ink: ink(of: year, present: present),
+                readInk: ink(of: year, present: present, read: true))
+        }
     }
 
     public var body: some View {
         Picker(selection: $year) {
-            ForEach(Self.years, id: \.self) { year in
-                Text(verbatim: Self.text(of: year))
-                    .font(.system(.title2, design: .serif, weight: Self.isLit(year) ? .bold : .semibold))
+            ForEach(rows) { row in
+                Text(verbatim: row.text)
+                    .font(.system(.title2, design: .serif, weight: row.isLit ? .bold : .semibold))
                     .monospacedDigit()
-                    .foregroundStyle(Self.ink(of: year))
-                    .tag(year)
+                    .foregroundStyle(row.year == year ? row.readInk : row.ink)
+                    .tag(row.year)
             }
         } label: {
             Text(String(localized: "eraClock.label", defaultValue: "Year", bundle: .ravenna,
                         comment: "VoiceOver name of the year setter behind the secret door: one wheel of years"))
         }
         .pickerStyle(.wheel)
-        .frame(width: wheelWidth, height: wheelHeight)
-        .clipped()
-        .overlay { rails }
+        .modifier(WheelFrame())
         .frame(maxWidth: .infinity)
+        // As the painting screen's bars do: past xxLarge a year's numerals outgrow the wheel's
+        // rows, and the wheel would outgrow a phone's screen.
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         .sensoryFeedback(trigger: year) { old, new in
-            new < old ? .impact(weight: .heavy, intensity: 0.25 + 0.75 * Self.age(of: new)) : nil
+            // An era's year clicks into place, from either side; a step back otherwise weighs
+            // what its age does. A step forward has the wheel's own tick alone.
+            if Self.isLit(new) { return .impact(flexibility: .rigid, intensity: 1) }
+            return new < old ? .impact(weight: .heavy, intensity: 0.25 + 0.75 * Self.age(of: new)) : nil
         }
         .onChange(of: year) { _, year in
             settling?.cancel()
             settling = Task {
-                if let era = Self.pulled(from: year) {
+                if !voiceOver, let era = Self.pulled(from: year) {
                     try? await Task.sleep(for: Self.pull)
                     guard !Task.isCancelled else { return }
                     withAnimation(reduceMotion ? nil : .smooth(duration: 0.45)) { self.year = era }
                     return
                 }
-                try? await Task.sleep(for: Self.rest)
+                try? await Task.sleep(for: voiceOver ? Self.spokenRest : Self.rest)
                 guard !Task.isCancelled else { return }
                 onSettle(year)
             }
@@ -70,16 +99,16 @@ public struct EraClock: View {
         .onDisappear { settling?.cancel() }
     }
 
-    /// Two hairlines across the wheel, above and below the year read, in the numerals' warmth.
-    private var rails: some View {
-        let ink = Color.primary.mix(with: Self.gold, by: Self.age(of: year)).opacity(0.45)
-        return VStack(spacing: railGap) {
-            Rectangle().fill(ink).frame(height: 1)
-            Rectangle().fill(ink).frame(height: 1)
+    /// The wheel's size, growing with the numerals' text size up to the clock's cap (read here,
+    /// inside the cap, and not on the clock, which sees the painter's own size). Tall enough for
+    /// two years above and below the one read, fading as a system wheel does.
+    private struct WheelFrame: ViewModifier {
+        @ScaledMetric(relativeTo: .title2) private var width: CGFloat = 120
+        @ScaledMetric(relativeTo: .title2) private var height: CGFloat = 176
+
+        func body(content: Content) -> some View {
+            content.frame(width: width, height: height).clipped()
         }
-        .frame(width: wheelWidth)
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
     }
 
     /// Smalti gold, as Ravenna's theme has it.
@@ -128,12 +157,13 @@ public struct EraClock: View {
     }
 
     /// The numerals' color: warmer the further back; an era's year in full gold, and in
-    /// SideStore and Debug builds every other year quieter, so the lit ones stand out.
-    static func ink(of year: Int) -> Color {
+    /// SideStore and Debug builds every other year quieter, so the lit ones stand out, but for
+    /// the year `read`, under the band, which is never quieter than its neighbours.
+    static func ink(of year: Int, present: Int = EraYear.present, read: Bool = false) -> Color {
         if isLit(year) { return gold }
-        let warm = Color.primary.mix(with: gold, by: age(of: year))
+        let warm = Color.primary.mix(with: gold, by: age(of: year, present: present))
         #if UNRELEASED
-        return warm.opacity(0.6)
+        return read ? warm : warm.opacity(0.6)
         #else
         return warm
         #endif
@@ -160,8 +190,7 @@ public struct EraClock: View {
 
     /// How far back a year is, from 0 at the present (and after) to 1 at 0547 and before it.
     /// (The long reach's older years are as warm as 0547's.)
-    static func age(of year: Int) -> Double {
-        let present = EraYear.present
+    static func age(of year: Int, present: Int = EraYear.present) -> Double {
         guard year < present else { return 0 }
         return min(1, Double(present - year) / Double(present - EraYear.byzantium))
     }
@@ -186,11 +215,14 @@ public enum EraYear {
     /// 1765, the year of Harunobu's first prints in full colour from many blocks, registered on
     /// kentō: Woodblock's (SideStore and Debug builds; painting-company row 375).
     public static let woodblock = 1765
+    /// 1502, the year of Dürer's *Young Hare*, the most famous early watercolor: Watercolor's
+    /// (SideStore and Debug builds; painting-company row 373).
+    public static let watercolor = 1502
 
     /// The years that open an era, oldest first: the ones the wheel lights.
     public static var modes: [Int] {
         #if UNRELEASED
-        return [byzantium, stainedGlass, woodblock]
+        return [byzantium, stainedGlass, watercolor, woodblock]
         #else
         return [byzantium]
         #endif
@@ -199,6 +231,7 @@ public enum EraYear {
     public static func opensStainedGlass(_ year: Int) -> Bool { year == stainedGlass && modes.contains(year) }
 
     public static func opensWoodblock(_ year: Int) -> Bool { year == woodblock && modes.contains(year) }
+    public static func opensWatercolor(_ year: Int) -> Bool { year == watercolor && modes.contains(year) }
 
     public static func returnsToThePresent(_ year: Int) -> Bool { year >= present }
 
