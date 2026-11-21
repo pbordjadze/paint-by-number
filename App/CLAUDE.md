@@ -771,6 +771,12 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   `regenerate`; the canvas takes no touches meanwhile; the menu gives each length's time, a band narrowed
 by the cuts made so far for one not cut yet, `LengthChip.expectedTimes`, and
 a length already cut while the painting is open is made again as it was, `cuts`). In SideStore and
+  Debug builds (`#if UNRELEASED`, painting-company row 361) the other lengths are cut ahead once the
+  painting has settled (`LengthPrecuts`: nearest first, one at a time at utility priority, the photo's
+  analysis found once, `ArtworkFactory.cut`, byte for byte `recut`'s; kept in memory into `cuts`, so
+  the menu gives their own times and a pick is put in by `restoreCut`), stopping when the painter
+  begins, a re-cut starts or the screen goes; a length picked while its cut is under way waits for it
+  (`claim`). In SideStore and
   Debug builds (`#if UNRELEASED`, painting-company row 352) the chip's menu ends in **Fine-Tune…**
   (`FineTuneSheet`, the preview's `SettingSlider`s): Colors, Detail and Lines, opening on what the
   painting was cut with, and Remake makes it again with them in place (`Library.retune`, recorded
