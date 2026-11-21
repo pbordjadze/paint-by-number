@@ -318,6 +318,12 @@ struct PaintView: View {
                 .environment(\.colorScheme, chromeScheme)
             }
 
+            if !session.isComplete {
+                // What finishing shows, met once a launch, out of sight.
+                FinishWarmup(session: session, share: completionShare)
+                    .environment(\.colorScheme, chromeScheme)
+            }
+
             // The capture's flash as feedback starts.
             Color.white
                 .opacity(flashes ? 0.5 : 0)
