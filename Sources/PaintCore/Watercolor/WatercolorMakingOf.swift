@@ -7,8 +7,8 @@ import Foundation
 /// something saturated and plainly wet happens in the first moment), then the light washes, the big ones of each value before the
 /// small, the darks last, in a few overlapping waves, and a few drops of clean water charged into
 /// the broad washes still damp, to bloom; and a clock (`step(at:)`) that shows it as a
-/// time-lapse, the floods a little faster than life and the drying hurried, until the sheet has
-/// all but dried (`isSettled`).
+/// time-lapse, the floods a little faster than life and the drying hurried, shown as one front
+/// sweeping the sheet (`dryingFront(at:)`), until it has passed (`isSettled`).
 ///
 /// Nothing here is canned: every frame is the simulation's state at that moment, drawn as the
 /// painting screen draws it. Deterministic like the simulation: the same template and seed make
@@ -53,9 +53,13 @@ public struct WatercolorMakingOf: Sendable {
     public static let dryingSpeed: Double = 9
     public static let easing: Double = 0.5
     public static let lead: Double = 0.25
-    /// The share of the sheet still wet at which the Making Of has settled and may end: the last
-    /// damp patches dry on while it is held and lifts away.
-    public static let settledWetShare: Double = 0.1
+    /// The drying as the film shows it: a front sweeping the sheet from its top left corner to
+    /// its bottom right over `frontSeconds` of simulation after the last tap, wet paint ahead of
+    /// it and matte behind, its edge `frontWidth` of the diagonal soft on either side. The
+    /// simulation's own drying, cell by cell as its water ran out, read as round grey blotches
+    /// over a pale wash (critic round 3); the pigment under the front is the simulation's still.
+    public static let frontSeconds: Float = 10
+    public static let frontWidth: Float = 0.15
     /// Simulation seconds after the last tap over which the pencil goes from under the painted
     /// areas (the film's finished painting has no lines through it).
     public static let pencilSeconds: Float = 6
@@ -150,6 +154,14 @@ public struct WatercolorMakingOf: Sendable {
         min(max((t - Float(lastTapStep) * WatercolorSim.dt) / Self.pencilSeconds, 0), 1)
     }
 
+    /// Where the drying front stands at simulation time `t`, along the sheet's diagonal (0 its
+    /// top left corner, 1 its bottom right, `(x + y) / 2` in fractions of the sheet): from
+    /// `-frontWidth` (all of it ahead, wet) at the last tap to `1 + frontWidth` (all of it dry).
+    public func dryingFront(at t: Float) -> Float {
+        let u = min(max((t - Float(lastTapStep) * WatercolorSim.dt) / Self.frontSeconds, 0), 1)
+        return -Self.frontWidth + u * (1 + 2 * Self.frontWidth)
+    }
+
     /// Steps `sim` to `step`, laying each tap as its step comes; `cursor` is the next tap. The
     /// steps taken (a dry sheet with no tap due skips ahead for nothing).
     @discardableResult
@@ -171,19 +183,12 @@ public struct WatercolorMakingOf: Sendable {
         return taken
     }
 
-    /// Whether the Making Of has played out: every tap laid and all but `settledWetShare` of the
-    /// sheet dry.
+    /// Whether the Making Of has played out: every tap laid and the drying front's soft edge
+    /// reaching the sheet's far corner, which it leaves while the painting is held (or the sheet
+    /// already dry, its clock stopped).
     public func isSettled(_ sim: WatercolorSim, cursor: Int) -> Bool {
         guard cursor >= log.taps.count else { return false }
-        guard sim.isActive else { return true }
-        let cells = sim.sheet.width * sim.sheet.height
-        let most = Int(Double(cells) * Self.settledWetShare)
-        var wet = 0
-        for i in 0..<cells where sim.W[i] > 0 {
-            wet += 1
-            if wet > most { return false }
-        }
-        return true
+        return !sim.isActive || dryingFront(at: sim.time) >= 1
     }
 
     /// The simulation's step to show `seconds` after the Making Of began: `floodSpeed` until the

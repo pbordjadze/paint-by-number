@@ -17,8 +17,8 @@ struct WatercolorUniforms {
     float2 paperTexel;    // one texel of the fine paper, in uv
     float2 simTexel;      // one cell of the simulation, in uv
     float2 film;          // the Making Of's (zero on the painting screen): x, the pencil gone from
-                          // under painted areas; y, the water shown more, so the film's wet
-                          // paint reads at a glance
+                          // under painted areas; y, 1 + where its drying front stands
+                          // (WatercolorMakingOf.dryingFront), the water shown more ahead of it
     float4 paper;         // the paper's color
     float4 background;    // around the sheet
     float4 numberInk;
@@ -147,14 +147,23 @@ fragment float4 watercolor_fragment(
     // Wet paint: a little darker, with a glint where the water's surface tilts toward the light.
     float water = d4.a;
     float wet = clamp(water / 0.6, 0.0, 1.0);
+    float emphasis = 0;
+    if (u.film.y > 0) {
+        // The Making Of: its painted paint reads wet until a drying front sweeps it matte, from
+        // the top left; left to the water cell by cell, the drying read as grey blotches.
+        float front = u.film.y - 1;
+        float ahead = smoothstep(front - 0.15, front + 0.15, (uv.x + uv.y) * 0.5);
+        wet = max(wet, step(r.gain.w, u.time)) * ahead;
+        emphasis = 1;
+    }
     if (wet > 0) {
         float2 step = u.simTexel * 2;
         float wx = float(density.sample(smooth, uv + float2(step.x, 0)).a - density.sample(smooth, uv - float2(step.x, 0)).a);
         float wy = float(density.sample(smooth, uv + float2(0, step.y)).a - density.sample(smooth, uv - float2(0, step.y)).a);
-        refl *= 1 - 0.07 * wet * (1 + 2 * u.film.y);
+        refl *= 1 - 0.07 * wet * (1 + 2 * emphasis);
         // A soft sheen, not a glare: brighter read as white blotches on a pale wash.
         float spec = pow(clamp(-(wx + wy) * 0.8, 0.0, 1.0), 2.0) * wet;
-        refl += 0.12 * spec * (1 + u.film.y);
+        refl += 0.12 * spec * (1 + emphasis);
     }
 
     // Graphite reads on bare paper and all but disappears under a wash.

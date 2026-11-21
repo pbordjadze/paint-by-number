@@ -145,7 +145,8 @@ func runMakingOf(template: Template, sheet: WatercolorSheet, fps: Double, out: U
             worstFrame = max(worstFrame, took)
         }
         if settled, settledAt == nil { settledAt = shown }
-        try writePPM(watercolorRaster(sim, template: template, fine: fine, wet: true, pencilFade: plan.pencilFade(at: sim.time)),
+        try writePPM(watercolorRaster(sim, template: template, fine: fine, front: plan.dryingFront(at: sim.time),
+                                         pencilFade: plan.pencilFade(at: sim.time)),
                      String(format: "frame-%04d.ppm", frame), in: out)
         var wet = 0
         for i in 0..<cells where sim.W[i] > 0 { wet += 1 }
@@ -162,12 +163,13 @@ func runMakingOf(template: Template, sheet: WatercolorSheet, fps: Double, out: U
 }
 
 /// The sheet as the app's shader draws it, at twice the simulation's grid (`fine`: the paper's
-/// fine tooth there, made once for many frames), without numbers. With `wet`, the film's wet
-/// paint: the shader's, darker with a sheen where the water's surface tilts, shown more
-/// (`u.film.y` 1); with `pencilFade`, the pencil that much gone from under painted areas (the
-/// film's, `u.film.x`).
+/// fine tooth there, made once for many frames), without numbers. With `front`, the film's wet
+/// paint: the shader's, darker with a sheen where the water's surface tilts, shown more, over
+/// every painted area ahead of the drying front standing there (`u.film.y`,
+/// `WatercolorMakingOf.dryingFront`); with `pencilFade`, the pencil that much gone from under
+/// painted areas (the film's, `u.film.x`).
 func watercolorRaster(_ sim: WatercolorSim, template t: Template, fine: [Float]? = nil,
-                      wet: Bool = false, pencilFade: Float = 0) -> RGBAImage {
+                      front: Float? = nil, pencilFade: Float = 0) -> RGBAImage {
     let sheet = sim.sheet
     let w = sheet.width, h = sheet.height, W2 = w * 2, H2 = h * 2
     var targets: [(gain: SIMD3<Float>, aim: SIMD3<Float>)] = []
@@ -206,14 +208,18 @@ func watercolorRaster(_ sim: WatercolorSim, template t: Template, fine: [Float]?
             let sy = fine[min(y + 1, H2 - 1) * W2 + x] - fine[max(y - 1, 0) * W2 + x]
             let under = min(max((d.x + d.y + d.z) / 3 / 1.2, 0), 1)
             refl *= min(max(1 + 0.45 * (sx + sy) * (1 - 0.6 * under), 0.85), 1.1)
-            if wet {
+            if let front {
                 func water(_ gx: Float, _ gy: Float) -> Float {
                     let x0 = Int(gx.rounded(.down)), y0 = Int(gy.rounded(.down))
                     let fx = gx - Float(x0), fy = gy - Float(y0)
                     return (sim.W[cell(x0, y0)] * (1 - fx) + sim.W[cell(x0 + 1, y0)] * fx) * (1 - fy)
                         + (sim.W[cell(x0, y0 + 1)] * (1 - fx) + sim.W[cell(x0 + 1, y0 + 1)] * fx) * fy
                 }
-                let wetness = min(max(water(gx, gy) / 0.6, 0), 1)
+                let along = (Float(x) + 0.5) / Float(W2) / 2 + (Float(y) + 0.5) / Float(H2) / 2
+                let e = min(max((along - (front - 0.15)) / 0.3, 0), 1)
+                let ahead = e * e * (3 - 2 * e)
+                let painted: Float = sim.paintedAt[r] <= sim.time ? 1 : 0
+                let wetness = max(min(max(water(gx, gy) / 0.6, 0), 1), painted) * ahead
                 if wetness > 0 {
                     let wx = water(gx + 2, gy) - water(gx - 2, gy), wy = water(gx, gy + 2) - water(gx, gy - 2)
                     let emphasis: Float = 1
