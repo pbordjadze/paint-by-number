@@ -131,6 +131,11 @@ struct PaintView: View {
                 CanvasUnavailableView(onClose: onClose)
             } else {
                 canvasAndChrome(geo: geo, palette: paletteLayout(in: geo.size))
+                    // The safe area's size, whatever a bar or a card asks: wider, the stack grew
+                    // to the right of the reader's leading edge, and the canvas, ignoring the safe
+                    // area within it, stopped short of the left one (an iPhone on its side; Paint
+                    // by Moonlight's fix, painting-company row 263, ported for row 330).
+                    .frame(width: geo.size.width, height: geo.size.height)
             }
         }
         // Nothing here takes typing: a keyboard over a sheet (feedback's notes) leaves the
