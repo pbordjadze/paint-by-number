@@ -104,7 +104,14 @@ final class CanvasView: UIView, PaintingCanvas {
     /// A mode that takes the canvas's touches in place of the painting session (`CanvasTouches`;
     /// Stained Glass's free glazing); nil, the session's rules. Pan, pinch and the double tap's
     /// zoom stay the canvas's.
-    weak var touches: (any CanvasTouches)?
+    weak var touches: (any CanvasTouches)? {
+        didSet {
+            // The painting's actions and rotor act on its session, not the mode's picture.
+            accessibilityCustomActions = touches == nil ? accessibilityActionList : nil
+            accessibilityCustomRotors = touches == nil ? [areasRotor] : []
+            accessibilityLabel = touches.map { $0.canvasSummary(self).label } ?? PaintSpeech.canvasLabel
+        }
+    }
     /// A canvas touch asked to hide the photo.
     var onDismissPhoto: (() -> Void)?
     /// Whether the first frame is watched for (`hasShownFirstFrame`): the start of a painting is
@@ -1645,8 +1652,8 @@ final class CanvasView: UIView, PaintingCanvas {
             return
         }
         if let touches {
-            touches.canvas(self, touched: p, phase: .tap)
-            lastTap = (t, view, true)
+            let changed = touches.canvas(self, touched: p, phase: .tap)
+            lastTap = (t, view, changed)
             return
         }
         #if UNRELEASED

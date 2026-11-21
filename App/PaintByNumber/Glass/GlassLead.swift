@@ -24,7 +24,11 @@ final class GlassLeadModel {
     nonisolated enum Start: Hashable, Sendable { case suggested, blank }
 
     /// The lead as laid, in canvas units: the suggestion's lines and the painter's.
-    private(set) var lead: [[CGPoint]] = []
+    private(set) var lead: [[CGPoint]] = [] {
+        didSet { leadPath = GlassPicture.leadPath(lines: lead, width: width, height: height) }
+    }
+    /// The laid lead and the frame as one path, made once a change, never per drawn frame.
+    @ObservationIgnored private(set) var leadPath = CGMutablePath() as CGPath
     /// Lines lifted but not laid yet, drawn as they were, so the lead never lags the finger.
     private(set) var pending: [(id: Int, line: [CGPoint])] = []
     private(set) var pieces = 1
@@ -330,12 +334,12 @@ struct GlassLeadView: View {
                 }
             }
         }
-        var lead = Path(GlassPicture.leadPath(lines: model.lead + model.waiting, width: model.width, height: model.height))
-            .applying(toScreen)
-        if stroke.count >= 2 {
-            var line = Path()
-            line.addLines(stroke.map { $0.applying(toScreen) })
-            lead.addPath(line)
+        var lead = Path(model.leadPath).applying(toScreen)
+        // The lines not laid yet and the finger's, few points, drawn as they are.
+        for line in model.waiting + [stroke] where line.count >= 2 {
+            var path = Path()
+            path.addLines(line.map { $0.applying(toScreen) })
+            lead.addPath(path)
         }
         let ink = GlassPicture.color(GlassPicture.lead, space: .sRGB)
         graphics.stroke(lead, with: .color(ink), style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))

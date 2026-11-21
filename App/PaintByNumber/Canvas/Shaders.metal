@@ -242,7 +242,7 @@ fragment float4 fillFragment(FillOut in [[stage_in]],
 struct GlassParameters {
     float4 lead;        // rgb: the lead (sRGB-curved), w: its width on average (canvas units)
     float4 warm;        // rgb: light through the glass deep in a piece (sRGB-curved), w: the unlit tint
-    float4 unlit;       // rgb: unlit glass's dark (sRGB-curved)
+    float4 unlit;       // rgb: unlit glass's dark (sRGB-curved), w: how many glasses there are
 };
 
 // Smooth value noise, 0…1, on the integer lattice.
@@ -287,7 +287,9 @@ fragment float4 glassFillFragment(FillOut in [[stage_in]],
     float3 suggested = curveEncode(regionColors[r].rgb);
     float3 unlit = (suggested * g.warm.w + g.unlit.rgb * (1.0 - g.warm.w)) * f.w;
     uint code = uint(max(s.mode, 0.0) + 0.5);
-    uint now = code % 1024u, before = code / 1024u;
+    // A glass past the last offered (never written so) reads as the last.
+    uint count = uint(max(g.unlit.w, 1.0));
+    uint now = min(code % 1024u, count), before = min(code / 1024u, count);
     float3 lit = now > 0u ? curveEncode(glasses[now - 1u].rgb) * f.y + g.warm.rgb * f.z : unlit;
     float3 under = before > 0u ? curveEncode(glasses[before - 1u].rgb) * f.y + g.warm.rgb * f.z : unlit;
     PaintSample ps = samplePaint(s, in.canvas, u.time.x, 1.0 / u.transform.z);

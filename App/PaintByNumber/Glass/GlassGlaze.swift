@@ -29,7 +29,15 @@ final class GlassGlazeModel: CanvasTouches {
     @ObservationIgnored weak var canvas: CanvasView? {
         didSet { if canvas !== oldValue { showAll() } }
     }
-    private(set) var glazing: Glazing
+    /// The glass in each piece. Not observed: a drag pours many a second, and the screen reads
+    /// only how many are glazed (`glazedCount`).
+    @ObservationIgnored private(set) var glazing: Glazing {
+        didSet {
+            let count = glazing.glazedCount
+            if count != glazedCount { glazedCount = count }
+        }
+    }
+    private(set) var glazedCount: Int
     /// The bead in hand: a place in `offered`.
     var selected = 0
     /// When the window was glazed whole on screen, for the sun's pass.
@@ -57,6 +65,7 @@ final class GlassGlazeModel: CanvasTouches {
         self.id = id
         self.template = template
         self.glazing = glazing
+        glazedCount = glazing.glazedCount
         self.offered = offered
         self.mode = mode
         session = PaintingSession(template: template)
@@ -67,7 +76,6 @@ final class GlassGlazeModel: CanvasTouches {
     }
 
     var pieces: Int { template.regions.count }
-    var glazedCount: Int { glazing.glazedCount }
     var isComplete: Bool { glazedCount == pieces }
 
     /// The piece under `p` (canvas units), if any.
@@ -79,25 +87,29 @@ final class GlassGlazeModel: CanvasTouches {
     }
 
     /// A touch on the canvas: a tap pours into one piece, a stroke into each it crosses.
-    func canvas(_ canvas: CanvasView, touched point: SIMD2<Float>, phase: CanvasTouchPhase) {
+    @discardableResult
+    func canvas(_ canvas: CanvasView, touched point: SIMD2<Float>, phase: CanvasTouchPhase) -> Bool {
         if phase == .tap || phase == .began {
             touchShowedBeads = beadsHidden
             if beadsHidden { beadsAsked += 1 }
         }
+        var poured = false
         if !touchShowedBeads, phase != .ended, let r = piece(at: point) {
-            glaze(r, from: point, animated: true)
+            poured = glaze(r, from: point, animated: true)
         }
         if phase == .tap || phase == .ended {
             touchShowedBeads = false
             endStroke()
         }
+        return poured
     }
 
     /// Pours the bead in hand into piece `r` from `p` (none: VoiceOver's activation, a stroke of
     /// its own).
-    func glaze(_ r: Int, from p: SIMD2<Float>? = nil, animated: Bool) {
+    @discardableResult
+    func glaze(_ r: Int, from p: SIMD2<Float>? = nil, animated: Bool) -> Bool {
         let glass = Int16(selected)
-        guard r < pieces, selected < offered.count, glazing.glass[r] != glass else { return }
+        guard r < pieces, selected < offered.count, glazing.glass[r] != glass else { return false }
         let wasComplete = isComplete
         let before = glazing.glass[r]
         if stroke == nil { stroke = [] }
@@ -109,6 +121,7 @@ final class GlassGlazeModel: CanvasTouches {
         if isComplete && !wasComplete { finished() }
         if p == nil { endStroke() }
         changed()
+        return true
     }
 
     /// The glass's note, at most one a stroke's tenth of a second, so a drag rings, never rattles.
@@ -390,27 +403,39 @@ struct GlassGlazeView: View {
 
     private var beads: some View {
         VStack(spacing: 6) {
-            ScrollView(.horizontal) {
-                HStack(spacing: 14) {
-                    ForEach(model.offered.indices, id: \.self) { g in
-                        // The window's own glasses, then a breath, then the glazier's classics.
-                        if g == model.template.palette.count && g > 0 {
-                            Color.clear.frame(width: 10, height: 1).accessibilityHidden(true)
-                        }
-                        bead(g)
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
-            }
-            .scrollIndicators(.hidden)
-            .defaultScrollAnchor(.center, for: .alignment)
+            // Its own view: a pour changes the count below, never the beads.
+            GlassBeads(model: model)
             Text(progressText)
                 .font(.footnote.monospacedDigit())
                 .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
         }
         .padding(.bottom, 8)
+    }
+}
+
+/// The glasses, one bead each: the window's own, a breath, then the glazier's classics. Reads
+/// only the bead in hand.
+private struct GlassBeads: View {
+    let model: GlassGlazeModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: 14) {
+                ForEach(model.offered.indices, id: \.self) { g in
+                    // The window's own glasses, then a breath, then the glazier's classics.
+                    if g == model.template.palette.count && g > 0 {
+                        Color.clear.frame(width: 10, height: 1).accessibilityHidden(true)
+                    }
+                    bead(g)
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+        }
+        .scrollIndicators(.hidden)
+        .defaultScrollAnchor(.center, for: .alignment)
     }
 
     private func bead(_ g: Int) -> some View {

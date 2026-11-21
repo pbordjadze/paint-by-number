@@ -47,7 +47,10 @@ nonisolated struct CanvasModeFrame {
 /// `CanvasView.showMode`: a tap, or a stroke from `began` through `moved` to `ended`, at a point
 /// in canvas units.
 protocol CanvasTouches: AnyObject {
-    func canvas(_ canvas: CanvasView, touched point: SIMD2<Float>, phase: CanvasTouchPhase)
+    /// Whether the touch changed the picture: a tap that changed nothing may be the first of a
+    /// double tap, which zooms.
+    @discardableResult
+    func canvas(_ canvas: CanvasView, touched point: SIMD2<Float>, phase: CanvasTouchPhase) -> Bool
     /// What VoiceOver says of `region`: the canvas offers each region in view as a button (its
     /// frames follow the camera), and activating one taps it at its anchor.
     func canvas(_ canvas: CanvasView, speak region: Int) -> (label: String, value: String)

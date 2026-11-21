@@ -61,7 +61,7 @@ nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
         parameters = Parameters(
             lead: SIMD4(GlassPicture.lead, width),
             warm: SIMD4(GlassTexture.warm, GlassTexture.unlitTint),
-            unlit: SIMD4(GlassTexture.unlitBase, 0))
+            unlit: SIMD4(GlassTexture.unlitBase, Float(offered.count)))
     }
 
     /// The value a piece's region state carries: the glass in it (nil: none) and the one it pours
