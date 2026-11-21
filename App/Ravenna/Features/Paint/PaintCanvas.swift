@@ -13,10 +13,13 @@ final class CanvasController {
     func replay() { view?.replay() }
     /// The painting shows whole again at once.
     func stopReplay() { view?.stopReplay() }
-    /// Where the template is in the canvas (the canvas's own coordinates), and whether the first
-    /// frame has been on screen (`PaintCanvas.watchesFirstFrame`): the start of a painting is handed
-    /// over to the canvas (`StartHandoff`).
-    var templateFrame: CGRect? { view?.templateFrame }
+    /// Where the template is in the window (nil while the canvas is in none), and whether the
+    /// first frame has been on screen (`PaintCanvas.watchesFirstFrame`): the start of a painting is
+    /// handed over to the canvas (`StartHandoff`).
+    var templateFrameInWindow: CGRect? {
+        guard let view, view.window != nil else { return nil }
+        return view.convert(view.templateFrame, to: nil)
+    }
     var isShowingFirstFrame: Bool { view?.hasShownFirstFrame ?? false }
     /// Makes the canvas first responder again (the window's undo history of fills, ⌘Z).
     func focus() { _ = view?.becomeFirstResponder() }
