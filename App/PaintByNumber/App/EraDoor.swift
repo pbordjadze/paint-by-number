@@ -14,12 +14,16 @@ enum Era: String {
     /// Stained Glass, at 1248 (SideStore and Debug builds; painting-company row 366): a mode of
     /// the app's own, not a copy of it (`GlassEra`).
     case glass
+    /// Woodblock, at 1765 (SideStore and Debug builds; painting-company row 375): prints carved
+    /// and printed by numbers from the app's own templates (`WoodblockEra`).
+    case woodblock
 
     /// The era a year on the clock opens, nil for a year that opens none.
     static func opened(by year: Int) -> Era? {
         if EraYear.opensByzantium(year) { return .byzantium }
         #if UNRELEASED
         if EraYear.opensStainedGlass(year) { return .glass }
+        if EraYear.opensWoodblock(year) { return .woodblock }
         #endif
         if EraYear.returnsToThePresent(year) { return .moonlight }
         return nil
@@ -53,8 +57,9 @@ final class EraDoor {
         #if UNRELEASED
         shown = era
         #else
-        // Stained Glass is SideStore's and Debug's: a release opening on it opens at home.
-        shown = era == .glass ? .moonlight : era
+        // Stained Glass and Woodblock are SideStore's and Debug's: a release opening on either
+        // opens at home.
+        shown = era == .glass || era == .woodblock ? .moonlight : era
         #endif
     }
 

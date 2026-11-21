@@ -11,7 +11,8 @@ import SwiftUI
 /// `about-photograph` are the page about a library picture's real work (`AboutPaintingDemo`),
 /// `print-preview…` Print's preview (`PrintPreviewDemo`). In SideStore and Debug builds Stained Glass
 /// (`GlassEra`) shows while the clock is at 1248, and for its scenarios, `-demo glass-<name>`
-/// (`GlassDemo`); `era-passage-glass` holds the way to it at the rose window's light.
+/// (`GlassDemo`); `era-passage-glass` holds the way to it at the rose window's light. Woodblock
+/// (`WoodblockEra`) shows at 1765 and for `-demo woodblock-<name>` (`WoodblockDemo`).
 struct RootView: View {
     @State private var door = EraDoor.shared
 
@@ -21,6 +22,8 @@ struct RootView: View {
                 RavennaEra(leave: { year in door.go(to: Era.opened(by: year) ?? .moonlight) })
             } else if showsGlass {
                 glass
+            } else if showsWoodblock {
+                woodblock
             } else {
                 moonlight
             }
@@ -55,6 +58,22 @@ struct RootView: View {
     @ViewBuilder private var glass: some View {
         #if UNRELEASED
         GlassEra(leave: { year in door.go(to: Era.opened(by: year) ?? .moonlight) })
+        #endif
+    }
+
+    /// Whether Woodblock is on screen: its era, or one of its demo scenarios (`woodblock-…`).
+    private var showsWoodblock: Bool {
+        #if UNRELEASED
+        return door.shown == .woodblock || WoodblockEra.isDemoScenario
+        #else
+        return false
+        #endif
+    }
+
+    /// Woodblock (SideStore and Debug builds; `WoodblockEra`).
+    @ViewBuilder private var woodblock: some View {
+        #if UNRELEASED
+        WoodblockEra(leave: { year in door.go(to: Era.opened(by: year) ?? .moonlight) })
         #endif
     }
 

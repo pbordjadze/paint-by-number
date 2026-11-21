@@ -168,7 +168,7 @@ public struct EraClock: View {
 }
 
 /// Which era a year on the clock opens: 547, the year San Vitale in Ravenna was consecrated, is
-/// Byzantium; 1248 Stained Glass, in SideStore and Debug builds; the present (or any later year)
+/// Byzantium; 1248 Stained Glass and 1765 Woodblock, in SideStore and Debug builds; the present (or any later year)
 /// is Paint by Moonlight's own. Every other year opens nothing.
 public enum EraYear {
     public static let byzantium = 547
@@ -183,10 +183,14 @@ public enum EraYear {
     /// and Debug builds; painting-company row 366).
     public static let stainedGlass = 1248
 
+    /// 1765, the year of Harunobu's first prints in full colour from many blocks, registered on
+    /// kentō: Woodblock's (SideStore and Debug builds; painting-company row 375).
+    public static let woodblock = 1765
+
     /// The years that open an era, oldest first: the ones the wheel lights.
     public static var modes: [Int] {
         #if UNRELEASED
-        return [byzantium, stainedGlass]
+        return [byzantium, stainedGlass, woodblock]
         #else
         return [byzantium]
         #endif
@@ -194,5 +198,10 @@ public enum EraYear {
 
     public static func opensStainedGlass(_ year: Int) -> Bool { year == stainedGlass && modes.contains(year) }
 
+    public static func opensWoodblock(_ year: Int) -> Bool { year == woodblock && modes.contains(year) }
+
     public static func returnsToThePresent(_ year: Int) -> Bool { year >= present }
+
+    /// Whether a wheel left on `year` takes the painter somewhere: an era's year, or the present.
+    public static func opensAnEra(_ year: Int) -> Bool { returnsToThePresent(year) || modes.contains(year) }
 }

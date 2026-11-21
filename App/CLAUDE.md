@@ -1362,6 +1362,28 @@ with a rose window's light (`EraPassage.drawNave`); Paint by Mosaic's wheel reac
 `glass-finished` (`GlassDemo`, on the mockup's monarch and lines, `GlassDemoLines`) and
 `era-passage-glass`; `EraDoorTests`, `SettingsTests.testTheClockAt1248OpensStainedGlass`.
 
+## Woodblock (1765)
+
+SideStore and Debug builds only (`#if UNRELEASED`; painting-company row 375): your photos,
+printed by numbers, a mode built on the canvas's mode hook as Stained Glass is. `Woodblock/`:
+`WoodblockEra` (the era's root: its gallery of prints, New Print from a photo or the library
+(`GlassLibraryView`), its Settings with the Year row), `WoodblockShelf` (an `ArtworkStore` of its
+own, `Application Support/Woodblock/Prints/`, each print a painting's folder plus
+`woodblock.bench`, PaintCore's `WoodblockBench`, LZFSE; a print's template is the app's own made
+with `WoodblockPlan.paints` paints), `WoodblockBenchView` (the bench on the painting screen's own
+`CanvasView`: carve, ink, the sheet, rub, peel, the print so far, block after block; one line of
+words a step and one button for what a finger can't do; VoiceOver gets a button to finish each
+step), `WoodblockMode` (the `CanvasMode`: five textures on the bench's grid, the bench's arrays
+staged and only their changed cells blitted each frame; the canvas draws the colour blocks'
+numbers, the regions other blocks print set painted) and `Woodblock.metal` (`woodblockFragment`:
+the block lit by the lamp, the grooves the tool left, the kyōgō, wet ink, the damp sheet's back,
+the peel's fold, the print the right way round). How a print is cut, carved and printed is
+PaintCore's (`Sources/PaintCore/Woodblock`: `WoodblockPlan`, `WoodblockField`, `WoodblockBench`,
+`Template.mirrored`; `pbn woodblock` prints one off the device). The door: 1765 on the year wheel
+(`EraYear.woodblock`, `Era.woodblock`); the passage is the tiles'. Demos: `woodblock-empty`,
+`-carve`, `-kyogo`, `-ink`, `-rub`, `-peel`, `-print`, `-finished`, `-gallery` (`WoodblockDemo`, on
+the library's wood duck); `EraDoorTests`.
+
 ## Outside the app: widgets and stickers
 
 SideStore and Debug builds only (painting-company rows 348 and 349). Two extensions, each a

@@ -81,6 +81,12 @@ before planning app work).
     glasses a window suggests, its background found by focus, and the classics offered after
     them) and `Glazing` (free glazing's `glazing.bin`: any glass in any piece, read as hostile
     input); `pbn glass` previews a window lit and unlit.
+  - `Woodblock/`: Woodblock (painting-company row 375): `WoodblockPlan` (a template's blocks, in
+    the block's mirrored space: the key block's drawing, a block per paint light to dark,
+    numbered as the canvas numbers its paints, the bokashi), `WoodblockField` (what stays of a
+    block, as a signed distance, and the room the tool has), `WoodblockBench` (carving that
+    never cuts what stays, ink, the baren, the peel, the print; `woodblock.bench`, read as
+    hostile input) and `Template.mirrored`; `pbn woodblock` prints a template off the device.
   - `Edit/`: `TemplateEditor`, the painter's pen, Cell Edge, Merge, Paint Brush, Bend Line and Move Edge (`reshape`), Move Number, eraser, line eraser, fill, Only
     This Area (`paintArea`), Looks and Edit Paint (looks and repaints, `Recolor.swift`) and the
     retired Color Splitter's splits made to a finished

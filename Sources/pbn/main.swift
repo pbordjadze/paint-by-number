@@ -43,6 +43,12 @@
 //       (GlassLeadSuggestion), as the Lead screen starts. Writes window.pbnt, glass.json (pieces, glasses, offered, background pieces, valid and
 //       validation), lit.ppm (every piece in its suggested glass, lead along every boundary) and
 //       unlit.ppm (the window before glazing).
+//   pbn woodblock <template.pbnt> --out <dir>
+//       a Woodblock print (painting-company row 375; WoodblockPlan): the template's key block, a
+//       block per paint light to dark and the bokashi, each carved, inked and rubbed by
+//       WoodblockBench. Writes print.ppm (every block rubbed in full), print-light.ppm (a light
+//       pass of the baren on each) and woodblock.json (the blocks, their inks, the cells each
+//       keeps standing, the grid).
 //   pbn drawing <photo.ppm> <outdir> [--palette crayons|pastels|earth|sea|garden] [--paints N]
 //       [--seed N] [--detail F] [--smooth F] [--cleaned]
 //       starts a painting from a drawing (GenerationSettings.drawing): the photo of a line
@@ -171,7 +177,7 @@ import Foundation
 import PaintCore
 
 let args = CommandLine.arguments
-guard args.count >= 2 else { fail("usage: pbn generate|drawing|glass|edit|refine|practice|suggest|bench|trace|check|names|vocab ...") }
+guard args.count >= 2 else { fail("usage: pbn generate|drawing|glass|woodblock|edit|refine|practice|suggest|bench|trace|check|names|vocab ...") }
 let options = parse(args.dropFirst(2))
 
 func run(_ command: String, _ options: Options) throws {
@@ -179,6 +185,7 @@ func run(_ command: String, _ options: Options) throws {
     case "generate": try runGenerate(options)
     case "drawing": try runDrawing(options)
     case "glass": try runGlass(options)
+    case "woodblock": try runWoodblock(options)
     case "edit": try runEdit(options)
     case "refine": try runRefine(options)
     case "practice": try runPractice(options)
