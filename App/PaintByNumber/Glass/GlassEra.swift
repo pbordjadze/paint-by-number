@@ -40,6 +40,11 @@ struct GlassEra: View {
         .overlay {
             if isLoadingPhoto { ProgressView().controlSize(.large) }
         }
+        #if DEBUG
+        .overlay {
+            if let count = GlassRealPanes.count { GlassRealPanes(count: count) }
+        }
+        #endif
         .photosPicker(isPresented: $picking, selection: $picked, matching: .images)
         .onChange(of: picked) { _, item in
             guard let item else { return }

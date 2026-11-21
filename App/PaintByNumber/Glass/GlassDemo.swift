@@ -13,6 +13,7 @@ import os
 /// - `glass-lead-suggested`: the Lead screen as it opens, the lead the photo suggests laid.
 /// - `glass-glaze`: a window with its larger pieces glazed in the glasses suggested.
 /// - `glass-finished`: the window glazed whole, the sun held halfway across it.
+/// - `glass-real-panes-<N>`: Apple's Liquid Glass as the glass, N panes (`GlassRealPanes`).
 @MainActor
 enum GlassDemo {
     static var scenario: String? { DemoMode.scenario.flatMap { $0.hasPrefix("glass-") ? $0 : nil } }
@@ -45,6 +46,9 @@ enum GlassDemo {
             switch name {
             case "glass-empty":
                 DemoMode.markReady()
+            case let real where real.hasPrefix("glass-real-panes"):
+                // `GlassRealPanes` lays itself over the era and says when it is ready.
+                break
             case "glass-lead":
                 let photo = try await Background.run { try Self.photo() }
                 guard let picture = PhotoLoader.cgImage(from: photo) else { return }
