@@ -1283,7 +1283,7 @@ footer, Settings, Feedback, its credits); code, module, target, files and the na
 in its texts (the Ground and Sinopia captions) stay Ravenna.
 
 - **The door** (`App/EraDoor.swift`, in every build from 1.1): Settings › About has a plain Year row
-  (the present year); tapped, Ravenna's `EraClock` comes out under it, one wheel of years whose
+  (the present year, or the year its wheel rests on, `EraClock.Reading`, until the row closes it); tapped, Ravenna's `EraClock` comes out under it, one wheel of years whose
   first is 0547 (then the centuries, the decades and the last seven years: `EraClock.years`; 0001 in
   SideStore and Debug builds, Stained Glass below); its
   numerals warm toward gold and its steps back weigh more the further back the year. Rolled to
