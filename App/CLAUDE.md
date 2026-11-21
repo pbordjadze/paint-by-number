@@ -1416,7 +1416,7 @@ per menu: painting-company `process/design-budget.md`); Paint by Mosaic's card k
 painted in, never printed), and two rows of `PDFExporter.Layout`'s choices: Size (`PDFExporter.sizes`:
 the fewest legible sheets, then the picture across more, with its printed size; without
 numbers there is no legibility floor) and Layers, one menu that stays open over the pages
-(row 370: Lines, Numbers, Color Hints, Color Key; `Layout.templateStyle`). The paper is the
+(row 370: Numbers, Color Hints, Color Key over the lines, which always print; `Layout.templateStyle`). The paper is the
 region's and the page turns the picture's way: the system's dialog asks for both after; its Print hands that layout's blank PDF to the dialog and closes once
 it has printed (`PrintSheet.onPrinted`). `Layout(paper:)` is the PDF as it always was.
 `print-preview` (with `-dark`, `-long-text`), `-painted`, `-sheets`, `-no-numbers` and `-hints` are its screenshots,

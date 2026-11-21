@@ -30,7 +30,7 @@ nonisolated struct PrintPreviewRequest: Identifiable, Sendable {
 
 /// Print (painting-company row 357): the pages as they will come out of the printer, on paper,
 /// with the layout choices a painter needs (how big the picture prints; what prints: the
-/// template's lines, numbers and color hints, and the color key, row 370),
+/// template's numbers and color hints, and the color key, row 370),
 /// starting where Print… has always printed (`PDFExporter.Layout(paper:)`): the region's paper,
 /// turned the picture's way. The system's dialog that follows asks for paper and orientation
 /// already, so the preview doesn't (the critic, painting-company row 357). Painted shows the
@@ -101,6 +101,7 @@ struct PrintPreviewSheet: View {
         .onChange(of: layout.numbers) {
             if !sizes.contains(where: { $0.across == layout.across }) { layout.across = nil }
         }
+        .onChange(of: [layout.numbers, layout.colorHints, layout.colorKey]) { showsPainted = false }
     }
 
     // MARK: The pages
@@ -198,15 +199,14 @@ struct PrintPreviewSheet: View {
     }
 
     /// What prints, one menu over the pages so each change shows on them as it is made: the
-    /// template's layers (`PDFExporter.Layout`'s `lines`, `numbers`, `colorHints`) and the color
-    /// key's page. Numbers off is a coloring page (painting-company row 370: a painter printed
+    /// template's layers over its lines, which always print (`PDFExporter.Layout`'s `numbers`,
+    /// `colorHints`), and the color key's page. A layer changed shows the pages blank again,
+    /// since Painted draws none of them (the critic, row 370). Numbers off is a coloring page (painting-company row 370: a painter printed
     /// templates and took the numbers out by hand).
     private var layersMenu: some View {
         // Laid as Size's row is: the name in the text's color, the choice the tinted menu.
         LabeledContent {
             Menu {
-                Toggle(isOn: $layout.lines) { Text("Lines") }
-                    .accessibilityIdentifier("print-lines")
                 Toggle(isOn: $layout.numbers) { Text("Numbers") }
                     .accessibilityIdentifier("print-numbers")
                 Toggle(isOn: $layout.colorHints) {
@@ -238,16 +238,16 @@ struct PrintPreviewSheet: View {
         }
     }
 
-    /// The layers chosen, in the menu's order, as a list ("Lines, Numbers, Color Key").
+    /// The layers chosen, in the menu's order, as a list ("Numbers, Color Key"); the lines
+    /// always print, so with nothing else chosen, "Lines Only".
     private var layersText: String {
         var chosen: [String] = []
-        if layout.lines { chosen.append(String(localized: "Lines")) }
         if layout.numbers { chosen.append(String(localized: "Numbers")) }
         if layout.colorHints { chosen.append(String(localized: "Color Hints")) }
         if layout.colorKey { chosen.append(String(localized: "Color Key")) }
         guard !chosen.isEmpty else {
-            return String(localized: "print.layers.none", defaultValue: "None",
-                          comment: "Print's preview, the Layers row with every layer turned off: nothing but the page's title prints")
+            return String(localized: "print.layers.linesOnly", defaultValue: "Lines Only",
+                          comment: "Print's preview, the Layers row with numbers, color hints and the color key all off: the template prints as its lines alone")
         }
         return chosen.formatted(.list(type: .and, width: .narrow))
     }

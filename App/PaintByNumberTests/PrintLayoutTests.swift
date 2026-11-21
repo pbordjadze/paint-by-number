@@ -105,18 +105,17 @@ struct PrintLayoutTests {
         record(painted[0], "print-preview-painted")
     }
 
-    /// The layers start as the template has always printed: lines, numbers and the dotted
-    /// guides, on paper (painting-company row 370).
+    /// The layers start as the template has always printed: numbers and the dotted guides over
+    /// the lines, on paper (painting-company row 370).
     @Test func theLayersStartAsTheTemplateAlwaysPrinted() {
         let layout = PDFExporter.Layout(paper: .letter)
-        #expect(layout.lines && layout.numbers && !layout.colorHints && layout.colorKey)
+        #expect(layout.numbers && !layout.colorHints && layout.colorKey)
         let style = layout.templateStyle, printable = TemplateRasterizer.Style.printable
         #expect(style.numbers && style.drawsDrawing && style.lines == .print && style.unpainted == .paper)
         #expect(style.outlineWidth == printable.outlineWidth)
     }
 
-    /// Each layer turned off or on changes the template's page, and with lines, numbers and
-    /// color hints all off nothing of the template is left on it.
+    /// Each layer turned off or on changes the template's page.
     @Test func eachLayerChangesThePage() async throws {
         for t in [Fixtures.stripes(), try Fixtures.sample(colors: 12)] {
             let request = PrintPreviewRequest(template: t, title: "Layers", nicknames: [])
@@ -128,10 +127,8 @@ struct PrintLayoutTests {
             }
             let hintsImage = try await page { $0.colorHints = true }
             let usual = PixelReader(try await page { _ in })
-            let noLines = PixelReader(try await page { $0.lines = false })
             let noNumbers = PixelReader(try await page { $0.numbers = false })
             let hints = PixelReader(hintsImage)
-            let nothing = PixelReader(try await page { $0.lines = false; $0.numbers = false })
             // Below the header: the template's part of the page.
             func count(_ a: PixelReader, _ test: (SIMD3<Int>) -> Bool) -> Int {
                 var n = 0
@@ -147,7 +144,6 @@ struct PrintLayoutTests {
                 }
                 return n
             }
-            #expect(differ(usual, noLines) > 10)
             #expect(differ(usual, noNumbers) > 10)
             #expect(differ(usual, hints) > 200)
             // A hint is a color, where the usual page is grey ink on white (its greys lean blue
@@ -156,7 +152,6 @@ struct PrintLayoutTests {
             #expect(count(usual, colored) == 0)
             #expect(count(hints, colored) > 200)
             // Nothing but the paper and the picture's frame.
-            #expect(count(nothing) { $0.x < 150 } < 40)
             record(hintsImage, "print-layers-hints-\(t.width)x\(t.height)")
         }
     }

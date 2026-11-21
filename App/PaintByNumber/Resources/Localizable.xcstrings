@@ -7586,7 +7586,7 @@
       }
     },
     "Layers" : {
-      "comment" : "Refine screen: the button in the top bar that opens the Layers panel (what shows: the numbers, the ink, the paint, the photo), and the panel's title; also the Tool Guide's page about that panel; and Print's preview's row (a menu) of what prints: lines, numbers, color hints, the color key",
+      "comment" : "Refine screen: the button in the top bar that opens the Layers panel (what shows: the numbers, the ink, the paint, the photo), and the panel's title; also the Tool Guide's page about that panel; and Print's preview's row (a menu) of what prints: numbers, color hints, the color key",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -29306,7 +29306,7 @@
       }
     },
     "Lines" : {
-      "comment" : "Create flow: label of the slider for how many of the photo's edges the template draws as lines; and Print's preview's Layers menu: the template's printed lines",
+      "comment" : "Create flow: label of the slider for how many of the photo's edges the template draws as lines",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -58333,74 +58333,74 @@
         }
       }
     },
-    "print.layers.none" : {
-      "comment" : "Print's preview, the Layers row with every layer turned off: nothing but the page's title prints",
+    "print.layers.linesOnly" : {
+      "comment" : "Print's preview, the Layers row with numbers, color hints and the color key all off: the template prints as its lines alone",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nichts"
+            "value" : "Nur Linien"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "None"
+            "value" : "Lines Only"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nada"
+            "value" : "Solo líneas"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rien"
+            "value" : "Traits seuls"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Niente"
+            "value" : "Solo linee"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "なし"
+            "value" : "線のみ"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "없음"
+            "value" : "선만"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Niets"
+            "value" : "Alleen lijnen"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nada"
+            "value" : "Só linhas"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无"
+            "value" : "仅线条"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無"
+            "value" : "僅線條"
           }
         }
       }

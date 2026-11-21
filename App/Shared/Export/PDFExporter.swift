@@ -86,9 +86,6 @@ nonisolated enum PDFExporter {
         /// Sheets along the picture's longer printed side (`sizes(for:layout:)`); nil, or fewer
         /// than its numbers need, is the fewest whose smallest number is legible.
         var across: Int?
-        /// The template's lines: a coloring book's drawing and the dotted guides between its
-        /// areas, or a classic template's outlines.
-        var lines = true
         /// The areas' numbers, and with them a coloring book's dotted guides, which part areas of
         /// different numbers the drawing doesn't (without numbers they part nothing). Without
         /// numbers no size needs more sheets than the painter asks for (`sheets(for:layout:)`).
@@ -116,10 +113,6 @@ nonisolated enum PDFExporter {
             if painted { return .finished }
             var style = TemplateRasterizer.Style.printable
             style.numbers = numbers
-            if !lines {
-                style.drawsDrawing = false
-                style.outlineWidth = 0
-            }
             if !numbers { style.lines = .screen }
             if colorHints { style.unpainted = .sketch }
             return style
