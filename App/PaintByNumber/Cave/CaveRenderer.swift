@@ -173,7 +173,7 @@ final class CaveRenderer {
         frame = (frame + 1) % Self.framesInFlight
         var u = uniforms
         u.slotsA = SIMD4(Int32(held[0]), Int32(held[1]), Int32(held[2]), Int32(held[3]))
-        u.slotsB = SIMD4(Int32(held[4]), Int32(held[5]), -1, -1)
+        u.slotsB = SIMD4(Int32(held[4]), Int32(held[5]), Int32(held[6]), Int32(held[7]))
         let pass = MTLRenderPassDescriptor()
         pass.colorAttachments[0].texture = drawable.texture
         pass.colorAttachments[0].loadAction = .dontCare

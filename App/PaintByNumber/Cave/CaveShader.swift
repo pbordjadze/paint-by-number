@@ -32,7 +32,7 @@ nonisolated enum CaveShader {
         float4 mouth;   // x, y, flare (0 to 1), leaving (0 to 1, the daylight taking the screen)
         float4 misc;    // time (s), end of the cave (wall x), relief depth, steady (Reduce Motion)
         int4 slotsA;    // the bay held in slots 0 to 3, -1 for none
-        int4 slotsB;    // in slots 4 and 5
+        int4 slotsB;    // in slots 4 to 7
     };
 
     struct Sprite {

@@ -89,6 +89,8 @@ final class CaveScene {
     private var dust: [Mote] = []
     private var sparks: [Mote] = []
     private var unsaved = false
+    /// Pigment blown since the last save, short of finishing an area: kept every few seconds.
+    private var pigmentLanded = false
     private var lastSave: Float = 0
 
     // MARK: What the scene asks of the app
@@ -274,15 +276,16 @@ final class CaveScene {
     /// Blows the next area wanted of the pigment in hand (or of any, taking it up), all of it.
     @discardableResult
     func blowNextArea() -> Bool {
-        guard var layer, let a = layer.nextArea(of: pigmentInHand) else { return false }
-        let pigment = layer.plan.pigments[a - 1]
+        guard let a = layer?.nextArea(of: pigmentInHand), let pigment = layer?.plan.pigments[a - 1],
+              let points = layer?.points(of: a) else { return false }
         if pigment != pigmentInHand { pick(pigment) }
         var finished: [Int] = []
-        for (k, p) in layer.points(of: a).enumerated() where k % 9 == 0 {
-            finished += layer.blow(at: p, radius: 10, amount: 0.5, pigment: pigment)
+        // Mutated in place (`layer?.`): a copy would duplicate the bay's pigment on every call.
+        for (k, p) in points.enumerated() where k % 9 == 0 {
+            finished += layer?.blow(at: p, radius: 10, amount: 0.5, pigment: pigment) ?? []
             if k % 90 == 0 { puff(at: p + SIMD2(Float(activeBay * CaveWall.bayWidth), 0), pigment: pigment, count: 1) }
         }
-        self.layer = layer
+        pigmentLanded = true
         areasDone(finished)
         return true
     }
@@ -364,10 +367,9 @@ final class CaveScene {
         }
         sound.place(torch: torch, listener: SIMD2(camera + visibleWidth / 2, Float(CaveWall.height) / 2))
         blow(dt)
-        if var h = hand, var layer {
+        if var h = hand, layer != nil {
             h.amount = min(1, h.amount + dt / 2.2)
-            layer.stencil(h.hand, amount: h.amount)
-            self.layer = layer
+            layer?.stencil(h.hand, amount: h.amount)
             hand = h
             if h.amount >= 1 {
                 hand = nil
@@ -388,7 +390,7 @@ final class CaveScene {
             sparks[k].life -= dt / 0.9
         }
         sparks.removeAll { $0.life <= 0 }
-        if unsaved && time - lastSave > 1 { save() }
+        if (unsaved && time - lastSave > 1) || (pigmentLanded && time - lastSave > 4) { save() }
         if let l = leaving {
             leaving = min(1, l + dt / 1.4)
             if leaving == 1 && !hasLeft {
@@ -404,9 +406,9 @@ final class CaveScene {
         for grip in grips.values {
             guard case .blow(let p, let since) = grip else { continue }
             let radius = 9 + min(14, (time - since) * 10)
-            if var layer {
-                finished += layer.blow(at: p - SIMD2(bayX, 0), radius: radius, amount: 0.055 * dt * 60, pigment: pigmentInHand)
-                self.layer = layer
+            if let f = layer?.blow(at: p - SIMD2(bayX, 0), radius: radius, amount: 0.055 * dt * 60, pigment: pigmentInHand) {
+                finished += f
+                pigmentLanded = true
             }
             if Float.random(in: 0..<1) < 0.8 * dt * 60 {
                 puff(at: p + SIMD2(Float.random(in: -0.5...0.5), Float.random(in: -0.5...0.5)) * radius, pigment: pigmentInHand, count: 1)
@@ -437,6 +439,7 @@ final class CaveScene {
     func save() {
         lastSave = time
         unsaved = false
+        pigmentLanded = false
         guard let layer, let last = paintings.last, !last.isComplete else { return }
         let progress = layer.progress
         let rgba = layer.rgba()

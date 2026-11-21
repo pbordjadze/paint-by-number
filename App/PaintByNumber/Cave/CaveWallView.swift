@@ -48,8 +48,13 @@ final class CaveWallView: UIView {
         accessibilityTraits = .allowsDirectInteraction
         accessibilityLabel = String(localized: "cave.wall", defaultValue: "Cave wall",
                                     comment: "VoiceOver label of the cave mode's whole screen: a rock wall lit by a torch")
+        NotificationCenter.default.addObserver(self, selector: #selector(enteredBackground),
+                                               name: UIApplication.didEnterBackgroundNotification, object: nil)
         Task { await prepare() }
     }
+
+    /// The app may not come back: what was blown is kept now.
+    @objc private func enteredBackground() { scene.save() }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
