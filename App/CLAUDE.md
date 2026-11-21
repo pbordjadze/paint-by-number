@@ -1276,8 +1276,10 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
   first is 0547 (then the centuries, the decades and the last seven years: `EraClock.years`; 0001 in
   SideStore and Debug builds, Stained Glass below); its
   numerals warm toward gold and its steps back weigh more the further back the year. Rolled to
-  0547 and left (`EraClock.rest`), Settings closes and `EraDoor.go(to: .byzantium)` starts `EraPassage`
-  (tiles set over the screen in an apse's courses, the era swapped under them, the tiles lifted;
+  0547 and left (`EraClock.rest`; with VoiceOver, which steps it a year a swipe, nothing is drawn
+  on to a lit year and a year counts after `EraClock.spokenRest`), Settings closes and `EraDoor.go(to: .byzantium)` starts `EraPassage`
+  (tiles set over the screen in an apse's courses, the era swapped under them once their bed is
+  whole, `EraPassage.bedded`, the tiles lifted;
   Reduce Motion dims); `RootView` shows `RavennaEra` while `EraDoor.shown` is `.byzantium`.
   Ravenna's Settings › About has the same Year row (0547) whose wheel, rolled to the present or later,
   calls the environment's `leaveRavenna`. The era outlives the launch (UserDefaults `era`, absent
