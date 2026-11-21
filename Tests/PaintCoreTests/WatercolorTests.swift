@@ -102,6 +102,57 @@ import Testing
         #expect(a != c)
     }
 
+    @Test func anEdgeDriesByHowWetItsNeighbourWas() {
+        // Two neighbours, laid one right after the other (the second runs into the first while
+        // it is wet) or once the first has dried: the edge between them comes out otherwise.
+        let t = Self.template
+        let sheet = WatercolorSheet(template: t, seed: 3)
+        let r = Self.largestRegion(t)
+        var adjacent = Set<Int>()
+        for i in 0..<(sheet.width * sheet.height) where Int(sheet.labels[i]) == r {
+            for j in [i - 1, i + 1, i - sheet.width, i + sheet.width] where j >= 0 && j < sheet.labels.count {
+                let o = Int(sheet.labels[j])
+                if o != r, sheet.group[o] != sheet.group[r] { adjacent.insert(o) }
+            }
+        }
+        guard let n = adjacent.max(by: { t.regions[$0].area < t.regions[$1].area }) else {
+            Issue.record("no neighbour of another group")
+            return
+        }
+        func painted(dryFirst: Bool) -> WatercolorSim {
+            let sim = WatercolorSim(sheet: sheet)
+            sim.tap(region: r, at: Self.center(of: r, in: t), paint: true)
+            if dryFirst { sim.finish() } else { for _ in 0..<20 { sim.advance() } }
+            #expect(dryFirst != sim.isActive)
+            sim.tap(region: n, at: Self.center(of: n, in: t), paint: true)
+            sim.finish()
+            return sim
+        }
+        let wet = painted(dryFirst: false), dry = painted(dryFirst: true)
+        // Within two cells of the edge, on the second area's side: wet-in-wet carries the first
+        // wash's pigment across (the two bleed); wet-on-dry leaves the second's own, crisper.
+        var bleedWet: Float = 0, bleedDry: Float = 0, cells = 0
+        let w = sheet.width
+        for i in 0..<(w * sheet.height) where Int(sheet.labels[i]) == n {
+            let x = i % w, y = i / w
+            var near = false
+            for dy in -2...2 { for dx in -2...2 {
+                let xx = x + dx, yy = y + dy
+                if xx >= 0, yy >= 0, xx < w, yy < sheet.height, Int(sheet.labels[yy * w + xx]) == r { near = true }
+            } }
+            guard near else { continue }
+            cells += 1
+            let a = wet.D[i] + wet.S[i], b = dry.D[i] + dry.S[i]
+            let diff = (a - b).replacing(with: b - a, where: a .< b)
+            bleedWet += diff.x + diff.y + diff.z
+            bleedDry += b.x + b.y + b.z
+        }
+        #expect(cells > 0)
+        // The edge differs by more than a tenth of what lies there.
+        #expect(bleedWet > 0.1 * bleedDry)
+        #expect(Self.digest(wet) != Self.digest(dry))
+    }
+
     @Test func aLogReplaysToTheSamePainting() throws {
         let t = Self.template
         let regions = t.regions.indices.sorted { t.regions[$0].area > t.regions[$1].area }.prefix(6)
