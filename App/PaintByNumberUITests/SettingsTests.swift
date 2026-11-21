@@ -300,17 +300,20 @@ final class SettingsTests: XCTestCase {
                 _ = wheel.waitForNonExistence(timeout: 3)
                 continue
             }
-            if year == 547, shown < year {
-                // Up from the long reach's far end to 0547, one row at a time: a flick of a few
-                // rows went from 0001 to 0400 and back over 0500, 0547 and 0600 without resting
-                // beside it (CI, November 20). A tap on the row below the one read turns the wheel
-                // a row; if one left it where it was, a short drag of a row does instead.
+            if (year == 547 && shown < year) || (year != present && abs(shown - year) <= 150) {
+                // Up from the long reach's far end to 0547, and the last row to an era's year,
+                // one row at a time: a flick of a few rows went from 0001 to 0400 and back over
+                // 0500, 0547 and 0600 without resting beside it (CI, November 20), and one past
+                // 1502 can rest beside 1248 and open Stained Glass instead (November 21). A tap on
+                // the row beyond the one read turns the wheel a row; if one left it where it was,
+                // a short drag of a row does instead.
                 let center = wheel.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                let toward: CGFloat = shown < year ? 1 : -1
                 if stepped == shown {
-                    center.press(forDuration: 0.1, thenDragTo: center.withOffset(CGVector(dx: 0, dy: -Self.row)),
+                    center.press(forDuration: 0.1, thenDragTo: center.withOffset(CGVector(dx: 0, dy: -toward * Self.row)),
                                  withVelocity: .slow, thenHoldForDuration: 0.3)
                 } else {
-                    center.withOffset(CGVector(dx: 0, dy: Self.row)).tap()
+                    center.withOffset(CGVector(dx: 0, dy: toward * Self.row)).tap()
                 }
                 stepped = shown
                 _ = wheel.waitForNonExistence(timeout: 2.5)

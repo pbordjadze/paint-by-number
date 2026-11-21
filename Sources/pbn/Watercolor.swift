@@ -109,9 +109,14 @@ func watercolorRaster(_ sim: WatercolorSim, template t: Template) -> RGBAImage {
             let canvas = SIMD2(Float(x) + 0.5, Float(y) + 0.5) / (2 * sheet.scale)
             let r = t.region(at: canvas) ?? 0
             let target = targets[r]
-            var d = SIMD3(d4.x, d4.y, d4.z) * target.gain
-            let cap = SIMD3<Float>(max(target.aim.x * 1.7, 0.05), max(target.aim.y * 1.7, 0.05), max(target.aim.z * 1.7, 0.05))
-            d = SIMD3(cap.x * tanh(d.x / cap.x), cap.y * tanh(d.y / cap.y), cap.z * tanh(d.z / cap.z))
+            var d = SIMD3(max(d4.x, 0), max(d4.y, 0), max(d4.z, 0)) * target.gain
+            // One factor for all three channels (the shader's reason).
+            var ratio: Float = 1
+            for c in 0..<3 where d[c] >= 1e-5 {
+                let cap = max(target.aim[c] * 1.7, 0.05)
+                ratio = min(ratio, cap * tanh(d[c] / cap) / d[c])
+            }
+            d *= ratio
             let p2 = fine[y * W2 + x]
             d *= 1 + gr * 0.6 * (0.5 - p2)
             var refl = WatercolorSheet.paperColor * SIMD3(exp(-d.x), exp(-d.y), exp(-d.z))

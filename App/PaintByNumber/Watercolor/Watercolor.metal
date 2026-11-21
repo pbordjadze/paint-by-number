@@ -64,9 +64,14 @@ fragment float4 watercolor_fragment(
 
     float4 d4 = float4(density.sample(smooth, uv));
     // The target solve: the area's pigment brought to its paint, rims capped toward its own hue.
-    float3 d = d4.rgb * r.gain.rgb;
+    float3 d = max(d4.rgb * r.gain.rgb, 0.0);
+    // One factor for all three channels, the most any channel's cap asks for: capped one by one,
+    // a neighbour's pigment sampled across the edge took on a hue of its own (cyan and magenta
+    // specks along the rims, CI, November 21).
     float3 cap = max(r.aim.rgb * 1.7, 0.05);
-    d = cap * tanh(d / cap);
+    float3 capped = cap * tanh(d / cap);
+    float3 ratio = select(capped / max(d, 1e-5), float3(1.0), d < 1e-5);
+    d *= min(ratio.r, min(ratio.g, ratio.b));
     float g = float(granulation.sample(smooth, uv).r);
     float p2 = float(paper.sample(smooth, uv).r);
     d *= 1 + g * 0.6 * (0.5 - p2);
@@ -86,8 +91,9 @@ fragment float4 watercolor_fragment(
         float wx = float(density.sample(smooth, uv + float2(step.x, 0)).a - density.sample(smooth, uv - float2(step.x, 0)).a);
         float wy = float(density.sample(smooth, uv + float2(0, step.y)).a - density.sample(smooth, uv - float2(0, step.y)).a);
         refl *= 1 - 0.07 * wet;
-        float spec = pow(clamp(-(wx + wy) * 1.1, 0.0, 1.0), 2.0) * wet;
-        refl += 0.35 * spec;
+        // A soft sheen, not a glare: brighter read as white blotches on a pale wash.
+        float spec = pow(clamp(-(wx + wy) * 0.8, 0.0, 1.0), 2.0) * wet;
+        refl += 0.12 * spec;
     }
 
     // Graphite reads on bare paper and all but disappears under a wash.
