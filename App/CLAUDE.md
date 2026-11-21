@@ -641,7 +641,9 @@ canvas's. Stained Glass is the first (`GlassMode`, `GlassModeTests`).
 
 - `EdgeDetector` runs the two bundled models (provenance in its doc comment and
   `tools/models/convert_*.py`): `edgeMap` the HED contours, `lineDrawing` the drawing;
-  `EdgeDetector.maps(for:)` returns both (the drawing resampled to the contours' size). `EyeFinder`
+  `EdgeDetector.maps(for:)` returns both (the drawing resampled to the contours' size). The loaded models are kept
+  (`ModelPool`, emptied on a memory warning) and warmed 2 s after launch (`warmUp`), so a cold
+  pick waits no longer than a warm one (painting-company row 361). `EyeFinder`
   (Vision face landmarks of `SubjectVision`'s faces → eye contours and irises) and `ObjectFinder`
   (its foreground instance mask traced by PaintCore's `MaskContours`) find the eyes and subjects, `TextFinder` (Vision's text
   recognition, down to 1/128 of the photo's height; none on the simulator) the lines of text PaintCore's `Writing` keeps

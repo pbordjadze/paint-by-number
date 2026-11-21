@@ -2,6 +2,8 @@ import CoreGraphics
 import CoreML
 import Foundation
 import PaintCore
+import os
+import UIKit
 
 /// The maps a coloring book draws from, made by the two bundled models
 /// (`Resources/Models`): HED (`HED.mlpackage`: ControlNet's Apache-2.0 retraining of Xie & Tu's
@@ -124,10 +126,17 @@ nonisolated enum EdgeDetector {
             ? image
             : Resample.area(image, width: size.width, height: size.height)
         try cancel.throwIfCancelled()
-        let loaded = try loadModel(model)
+        let loaded = try ModelPool.take(model)
         let features = try MLDictionaryFeatureProvider(dictionary: ["image": MLFeatureValue(multiArray: paddedInput(input, for: model))])
         try cancel.throwIfCancelled()
-        let output = try loaded.prediction(from: features)
+        let output: MLFeatureProvider
+        do {
+            output = try loaded.prediction(from: features)
+            ModelPool.give(back: loaded, of: model)
+        } catch {
+            ModelPool.give(back: loaded, of: model)
+            throw error
+        }
         try cancel.throwIfCancelled()
         guard let values = output.featureValue(for: model.output)?.multiArrayValue else { throw DetectorError.unexpectedOutput }
         return try edgeMap(from: values, width: input.width, height: input.height)
@@ -158,6 +167,53 @@ nonisolated enum EdgeDetector {
     static func level(_ p: Float) -> UInt8 {
         guard p.isFinite else { return 0 }
         return UInt8(min(max((Double(p) * 255 + 0.5).rounded(.down), 0), 255))
+    }
+
+    /// Loads both models and runs each once on a small picture, at background priority, so the
+    /// first photo after launch waits no longer than any other (loading them and their first
+    /// prediction cost about 1.7 s of a cold pick on the iPad Air 5, painting-company row 361).
+    /// Called once the app has settled after launch; does nothing once the pool holds a model.
+    static func warmUp() async {
+        _ = ModelPool.emptiedOnMemoryWarning
+        guard !ModelPool.isWarm else { return }
+        await Task.detached(priority: .background) {
+            let blank = RGBAImage(width: 64, height: 64, fill: SIMD4(255, 255, 255, 255))
+            for model in Model.allCases {
+                _ = try? map(model, for: blank, maxLongSide: 64, cancel: .none)
+            }
+        }.value
+    }
+
+    /// Loaded models kept between photos: loading one costs most of a cold pick's wait. A
+    /// prediction takes a model out and puts it back, so two photos made at once (a pick while a
+    /// painting is cut ahead) never share one instance; the second loads its own, as before, and
+    /// the pool keeps one of each. Emptied on a memory warning (the weights are about 37 MB).
+    nonisolated enum ModelPool {
+        private static let idle = OSAllocatedUnfairLock<[Model: MLModel]>(uncheckedState: [:])
+
+        /// Registered once, by `warmUp`; the center keeps the observer for the launch.
+        static let emptiedOnMemoryWarning: Void = {
+            _ = NotificationCenter.default.addObserver(
+                forName: UIApplication.didReceiveMemoryWarningNotification, object: nil, queue: nil
+            ) { _ in
+                ModelPool.empty()
+            }
+        }()
+
+        static var isWarm: Bool { idle.withLockUnchecked { !$0.isEmpty } }
+
+        static func take(_ model: Model) throws -> MLModel {
+            if let kept = idle.withLockUnchecked({ $0.removeValue(forKey: model) }) { return kept }
+            return try loadModel(model)
+        }
+
+        static func give(back loaded: MLModel, of model: Model) {
+            idle.withLockUnchecked { if $0[model] == nil { $0[model] = loaded } }
+        }
+
+        static func empty() {
+            idle.withLockUnchecked { $0.removeAll() }
+        }
     }
 
     private static func loadModel(_ model: Model) throws -> MLModel {

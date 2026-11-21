@@ -135,6 +135,21 @@ struct EdgeDetectorTests {
         #expect(size(4000, 3000, 400) == [400, 300])
     }
 
+    /// The models kept warm (`EdgeDetector.ModelPool`) draw the same maps as models loaded
+    /// afresh, and two photos made at once each get a model of their own.
+    @Test func keptModelsDrawWhatFreshOnesDraw() async throws {
+        let input = RGBAImage(width: 96, height: 64, fill: SIMD4(200, 120, 40, 255))
+        EdgeDetector.ModelPool.empty()
+        let fresh = try EdgeDetector.maps(for: input, cancel: .none)
+        await EdgeDetector.warmUp()
+        let kept = try EdgeDetector.maps(for: input, cancel: .none)
+        #expect(kept.drawing == fresh.drawing && kept.contours == fresh.contours)
+        async let first = Task.detached { try EdgeDetector.maps(for: input, cancel: .none) }.value
+        async let second = Task.detached { try EdgeDetector.maps(for: input, cancel: .none) }.value
+        let both = try await [first, second]
+        #expect(both.allSatisfy { $0.drawing == fresh.drawing && $0.contours == fresh.contours })
+    }
+
     /// NumPy's "reflect": mirrored at the last pixel without repeating it.
     @Test func paddingMirrorsLikeTheResearch() {
         #expect((0..<12).map { EdgeDetector.reflect($0, 5) } == [0, 1, 2, 3, 4, 3, 2, 1, 0, 1, 2, 3])
