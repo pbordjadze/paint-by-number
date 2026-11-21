@@ -60,9 +60,11 @@ import Testing
         let plan = WatercolorMakingOf(template: t, sheet: WatercolorSheet(template: t, seed: 1))
         let steps = stride(from: 0.0, to: 12, by: 0.05).map { plan.step(at: $0) }
         #expect(zip(steps, steps.dropFirst()).allSatisfy { $0 <= $1 })
-        #expect(plan.step(at: 0) == 0)
+        #expect(plan.step(at: 0) < 30)  // the first wash under way at once
         let early = plan.step(at: 1) - plan.step(at: 0)
         let late = plan.step(at: 11) - plan.step(at: 10)
         #expect(late > 3 * early)
+        #expect(plan.pencilFade(at: 0) == 0)
+        #expect(plan.pencilFade(at: 1000) == 1)
     }
 }

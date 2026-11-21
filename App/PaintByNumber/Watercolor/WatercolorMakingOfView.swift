@@ -34,6 +34,10 @@ final class WatercolorFilm {
     private(set) var isSettled = false
     /// The demo's held moment is on screen.
     private(set) var isHeld = false
+    /// Every wash is laid and the sheet is drying: the film pushes in toward `focus`.
+    private(set) var isDrying = false
+    /// Where it pushes in: the first bloom, as a point of the sheet (0…1).
+    let focus: UnitPoint
     /// The bare sheet as a picture, for Reduce Motion's crossfade.
     private(set) var bare: CGImage?
     /// A demo's moment to hold, seconds into the Making Of (Debug builds' scenario).
@@ -44,9 +48,12 @@ final class WatercolorFilm {
         self.renderer = renderer
         self.player = player
         self.hold = hold
+        let f = player.plan.focus ?? SIMD2(Float(template.width), Float(template.height)) / 2
+        focus = UnitPoint(x: CGFloat(f.x) / CGFloat(max(template.width, 1)), y: CGFloat(f.y) / CGFloat(max(template.height, 1)))
         renderer.onFrame = { [weak self] frame in
             guard let self else { return }
             if frame.settled { isSettled = true }
+            if frame.drying { isDrying = true }
             if hold != nil { isHeld = true }
         }
     }
@@ -139,6 +146,10 @@ nonisolated struct WatercolorFilmFrame: Sendable {
     var aims: [SIMD4<Float>] = []
     var time: Float = 0
     var settled = false
+    /// Every tap laid: the drying.
+    var drying = false
+    /// How far the pencil has gone from under the painted areas (`WatercolorMakingOf.pencilFade`).
+    var pencilFade: Float = 0
 }
 
 /// The Making Of's own simulation and its plan, stepped by one task at a time
@@ -189,7 +200,8 @@ nonisolated final class WatercolorFilmPlayer: @unchecked Sendable {
     }
 
     private func pack(box: WatercolorSim.Box?, regions: [Int32]) -> WatercolorFilmFrame {
-        var frame = WatercolorFilmFrame(time: sim.time, settled: isSettled)
+        var frame = WatercolorFilmFrame(time: sim.time, settled: isSettled, drying: plan.isDrying(sim),
+                                        pencilFade: plan.pencilFade(at: sim.time))
         let w = sheet.width
         if let box, box.x1 > box.x0, box.y1 > box.y0 {
             let bw = box.x1 - box.x0, bh = box.y1 - box.y0
@@ -244,6 +256,7 @@ final class WatercolorFilmRenderer: NSObject, MTKViewDelegate {
     private let inFlight = DispatchSemaphore(value: 1)
     private var pending: [WatercolorFilmFrame] = []
     private var time: Float = 0
+    private var pencilFade: Float = 0
     /// Told of each frame once it is drawn.
     var onFrame: ((WatercolorFilmFrame) -> Void)?
 
@@ -352,6 +365,7 @@ final class WatercolorFilmRenderer: NSObject, MTKViewDelegate {
             canvasSize: SIMD2(Float(template.width), Float(template.height)),
             paperTexel: SIMD2(1 / Float(paper.width), 1 / Float(paper.height)),
             simTexel: SIMD2(1 / Float(sheet.width), 1 / Float(sheet.height)),
+            pad: SIMD2(pencilFade, 1),
             paper: WatercolorRenderer.paperColor, background: WatercolorRenderer.paperColor,
             numberInk: WatercolorRenderer.numberInk)
         pass.colorAttachments[0].loadAction = .dontCare
@@ -372,6 +386,7 @@ final class WatercolorFilmRenderer: NSObject, MTKViewDelegate {
 
     private func upload(_ frame: WatercolorFilmFrame) {
         time = frame.time
+        pencilFade = frame.pencilFade
         if let box = frame.box {
             let bw = box.x1 - box.x0, bh = box.y1 - box.y0
             frame.density.withUnsafeBytes { raw in
@@ -447,10 +462,14 @@ struct WatercolorMakingOfView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var lifting = false
     @State private var showsFinished = false
+    @State private var pushedIn = false
 
     /// The finished painting held, and its lift (`tools/watercolor_making_of.py` films the same).
     static let hold: Double = 0.8
     static let lift: Double = 0.9
+    /// The push in toward a drying bloom: how far, and over how long.
+    static let pushIn: CGFloat = 1.15
+    static let pushSeconds: Double = 2.6
 
     var body: some View {
         let t = film.template
@@ -465,6 +484,8 @@ struct WatercolorMakingOfView: View {
                     }
                 }
                 .aspectRatio(CGSize(width: t.width, height: t.height), contentMode: .fit)
+                .scaleEffect(pushedIn ? Self.pushIn : 1, anchor: film.focus)
+                .clipped()
                 .padding(20)
                 .scaleEffect(lifting && !reduceMotion ? 1.05 : 1)
         }
@@ -485,6 +506,10 @@ struct WatercolorMakingOfView: View {
                 guard (try? await Task.sleep(for: .seconds(Self.hold))) != nil else { return }
             }
             end(after: Self.lift)
+        }
+        .onChange(of: film.isDrying) { _, drying in
+            guard drying, !reduceMotion, film.hold == nil else { return }
+            withAnimation(.easeInOut(duration: Self.pushSeconds)) { pushedIn = true }
         }
         .onDisappear { film.stop() }
     }

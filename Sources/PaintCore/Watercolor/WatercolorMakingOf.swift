@@ -17,6 +17,9 @@ public struct WatercolorMakingOf: Sendable {
     public let log: WatercolorLog
     /// The step of the last tap.
     public let lastTapStep: Int
+    /// Where the film pushes in as the sheet dries: the bloom nearest the middle, canvas units
+    /// (nil without one), so the push never runs into a corner.
+    public let focus: SIMD2<Float>?
 
     /// Washes, light to dark: few enough that each reads as a stage of the painting, enough that
     /// the darks come last.
@@ -31,12 +34,19 @@ public struct WatercolorMakingOf: Sendable {
 
     /// The time-lapse: simulation seconds per second shown while the washes go on and once the
     /// last is laid (the drying), and the seconds shown over which the one eases into the other.
+    /// The clock starts `lead` simulation seconds in, so the first wash is already flooding
+    /// in the first frames. The drying is hurried hardest (critic round 1: a still film
+    /// once the paint was down), and the film pushes in toward a bloom meanwhile.
     public static let floodSpeed: Double = 1.6
-    public static let dryingSpeed: Double = 5
-    public static let easing: Double = 0.8
+    public static let dryingSpeed: Double = 12
+    public static let easing: Double = 0.5
+    public static let lead: Double = 0.25
     /// The share of the sheet still wet at which the Making Of has settled and may end: the last
     /// damp patches dry on while it is held and lifts away.
-    public static let settledWetShare: Double = 0.03
+    public static let settledWetShare: Double = 0.1
+    /// Simulation seconds after the last tap over which the pencil goes from under the painted
+    /// areas (the film's finished painting has no lines through it).
+    public static let pencilSeconds: Float = 6
 
     public init(template t: Template, sheet: WatercolorSheet) {
         let n = t.regions.count
@@ -79,17 +89,30 @@ public struct WatercolorMakingOf: Sendable {
         // when the darks go on, pushing their pigment out into a cauliflower edge.
         let middle = (0..<n).filter { wave[$0] > 0 && wave[$0] < Self.waves - 1 }.sorted(by: bigFirst)
         let last = Float(Self.waves - 1) * Self.waveSeconds
+        var focus: SIMD2<Float>?
         for (i, r) in middle.prefix(Self.blooms).enumerated() {
             let b = t.regions[r].bounds
             // Off the wash's middle, toward a corner of its box, so the bloom spreads across it.
             let corner = SIMD2(Float(i % 2 == 0 ? b.minX : b.maxX), Float(i < 2 ? b.minY : b.maxY))
             let p = point(r) + 0.35 * (corner - point(r))
             let at = t.region(at: p) == r ? p : point(r)
+            let centre = SIMD2(Float(t.width), Float(t.height)) / 2
+            func far(_ p: SIMD2<Float>) -> Float { ((p - centre) * (p - centre)).sum() }
+            if focus.map({ far($0) > far(at) }) ?? true { focus = at }
             taps.append(.init(step: step(last + 0.15 * Float(i)), region: r, x: at.x, y: at.y, paint: false))
         }
         taps.sort { $0.step != $1.step ? $0.step < $1.step : ($0.paint != $1.paint ? $0.paint : $0.region < $1.region) }
         log = WatercolorLog(seed: sheet.seed, taps: taps)
         lastTapStep = taps.last?.step ?? 0
+        self.focus = focus
+    }
+
+    /// Whether every tap is laid: from here the film is the drying.
+    public func isDrying(_ sim: WatercolorSim) -> Bool { sim.step > lastTapStep }
+
+    /// How far the pencil has gone from under the painted areas at simulation time `t`, 0…1.
+    public func pencilFade(at t: Float) -> Float {
+        min(max((t - Float(lastTapStep) * WatercolorSim.dt) / Self.pencilSeconds, 0), 1)
     }
 
     /// Steps `sim` to `step`, laying each tap as its step comes; `cursor` is the next tap. The
@@ -134,6 +157,7 @@ public struct WatercolorMakingOf: Sendable {
         let a = Self.floodSpeed, b = Self.dryingSpeed, r = Self.easing
         let lastTap = Double(lastTapStep) * Double(WatercolorSim.dt)
         let turn = lastTap / a
+        let seconds = seconds + Self.lead / a
         let sim: Double
         if seconds <= turn {
             sim = a * max(seconds, 0)

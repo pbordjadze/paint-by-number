@@ -16,7 +16,8 @@ struct WatercolorUniforms {
     float2 canvasSize;    // canvas units
     float2 paperTexel;    // one texel of the fine paper, in uv
     float2 simTexel;      // one cell of the simulation, in uv
-    float2 pad;
+    float2 film;          // the Making Of's (zero on the painting screen): x, the pencil gone from
+                          // under painted areas; y, the numbers hidden
     float4 paper;         // the paper's color
     float4 background;    // around the sheet
     float4 numberInk;
@@ -98,11 +99,12 @@ fragment float4 watercolor_fragment(
 
     // Graphite reads on bare paper and all but disappears under a wash.
     float ink = float(pencil.sample(smooth, uv).r) * 0.75 * (1 - 0.75 * clamp(under * 2.5, 0.0, 1.0));
+    ink *= 1 - u.film.x * step(r.gain.w, u.time);
     refl *= 1 - ink * (1 - float3(0.30, 0.30, 0.33));
 
     // A number fades once its area is painted.
     float fade = clamp(1 - (u.time - r.gain.w) / 0.35, 0.0, 1.0);
-    float n = float(numbers.sample(smooth, uv).r) * fade;
+    float n = float(numbers.sample(smooth, uv).r) * fade * (1 - u.film.y);
     refl = mix(refl, u.numberInk.rgb, n * 0.9);
     return float4(refl, 1);
 }

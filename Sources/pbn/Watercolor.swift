@@ -90,11 +90,13 @@ func runWatercolor(_ options: Options) throws {
 }
 
 /// The Making Of as the app plays it (`WatercolorMakingOf`): its own simulation stepped to the
-/// step each frame shows, drawn wet every 1/`fps` second shown, the numbers fading as the app's
-/// do, on past the moment it settles for the app's hold and lift (`tail` seconds), as the app
-/// steps on while it ends. Writes making-of.csv (per frame: the step, the share of the sheet wet,
-/// and whether it has settled) and prints the steps' cost: the app makes them off the main
-/// actor as the frames come due.
+/// step each frame shows, drawn wet every 1/`fps` second shown with no numbers and the pencil
+/// going from under painted areas as it dries, as the app's film draws it, on past the moment it
+/// settles for the app's hold and lift (`tail` seconds), as the app steps on while it ends.
+/// Writes bare.ppm (the pencilled sheet with its numbers, what the lift leaves), making-of.csv
+/// (per frame: the step, the share of the sheet wet, whether it dries and has settled),
+/// focus.txt (where the film pushes in, fractions of the sheet) and prints the steps' cost: the
+/// app makes them off the main actor as the frames come due.
 func runMakingOf(template: Template, sheet: WatercolorSheet, fps: Double, out: URL, tail: Double = 1.7) throws {
     let plan = WatercolorMakingOf(template: template, sheet: sheet)
     let sim = WatercolorSim(sheet: sheet)
@@ -102,8 +104,12 @@ func runMakingOf(template: Template, sheet: WatercolorSheet, fps: Double, out: U
     var cursor = 0, frame = 0
     var stepping: Double = 0, worstFrame: Double = 0
     var settledAt: Double?
-    var csv = "frame,shown,step,simulated,wet,settled\n"
+    var csv = "frame,shown,step,simulated,wet,settled,drying\n"
     let cells = sheet.width * sheet.height
+    try writePPM(watercolorRaster(sim, template: template, fine: fine, numbers: true), "bare.ppm", in: out)
+    let focus = plan.focus ?? SIMD2(Float(template.width), Float(template.height)) / 2
+    try String(format: "%.4f %.4f\n", focus.x / Float(template.width), focus.y / Float(template.height))
+        .write(to: out.appendingPathComponent("focus.txt"), atomically: true, encoding: .utf8)
     while true {
         let shown = Double(frame) / fps
         let t0 = Date()
@@ -115,11 +121,12 @@ func runMakingOf(template: Template, sheet: WatercolorSheet, fps: Double, out: U
             worstFrame = max(worstFrame, took)
         }
         if settled, settledAt == nil { settledAt = shown }
-        try writePPM(watercolorRaster(sim, template: template, fine: fine, numbers: true, wet: true),
+        try writePPM(watercolorRaster(sim, template: template, fine: fine, wet: true, pencilFade: plan.pencilFade(at: sim.time)),
                      String(format: "frame-%04d.ppm", frame), in: out)
         var wet = 0
         for i in 0..<cells where sim.W[i] > 0 { wet += 1 }
-        csv += String(format: "%d,%.3f,%d,%.3f,%.4f,%d\n", frame, shown, sim.step, sim.time, Double(wet) / Double(cells), settled ? 1 : 0)
+        csv += String(format: "%d,%.3f,%d,%.3f,%.4f,%d,%d\n", frame, shown, sim.step, sim.time, Double(wet) / Double(cells), settled ? 1 : 0,
+                      plan.isDrying(sim) ? 1 : 0)
         frame += 1
         if let settledAt, shown >= settledAt + tail { break }
     }
@@ -133,9 +140,10 @@ func runMakingOf(template: Template, sheet: WatercolorSheet, fps: Double, out: U
 /// The sheet as the app's shader draws it, at twice the simulation's grid (`fine`: the paper's
 /// fine tooth there, made once for many frames). With `numbers`, a dot of number ink at each
 /// label fading as its area is painted, as the shader's numbers do (the app draws the digits);
-/// with `wet`, the shader's wet paint, darker with a sheen where the water's surface tilts.
+/// with `wet`, the shader's wet paint, darker with a sheen where the water's surface tilts; with
+/// `pencilFade`, the pencil that much gone from under painted areas (the film's, `u.film.x`).
 func watercolorRaster(_ sim: WatercolorSim, template t: Template, fine: [Float]? = nil, numbers: Bool = false,
-                      wet: Bool = false) -> RGBAImage {
+                      wet: Bool = false, pencilFade: Float = 0) -> RGBAImage {
     let sheet = sim.sheet
     let w = sheet.width, h = sheet.height, W2 = w * 2, H2 = h * 2
     var targets: [(gain: SIMD3<Float>, aim: SIMD3<Float>)] = []
@@ -192,7 +200,8 @@ func watercolorRaster(_ sim: WatercolorSim, template t: Template, fine: [Float]?
             // Pencil where the region changes within a canvas unit.
             let here = t.region(at: canvas), right = t.region(at: canvas + SIMD2(1, 0)), down = t.region(at: canvas + SIMD2(0, 1))
             if here != right || here != down {
-                let ink = 0.55 * (1 - 0.75 * min(under * 2.5, 1))
+                let painted: Float = sim.paintedAt[r] <= sim.time ? 1 : 0
+                let ink = 0.55 * (1 - 0.75 * min(under * 2.5, 1)) * (1 - pencilFade * painted)
                 refl = refl * (1 - ink * (1 - graphite))
             }
             let p3 = refl

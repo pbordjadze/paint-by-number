@@ -23,11 +23,25 @@ from PIL import Image, ImageDraw
 DESK = (232, 227, 217)
 HOLD = 0.8  # seconds the finished painting is held (WatercolorMakingOfView.hold)
 LIFT = 0.9  # seconds it lifts away (WatercolorMakingOfView.lift)
+PUSH = 1.15  # the push in toward a drying bloom (WatercolorMakingOfView.pushIn)
+PUSH_SECONDS = 2.6  # its ease in and out (WatercolorMakingOfView.pushSeconds)
 
 
-def on_desk(sheet, size):
+def pushed(sheet, zoom, focus):
+    """The sheet scaled `zoom` about `focus` (fractions) and clipped to its own frame."""
+    if zoom <= 1.0001:
+        return sheet
+    w, h = sheet.size
+    cw, ch = w / zoom, h / zoom
+    fx, fy = focus[0] * w, focus[1] * h
+    x0, y0 = fx - fx / zoom, fy - fy / zoom
+    return sheet.crop((round(x0), round(y0), round(x0 + cw), round(y0 + ch))).resize((w, h), Image.LANCZOS)
+
+
+def on_desk(sheet, size, zoom=1.0, focus=(0.5, 0.5)):
     """The sheet centred on the desk at 94% of the frame, as the app fits it."""
     w, h = size
+    sheet = pushed(sheet, zoom, focus)
     s = min(w / sheet.width, h / sheet.height) * 0.94
     tile = sheet.resize((round(sheet.width * s), round(sheet.height * s)), Image.LANCZOS)
     out = Image.new("RGB", size, DESK)
@@ -35,10 +49,11 @@ def on_desk(sheet, size):
     return out
 
 
-def lifted(finished, bare, size, u):
+def lifted(finished, bare, size, u, zoom=1.0, focus=(0.5, 0.5)):
     """The ending at u (0…1): the finished sheet a little larger and fading over the bare one."""
     w, h = size
     base = on_desk(bare, size)
+    finished = pushed(finished, zoom, focus)
     s = min(w / finished.width, h / finished.height) * 0.94 * (1 + 0.05 * u)
     tile = finished.resize((round(finished.width * s), round(finished.height * s)), Image.LANCZOS)
     top = base.copy()
@@ -58,11 +73,25 @@ def main():
     if not paths:
         raise SystemExit(f"no frame-*.ppm in {args.dir}")
     settled = len(paths) - 1
+    drying = None
     with open(os.path.join(args.dir, "making-of.csv")) as f:
         for row in csv.DictReader(f):
+            if drying is None and row.get("drying") == "1":
+                drying = int(row["frame"])
             if row["settled"] == "1":
                 settled = int(row["frame"])
                 break
+    focus = (0.5, 0.5)
+    focus_file = os.path.join(args.dir, "focus.txt")
+    if os.path.exists(focus_file):
+        focus = tuple(float(v) for v in open(focus_file).read().split())
+
+    def zoom(k):
+        """The push in at film frame k: eased from the drying's first frame."""
+        if drying is None or k < drying:
+            return 1.0
+        u = min((k - drying) / (PUSH_SECONDS * args.fps), 1)
+        return 1 + (PUSH - 1) * u * u * (3 - 2 * u)
     ending = paths[settled:]
     paths = paths[:settled + 1]
 
@@ -86,21 +115,22 @@ def main():
         print("no ffmpeg: contact sheet only")
         return
     size = (args.width, round(args.width * 10 / 16) // 2 * 2)
-    bare = Image.open(paths[0]).convert("RGB")
+    bare_file = os.path.join(args.dir, "bare.ppm")
+    bare = Image.open(bare_file if os.path.exists(bare_file) else paths[0]).convert("RGB")
     def ending_frame(j):
         return Image.open(ending[min(j, len(ending) - 1)]).convert("RGB")
     with tempfile.TemporaryDirectory() as tmp:
         k = 0
         for p in paths:
-            on_desk(Image.open(p).convert("RGB"), size).save(os.path.join(tmp, f"{k:05d}.png"))
+            on_desk(Image.open(p).convert("RGB"), size, zoom(k), focus).save(os.path.join(tmp, f"{k:05d}.png"))
             k += 1
         held = round(HOLD * args.fps)
         for j in range(1, held + 1):
-            on_desk(ending_frame(j), size).save(os.path.join(tmp, f"{k:05d}.png"))
+            on_desk(ending_frame(j), size, zoom(k), focus).save(os.path.join(tmp, f"{k:05d}.png"))
             k += 1
         steps = round(LIFT * args.fps)
         for j in range(1, steps + 1):
-            lifted(ending_frame(held + j), bare, size, j / steps).save(os.path.join(tmp, f"{k:05d}.png"))
+            lifted(ending_frame(held + j), bare, size, j / steps, zoom(k), focus).save(os.path.join(tmp, f"{k:05d}.png"))
             k += 1
         for _ in range(round(0.6 * args.fps)):
             on_desk(bare, size).save(os.path.join(tmp, f"{k:05d}.png"))
