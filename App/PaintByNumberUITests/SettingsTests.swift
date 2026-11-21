@@ -331,15 +331,25 @@ final class SettingsTests: XCTestCase {
     private static let row: CGFloat = 38
 
     #if UNRELEASED
-    /// Stained Glass (painting-company row 366): 1248 on the wheel opens it, with no windows yet,
-    /// and its own Year row rolled to the present brings Paint by Moonlight back.
+    /// Watercolor (painting-company row 373) and Stained Glass (row 366): 1502 on the wheel opens
+    /// Watercolor, its own Year row rolled to 1248 opens Stained Glass, each with nothing in it
+    /// yet, and Stained Glass's rolled to the present brings Paint by Moonlight back. In that
+    /// order because a wheel rolled a few rows at a time from the present to 1248 would rest
+    /// beside 1502 on the way and open Watercolor (`EraClock.pulled`).
     @MainActor
-    func testTheClockAt1248OpensStainedGlass() throws {
+    func testTheClockOpensWatercolorAndStainedGlass() throws {
         let app = openSettings()
         let presentYear = app.descendants(matching: .any)["about-year"]
         scroll(app, to: presentYear)
         presentYear.tap()
         XCTAssertTrue(app.descendants(matching: .any)["era-clock"].waitForExistence(timeout: 5), "The Year row brought out no year setter")
+        roll(app, to: 1502)
+        XCTAssertTrue(app.buttons["watercolor-choose-photo"].waitForExistence(timeout: 30), "1502 didn't open Watercolor")
+        attachScreenshot(of: app, named: "watercolor-through-the-door")
+        app.buttons["watercolor-settings"].tap()
+        let watercolorYear = app.descendants(matching: .any)["about-year"]
+        XCTAssertTrue(watercolorYear.waitForExistence(timeout: 10), "Watercolor's Settings has no Year row")
+        watercolorYear.tap()
         roll(app, to: 1248)
         XCTAssertTrue(app.buttons["glass-choose-photo"].waitForExistence(timeout: 30), "1248 didn't open Stained Glass")
         attachScreenshot(of: app, named: "stained-glass-through-the-door")

@@ -81,6 +81,10 @@ before planning app work).
     glasses a window suggests, its background found by focus, and the classics offered after
     them) and `Glazing` (free glazing's `glazing.bin`: any glass in any piece, read as hostile
     input); `pbn glass` previews a window lit and unlit.
+  - `Watercolor/`: Watercolor (painting-company row 373): `WatercolorSheet` (a template as a
+    sheet of paper, the watercolor key), `WatercolorSim` (water and pigment after Curtis et al.
+    1997, deterministic on any core count, snapshots) and `WatercolorLog` (the taps, read as
+    hostile input); `pbn watercolor` paints a template tap by tap.
   - `Edit/`: `TemplateEditor`, the painter's pen, Cell Edge, Merge, Paint Brush, Bend Line and Move Edge (`reshape`), Move Number, eraser, line eraser, fill, Only
     This Area (`paintArea`), Looks and Edit Paint (looks and repaints, `Recolor.swift`) and the
     retired Color Splitter's splits made to a finished

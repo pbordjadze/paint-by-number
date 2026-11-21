@@ -67,6 +67,10 @@ public final class WatercolorSim {
 
     public struct Box: Equatable, Sendable {
         public var x0, y0, x1, y1: Int
+        public init(x0: Int, y0: Int, x1: Int, y1: Int) {
+            self.x0 = x0; self.y0 = y0; self.x1 = x1; self.y1 = y1
+        }
+
         func union(_ o: Box?) -> Box {
             guard let o else { return self }
             return Box(x0: min(x0, o.x0), y0: min(y0, o.y0), x1: max(x1, o.x1), y1: max(y1, o.y1))

@@ -310,8 +310,7 @@ struct GlassSettingsView: View {
                     .accessibilityIdentifier("about-year")
                     if showsClock {
                         EraClock(year: EraYear.stainedGlass) { year in
-                            guard year != EraYear.stainedGlass,
-                                  EraYear.returnsToThePresent(year) || EraYear.opensByzantium(year) else { return }
+                            guard year != EraYear.stainedGlass, EraYear.opensAnEra(year) else { return }
                             dismiss()
                             leave(year)
                         }

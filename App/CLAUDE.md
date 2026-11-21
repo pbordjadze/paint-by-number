@@ -1336,7 +1336,29 @@ builds, lights the eras' years (`EraYear.modes`) and draws a wheel resting besid
 with a rose window's light (`EraPassage.drawNave`); Paint by Mosaic's wheel reaches it too
 (`LeaveRavenna(for:)`). Demos: `glass-empty`, `glass-gallery`, `glass-lead`, `glass-glaze`,
 `glass-finished` (`GlassDemo`, on the mockup's monarch and lines, `GlassDemoLines`) and
-`era-passage-glass`; `EraDoorTests`, `SettingsTests.testTheClockAt1248OpensStainedGlass`.
+`era-passage-glass`; `EraDoorTests`, `SettingsTests.testTheClockOpensWatercolorAndStainedGlass`.
+
+## Watercolor (1502)
+
+SideStore and Debug builds only (`#if UNRELEASED`; painting-company row 373): paint by number
+where every tap is real water. PaintCore's `Watercolor/` simulates the sheet (`WatercolorSheet`:
+the template at 800 cells on its long side, the paper, the watercolor key `density(of:area:)`,
+wash groups; `WatercolorSim`: water, suspended and deposited pigment and granulation stepped at
+1/60 s over the wet box only, each area's wash solved toward its paint so every result is
+beautiful; `WatercolorLog`, the taps, read as hostile input). A tap of the paint in hand floods its
+area from where it lands; any other tap is water, a laid area tapped again blooms: no tap is
+wrong. `Watercolor/` here: `WatercolorEra` (gallery, New Painting from a photo or the library,
+Settings with the Year row), `WatercolorShelf` (an `ArtworkStore` at
+`Application Support/Watercolor/Paintings/`, each painting's folder plus `watercolor.json`, the
+tap log, and `watercolor.sheet`, the sim's LZFSE snapshot, so a painting opens without replaying),
+`WatercolorPainting` (the observable model), `WatercolorRenderer` + `Watercolor.metal` (the sheet
+drawn in linear Display P3: Beer–Lambert pigment, granulation, paper, wet sheen, pencil and numbers
+that fade as a wash covers them; logs step times to `Log.canvas`), `WatercolorCanvas` (an MTKView
+under a zooming scroll view, paused when nothing is wet), `WatercolorPaintView` (canvas and paint
+box; Reduce Motion settles each wash at once). 1502 opens `Era.watercolor`, whose passage is a
+wash flooding the screen (`EraPassage.drawWash`). `pbn watercolor` paints a template off the
+device. Demos: `watercolor-empty`, `watercolor-paint`, `watercolor-painted` (`WatercolorDemo`) and
+`era-passage-watercolor`.
 
 ## Outside the app: widgets and stickers
 
