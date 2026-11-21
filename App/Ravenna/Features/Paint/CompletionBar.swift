@@ -138,9 +138,10 @@ struct FinishWarmup: View {
             CompletionBar(
                 session: session, title: "", share: share, sealBounces: bounces, onReplay: {}, onStopReplay: {},
                 onShareTimelapse: {}, onClose: {}, isWarmup: true)
-                .fixedSize()
+                // The width the bar will have, not its ideal size: with nothing proposed, long
+                // words had its layout measure every arrangement of its rows for half a minute.
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                .offset(y: 400)
+                .offset(y: 1000)
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
                 .task {

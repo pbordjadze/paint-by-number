@@ -144,6 +144,16 @@ nonisolated final class TileSound: @unchecked Sendable {
         if delay > 0, let node = p.lastRenderTime, let time = p.playerTime(forNodeTime: node) {
             let at = AVAudioTime(sampleTime: time.sampleTime + AVAudioFramePosition(delay * format.sampleRate), atRate: format.sampleRate)
             p.scheduleBuffer(buffer, at: at, options: [], completionHandler: nil)
+        } else if delay > 0 {
+            // An engine just started again after resting has no render time yet: the note waits on
+            // the queue instead, so an arpeggio keeps its rhythm rather than sounding as one chord
+            // (Paint by Moonlight's `SoundPlayer` does the same).
+            let held = Held(buffer: buffer)
+            restWhenQuiet(after: delay)
+            queue.asyncAfter(deadline: .now() + delay) { [self] in
+                sound(held.buffer, volume: volume)
+            }
+            return
         } else {
             p.scheduleBuffer(buffer, at: nil, options: .interrupts, completionHandler: nil)
         }
@@ -161,6 +171,10 @@ nonisolated final class TileSound: @unchecked Sendable {
             guard Date.now.timeIntervalSince(quietFrom) >= Self.restAfter, engine.isRunning else { return }
             engine.pause()
         }
+    }
+
+    private struct Held: @unchecked Sendable {
+        let buffer: AVAudioPCMBuffer
     }
 
     /// Quiet this long, the engine rests.
