@@ -23,6 +23,8 @@ struct WatercolorEra: View {
     @State private var picked: PhotosPickerItem?
     @State private var showsSettings = false
     @State private var isMaking = false
+    /// The Making Of of the painting just made, over its painting screen.
+    @State private var makingOf: WatercolorFilm?
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -40,6 +42,11 @@ struct WatercolorEra: View {
                 }
                 .padding(28)
                 .background(.regularMaterial, in: .rect(cornerRadius: 22))
+            }
+        }
+        .overlay {
+            if let makingOf {
+                WatercolorMakingOfView(film: makingOf) { self.makingOf = nil }
             }
         }
         .photosPicker(isPresented: $picking, selection: $picked, matching: .images)
@@ -60,7 +67,7 @@ struct WatercolorEra: View {
         .task {
             await shelf.load()
             #if DEBUG
-            await WatercolorDemo.run(scenario: DemoMode.scenario, shelf: shelf, path: $path)
+            await WatercolorDemo.run(scenario: DemoMode.scenario, shelf: shelf, path: $path, makingOf: $makingOf)
             #endif
         }
         .tint(WatercolorEra.ink)
@@ -117,6 +124,11 @@ struct WatercolorEra: View {
         do {
             let (template, settings) = try await WatercolorShelf.template(of: photo, length: Preferences().paintingLength)
             let artwork = try await shelf.create(template: template, settings: settings, photo: photo, title: title, sampleName: sampleName)
+            // The Making Of plays over the painting screen as it opens beneath (VoiceOver has
+            // nothing to see in it, and goes straight to the painting).
+            if !UIAccessibility.isVoiceOverRunning {
+                makingOf = await WatercolorFilm.prepare(template: template, seed: WatercolorPainting.seed(of: artwork.id))
+            }
             path = [artwork.id]
         } catch {
             Log.library.error("Couldn't make a watercolor: \(String(describing: error), privacy: .public)")

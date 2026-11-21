@@ -84,7 +84,7 @@ struct WatercolorUniforms {
     var canvasSize: SIMD2<Float>
     var paperTexel: SIMD2<Float>
     var simTexel: SIMD2<Float>
-    var pad: SIMD2<Float> = .zero
+    var film: SIMD2<Float> = .zero  // the Making Of's (Watercolor.metal says what)
     var paper: SIMD4<Float>
     var background: SIMD4<Float>
     var numberInk: SIMD4<Float>

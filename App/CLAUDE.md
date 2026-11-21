@@ -1369,11 +1369,16 @@ wet; the sheet with its margins, `WatercolorRenderer.margins`, fitted above the 
 finished painting signed in pencil in its bottom margin, its title and 1502), `WatercolorPaintView`
 (canvas and paint box, `WatercolorPaintBox`: a tin of half pans lying over the desk, the pan in
 hand lifted, a used-up one scooped to its white, put away when the painting is finished, the
-sheet settling into its room; Reduce Motion settles each wash at once and moves nothing). The era
+sheet settling into its room; Reduce Motion settles each wash at once and moves nothing), `WatercolorMakingOfView` (the Making Of: a new
+painting painted once by a simulation of its own stepped off the main actor, PaintCore's
+`WatercolorMakingOf` its plan and clock, drawn with the same shader by `WatercolorFilmRenderer`,
+over the painting screen opening beneath; about six seconds, a tap lifts it away; Reduce Motion
+crossfades the finished painting in and out; VoiceOver skips it). The era
 is dark (`preferredColorScheme`, as Stained Glass), its gallery sheets on the slate
 (`WatercolorCard`, `DeckleEdge`), empty a blank sheet with its two ways in. 1502 opens `Era.watercolor`, whose passage is a
 wash flooding the screen (`EraPassage.drawWash`). `pbn watercolor` paints a template off the
-device. Demos: `watercolor-empty`, `watercolor-paint`, `watercolor-painted` (`WatercolorDemo`) and
+device. Demos: `watercolor-empty`, `watercolor-paint`, `watercolor-painted`, `watercolor-making-of`
+(held mid-flood) (`WatercolorDemo`) and
 `era-passage-watercolor`.
 
 ## Outside the app: widgets and stickers
