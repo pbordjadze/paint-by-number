@@ -1340,9 +1340,11 @@ on the app's own code rather than a copy of it, as Paint by Mosaic is. `Glass/`:
 era's root: its gallery `GlassGalleryView`, New Window through the system photo picker, its
 Settings with the Year row), `GlassShelf` (an `ArtworkStore` of its own,
 `Application Support/StainedGlass/Windows/`, each window a painting's folder plus `glazing.bin`,
-PaintCore's `Glazing`), `GlassLead` (the Lead screen: the photo dimmed, the finger's lines laid
-one by one through PaintCore's `GlassWindow.Leading`, ends joined as the Pen joins, the pieces a
-line closes flashing; lead that closes nothing stays as drawn, Paul's choice), `GlassGlaze`
+PaintCore's `Glazing`), `GlassLead` (the Lead screen: the photo dimmed under the lead it suggests,
+PaintCore's `GlassLeadSuggestion` laid as the ground of `GlassWindow.Leading.suggested`, or a
+blank window by Start From; the finger's lines laid one by one, ends joined as the Pen joins, the
+pieces a line closes flashing; Erase's tap takes lead away junction to junction, as Edit's Line
+Eraser does; lead that closes nothing stays as drawn, Paul's choice), `GlassGlaze`
 (free glazing on the painting screen's own `CanvasView` in `GlassMode`, Canvas above: any bead's
 glass in any piece, poured from the finger over the glass before it, unlit pieces keeping a
 faint tint of the suggested glass, the sun passing once when it is whole, drawn by
@@ -1356,7 +1358,7 @@ streaked, unlit flat and matte: one RGBA buffer a piece repaints for the shelf's
 builds, lights the eras' years (`EraYear.modes`) and draws a wheel resting beside one on to it
 (`EraClock.pulled`); 1248 opens `Era.glass` (`Era.opened(by:)`), whose passage is a nave's dark
 with a rose window's light (`EraPassage.drawNave`); Paint by Mosaic's wheel reaches it too
-(`LeaveRavenna(for:)`). Demos: `glass-empty`, `glass-gallery`, `glass-lead`, `glass-glaze`,
+(`LeaveRavenna(for:)`). Demos: `glass-empty`, `glass-gallery`, `glass-lead`, `glass-lead-suggested`, `glass-glaze`,
 `glass-finished` (`GlassDemo`, on the mockup's monarch and lines, `GlassDemoLines`) and
 `era-passage-glass`; `EraDoorTests`, `SettingsTests.testTheClockAt1248OpensStainedGlass`.
 

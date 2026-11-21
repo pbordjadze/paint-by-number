@@ -21,23 +21,33 @@ struct GlassReport: Encodable {
 
 func runGlass(_ options: Options) throws {
     guard options.positional.count == 2, let out = options.out else {
-        fail("usage: pbn glass <photo> <lines.json> --out <dir> [generate options]")
+        fail("usage: pbn glass <photo> <lines.json | suggest> --out <dir> [generate options]")
     }
     let photo = loadImage(options.positional[0])
-    guard let data = FileManager.default.contents(atPath: options.positional[1]) else { fail("cannot read \(options.positional[1])") }
-    let script: GlassScript
-    do { script = try JSONDecoder().decode(GlassScript.self, from: data) } catch { fail("cannot decode \(options.positional[1]): \(error)") }
     let outDir = URL(fileURLWithPath: out)
     try FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
     let size = options.settings.workingSize(sourceWidth: photo.width, sourceHeight: photo.height)
-    let lines = script.lines.map { line in
-        line.compactMap { p in p.count == 2 ? SIMD2(p[0] * Float(size.width), p[1] * Float(size.height)) : nil }
+    let lines: [[SIMD2<Float>]]
+    if options.positional[1] == "suggest" {
+        // The lead the photo suggests (`GlassLeadSuggestion`), as the Lead screen starts with.
+        let start = Date()
+        lines = try GlassLeadSuggestion.lines(photo: photo, width: size.width, height: size.height)
+        FileHandle.standardError.write("suggested \(lines.count) lines in \(String(format: "%.2f", Date().timeIntervalSince(start))) s\n".data(using: .utf8)!)
+    } else {
+        guard let data = FileManager.default.contents(atPath: options.positional[1]) else { fail("cannot read \(options.positional[1])") }
+        let script: GlassScript
+        do { script = try JSONDecoder().decode(GlassScript.self, from: data) } catch { fail("cannot decode \(options.positional[1]): \(error)") }
+        lines = script.lines.map { line in
+            line.compactMap { p in p.count == 2 ? SIMD2(p[0] * Float(size.width), p[1] * Float(size.height)) : nil }
+        }
     }
+    let laying = Date()
     let window: GlassWindow.Leaded
     do {
         window = try GlassWindow.leaded(photo: photo, width: size.width, height: size.height, colorSpace: photo.colorSpace, lines: lines,
-                                    joining: Float(max(size.width, size.height)) * 0.02)
+                                    joining: Float(max(size.width, size.height)) * GlassLeadSuggestion.joining)
     } catch { fail("no window: \(error)") }
+    FileHandle.standardError.write("leaded in \(String(format: "%.2f", Date().timeIntervalSince(laying))) s\n".data(using: .utf8)!)
     let t = window.template
     let report = t.validate()
     try t.encoded().write(to: outDir.appendingPathComponent("window.pbnt"))

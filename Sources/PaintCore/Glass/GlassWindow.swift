@@ -33,12 +33,56 @@ public enum GlassWindow {
     public struct Leading: Sendable {
         public let photo: RGBAImage
         private var trail: EditTrail
-        /// The lines laid, as joined.
-        public private(set) var lines: [[SIMD2<Float>]] = []
+        /// What the painter did, each step one of `trail`'s edits: a line laid, or one taken away.
+        private enum Step: Sendable { case line([SIMD2<Float>]), erase }
+        private var steps: [Step] = []
+        /// The lines the painter laid, as joined (the suggestion's are the ground they were laid on).
+        public var lines: [[SIMD2<Float>]] {
+            steps.compactMap { if case .line(let line) = $0 { line } else { nil } }
+        }
 
         public init(photo: RGBAImage, width: Int, height: Int, colorSpace: RGBColorSpace) throws {
             self.photo = photo
             trail = EditTrail(base: try TemplateEditor.blank(width: width, height: height, photo: photo, colorSpace: colorSpace))
+        }
+
+        /// A window leaded as the photo suggests (`GlassLeadSuggestion`), for the painter to change:
+        /// the suggestion is the ground of what they do, so Undo never takes it back line by line.
+        public static func suggested(
+            photo: RGBAImage, width: Int, height: Int, colorSpace: RGBColorSpace, cancel: CancellationCheck = .none
+        ) throws -> Leading {
+            var leading = try Leading(photo: photo, width: width, height: height, colorSpace: colorSpace)
+            let reach = Float(max(width, height)) * GlassLeadSuggestion.joining
+            for line in try GlassLeadSuggestion.lines(photo: photo, width: width, height: height, cancel: cancel) {
+                try cancel.throwIfCancelled()
+                leading.add(line, joining: reach)
+            }
+            leading.trail = EditTrail(base: leading.trail.template)
+            leading.steps = []
+            return leading
+        }
+
+        /// The lead as it stands: every line, the suggestion's and the painter's, as laid.
+        public var lead: [[SIMD2<Float>]] {
+            RefineGestures.drawingLines(of: trail.template, writing: false).map { $0.map { SIMD2(Float($0.x), Float($0.y)) } }
+        }
+
+        public var canUndo: Bool { !steps.isEmpty }
+
+        /// Takes away the lead under `point` from junction to junction (Edit's Line Eraser's tap),
+        /// within `reach` (canvas units). Whether there was lead there to take.
+        @discardableResult
+        public mutating func erase(at point: SIMD2<Float>, reach: Float) -> Bool {
+            guard trail.lay(.eraseLine(at: point, reach: reach)).verdict.isMade else { return false }
+            steps.append(.erase)
+            return true
+        }
+
+        /// Takes back the painter's last step.
+        public mutating func undo() throws {
+            guard !steps.isEmpty else { return }
+            try trail.move(to: Array(trail.edits.dropLast()))
+            steps.removeLast()
         }
 
         /// The window as leaded so far, its paints the photo's under each piece.
@@ -67,11 +111,10 @@ public enum GlassWindow {
             }
             let verdict = trail.lay(TemplateEditor.painted(.draw(points: line), on: before, photo: photo)).verdict
             let after = trail.template
+            if verdict.isMade { steps.append(.line(line)) }
             guard after.regions.count > before.regions.count else {
-                if verdict.isMade { lines.append(line) }
                 return Added(line: line, verdict: verdict, closed: [])
             }
-            lines.append(line)
             // A piece is closed by this line where its area isn't the area of the piece it was
             // part of: the new pieces, and the one they were cut from.
             var closed: [Int] = []

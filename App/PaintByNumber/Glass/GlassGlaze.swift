@@ -5,6 +5,7 @@ import Observation
 import PaintCore
 import SwiftUI
 import UIKit
+import os
 
 /// Glazing a window (painting-company row 366; Paul's free glazing, November 20, 2026): the room
 /// dark, the window's glass unlit, each piece keeping a faint tint of the glass the photo

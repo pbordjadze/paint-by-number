@@ -111,6 +111,42 @@ struct GlassTests {
         #expect(leading.window().template.encoded() == all.template.encoded())
     }
 
+    /// The lead a photo suggests goes round what stands out in it, and is the ground the painter
+    /// starts from: nothing to undo, and the window is valid.
+    @Test func theSuggestedLeadGoesRoundTheSubject() throws {
+        var photo = RGBAImage(width: Self.width, height: Self.height, fill: Self.sage)
+        for y in 0..<Self.height {
+            for x in 0..<Self.width where hypot(Float(x - 160), Float(y - 90)) < 50 { photo[x, y] = Self.orange }
+        }
+        let leading = try GlassWindow.Leading.suggested(photo: photo, width: Self.width, height: Self.height, colorSpace: .sRGB)
+        let t = leading.template
+        expectValid(t)
+        #expect(t.regions.count >= 2)
+        #expect(!leading.canUndo && leading.lines.isEmpty)
+        #expect(Self.region(at: 160, 90, in: t) != Self.region(at: 30, 90, in: t), "the disc is a piece of its own")
+        // Every line of the lead lies near the disc's edge.
+        for line in leading.lead { for p in line where p.x > 1 && p.x < 239 && p.y > 1 && p.y < 179 {
+            #expect(abs(hypot(p.x - 160, p.y - 90) - 50) < 8)
+        } }
+    }
+
+    /// A tap takes a line of lead away, junction to junction, and Undo puts it back.
+    @Test func eraseTakesALineAndUndoPutsItBack() throws {
+        var leading = try GlassWindow.Leading(photo: Self.photo(), width: Self.width, height: Self.height, colorSpace: .sRGB)
+        for line in Self.lines { leading.add(line) }
+        let three = leading.template.encoded()
+        #expect(leading.template.regions.count == 3)
+        let erased = leading.erase(at: SIMD2(200, 90), reach: 4)
+        #expect(erased)
+        #expect(leading.template.regions.count == 2)
+        let bare = leading.erase(at: SIMD2(60, 40), reach: 4)
+        #expect(!bare, "nothing to take on bare glass")
+        try leading.undo()
+        #expect(leading.template.encoded() == three)
+        try leading.undo()
+        #expect(leading.lines.count == 1)
+    }
+
     @Test func noLinesIsOnePiece() throws {
         let w = try Self.window([])
         expectValid(w.template)
