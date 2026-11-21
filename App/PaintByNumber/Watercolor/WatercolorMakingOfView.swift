@@ -14,8 +14,9 @@ import UIKit
 /// (light washes first, darks last, a few blooms) and the time-lapse clock; a simulation of its
 /// own steps off the main actor (`WatercolorFilmPlayer`, `WatercolorFilm.produce`), sending what
 /// changed as frames to a renderer of its own that draws with the painting screen's shader
-/// (Watercolor.metal). It ends on the finished painting, held a moment, which lifts away off the
-/// bare pencilled sheet the painter then paints, already open beneath it.
+/// (Watercolor.metal). It ends on the finished painting, held a moment as the camera draws back,
+/// which lifts off its own bare pencilled sheet, at the same place and scale, numbers and all;
+/// that sheet then dissolves into the painting screen opening beneath, the same sheet.
 ///
 /// Short and skippable rather than played over the template's making: the plan needs the
 /// finished template, and the making uses every core. It plays about six seconds once the
@@ -38,7 +39,8 @@ final class WatercolorFilm {
     private(set) var isDrying = false
     /// Where it pushes in: the first bloom, as a point of the sheet (0…1).
     let focus: UnitPoint
-    /// The bare sheet as a picture, for Reduce Motion's crossfade.
+    /// The bare sheet with its numbers, as a picture: what the painting lifts off (and Reduce
+    /// Motion's crossfade).
     private(set) var bare: CGImage?
     /// A demo's moment to hold, seconds into the Making Of (Debug builds' scenario).
     @ObservationIgnored let hold: Double?
@@ -75,7 +77,7 @@ final class WatercolorFilm {
     /// Motion), as fast as it goes with only the finished painting sent.
     func start(settlingAtOnce: Bool) {
         guard producing == nil else { return }
-        if settlingAtOnce { bare = renderer.picture(maxPixelSize: 1600) }
+        bare = renderer.picture(maxPixelSize: 2048)
         let mode: WatercolorFilmPlayer.Mode
         if let hold {
             mode = .hold(hold)
@@ -150,6 +152,8 @@ nonisolated struct WatercolorFilmFrame: Sendable {
     var drying = false
     /// How far the pencil has gone from under the painted areas (`WatercolorMakingOf.pencilFade`).
     var pencilFade: Float = 0
+    /// Where the drying front stands (`WatercolorMakingOf.dryingFront`).
+    var front: Float = -WatercolorMakingOf.frontWidth
 }
 
 /// The Making Of's own simulation and its plan, stepped by one task at a time
@@ -201,7 +205,7 @@ nonisolated final class WatercolorFilmPlayer: @unchecked Sendable {
 
     private func pack(box: WatercolorSim.Box?, regions: [Int32]) -> WatercolorFilmFrame {
         var frame = WatercolorFilmFrame(time: sim.time, settled: isSettled, drying: plan.isDrying(sim),
-                                        pencilFade: plan.pencilFade(at: sim.time))
+                                        pencilFade: plan.pencilFade(at: sim.time), front: plan.dryingFront(at: sim.time))
         let w = sheet.width
         if let box, box.x1 > box.x0, box.y1 > box.y0 {
             let bw = box.x1 - box.x0, bh = box.y1 - box.y0
@@ -251,12 +255,15 @@ final class WatercolorFilmRenderer: NSObject, MTKViewDelegate {
     private let paper: any MTLTexture
     private let pencil: any MTLTexture
     private let numbers: any MTLTexture
+    /// No numbers: the film's (the bare sheet it lifts off has them).
+    private let noNumbers: any MTLTexture
     private let regions: any MTLBuffer
     /// One frame on the GPU at a time: its textures are written in place.
     private let inFlight = DispatchSemaphore(value: 1)
     private var pending: [WatercolorFilmFrame] = []
     private var time: Float = 0
     private var pencilFade: Float = 0
+    private var front: Float = -WatercolorMakingOf.frontWidth
     /// Told of each frame once it is drawn.
     var onFrame: ((WatercolorFilmFrame) -> Void)?
 
@@ -281,6 +288,7 @@ final class WatercolorFilmRenderer: NSObject, MTKViewDelegate {
               let paper = texture(.r16Float, assets.paperWidth, assets.paperHeight),
               let pencil = texture(.r8Unorm, assets.rasterWidth, assets.rasterHeight, mipmapped: true),
               let numbers = texture(.r8Unorm, assets.rasterWidth, assets.rasterHeight, mipmapped: true),
+              let noNumbers = texture(.r8Unorm, 1, 1),
               let regions = device.makeBuffer(length: max(1, t.regions.count) * MemoryLayout<WatercolorRegion>.stride,
                                               options: .storageModeShared)
         else { return nil }
@@ -295,6 +303,7 @@ final class WatercolorFilmRenderer: NSObject, MTKViewDelegate {
         self.paper = paper
         self.pencil = pencil
         self.numbers = numbers
+        self.noNumbers = noNumbers
         self.regions = regions
         super.init()
         t.regionMap.storage.withUnsafeBytes { bytes in
@@ -305,9 +314,9 @@ final class WatercolorFilmRenderer: NSObject, MTKViewDelegate {
             paper.replace(region: MTLRegionMake2D(0, 0, assets.paperWidth, assets.paperHeight), mipmapLevel: 0,
                           withBytes: bytes.baseAddress!, bytesPerRow: assets.paperWidth * 2)
         }
-        // The film hides the numbers (the bare sheet brings them back): a blank layer in their place.
-        let blank = [UInt8](repeating: 0, count: assets.numbers.count)
-        for (texture, bytes) in [(pencil, assets.pencil), (numbers, blank)] {
+        var none: UInt8 = 0
+        noNumbers.replace(region: MTLRegionMake2D(0, 0, 1, 1), mipmapLevel: 0, withBytes: &none, bytesPerRow: 1)
+        for (texture, bytes) in [(pencil, assets.pencil), (numbers, assets.numbers)] {
             bytes.withUnsafeBytes { raw in
                 texture.replace(region: MTLRegionMake2D(0, 0, assets.rasterWidth, assets.rasterHeight), mipmapLevel: 0,
                                 withBytes: raw.baseAddress!, bytesPerRow: assets.rasterWidth)
@@ -361,13 +370,14 @@ final class WatercolorFilmRenderer: NSObject, MTKViewDelegate {
         commands.addCompletedHandler { _ in semaphore.signal() }
     }
 
-    private func encode(_ commands: any MTLCommandBuffer, pass: MTLRenderPassDescriptor, unitsPerPixel: Float) {
+    private func encode(_ commands: any MTLCommandBuffer, pass: MTLRenderPassDescriptor, unitsPerPixel: Float,
+                        numbered: Bool = false) {
         var uniforms = WatercolorUniforms(
             offset: .zero, unitsPerPixel: unitsPerPixel, time: time,
             canvasSize: SIMD2(Float(template.width), Float(template.height)),
             paperTexel: SIMD2(1 / Float(paper.width), 1 / Float(paper.height)),
             simTexel: SIMD2(1 / Float(sheet.width), 1 / Float(sheet.height)),
-            pad: SIMD2(pencilFade, 1),  // y: the water shown more (Watercolor.metal)
+            pad: SIMD2(pencilFade, 1 + front),  // y: the drying front, past 1 (Watercolor.metal)
             paper: WatercolorRenderer.paperColor, background: WatercolorRenderer.paperColor,
             numberInk: WatercolorRenderer.numberInk)
         pass.colorAttachments[0].loadAction = .dontCare
@@ -381,7 +391,7 @@ final class WatercolorFilmRenderer: NSObject, MTKViewDelegate {
         encoder.setFragmentTexture(labels, index: 2)
         encoder.setFragmentTexture(paper, index: 3)
         encoder.setFragmentTexture(pencil, index: 4)
-        encoder.setFragmentTexture(numbers, index: 5)
+        encoder.setFragmentTexture(numbered ? numbers : noNumbers, index: 5)
         encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
         encoder.endEncoding()
     }
@@ -389,6 +399,7 @@ final class WatercolorFilmRenderer: NSObject, MTKViewDelegate {
     private func upload(_ frame: WatercolorFilmFrame) {
         time = frame.time
         pencilFade = frame.pencilFade
+        front = frame.front
         if let box = frame.box {
             let bw = box.x1 - box.x0, bh = box.y1 - box.y0
             frame.density.withUnsafeBytes { raw in
@@ -407,7 +418,8 @@ final class WatercolorFilmRenderer: NSObject, MTKViewDelegate {
         }
     }
 
-    /// The sheet as it stands, `maxPixelSize` on its long side (Reduce Motion's bare sheet).
+    /// The sheet as it stands with its numbers, `maxPixelSize` on its long side: the bare sheet
+    /// the film lifts off, taken before it starts.
     func picture(maxPixelSize: Int) -> CGImage? {
         let scale = Float(maxPixelSize) / Float(max(template.width, template.height, 1))
         let w = max(1, Int((Float(template.width) * scale).rounded())), h = max(1, Int((Float(template.height) * scale).rounded()))
@@ -419,7 +431,7 @@ final class WatercolorFilmRenderer: NSObject, MTKViewDelegate {
         pass.colorAttachments[0].texture = target
         inFlight.wait()
         defer { inFlight.signal() }
-        encode(commands, pass: pass, unitsPerPixel: 1 / scale)
+        encode(commands, pass: pass, unitsPerPixel: 1 / scale, numbered: true)
         commands.commit()
         commands.waitUntilCompleted()
         guard commands.status == .completed else { return nil }
@@ -462,38 +474,48 @@ struct WatercolorMakingOfView: View {
     let film: WatercolorFilm
     let onEnd: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var lifting = false
+    /// Reduce Motion's finished painting shown over the bare sheet.
     @State private var showsFinished = false
+    /// The painting lifted off its bare sheet.
+    @State private var lifted = false
+    /// The bare sheet dissolved into the painting screen beneath.
+    @State private var gone = false
     @State private var pushedIn = false
 
-    /// The finished painting held, and its lift (`tools/watercolor_making_of.py` films the same).
-    static let hold: Double = 0.8
-    static let lift: Double = 0.9
-    /// The push in toward a drying bloom: how far, and over how long.
+    /// The finished painting held as the camera draws back out, its lift off the bare sheet, and
+    /// the bare sheet's dissolve into the painting screen (`tools/watercolor_making_of.py`
+    /// films the first two).
+    static let hold: Double = 0.5
+    static let lift: Double = 0.7
+    static let dissolve: Double = 0.3
+    /// The push in toward a drying bloom while the drying front sweeps: how far, and how long.
     static let pushIn: CGFloat = 1.15
-    static let pushSeconds: Double = 2.6
+    static let pushSeconds: Double = 1.4
+
+    private var paintingShown: Bool {
+        reduceMotion ? showsFinished && !lifted : !lifted
+    }
 
     var body: some View {
         let t = film.template
         ZStack {
             WatercolorEra.desk.ignoresSafeArea()
-            WatercolorFilmCanvas(renderer: film.renderer)
-                .overlay {
-                    if let bare = film.bare {
-                        Image(decorative: bare, scale: 1)
-                            .resizable()
-                            .opacity(showsFinished ? 0 : 1)
-                    }
+            ZStack {
+                if let bare = film.bare {
+                    Image(decorative: bare, scale: 1)
+                        .resizable()
                 }
-                .aspectRatio(CGSize(width: t.width, height: t.height), contentMode: .fit)
-                .scaleEffect(pushedIn ? Self.pushIn : 1, anchor: film.focus)
-                .clipped()
-                .padding(20)
-                .scaleEffect(lifting && !reduceMotion ? 1.05 : 1)
+                WatercolorFilmCanvas(renderer: film.renderer)
+                    .opacity(paintingShown ? 1 : 0)
+            }
+            .aspectRatio(CGSize(width: t.width, height: t.height), contentMode: .fit)
+            .scaleEffect(pushedIn ? Self.pushIn : 1, anchor: film.focus)
+            .clipped()
+            .padding(20)
         }
-        .opacity(lifting ? 0 : 1)
+        .opacity(gone ? 0 : 1)
         .contentShape(.rect)
-        .onTapGesture { end(after: 0.35) }
+        .onTapGesture { end(lift: 0.2, dissolve: 0.25) }
         .accessibilityHidden(true)
         .task {
             film.start(settlingAtOnce: reduceMotion)
@@ -504,10 +526,12 @@ struct WatercolorMakingOfView: View {
             if reduceMotion {
                 withAnimation(.easeInOut(duration: 1)) { showsFinished = true }
                 guard (try? await Task.sleep(for: .seconds(2.2))) != nil else { return }
+                end(lift: 1, dissolve: Self.dissolve)
             } else {
+                withAnimation(.easeInOut(duration: Self.hold)) { pushedIn = false }
                 guard (try? await Task.sleep(for: .seconds(Self.hold))) != nil else { return }
+                end(lift: Self.lift, dissolve: Self.dissolve)
             }
-            end(after: Self.lift)
         }
         .onChange(of: film.isDrying) { _, drying in
             guard drying, !reduceMotion, film.hold == nil else { return }
@@ -516,11 +540,14 @@ struct WatercolorMakingOfView: View {
         .onDisappear { film.stop() }
     }
 
-    private func end(after seconds: Double) {
-        guard !lifting else { return }
-        withAnimation(.easeInOut(duration: seconds)) { lifting = true }
+    /// The painting lifts off its bare sheet, which then dissolves into the painting screen.
+    private func end(lift: Double, dissolve: Double) {
+        guard !lifted else { return }
+        withAnimation(.easeInOut(duration: lift)) { lifted = true }
         Task {
-            try? await Task.sleep(for: .seconds(seconds))
+            try? await Task.sleep(for: .seconds(lift))
+            withAnimation(.easeInOut(duration: dissolve)) { gone = true }
+            try? await Task.sleep(for: .seconds(dissolve))
             film.stop()
             onEnd()
         }

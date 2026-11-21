@@ -74,5 +74,10 @@ import Testing
         #expect(late > 3 * early)
         #expect(plan.pencilFade(at: 0) == 0)
         #expect(plan.pencilFade(at: 1000) == 1)
+        // The drying front: the whole sheet ahead of it until the last tap, behind it at the end.
+        let lastTap = Float(plan.lastTapStep) * WatercolorSim.dt
+        #expect(plan.dryingFront(at: 0) == -WatercolorMakingOf.frontWidth)
+        #expect(plan.dryingFront(at: lastTap + 1) < plan.dryingFront(at: lastTap + 2))
+        #expect(plan.dryingFront(at: 1000) == 1 + WatercolorMakingOf.frontWidth)
     }
 }

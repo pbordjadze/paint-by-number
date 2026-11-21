@@ -7,11 +7,11 @@
 Reads <dir>/frame-NNNN.ppm (pbn's frames, 1/fps second shown apart) and making-of.csv (which
 frame settled) and writes <dir>/contact.jpg (--tiles frames evenly spaced up to the settled one,
 each with its time shown) and, when ffmpeg is on the path, <dir>/making-of.mp4: the frames, then
-the app's ending on the frames after (the painting held, drying on, then lifted away, a little
-larger and fading, off the bare pencilled sheet the painter paints, its numbers drawn at the
-film's own size from labels.csv, as the painting screen draws them, fading in once the lift is
-done; the last of these is also written as last-frame.png). Pillow only; the numbers in DejaVu
-Sans where it is installed.
+the app's ending on the frames after (the painting held as the push in draws back out, then
+lifted off its own bare pencilled sheet at the same place and scale: the bare sheet with its
+numbers, drawn at the film's own size from labels.csv as the painting screen draws them, held
+as the app hands over to the painting screen; that last frame is also written as
+last-frame.png). Pillow only; the numbers in DejaVu Sans where it is installed.
 """
 import argparse
 import csv
@@ -24,11 +24,10 @@ import tempfile
 from PIL import Image, ImageDraw, ImageFont
 
 DESK = (232, 227, 217)
-HOLD = 0.8  # seconds the finished painting is held (WatercolorMakingOfView.hold)
-LIFT = 0.9  # seconds it lifts away (WatercolorMakingOfView.lift)
+HOLD = 0.5  # seconds the finished painting is held, drawing back out (WatercolorMakingOfView.hold)
+LIFT = 0.7  # seconds it lifts off the bare sheet (WatercolorMakingOfView.lift)
 PUSH = 1.15  # the push in toward a drying bloom (WatercolorMakingOfView.pushIn)
-PUSH_SECONDS = 2.6  # its ease in and out (WatercolorMakingOfView.pushSeconds)
-NUMBERS_IN = 0.35  # seconds the numbers fade in over once the lift is done
+PUSH_SECONDS = 1.4  # its ease in (WatercolorMakingOfView.pushSeconds)
 NUMBER_INK = (48, 46, 51)  # WatercolorRenderer.numberInk, near enough
 FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 
@@ -55,17 +54,11 @@ def on_desk(sheet, size, zoom=1.0, focus=(0.5, 0.5)):
     return out
 
 
-def lifted(finished, bare, size, u, zoom=1.0, focus=(0.5, 0.5)):
-    """The ending at u (0…1): the finished sheet a little larger and fading over the bare one."""
-    w, h = size
-    base = on_desk(bare, size)
-    finished = pushed(finished, zoom, focus)
-    s = min(w / finished.width, h / finished.height) * 0.94 * (1 + 0.05 * u)
-    tile = finished.resize((round(finished.width * s), round(finished.height * s)), Image.LANCZOS)
-    top = base.copy()
-    top.paste(tile, ((w - tile.width) // 2, (h - tile.height) // 2))
+def lifted(finished, bare, u):
+    """The ending at u (0…1): the finished painting fading off its numbered bare sheet, both
+    on the desk at the same place and scale."""
     ease = u * u * (3 - 2 * u)
-    return Image.blend(top, base, ease)
+    return Image.blend(finished, bare, ease)
 
 
 def numbered(sheet, size, labels, alpha):
@@ -113,12 +106,21 @@ def main():
     if os.path.exists(focus_file):
         focus = tuple(float(v) for v in open(focus_file).read().split())
 
-    def zoom(k):
-        """The push in at film frame k: eased from the drying's first frame."""
+    def smooth(u):
+        u = min(max(u, 0), 1)
+        return u * u * (3 - 2 * u)
+
+    def pushing(k):
+        """The push in at film frame k, eased from the drying's first frame."""
         if drying is None or k < drying:
             return 1.0
-        u = min((k - drying) / (PUSH_SECONDS * args.fps), 1)
-        return 1 + (PUSH - 1) * u * u * (3 - 2 * u)
+        return 1 + (PUSH - 1) * smooth((k - drying) / (PUSH_SECONDS * args.fps))
+
+    def zoom(k):
+        """The push in at film frame k, drawn back out over the hold once it has settled."""
+        if k <= settled:
+            return pushing(k)
+        return 1 + (pushing(settled) - 1) * (1 - smooth((k - settled) / (HOLD * args.fps)))
     ending = paths[settled:]
     paths = paths[:settled + 1]
 
@@ -160,17 +162,15 @@ def main():
         for j in range(1, held + 1):
             on_desk(ending_frame(j), size, zoom(k), focus).save(os.path.join(tmp, f"{k:05d}.png"))
             k += 1
+        sheet = numbered(bare, size, labels, 1)
         steps = round(LIFT * args.fps)
         for j in range(1, steps + 1):
-            lifted(ending_frame(held + j), bare, size, j / steps, zoom(k), focus).save(os.path.join(tmp, f"{k:05d}.png"))
+            lifted(on_desk(ending_frame(held + j), size), sheet, j / steps).save(os.path.join(tmp, f"{k:05d}.png"))
             k += 1
-        fade_in = max(round(NUMBERS_IN * args.fps), 1)
-        last = None
-        for j in range(fade_in + round(0.8 * args.fps)):
-            last = numbered(bare, size, labels, min((j + 1) / fade_in, 1))
-            last.save(os.path.join(tmp, f"{k:05d}.png"))
+        for _ in range(round(0.6 * args.fps)):
+            sheet.save(os.path.join(tmp, f"{k:05d}.png"))
             k += 1
-        last.save(os.path.join(args.dir, "last-frame.png"))
+        sheet.save(os.path.join(args.dir, "last-frame.png"))
         out = os.path.join(args.dir, "making-of.mp4")
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(args.fps), "-i",
                         os.path.join(tmp, "%05d.png"), "-c:v", "libx264", "-pix_fmt", "yuv420p",
