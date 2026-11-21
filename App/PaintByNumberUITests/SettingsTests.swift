@@ -293,19 +293,21 @@ final class SettingsTests: XCTestCase {
         // A flick returns while the wheel still turns, and the year counts once it has rested
         // (`EraClock.rest`, 0.7 s): each flick waits for the wheel to go before the next.
         var stepped: Int?
-        for _ in 0..<40 where wheels.count > 0 {
+        for _ in 0..<80 where wheels.count > 0 {
             let wheel = wheels.firstMatch
             guard let shown = (wheel.value as? String).flatMap({ Int($0.prefix(4)) }) else { break }
+            print("SettingsTests.roll: the wheel shows \(shown), on the way to \(year)")
             if shown == year {
                 _ = wheel.waitForNonExistence(timeout: 3)
                 continue
             }
-            if (year == 547 && shown < year) || (year != present && abs(shown - year) <= 400 && !Self.eras.contains(shown)) {
-                // Up from the long reach's far end to 0547, and the last row to an era's year,
-                // one row at a time: a flick of a few rows went from 0001 to 0400 and back over
-                // 0500, 0547 and 0600 without resting beside it (CI, November 20), and one past
-                // 1502 can rest beside 1248 and open Stained Glass instead (November 21; from an
-                // era's own year a row away glides back to it, so that one flicks). A tap on
+            if (year == 547 && shown < year) || (year != present && year != 547 && !Self.eras.contains(shown)) {
+                // Up from the long reach's far end to 0547, and all the way to any other era's
+                // year, one row at a time: a flick of a few rows went from 0001 to 0400 and back
+                // over 0500, 0547 and 0600 without resting beside it (CI, November 20), and slow
+                // flicks from the present toward 1502 went past it, rested beside 1248 and opened
+                // Stained Glass (three runs, November 21). From an era's own year a row away glides
+                // back to it, so that one flicks. A tap on
                 // the row beyond the one read turns the wheel a row; if one left it where it was,
                 // a short drag of a row does instead.
                 let center = wheel.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
