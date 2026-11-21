@@ -1,0 +1,136 @@
+import Foundation
+import PaintCore
+
+/// `pbn watercolor`: a Watercolor painting (painting-company row 373) off the device, to judge
+/// the simulation's look and time its steps. A painter taps every area of the template once, paint
+/// by paint (each paint's areas top left first, `--spacing` seconds apart, at each area's label),
+/// and the sheet is drawn as the app's shader draws it (`WatercolorRenderer.metal`, mirrored here
+/// on the CPU: the target solve, Beer–Lambert over the paper's color, granulation in the paper's
+/// fine valleys, the paper lit from the top left, pencil fading under paint; no sheen or numbers).
+///
+///   pbn watercolor <photo | template.pbnt> --out <dir> [--seed N] [--spacing S] [--frames t1,t2,…]
+///       [generate options]
+///
+/// Writes painting.ppm (dried), frame-<t>.ppm for each time asked (seconds from the first tap,
+/// wet), watercolor.json (the tap log) and prints the steps' timings.
+func runWatercolor(_ options: Options) throws {
+    guard options.positional.count == 1, let out = options.out else {
+        fail("usage: pbn watercolor <photo | template.pbnt> --out <dir> [--spacing S] [--frames t,…] [generate options]")
+    }
+    let path = options.positional[0]
+    let template: Template
+    if path.hasSuffix(".pbnt") {
+        guard let data = FileManager.default.contents(atPath: path) else { fail("cannot read \(path)") }
+        do { template = try Template(encoded: data) } catch { fail("cannot decode \(path): \(error)") }
+    } else {
+        template = try TemplateGenerator(settings: options.settings).generate(from: loadImage(path), cancel: .none).template
+    }
+    let outDir = URL(fileURLWithPath: out)
+    try FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
+    let spacing = Float(options.watercolorSpacing ?? 0.12)
+    let frames = options.watercolorFrames ?? []
+    let seed = options.settings.seed
+
+    let made = Date()
+    let sheet = WatercolorSheet(template: template, seed: seed)
+    print(String(format: "sheet %d x %d, %d areas, made in %.0f ms", sheet.width, sheet.height, sheet.regionCount,
+                 Date().timeIntervalSince(made) * 1000))
+    let sim = WatercolorSim(sheet: sheet)
+    // Paint by paint, each paint's areas from the top left down.
+    let order = template.labels.indices
+        .sorted { a, b in
+            let la = template.labels[a], lb = template.labels[b]
+            let ca = template.regions[Int(la.region)].colorIndex, cb = template.regions[Int(lb.region)].colorIndex
+            return ca != cb ? ca < cb : la.position.x + la.position.y < lb.position.x + lb.position.y
+        }
+    var seen = Set<UInt32>()
+    var log = WatercolorLog(seed: seed)
+    var steps: [Double] = []
+    var taps: [(step: Int, label: Label)] = []
+    var next = 0
+    for i in order where seen.insert(template.labels[i].region).inserted {
+        taps.append((next, template.labels[i]))
+        next += max(1, Int((spacing / WatercolorSim.dt).rounded()))
+    }
+    var pendingFrames = frames.sorted()
+    var tapIndex = 0
+    while tapIndex < taps.count || sim.isActive {
+        while tapIndex < taps.count, taps[tapIndex].step <= sim.step {
+            let label = taps[tapIndex].label
+            log.taps.append(.init(step: sim.step, region: Int(label.region), x: label.position.x, y: label.position.y, paint: true))
+            let t0 = Date()
+            sim.tap(region: Int(label.region), at: label.position, paint: true)
+            steps.append(-Date().timeIntervalSince(t0))  // taps counted apart (negative)
+            tapIndex += 1
+        }
+        if let f = pendingFrames.first, sim.time >= f {
+            pendingFrames.removeFirst()
+            try writePPM(watercolorRaster(sim, template: template), String(format: "frame-%05.2f.ppm", f), in: outDir)
+        }
+        let t0 = Date()
+        sim.advance()
+        steps.append(Date().timeIntervalSince(t0))
+    }
+    try writePPM(watercolorRaster(sim, template: template), "painting.ppm", in: outDir)
+    try log.encoded().write(to: outDir.appendingPathComponent("watercolor.json"))
+    let stepTimes = steps.filter { $0 >= 0 }.sorted()
+    let tapTimes = steps.filter { $0 < 0 }.map { -$0 }.sorted()
+    func ms(_ a: [Double], _ q: Double) -> Double { a.isEmpty ? 0 : a[min(a.count - 1, Int(Double(a.count) * q))] * 1000 }
+    print(String(format: "%d taps over %.1f s: step median %.2f ms, p95 %.2f ms, max %.2f ms; tap median %.2f ms, max %.2f ms",
+                 log.taps.count, sim.time, ms(stepTimes, 0.5), ms(stepTimes, 0.95), ms(stepTimes, 1), ms(tapTimes, 0.5), ms(tapTimes, 1)))
+    let replayed = Date()
+    let again = WatercolorSim(sheet: WatercolorSheet(template: template, seed: seed))
+    again.replay(log)
+    print(String(format: "replay of the log: %.0f ms", Date().timeIntervalSince(replayed) * 1000))
+}
+
+/// The sheet as the app's shader draws it, at twice the simulation's grid.
+func watercolorRaster(_ sim: WatercolorSim, template t: Template) -> RGBAImage {
+    let sheet = sim.sheet
+    let w = sheet.width, h = sheet.height, W2 = w * 2, H2 = h * 2
+    var targets: [(gain: SIMD3<Float>, aim: SIMD3<Float>)] = []
+    for r in 0..<sheet.regionCount { targets.append(sim.target(of: r)) }
+    let fine = WatercolorSheet.paperHeight(width: W2, height: H2, seed: sheet.seed &+ 11)
+    var image = RGBAImage(width: W2, height: H2, fill: SIMD4(0, 0, 0, 255))
+    func cell(_ x: Int, _ y: Int) -> Int { min(max(y, 0), h - 1) * w + min(max(x, 0), w - 1) }
+    let graphite = SIMD3<Float>(0.30, 0.30, 0.33)
+    for y in 0..<H2 {
+        for x in 0..<W2 {
+            // Bilinear on the grid, the target solve by the region under the pixel.
+            let gx = (Float(x) + 0.5) / 2 - 0.5, gy = (Float(y) + 0.5) / 2 - 0.5
+            let x0 = Int(gx.rounded(.down)), y0 = Int(gy.rounded(.down))
+            let fx = gx - Float(x0), fy = gy - Float(y0)
+            func dens(_ i: Int) -> SIMD4<Float> { sim.D[i] + 0.9 * sim.S[i] }
+            let a = dens(cell(x0, y0)) * (1 - fx) + dens(cell(x0 + 1, y0)) * fx
+            let b = dens(cell(x0, y0 + 1)) * (1 - fx) + dens(cell(x0 + 1, y0 + 1)) * fx
+            let d4 = a * (1 - fy) + b * fy
+            let gr = sim.G[cell(x0, y0)] * (1 - fx) * (1 - fy) + sim.G[cell(x0 + 1, y0)] * fx * (1 - fy)
+                + sim.G[cell(x0, y0 + 1)] * (1 - fx) * fy + sim.G[cell(x0 + 1, y0 + 1)] * fx * fy
+            let canvas = SIMD2(Float(x) + 0.5, Float(y) + 0.5) / (2 * sheet.scale)
+            let r = t.region(at: canvas) ?? 0
+            let target = targets[r]
+            var d = SIMD3(d4.x, d4.y, d4.z) * target.gain
+            let cap = SIMD3<Float>(max(target.aim.x * 1.7, 0.05), max(target.aim.y * 1.7, 0.05), max(target.aim.z * 1.7, 0.05))
+            d = SIMD3(cap.x * tanh(d.x / cap.x), cap.y * tanh(d.y / cap.y), cap.z * tanh(d.z / cap.z))
+            let p2 = fine[y * W2 + x]
+            d *= 1 + gr * 0.6 * (0.5 - p2)
+            var refl = WatercolorSheet.paperColor * SIMD3(exp(-d.x), exp(-d.y), exp(-d.z))
+            let sx = fine[y * W2 + min(x + 1, W2 - 1)] - fine[y * W2 + max(x - 1, 0)]
+            let sy = fine[min(y + 1, H2 - 1) * W2 + x] - fine[max(y - 1, 0) * W2 + x]
+            let under = min(max((d.x + d.y + d.z) / 3 / 1.2, 0), 1)
+            refl *= min(max(1 + 0.45 * (sx + sy) * (1 - 0.6 * under), 0.85), 1.1)
+            // Pencil where the region changes within a canvas unit.
+            let here = t.region(at: canvas), right = t.region(at: canvas + SIMD2(1, 0)), down = t.region(at: canvas + SIMD2(0, 1))
+            if here != right || here != down {
+                let ink = 0.55 * (1 - 0.75 * min(under * 2.5, 1))
+                refl = refl * (1 - ink * (1 - graphite))
+            }
+            let p3 = refl
+            // Linear P3 to sRGB for the file (close enough to judge by: P3 paints keep their hue).
+            let srgb = ColorScience.p3ToSRGBLinear(p3)
+            func byte(_ v: Float) -> UInt8 { UInt8(min(max(ColorScience.encodeSRGB(v), 0), 1) * 255 + 0.5) }
+            image[x, y] = SIMD4(byte(srgb.x), byte(srgb.y), byte(srgb.z), 255)
+        }
+    }
+    return image
+}
