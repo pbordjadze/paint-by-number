@@ -202,40 +202,40 @@ struct PrintPreviewSheet: View {
     /// key's page. Numbers off is a coloring page (painting-company row 370: a painter printed
     /// templates and took the numbers out by hand).
     private var layersMenu: some View {
-        Menu {
-            Toggle(isOn: $layout.lines) { Text("Lines") }
-                .accessibilityIdentifier("print-lines")
-            Toggle(isOn: $layout.numbers) { Text("Numbers") }
-                .accessibilityIdentifier("print-numbers")
-            Toggle(isOn: $layout.colorHints) {
-                Text("Color Hints")
-                Text("Each area a pale wash of its paint")
+        // Laid as Size's row is: the name in the text's color, the choice the tinted menu.
+        LabeledContent {
+            Menu {
+                Toggle(isOn: $layout.lines) { Text("Lines") }
+                    .accessibilityIdentifier("print-lines")
+                Toggle(isOn: $layout.numbers) { Text("Numbers") }
+                    .accessibilityIdentifier("print-numbers")
+                Toggle(isOn: $layout.colorHints) {
+                    Text("Color Hints")
+                    Text("Each area a pale wash of its paint")
+                }
+                .accessibilityIdentifier("print-color-hints")
+                Toggle(isOn: $layout.colorKey) {
+                    Text("Color Key")
+                    Text("The paints, and the finished picture")
+                }
+                .accessibilityIdentifier("print-color-key")
+            } label: {
+                HStack(spacing: 4) {
+                    Text(layersText)
+                        .multilineTextAlignment(.trailing)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.footnote.weight(.medium))
+                        .accessibilityHidden(true)
+                }
             }
-            .accessibilityIdentifier("print-color-hints")
-            Toggle(isOn: $layout.colorKey) {
-                Text("Color Key")
-                Text("The paints, and the finished picture")
-            }
-            .accessibilityIdentifier("print-color-key")
+            // Several layers in one visit, each seen on the pages behind the menu.
+            .menuActionDismissBehavior(.disabled)
+            .accessibilityLabel(Text("Layers"))
+            .accessibilityValue(Text(layersText))
+            .accessibilityIdentifier("print-layers")
         } label: {
-            HStack {
-                Text("Layers")
-                    .foregroundStyle(.primary)
-                Spacer()
-                Text(layersText)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.trailing)
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(.footnote.weight(.medium))
-                    .foregroundStyle(.secondary)
-                    .accessibilityHidden(true)
-            }
+            Text("Layers")
         }
-        // Several layers in one visit, each seen on the pages behind the menu.
-        .menuActionDismissBehavior(.disabled)
-        .accessibilityLabel(Text("Layers"))
-        .accessibilityValue(Text(layersText))
-        .accessibilityIdentifier("print-layers")
     }
 
     /// The layers chosen, in the menu's order, as a list ("Lines, Numbers, Color Key").
