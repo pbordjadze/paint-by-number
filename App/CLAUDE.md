@@ -1185,6 +1185,17 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   stretches every duration N times for their `Slowed` runs, and `-handoffFallback S` sets the
   seconds a painting has to draw: CI's simulators take several to open one, and stall their main
   thread for seconds meanwhile, so a motion of half a second is a frame or two there.
+- The Museum (SideStore and Debug builds, `#if UNRELEASED`; painting-company row 369;
+  `Features/Museum/`): Your Own's Museum tile opens `MuseumView` over the Paint page, the
+  open-access works of museums (`MuseumCatalog`: one JSON that `tools/museum/catalog.py` writes
+  and the `museum` branch serves, kept in the caches folder and fetched again after a day) by
+  movement, kind, search and order (`MuseumQuery`, `MuseumQueryTests`; Most Colorful first).
+  A work's page (`MuseumWorkView`) fetches its full image (about 3,000 px) as it opens; Paint
+  This closes the Museum and loads it as a picked photo named after the work
+  (`CreateModel.load(imageData:title:)`, `paintsNow`). Pictures go through `MuseumImages`, a
+  URL cache of their own on disk. Its scenarios are `museum` (with `-dark`), `museum-art-nouveau`
+  and `museum-work` (with `-dark`), which need the network; `-demoMuseumPaint YES` paints the
+  opened work once it is fetched.
 - Start from a Drawing (SideStore and Debug builds, `#if UNRELEASED`; painting-company row 190;
   PaintCore's `docs/start-from-a-drawing.md`): its way in, the Paint page's A Drawing on Paper
   tile, is hidden since November 13, 2026 (the mode's generated colors; removal undecided), so
