@@ -4,8 +4,8 @@ import PaintCore
 import Testing
 @testable import PaintByNumber
 
-/// Print's layout (painting-company row 357): `PDFExporter.Layout`'s paper, orientation, size
-/// and color key, and the preview that draws its pages.
+/// Print's layout (painting-company row 357): `PDFExporter.Layout`'s paper, orientation, size,
+/// layers (row 370) and color key, and the preview that draws its pages.
 @MainActor
 struct PrintLayoutTests {
     private func pageCount(_ data: Data) throws -> Int {
@@ -103,6 +103,70 @@ struct PrintLayoutTests {
         }
         #expect(differ > 100)
         record(painted[0], "print-preview-painted")
+    }
+
+    /// The layers start as the template has always printed: numbers and the dotted guides over
+    /// the lines, on paper (painting-company row 370).
+    @Test func theLayersStartAsTheTemplateAlwaysPrinted() {
+        let layout = PDFExporter.Layout(paper: .letter)
+        #expect(layout.numbers && !layout.colorHints && layout.colorKey)
+        let style = layout.templateStyle, printable = TemplateRasterizer.Style.printable
+        #expect(style.numbers && style.drawsDrawing && style.lines == .print && style.unpainted == .paper)
+        #expect(style.outlineWidth == printable.outlineWidth)
+    }
+
+    /// Each layer turned off or on changes the template's page.
+    @Test func eachLayerChangesThePage() async throws {
+        for t in [Fixtures.stripes(), try Fixtures.sample(colors: 12)] {
+            let request = PrintPreviewRequest(template: t, title: "Layers", nicknames: [])
+            func page(_ change: (inout PDFExporter.Layout) -> Void) async throws -> CGImage {
+                var layout = PDFExporter.Layout(paper: .letter, across: 1)
+                layout.colorKey = false
+                change(&layout)
+                return try #require(await PrintPages.images(request, layout: layout, longSide: 1200).first)
+            }
+            let hintsImage = try await page { $0.colorHints = true }
+            let usual = PixelReader(try await page { _ in })
+            let noNumbers = PixelReader(try await page { $0.numbers = false })
+            let hints = PixelReader(hintsImage)
+            // Below the header: the template's part of the page.
+            func count(_ a: PixelReader, _ test: (SIMD3<Int>) -> Bool) -> Int {
+                var n = 0
+                for y in stride(from: 140, to: a.height - 80, by: 2) {
+                    for x in stride(from: 80, to: a.width - 80, by: 2) where test(a[x, y]) { n += 1 }
+                }
+                return n
+            }
+            func differ(_ a: PixelReader, _ b: PixelReader) -> Int {
+                var n = 0
+                for y in stride(from: 140, to: a.height - 80, by: 2) {
+                    for x in stride(from: 80, to: a.width - 80, by: 2) where maxDifference(a[x, y], b[x, y]) > 8 { n += 1 }
+                }
+                return n
+            }
+            #expect(differ(usual, noNumbers) > 10)
+            #expect(differ(usual, hints) > 200)
+            // A hint is a color, where the usual page is grey ink on white (its greys lean blue
+            // by 13 levels at most).
+            let colored = { (c: SIMD3<Int>) in max(c.x, c.y, c.z) - min(c.x, c.y, c.z) > 20 }
+            #expect(count(usual, colored) == 0)
+            #expect(count(hints, colored) > 200)
+            // Nothing but the paper and the picture's frame.
+            record(hintsImage, "print-layers-hints-\(t.width)x\(t.height)")
+        }
+    }
+
+    /// Without numbers no legibility floor sizes the print: the smallest size is one page.
+    @Test func withoutNumbersTheSmallestSizeIsOnePage() throws {
+        let t = try Fixtures.sample(colors: 30, detail: 0.6)
+        var layout = PDFExporter.Layout(paper: .letter)
+        layout.numbers = false
+        let sizes = PDFExporter.sizes(for: t, layout: layout)
+        #expect(sizes[0].across == nil && sizes[0].sheets.count == 1)
+        #expect(sizes.count >= 2)
+        // An asked size is kept.
+        layout.across = 2
+        #expect(PDFExporter.sheets(for: t, layout: layout).count > 1)
     }
 
     /// What Print hands the dialog is the layout's blank document.

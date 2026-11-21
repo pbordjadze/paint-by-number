@@ -201,6 +201,35 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
+    /// A photo that never arrived leaves nothing of the one before it (painting-company row 102):
+    /// not its kind (a page from scratch, here), its name, its number, its mix, nor the sparkles
+    /// of a shape drawn on it.
+    @Test func aFailedPhotoLeavesNothingOfTheLast() async throws {
+        let model = CreateModel()
+        model.loadScratch()
+        try await waitUntil { model.isFinal }
+        model.withdrawRefine()
+        model.title = "Sailboat"
+        let page = try #require(model.preview?.template)
+        let w = Float(page.width), h = Float(page.height)
+        let box = TemplateEditor.Edit.draw(
+            points: [SIMD2(0.3 * w, 0.3 * h), SIMD2(0.7 * w, 0.3 * h), SIMD2(0.7 * w, 0.7 * h), SIMD2(0.3 * w, 0.7 * h)], closed: true)
+        let serial = model.edit(box)
+        try await waitUntil(polling: .milliseconds(2)) { model.settledEdits >= serial && model.isFinal }
+        #expect(model.closedShape != nil && model.isScratch && model.hasLineArtInput)
+        let photoID = model.photoID
+
+        model.fail(.cameraCapture)
+        await model.settled()
+        #expect(model.phase == .failed(CreateModel.CreateError.cameraCapture.localizedDescription))
+        #expect(!model.isScratch && !model.isDrawing && !model.hasLineArtInput)
+        #expect(model.title.isEmpty && model.defaultTitle.isEmpty && !model.titleIsGiven)
+        #expect(model.photoID != photoID)
+        #expect(model.closedShape == nil && model.settledEdits == 0)
+        #expect(model.refinements.isEmpty && model.rememberedBases == 0 && model.draft == nil)
+        #expect(model.paintMix == CreateModel.newPaintMix && model.tuning == CreateModel.newTuning)
+    }
+
     /// Refine opens only on the final template: not while the settings are chosen, on a draft, or
     /// on the template of settings the sliders have left.
     @Test func refineOpensOnlyOnTheFinalTemplate() async throws {

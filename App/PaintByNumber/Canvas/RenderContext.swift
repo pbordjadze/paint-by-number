@@ -22,6 +22,8 @@ nonisolated final class RenderContext: @unchecked Sendable {
     let sampleCount: Int
     let atlas: DigitAtlas
     let atlasTexture: any MTLTexture
+    /// The shaders, for a mode's own pipelines (`makePipeline`).
+    let library: any MTLLibrary
 
     let paperPipeline: any MTLRenderPipelineState
     let fillPipeline: any MTLRenderPipelineState
@@ -55,6 +57,7 @@ nonisolated final class RenderContext: @unchecked Sendable {
         self.device = device
         self.queue = queue
         self.atlas = atlas
+        self.library = library
         let samples = device.supportsTextureSampleCount(4) ? 4 : 1
         sampleCount = samples
 
@@ -108,6 +111,28 @@ nonisolated final class RenderContext: @unchecked Sendable {
     }
 
     nonisolated private enum Blend { case none, premultiplied, max }
+
+    /// A pipeline drawing into the canvas's color pass, for a mode (`CanvasMode`): `vertex` and
+    /// `fragment` name functions of `Shaders.metal`; `blends` premultiplied over what is drawn,
+    /// else it replaces it.
+    func makePipeline(vertex: String, fragment: String, blends: Bool) -> (any MTLRenderPipelineState)? {
+        let d = MTLRenderPipelineDescriptor()
+        d.vertexFunction = library.makeFunction(name: vertex)
+        d.fragmentFunction = library.makeFunction(name: fragment)
+        d.rasterSampleCount = sampleCount
+        let c = d.colorAttachments[0]!
+        c.pixelFormat = Self.colorFormat
+        c.isBlendingEnabled = blends
+        if blends {
+            c.rgbBlendOperation = .add
+            c.alphaBlendOperation = .add
+            c.sourceRGBBlendFactor = .one
+            c.sourceAlphaBlendFactor = .one
+            c.destinationRGBBlendFactor = .oneMinusSourceAlpha
+            c.destinationAlphaBlendFactor = .oneMinusSourceAlpha
+        }
+        return try? device.makeRenderPipelineState(descriptor: d)
+    }
 
     /// Private textures work on every GPU (including the simulator); upload via a blit.
     private static func upload(atlas: DigitAtlas, device: any MTLDevice, queue: any MTLCommandQueue) -> (any MTLTexture)? {
@@ -218,6 +243,8 @@ nonisolated final class RenderContext: @unchecked Sendable {
         var clear = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 0)
         /// The source photo, drawn over everything but the brush at `uniforms.photo.x`.
         var photo: (any MTLTexture)? = nil
+        /// A mode drawing the painting in place of its own look (`CanvasMode`); nil draws as ever.
+        var mode: (any CanvasMode)? = nil
     }
 
     /// The sheet's pixels in the target (`CanvasUniforms`: canvas units times `transform.z` plus
@@ -235,14 +262,18 @@ nonisolated final class RenderContext: @unchecked Sendable {
 
     /// Encodes one frame: outline coverage (RG16F, max blending), then a single multisampled
     /// pass with paper + shadow, all fills in one indexed draw, the outline composite, the
-    /// numbers, the source photo while it shows and the brush.
+    /// numbers, the source photo while it shows and the brush. A mode (`content.mode`) prepares
+    /// first, draws the paint in place of the fills, may leave out the outlines and the numbers,
+    /// and draws its light before the brush.
     func encode(
         _ commands: any MTLCommandBuffer, scene: CanvasScene, states: any MTLBuffer,
         uniforms: CanvasUniforms, targets: Targets, content: Content
     ) {
         var u = uniforms
         let uniformSize = MemoryLayout<CanvasUniforms>.stride
-        let drawOutlines = content.outlines && scene.segmentCount > 0
+        let mode = content.mode
+        let drawOutlines = content.outlines && scene.segmentCount > 0 && mode?.drawsOutlines != false
+        mode?.prepare(commands, frame: CanvasModeFrame(context: self, scene: scene, states: states, uniforms: u))
 
         if drawOutlines {
             let pass = MTLRenderPassDescriptor()
@@ -290,7 +321,11 @@ nonisolated final class RenderContext: @unchecked Sendable {
         // The paint keeps to the sheet: an area's smoothed edge along the picture's border can bow
         // past it, and the paint showed beyond the sheet's top as a ragged edge (Paul, November 10).
         let sheet = Self.sheetScissor(u)
-        if scene.indexCount > 0, let sheet {
+        if let mode, let sheet {
+            enc.setScissorRect(sheet)
+            mode.drawPaint(enc, frame: CanvasModeFrame(context: self, scene: scene, states: states, uniforms: u))
+            enc.setScissorRect(MTLScissorRect(x: 0, y: 0, width: Int(u.viewport.x), height: Int(u.viewport.y)))
+        } else if scene.indexCount > 0, let sheet {
             enc.setScissorRect(sheet)
             enc.setRenderPipelineState(fillPipeline)
             enc.setVertexBuffer(scene.positions, offset: 0, index: 0)
@@ -316,7 +351,7 @@ nonisolated final class RenderContext: @unchecked Sendable {
             enc.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
         }
 
-        if content.numbers && scene.glyphCount > 0 {
+        if content.numbers && scene.glyphCount > 0 && mode?.drawsNumbers != false {
             enc.setRenderPipelineState(glyphPipeline)
             enc.setVertexBuffer(scene.glyphs, offset: 0, index: 0)
             enc.setVertexBuffer(scene.digitRects, offset: 0, index: 1)
@@ -338,6 +373,8 @@ nonisolated final class RenderContext: @unchecked Sendable {
             enc.setFragmentBytes(&u, length: uniformSize, index: 0)
             enc.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
         }
+
+        mode?.drawOver(enc, frame: CanvasModeFrame(context: self, scene: scene, states: states, uniforms: u))
 
         if content.brush {
             enc.setRenderPipelineState(brushPipeline)

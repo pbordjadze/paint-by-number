@@ -116,6 +116,10 @@ struct EraPassage: View {
     static let hold: TimeInterval = 0.25
     static let lift: TimeInterval = 1.0
     static var total: TimeInterval { wait + cover + hold + lift }
+    /// How far through the way in's cover its bed of the apse's dark is whole, the last courses
+    /// still being set: Paint by Mosaic goes in beneath from then, so the work of the swap is
+    /// over before the tiles lift, as the way back's is (`EraWayBack.swap`).
+    static let bedded = 0.75
 
     /// Whether the passage to `destination` is the way back's own: to Paint by Moonlight from
     /// the mosaic era, with motion. Stained Glass's passages are the nave's, either way, and
@@ -128,6 +132,7 @@ struct EraPassage: View {
     /// over (seconds from its start).
     static func moments(to destination: Era, from origin: Era? = nil, reduceMotion: Bool) -> (covered: TimeInterval, done: TimeInterval) {
         if isWayBack(to: destination, from: origin, reduceMotion: reduceMotion) { return (EraWayBack.swap, EraWayBack.total) }
+        if destination == .byzantium, origin == .moonlight, !reduceMotion { return (wait + cover * bedded, total) }
         return (wait + cover, total)
     }
 
@@ -256,7 +261,7 @@ struct EraPassage: View {
         graphics.blendMode = .destinationOver
         let whole = Path(CGRect(origin: .zero, size: size))
         if t < Self.cover {
-            let front = min(layout.farthest, CGFloat(t / Self.cover / 0.75) * layout.farthest)
+            let front = min(layout.farthest, CGFloat(t / Self.cover / Self.bedded) * layout.farthest)
             let centre = layout.centre
             let bed = Path(ellipseIn: CGRect(x: centre.x - front, y: centre.y - front, width: 2 * front, height: 2 * front))
             graphics.fill(bed, with: .color(apse))

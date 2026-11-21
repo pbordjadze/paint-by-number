@@ -35,11 +35,12 @@
 //       photo's color there; radius a fraction of the photo's long side; a kind pbn doesn't
 //       know is skipped with a warning; stats.json gains `detailRegions`); --line-art sets a
 //       LineArtSettings field and --tuning a PipelineTuning factor by name
-//   pbn glass <photo> <lines.json> --out <dir> [generate options]
+//   pbn glass <photo> <lines.json | suggest> --out <dir> [generate options]
 //       a Stained Glass window (painting-company row 366; GlassWindow.leaded): the photo leaded
 //       by lines.json's {"lines": [[[x, y], ...], ...]} (fractions of the photo's width and
-//       height), each closed piece a region with the glass the photo suggests (GlassPalette).
-//       Writes window.pbnt, glass.json (pieces, glasses, offered, background pieces, valid and
+//       height), each closed piece a region with the glass the photo suggests (GlassPalette);
+//       `suggest` in place of lines.json leads it with the lead the photo suggests
+//       (GlassLeadSuggestion), as the Lead screen starts. Writes window.pbnt, glass.json (pieces, glasses, offered, background pieces, valid and
 //       validation), lit.ppm (every piece in its suggested glass, lead along every boundary) and
 //       unlit.ppm (the window before glazing).
 //   pbn watercolor <photo | template.pbnt> --out <dir> [--seed N] [--spacing S] [--order paint|sweep]

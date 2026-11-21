@@ -26,12 +26,15 @@ nonisolated final class TileSound: @unchecked Sendable {
     private var melody = Melody()
     /// When a tile's note last sounded.
     private var lastPlayed = Date.distantPast
+    /// When the latest sound asked for will have rung out (`restWhenQuiet`).
+    private var quietFrom = Date.distantPast
 
     /// Builds the engine and makes `mode`'s glass notes ahead of the first tile.
     func prepare(mode: Melody.Mode) {
         queue.async { [self] in
             guard start() else { return }
             _ = notes(.glass, mode)
+            restWhenQuiet(after: 0)
         }
     }
 
@@ -49,6 +52,15 @@ nonisolated final class TileSound: @unchecked Sendable {
             let note = melody.next(at: now)
             let volume = Float(0.3 + 0.3 * min(max(size, 0), 1)) * (quick ? 0.7 : 1)
             sound(notes(voice, mode)[note.index], volume: volume)
+        }
+    }
+
+    /// Pauses the engine now: the app left the foreground, where it kept rendering silence
+    /// (Paint by Moonlight's `SoundPlayer.rest`, painting-company row 263). The next sound starts
+    /// it again.
+    func rest() {
+        queue.async { [self] in
+            if engine.isRunning { engine.pause() }
         }
     }
 
@@ -132,11 +144,41 @@ nonisolated final class TileSound: @unchecked Sendable {
         if delay > 0, let node = p.lastRenderTime, let time = p.playerTime(forNodeTime: node) {
             let at = AVAudioTime(sampleTime: time.sampleTime + AVAudioFramePosition(delay * format.sampleRate), atRate: format.sampleRate)
             p.scheduleBuffer(buffer, at: at, options: [], completionHandler: nil)
+        } else if delay > 0 {
+            // An engine just started again after resting has no render time yet: the note waits on
+            // the queue instead, so an arpeggio keeps its rhythm rather than sounding as one chord
+            // (Paint by Moonlight's `SoundPlayer` does the same).
+            let held = Held(buffer: buffer)
+            restWhenQuiet(after: delay)
+            queue.asyncAfter(deadline: .now() + delay) { [self] in
+                sound(held.buffer, volume: volume)
+            }
+            return
         } else {
             p.scheduleBuffer(buffer, at: nil, options: .interrupts, completionHandler: nil)
         }
         if !p.isPlaying { p.play() }
+        restWhenQuiet(after: delay)
     }
+
+    /// Pauses the engine once eight seconds have passed with nothing sounding or asked for, as
+    /// Paint by Moonlight's `SoundPlayer` does: running, it renders silence on the audio thread
+    /// for as long as the mosaic is open. The next sound starts it again.
+    private func restWhenQuiet(after delay: TimeInterval) {
+        // A clink rings out within a second and a half.
+        quietFrom = max(quietFrom, Date.now.addingTimeInterval(delay + 1.5))
+        queue.asyncAfter(deadline: .now() + delay + 1.5 + Self.restAfter + 0.5) { [self] in
+            guard Date.now.timeIntervalSince(quietFrom) >= Self.restAfter, engine.isRunning else { return }
+            engine.pause()
+        }
+    }
+
+    private struct Held: @unchecked Sendable {
+        let buffer: AVAudioPCMBuffer
+    }
+
+    /// Quiet this long, the engine rests.
+    private static let restAfter: TimeInterval = 8
 
     private func buffer(_ samples: [Float]) -> AVAudioPCMBuffer? {
         guard let b = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(samples.count)),

@@ -82,6 +82,10 @@ struct AppShellView: View {
                 } isTargeted: { isDropTargeted = $0 }
                 .overlay { if isDropTargeted { DropHighlight().transition(.opacity) } }
                 .animation(.easeOut(duration: 0.2), value: isDropTargeted)
+                // While Start the Mosaic hands over, under the create flow, the shelf moves nothing
+                // (`shelfIsOutOfSight`). For the shelf alone: set before `navigationDestination`, it
+                // doesn't reach the mosaic's screen, whose own thumbnail fades as ever.
+                .environment(\.shelfIsOutOfSight, handoff.shelfIsOutOfSight)
                 .background { NavigationBarShown() }
                 .navigationTitle("Paint by Mosaic")
                 // At accessibility sizes the count goes with the large title (`toolbar`).

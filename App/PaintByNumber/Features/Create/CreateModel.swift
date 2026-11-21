@@ -707,32 +707,10 @@ final class CreateModel {
     /// with, so its corrections make it again as they do a painting's. Nothing is saved: the
     /// flow is the page's own, no draft's.
     func practice(_ picture: RefinePracticePicture, scene: RefinePracticeScene) {
-        cancelAll()
+        forgetPhoto()
         isPractice = true
-        isDrawing = false
-        isScratch = false
-        homeKey = nil
-        pinOrigins = []
-        photoDefaultTitle = ""
-        titleIsGiven = false
-        blankTitle = ""
-        title = ""
         let photo = scene == .note ? picture.note : picture.evening
         source = Source(image: photo.image, preview: photo.preview, sampleName: nil)
-        preview = nil
-        stats = nil
-        importance = nil
-        lineArtInput = nil
-        draftImage = nil
-        decision = nil
-        suggested = nil
-        settingsOrigin = nil
-        refinements = TemplateRefinements()
-        made = []
-        shownStages = nil
-        loadID += 1
-        forgetEdits()
-        progress = 0
         phase = .loading
         guard let evening = scene.evening else {
             lineArtInput = picture.noteLineArt
@@ -763,20 +741,49 @@ final class CreateModel {
     /// A photo that never arrived (the camera's shot couldn't be read): shown in place of the
     /// preview.
     func fail(_ error: CreateError) {
+        forgetPhoto()
+        phase = .failed(error.localizedDescription)
+    }
+
+    /// Lets go of everything the flow held of its photo, as if it had none: the one place a
+    /// photo's state is reset (`begin`, `practice`, `fail`), so a field added to it is reset by
+    /// all three. Each then sets `phase` and what it knows of the new photo. What holds for every
+    /// photo stays: the sliders (`colorCount`, `detail`, `smoothness`, `lines`; a photo's
+    /// suggestion or draft moves them), `drawingPalette`, `paintsNow` (the page sets it for each
+    /// pick), `changedPaintNames` (a ✎ Change's flow is its painting's alone), and `isAdjusting`
+    /// and `refiningCancelled`, which follow the painter's hands on the sliders and in Refine.
+    private func forgetPhoto() {
         cancelAll()
+        paintingLineArt = nil
+        isPractice = false
+        isDrawing = false
+        isScratch = false
+        resumeKept = nil
+        homeKey = nil
+        pinOrigins = []
+        photoDefaultTitle = ""
+        titleIsGiven = false
+        blankTitle = ""
+        title = ""
+        photoID = UUID()
         source = nil
         preview = nil
         stats = nil
+        importance = nil
+        lineArtInput = nil
+        draftImage = nil
         decision = nil
         suggested = nil
         settingsOrigin = nil
+        paintMix = Self.newPaintMix
+        tuning = Self.newTuning
         refinements = TemplateRefinements()
         made = []
         shownStages = nil
         // A generation still finishing belonged to the photo that is gone.
         loadID += 1
         forgetEdits()
-        phase = .failed(error.localizedDescription)
+        progress = 0
     }
 
     /// `drawing`: the photo is a drawing on paper (`isDrawing`), cleaned on the way in unless
@@ -787,10 +794,11 @@ final class CreateModel {
         lineArt paintings: LineArtSettings? = nil, givenTitle: Bool = false,
         decode: @escaping () async throws -> Decoded
     ) {
-        cancelAll()
+        // Anything typed for the last photo goes, and a new photo's mix and tuning come, unless it
+        // is a draft's (`resume` puts those back).
+        forgetPhoto()
         // A painting's own line art (its ✎ Change), read by the inputs prepared below too.
         paintingLineArt = paintings
-        isPractice = false
         isDrawing = drawing
         isScratch = scratch
         if let set = saved?.settings.drawing?.palette { drawingPalette = set }
@@ -798,39 +806,23 @@ final class CreateModel {
             kept.map { ($0, BaseKey(settings: saved.settings, inputs: saved.refinements.generatorInputs)) }
         }
         homeKey = resumeKept?.key
-        pinOrigins = []
-        // A new photo gets a new default name, and anything typed for the last one goes.
+        // A new photo gets a new default name.
         photoDefaultTitle = defaultTitle
         titleIsGiven = saved.map { $0.givenTitle == true } ?? givenTitle
         // A draft on Blank (or a page from scratch) saved its drawing's name as its default.
         blankTitle = scratch || saved?.refinements.start == .blank ? defaultTitle : Self.scratchTitle()
-        title = saved?.title ?? ""
-        photoID = saved?.photoID ?? UUID()
-        source = nil
-        preview = nil
-        stats = nil
-        importance = nil
-        lineArtInput = nil
-        draftImage = nil
-        decision = nil
-        suggested = nil
-        settingsOrigin = nil
-        // A new photo's mix and tuning, unless it is a draft's (`resume` puts those back).
-        paintMix = Self.newPaintMix
-        tuning = Self.newTuning
-        refinements = saved?.refinements ?? TemplateRefinements()
+        if let saved {
+            title = saved.title
+            photoID = saved.photoID
+            refinements = saved.refinements
+        }
         if scratch { refinements.start = .blank }
-        made = []
-        shownStages = nil
         // What the draft's settings made of the photo itself, which the draft's JPEG of it would
         // not make again: kept for coming back to them too.
         if let resumed = resumeKept {
             remember(resumed.trail.base, settings: resumed.key.settings, refinements: resumed.key.inputs, palette: nil)
         }
-        forgetEdits()
-        progress = 0
         phase = .loading
-        loadID += 1
         let load = loadID
         let preference = paintingLength
         let lineArt = paintingLineArt ?? baseLineArt
@@ -1533,6 +1525,7 @@ final class CreateModel {
         handledEdits = 0
         leftOutEdits = 0
         settledEdits = 0
+        closedShape = nil
         dismissNote()
     }
 

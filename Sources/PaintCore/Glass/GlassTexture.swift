@@ -16,13 +16,17 @@ public struct GlassTexture: Sendable {
     private let depth: [Float]
     /// Per pixel, the grain of unlit glass.
     private let grain: [Float]
+    /// Per pixel, how far it lies from its piece's lead, in pixels (1 on the piece's edge).
+    private let lead: [Float]
     /// The pixels of each piece, piece by piece (`order[start[r]..<start[r + 1]]`).
     private let order: [Int32]
     private let start: [Int]
 
     /// The dark of unlit glass, and how much of its own color shows through it.
     public static let unlitBase = SIMD3<Float>(30, 31, 40) / 255
-    public static let unlitTint: Float = 0.17
+    public static let unlitTint: Float = 0.1
+    /// Light through lit glass deep in its piece, so even a dark glass glows in its middle.
+    public static let warm = SIMD3<Float>(30, 26, 18) / 255
 
     public init(template t: Template) {
         let w = t.width, h = t.height, n = w * h
@@ -96,6 +100,7 @@ public struct GlassTexture: Sendable {
         self.shade = shade
         self.depth = depth
         self.grain = grain
+        lead = d
 
         var count = [Int](repeating: 0, count: pieces + 1)
         for k in label where pieces > 0 { count[k + 1] += 1 }
@@ -113,8 +118,7 @@ public struct GlassTexture: Sendable {
     /// Paints piece `r` in `rgb`, lit (glazed) or not, into `pixels` (RGBA, `width` × `height`).
     public func paint(_ r: Int, rgb: SIMD3<Float>, lit: Bool, into pixels: inout [UInt8]) {
         guard r >= 0, r + 1 < start.count, pixels.count >= width * height * 4 else { return }
-        // Light through the glass, so even a dark glass glows in its middle.
-        let warm = SIMD3<Float>(30, 26, 18) / 255
+        let warm = Self.warm
         let tinted = rgb * Self.unlitTint + Self.unlitBase * (1 - Self.unlitTint)
         pixels.withUnsafeMutableBufferPointer { out in
             for j in start[r]..<start[r + 1] {
@@ -136,6 +140,20 @@ public struct GlassTexture: Sendable {
             paint(r, rgb: colors[r], lit: lit[r], into: &pixels)
         }
         return pixels
+    }
+
+    /// The window's fields for a renderer that paints the glass itself (the canvas's Stained Glass
+    /// look): four floats a pixel, row by row from the top: the distance from the lead in pixels,
+    /// then `shade`, `depth` and `grain` as `paint` uses them.
+    public func fields() -> [Float] {
+        var out = [Float](repeating: 0, count: width * height * 4)
+        for i in 0..<(width * height) {
+            out[i * 4] = lead[i]
+            out[i * 4 + 1] = shade[i]
+            out[i * 4 + 2] = depth[i]
+            out[i * 4 + 3] = grain[i]
+        }
+        return out
     }
 
     private static func byte(_ v: Float) -> UInt8 { UInt8(min(255, max(0, (v * 255).rounded()))) }
