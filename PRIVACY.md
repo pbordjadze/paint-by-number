@@ -87,13 +87,14 @@ the picture instead).
 
 ## Paint Together
 
-**Paint Together** lets you paint a picture with someone on a FaceTime call, through Apple's
-SharePlay. When you start it, the painting you chose (its template, title and paint names, like
-the file Send Template makes, without your photo) goes to the people on the call with
-what is painted so far, and the areas each of you fills go back and forth while you paint. It all
-travels through Apple's SharePlay, between the devices on the call, under Apple's terms: it doesn't pass through us and we never
-see it. The app learns no names, phone numbers or email addresses of the people on the call. When
-the call or Paint Together ends, each of you keeps the painting on your own device.
+**Paint Together** lets you paint a picture with someone on a FaceTime call or in a Messages
+conversation, through Apple's SharePlay. When you start it, the painting you chose (its template,
+title, settings and paint names, like the file Send Template makes, without your photo) goes to
+the others in the session with what is painted so far, and the areas each of you fills go back and
+forth while you paint. It travels through Apple's SharePlay service to the other devices in the
+session, under Apple's terms: it doesn't pass through us and we never see it. The app learns no
+names, phone numbers or email addresses of the people in the session. When Paint Together ends,
+each of you keeps the painting on your own device.
 
 ## Widgets and stickers
 
