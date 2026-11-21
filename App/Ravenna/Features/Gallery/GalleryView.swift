@@ -44,6 +44,10 @@ struct GalleryView: View {
     #if UNRELEASED
     /// The mosaic Set in Stone is open on.
     @State private var settingInStone: SetInStoneRequest?
+    /// Print's preview, up for a card's Print… (painting-company row 330).
+    @State private var printPreview: PrintPreviewRequest?
+    /// The template being read for Print…: one at a time.
+    @State private var printTask: Task<Void, Never>?
     #endif
     /// The top of the pages is in view, where the bar's tips lie.
     @State private var showsTop = true
@@ -119,6 +123,10 @@ struct GalleryView: View {
             SetInStoneSheet(request: request)
                 .pageSizedOnPad()
         }
+        .sheet(item: $printPreview) { request in
+            PrintPreviewSheet(request: request)
+                .pageSizedOnPad()
+        }
         #endif
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
         // The shelf's tips: a visit begins, the library changes under it (its pages come into view,
@@ -127,7 +135,14 @@ struct GalleryView: View {
             PaintTips.desk.enter(.shelf)
             PaintTips.shelfMoment(library)
         }
-        .onDisappear { PaintTips.desk.leave(.shelf) }
+        .onDisappear {
+            PaintTips.desk.leave(.shelf)
+            #if UNRELEASED
+            // A template still being read for Print… has no gallery to show its preview over.
+            printTask?.cancel()
+            printTask = nil
+            #endif
+        }
         .onChange(of: library.tipFacts) { PaintTips.shelfMoment(library) }
         .onChange(of: PaintTips.desk.answers) { PaintTips.shelfMoment(library) }
         .onChange(of: PaintTips.desk.shelfReturns) { PaintTips.shelfMoment(library) }
@@ -327,6 +342,15 @@ struct GalleryView: View {
         } label: {
             Label("Share", systemImage: "square.and.arrow.up")
         }
+        #if UNRELEASED
+        // Print… beside Share, as Paint by Moonlight's card has it (newcomers looked for it here,
+        // never inside Share: painting-company row 240), opening Print's preview on the mosaic's
+        // sheet of tiles. Not offered where the device can't print.
+        if PrintSheet.isAvailable {
+            Button("Print…", systemImage: "printer") { printTemplate(of: artwork) }
+                .accessibilityIdentifier("print-template")
+        }
+        #endif
         Divider()
         // Nothing to clear on a painting nobody has painted on. Red, as in the painting's More
         // menu: it clears the painting.
@@ -354,19 +378,18 @@ struct GalleryView: View {
                 shareTimelapse(artwork)
             }
         }
-        let template = PrintableTemplateFile(
-            store: library.store, artwork: artwork, paper: .default(for: Locale.current.region))
         #if UNRELEASED
-        // Set in Stone takes Print Template…'s place: its full-size pages are in the book
-        // (painting-company row 367). A mosaic sent from elsewhere has no tiles to set.
+        // Set in Stone takes Print Template…'s place (painting-company row 367), and Print…, beside
+        // Share, prints the sheet: one way to print per menu (painting-company
+        // process/design-budget.md). A mosaic sent from elsewhere has no tiles to set.
         if SetInStoneRequest.isAvailable(store: library.store, artwork: artwork) {
             Button(String(localized: "gallery.setInStone", defaultValue: "Set in Stone…", bundle: .ravenna,
                           comment: "A mosaic's Share menu: opens a book for setting the mosaic in real stone, with the stones to buy"),
                    systemImage: "square.grid.3x3.square") { setInStone(artwork) }
-        } else {
-            Button("Print Template…", systemImage: "printer") { share { try await template.export() } }
         }
         #else
+        let template = PrintableTemplateFile(
+            store: library.store, artwork: artwork, paper: .default(for: Locale.current.region))
         Button("Print Template…", systemImage: "printer") { share { try await template.export() } }
         #endif
         // Paint by Moonlight opens it as a new painting, blank, refinements and all; the PDF above
@@ -400,6 +423,23 @@ struct GalleryView: View {
     }
 
     #if UNRELEASED
+    /// Print…: reads the mosaic's template, then opens Print's preview on it. One at a time:
+    /// asked again while a template is being read, it does nothing.
+    private func printTemplate(of artwork: Artwork) {
+        PaintTips.used(.shelfHold)
+        guard printTask == nil else { return }
+        let store = library.store
+        printTask = Task {
+            do {
+                let request = try await PrintPreviewRequest.saved(store: store, artwork: artwork)
+                if !Task.isCancelled { printPreview = request }
+            } catch {
+                Log.library.error("Preparing a template to print failed: \(String(describing: error), privacy: .public)")
+            }
+            if !Task.isCancelled { printTask = nil }
+        }
+    }
+
     private func setInStone(_ artwork: Artwork) {
         PaintTips.used(.shelfHold)
         let store = library.store

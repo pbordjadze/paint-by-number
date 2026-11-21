@@ -20,6 +20,8 @@ import simd
 ///   Gilded Wreath (`PaintingWork`) and still under the name the app gave it: the Finished panel
 ///   with its four doors and the name with its pencil (`FinishedDoors`, SideStore and Debug
 ///   builds; painting-company row 330), ready once their glimpses have had time to draw
+/// - `paint-complete-lines`: the finished mosaic with More › Show Lines on, zoomed 2.5× onto the
+///   middle, the sheet's lines drawn over its tiles (SideStore and Debug builds)
 /// - `paint-mosaic-measure`: a mosaic of about 9,500 tiles (the Pieces slider's top; a jittered
 ///   grid, `measureMosaic`), fitted; once ready, rows are laid for eight seconds while
 ///   `FrameMeter` measures the frames, and its report goes to the log and to
@@ -90,7 +92,8 @@ struct PaintDemoView: View {
                 PaintView(
                     session: demo.session, title: demo.title, onClose: {},
                     onName: demo.unnamed ? {} : nil, isNamed: !demo.unnamed,
-                    initialCamera: demo.camera, fillDurationScale: demo.fillDurationScale, showsPhoto: demo.showsPhoto)
+                    initialCamera: demo.camera, fillDurationScale: demo.fillDurationScale, showsPhoto: demo.showsPhoto,
+                    showsLines: demo.showsLines)
                     .environment(\.paintingWork, demo.work)
                     .environment(\.sourcePhotoLoader, demo.photo.map { name in
                         SourcePhotoLoader(load: { size in await Self.photo(name, maxPixelSize: size) })
@@ -219,6 +222,8 @@ private final class Demo {
     var camera: CanvasCamera?
     var fillDurationScale: Float = 1
     var showsPhoto = false
+    /// `paint-complete-lines`: More › Show Lines on.
+    var showsLines = false
     /// Overrides the system text size (accessibility scenarios).
     var dynamicTypeSize: DynamicTypeSize?
     /// Feedback scenarios: what feedback starts with, and where the painting came from.
@@ -293,6 +298,10 @@ private final class Demo {
             paint(fraction: 1)
             work = PaintingWork(sample: Sample.named("young-woman-gilded-wreath"), makingOf: nil)
             unnamed = true
+        case "paint-complete-lines":
+            paint(fraction: 1)
+            showsLines = true
+            camera = CanvasCamera(zoom: 2.5, center: SIMD2(Float(t.width), Float(t.height)) * 0.5)
         case "paint-finish", "paint-nightfall", "paint-nightfall-dark":
             if scenario.hasPrefix("paint-nightfall") {
                 UserDefaults.ravenna.register(defaults: [SettingsKey.sky: SkySetting.moon.rawValue])
