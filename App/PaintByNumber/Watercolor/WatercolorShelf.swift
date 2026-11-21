@@ -130,7 +130,7 @@ final class WatercolorShelf {
                 }
             }
             let sheet = WatercolorSheet(template: template, seed: log.seed)
-            var sim = WatercolorSim(sheet: sheet)
+            let sim = WatercolorSim(sheet: sheet)
             var restored = false
             if let compressed = sheetData {
                 do {
@@ -142,13 +142,6 @@ final class WatercolorShelf {
                 } catch {
                     Log.library.error("Unreadable watercolor sheet of \(id.uuidString, privacy: .public): replaying its log")
                 }
-            }
-            // The log is written before the sheet: a save cut off between them leaves taps the
-            // sheet never saw, and the log, replayed, is the painting.
-            if restored, let last = log.taps.last, last.step > sim.step {
-                Log.library.error("Watercolor sheet of \(id.uuidString, privacy: .public) older than its log: replaying it")
-                sim = WatercolorSim(sheet: sheet)
-                restored = false
             }
             if !restored && !log.taps.isEmpty { sim.replay(log) }
             let assets = WatercolorAssets.make(template: template, sheet: sheet)
@@ -185,9 +178,11 @@ final class WatercolorShelf {
         do {
             try await Background.run {
                 let dir = store.directory(for: id)
-                try log.encoded().write(to: dir.appending(path: Self.logFile), options: .atomic)
+                // The sheet first: a save cut off between the two leaves a sheet with a tap or two
+                // its log lacks (the picture whole, its record short), never a sheet missing one.
                 let compressed = try (snapshot as NSData).compressed(using: .lzfse) as Data
                 try compressed.write(to: dir.appending(path: Self.sheetFile), options: .atomic)
+                try log.encoded().write(to: dir.appending(path: Self.logFile), options: .atomic)
                 if let png = picture.flatMap(ImageCodec.pngData) { try? store.writeThumbnail(png, for: id) }
                 try store.writeMeta(saved)
             }

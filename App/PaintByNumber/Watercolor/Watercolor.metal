@@ -138,7 +138,10 @@ fragment float4 watercolor_fragment(
         for (int k = 0; k < 4; k++) {
             float2 o = float2(float(k & 1), float(k >> 1));
             float2 c = clamp(g0 + o, float2(0), simSize - 1);
-            uint lab = labels.read(min(uint2((c + 0.5) / simSize * float2(labelSize)), labelSize - 1)).r;
+            // The cell's centre as the sheet reads the template, by one scale on both axes
+            // (the sheet's height is rounded): `WatercolorSheet`'s labels exactly.
+            float2 cellUV = (c + 0.5) / simSize.x * float2(1, u.canvasSize.x / u.canvasSize.y);
+            uint lab = labels.read(min(uint2(cellUV * float2(labelSize)), labelSize - 1)).r;
             float wx = o.x > 0.5 ? fr.x : 1 - fr.x;
             float wy = o.y > 0.5 ? fr.y : 1 - fr.y;
             if (lab == region) {
