@@ -106,13 +106,13 @@ nonisolated enum FormingPlan {
     static var drawIn: Double { 1.4 * StartHandoffPlan.glide }
     /// The soft edge of the drawing as it travels, as a share of the picture's width.
     static let feather = 0.18
-    /// How long the hand-off's lift still waits at `now`, the preview's picture having said its
-    /// lines will be drawn at `done` (`PreviewPictureProbe.formingDone`; seconds on one clock):
-    /// the rest of the drawing, or of the show's fuse (`FormingShow`), and nothing once it is
-    /// done, skipped, or never began. Never longer than the longest either could still take.
-    static func liftWait(until done: Double?, now: Double) -> Double {
-        guard let done else { return 0 }
-        return min(max(done - now, 0), max(drawIn, FormingShow.longestTail))
+    /// How long the hand-off's lift still waits, the preview's lines being drawn `remaining`
+    /// seconds from now (`PreviewPictureProbe.formingDone`; nil: none are coming): the rest of
+    /// the drawing (or of the short Making-of's fuse, which ends as soon), nothing once it is
+    /// done, and never longer than the drawing itself.
+    static func liftWait(remaining: Double?) -> Double {
+        guard let remaining else { return 0 }
+        return min(max(remaining, 0), drawIn)
     }
     /// The photo dries away under the lines into the page: the hand-off's own `settle`, during
     /// its `glide`, so the passage is no longer than the release's.
