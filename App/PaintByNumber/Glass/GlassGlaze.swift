@@ -179,6 +179,14 @@ final class GlassGlazeModel: CanvasTouches {
         }
     }
 
+    /// A whole window back in front stands in the light of the hour it is now, not the one it
+    /// was left in.
+    func refreshLight() {
+        guard isComplete, sunHold == nil, let canvas, !mode.isAnimating(at: canvas.canvasTime) else { return }
+        mode.sun(at: canvas.canvasTime, passes: false, hour: Self.hour())
+        canvas.requestRender()
+    }
+
     /// The hour now on the device's clock, 0…24.
     static func hour(_ date: Date = .now) -> Float {
         let c = Calendar.current.dateComponents([.hour, .minute], from: date)
@@ -241,6 +249,24 @@ final class GlassGlazeModel: CanvasTouches {
         onChange(glazing)
     }
 
+    func canvas(_ canvas: CanvasView, speak region: Int) -> (label: String, value: String) {
+        let glass = region < glazing.glass.count ? Int(glazing.glass[region]) : -1
+        return (String(localized: "glass.piece", defaultValue: "Piece \(region + 1)",
+                       comment: "VoiceOver name of one piece of a stained glass window, by its number"),
+                glass >= 0 && glass < offered.count ? name(of: glass) : String(
+                    localized: "glass.unglazed", defaultValue: "Unglazed",
+                    comment: "VoiceOver value of a piece of stained glass with no glass in it yet"))
+    }
+
+    func canvasSummary(_ canvas: CanvasView) -> (label: String, value: String) {
+        (String(localized: "Window"), progressText)
+    }
+
+    var progressText: String {
+        String(localized: "glass.progress", defaultValue: "Glazed: \(glazedCount) of \(pieces)",
+               comment: "VoiceOver value of a stained glass window: pieces glazed of all its pieces")
+    }
+
     func name(of glass: Int) -> String {
         ColorNameText.title(ColorName(oklab: offered[glass].oklab))
     }
@@ -257,8 +283,6 @@ struct GlassCanvas: UIViewRepresentable {
         view.mode = model.mode
         view.touches = model
         view.backgroundColor = UIColor(GlassPicture.color(GlassPicture.nave, space: .sRGB))
-        // The pieces are VoiceOver's (`GlassGlazeView.pieceElements`), not the canvas's numbers.
-        view.accessibilityElementsHidden = true
         model.reduceMotion = context.environment.accessibilityReduceMotion
         model.canvas = view
         return view
@@ -296,18 +320,8 @@ struct GlassGlazeView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // The canvas offers each piece in view to VoiceOver (`GlassGlazeModel`'s `CanvasTouches`).
             GlassCanvas(model: model)
-                .overlay {
-                    GeometryReader { proxy in
-                        let fit = GlassFit(width: model.template.width, height: model.template.height, in: proxy.size, margin: 28)
-                        Color.clear
-                            .accessibilityElement(children: .contain)
-                            .accessibilityLabel(Text("Window"))
-                            .accessibilityValue(Text(progressText))
-                            .accessibilityChildren { pieceElements(fit: fit) }
-                    }
-                    .allowsHitTesting(false)
-                }
             if showsBeads || voiceOver {
                 beads.transition(.opacity)
             }
@@ -345,7 +359,7 @@ struct GlassGlazeView: View {
             model.soundsReady(true)
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase != .active { model.flush() }
+            if phase == .active { model.refreshLight() } else { model.flush() }
         }
         .onDisappear {
             model.flush()
@@ -370,31 +384,7 @@ struct GlassGlazeView: View {
         withAnimation(reduceMotion ? nil : .easeInOut(duration: duration)) { showsBeads = shown }
     }
 
-    private var progressText: String {
-        String(localized: "glass.progress", defaultValue: "Glazed: \(model.glazedCount) of \(model.pieces)",
-               comment: "VoiceOver value of a stained glass window: pieces glazed of all its pieces")
-    }
-
-    /// One element a piece for VoiceOver, at its number's place: its glass or none, and an
-    /// activation that pours the bead in hand.
-    private func pieceElements(fit: GlassFit) -> some View {
-        ForEach(0..<model.pieces, id: \.self) { r in
-            let at = model.template.labels(ofRegion: r).first.map { CGPoint($0.position).applying(fit.transform) }
-                ?? CGPoint(x: fit.rect.midX, y: fit.rect.midY)
-            let glass = Int(model.glazing.glass[r])
-            Color.clear
-                .frame(width: 44, height: 44)
-                .position(at)
-                .accessibilityElement()
-                .accessibilityLabel(Text(String(localized: "glass.piece", defaultValue: "Piece \(r + 1)",
-                                                comment: "VoiceOver name of one piece of a stained glass window, by its number")))
-                .accessibilityValue(Text(glass >= 0 && glass < model.offered.count ? model.name(of: glass) : String(
-                    localized: "glass.unglazed", defaultValue: "Unglazed",
-                    comment: "VoiceOver value of a piece of stained glass with no glass in it yet")))
-                .accessibilityAddTraits(.isButton)
-                .accessibilityAction { model.glaze(r, animated: false) }
-        }
-    }
+    private var progressText: String { model.progressText }
 
     // MARK: Beads
 

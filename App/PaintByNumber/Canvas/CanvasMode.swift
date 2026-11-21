@@ -48,6 +48,11 @@ nonisolated struct CanvasModeFrame {
 /// in canvas units.
 protocol CanvasTouches: AnyObject {
     func canvas(_ canvas: CanvasView, touched point: SIMD2<Float>, phase: CanvasTouchPhase)
+    /// What VoiceOver says of `region`: the canvas offers each region in view as a button (its
+    /// frames follow the camera), and activating one taps it at its anchor.
+    func canvas(_ canvas: CanvasView, speak region: Int) -> (label: String, value: String)
+    /// The canvas's own VoiceOver label and value while a mode has its touches.
+    func canvasSummary(_ canvas: CanvasView) -> (label: String, value: String)
 }
 
 enum CanvasTouchPhase { case tap, began, moved, ended }

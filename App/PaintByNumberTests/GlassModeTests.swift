@@ -43,12 +43,12 @@ struct GlassModeTests {
                 "a glazed piece shines over its unlit glass")
         #expect(after[Int(elsewhere.x), Int(elsewhere.y)] == before[Int(elsewhere.x), Int(elsewhere.y)],
                 "the other pieces stay as they were")
-        // A pixel on the lead between two pieces is darker than the unlit glass beside it.
+        // A pixel on the lead between two pieces is darker than the glazed glass it holds.
         let edge = try #require((0..<(t.width - 1)).lazy.compactMap { x -> SIMD2<Int>? in
             let y = Int(inside.y)
             return t.regionMap[x, y] != t.regionMap[x + 1, y] ? SIMD2(x, y) : nil
         }.first)
-        #expect(luma(before[edge.x, edge.y]) < luma(before[Int(elsewhere.x), Int(elsewhere.y)]), "the lead is dark")
+        #expect(luma(after[edge.x, edge.y]) + 40 < luma(after[Int(inside.x), Int(inside.y)]), "the lead is dark")
         // The lead is the drawing: the canvas's own outlines and numbers never show.
         let bare = PixelReader(try frame(glazed: true, outlines: false, numbers: false))
         for (x, y) in [(Int(inside.x), Int(inside.y)), (edge.x, edge.y), (Int(elsewhere.x), Int(elsewhere.y))] {

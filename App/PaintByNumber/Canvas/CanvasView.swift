@@ -994,6 +994,7 @@ final class CanvasView: UIView, PaintingCanvas {
         state.mode = value
         renderer.update(region, state)
         requestRender()
+        modeRegionChanged(region)
     }
 
     /// Frames presented so far (diagnostics and tests).
@@ -1880,6 +1881,7 @@ final class CanvasView: UIView, PaintingCanvas {
     /// that says why there are none and carries the actions.
     private func buildAccessibleElements() -> [NSObject] {
         let area = bounds.inset(by: chromeInsets)
+        if let touches { return modeElements(touches, in: area) }
         guard let color = session.selectedColor, area.width >= 44, area.height >= 44 else {
             areaElements = [:]
             return [configuredPlaceholder(frame: area.isEmpty ? bounds : area)]
@@ -1915,6 +1917,55 @@ final class CanvasView: UIView, PaintingCanvas {
         }
         areaElements = elements
         return items
+    }
+
+    /// A mode's regions in view (`CanvasTouches`): every one, whatever its paint, as the mode
+    /// names it, or one element of the whole canvas when none is in view.
+    private func modeElements(_ touches: any CanvasTouches, in area: CGRect) -> [NSObject] {
+        let camera = currentCamera()
+        let inner = area.insetBy(dx: 22, dy: 22)
+        let a = canvasPoint(forView: inner.origin)
+        let b = canvasPoint(forView: CGPoint(x: inner.maxX, y: inner.maxY))
+        let visible = CGRect(x: CGFloat(a.x), y: CGFloat(a.y), width: CGFloat(b.x - a.x), height: CGFloat(b.y - a.y))
+        let regions = inner.width > 0 && inner.height > 0
+            ? CanvasAccessibility.visibleAreas(
+                Array(template.regions.indices), anchors: anchors, visible: visible, center: visibleCenter,
+                rowHeight: Float(44 / camera.zoom))
+            : []
+        guard !regions.isEmpty else {
+            areaElements = [:]
+            let whole = UIAccessibilityElement(accessibilityContainer: self)
+            let summary = touches.canvasSummary(self)
+            whole.accessibilityLabel = summary.label
+            whole.accessibilityValue = summary.value
+            whole.accessibilityFrameInContainerSpace = area.isEmpty ? bounds : area
+            return [whole]
+        }
+        var elements: [Int: CanvasAreaElement] = [:]
+        let items = regions.map { r -> CanvasAreaElement in
+            let element = areaElements[r] ?? CanvasAreaElement(region: r, container: self)
+            let spoken = touches.canvas(self, speak: r)
+            element.accessibilityLabel = spoken.label
+            element.accessibilityValue = spoken.value
+            element.accessibilityHint = nil
+            element.accessibilityTraits = .button
+            element.accessibilityIdentifier = "canvas-area-\(r)"
+            element.accessibilityFrameInContainerSpace = areaFrame(r, zoom: camera.zoom, in: area)
+            element.accessibilityCustomActions = nil
+            element.accessibilityCustomRotors = nil
+            elements[r] = element
+            return element
+        }
+        areaElements = elements
+        return items
+    }
+
+    /// A mode's region spoken anew (its value changed).
+    func modeRegionChanged(_ region: Int) {
+        guard let touches, let element = areaElements[region] else { return }
+        let spoken = touches.canvas(self, speak: region)
+        element.accessibilityLabel = spoken.label
+        element.accessibilityValue = spoken.value
     }
 
     /// A square around the area's number, as big as the number's free space (44–160 pt), cut
@@ -1996,6 +2047,10 @@ final class CanvasView: UIView, PaintingCanvas {
     /// Paints an area for VoiceOver or Switch Control the way a tap on its number would, then
     /// moves focus to the area that took its place in the list.
     func paintForAccessibility(_ region: Int) -> Bool {
+        if let touches {
+            touches.canvas(self, touched: anchors[region], phase: .tap)
+            return true
+        }
         guard let color = session.selectedColor, session.colorOf(region) == color, !session.isPainted(region) else {
             return false
         }

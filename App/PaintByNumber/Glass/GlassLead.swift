@@ -3,6 +3,7 @@ import CoreGraphics
 import Observation
 import PaintCore
 import SwiftUI
+import os
 
 /// Leading a window (painting-company row 366): the photo, dimmed, with the lead it suggests
 /// (`GlassLeadSuggestion`, Paul's pick: a suggested lead you can edit) over it, and the painter's
@@ -39,6 +40,8 @@ final class GlassLeadModel {
     @ObservationIgnored private var leading: GlassWindow.Leading?
     @ObservationIgnored private var queue: Task<Void, Never>?
     @ObservationIgnored private var nextID = 0
+    /// Which `begin` is the latest, so only its end puts the spinner away.
+    @ObservationIgnored private var beginning = 0
     /// Lines taken back before they were laid: their work is skipped, or its result dropped.
     @ObservationIgnored private var withdrawn: Set<Int> = []
 
@@ -60,14 +63,31 @@ final class GlassLeadModel {
         self.start = start
         for line in pending { withdrawn.insert(line.id) }
         pending = []
+        pieces = 1
+        lead = []
+        beginning += 1
+        let beginning = beginning
         isSuggesting = start == .suggested
         enqueue(id: nil) { [photo, width, height] _ in
-            let fresh = start == .suggested
-                ? try GlassWindow.Leading.suggested(photo: photo, width: width, height: height, colorSpace: photo.colorSpace)
-                : try GlassWindow.Leading(photo: photo, width: width, height: height, colorSpace: photo.colorSpace)
-            return (fresh, [])
-        } then: { [weak self] in self?.isSuggesting = false }
+            let blank = { try GlassWindow.Leading(photo: photo, width: width, height: height, colorSpace: photo.colorSpace) }
+            guard start == .suggested else { return (try blank(), []) }
+            do {
+                return (try GlassWindow.Leading.suggested(
+                    photo: photo, width: width, height: height, colorSpace: photo.colorSpace, cancel: .task), [])
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                // No suggestion: the painter leads a blank window rather than one that takes no lead.
+                Log.library.error("No suggested lead: \(String(describing: error), privacy: .public)")
+                return (try blank(), [])
+            }
+        } then: { [weak self] in
+            if self?.beginning == beginning { self?.isSuggesting = false }
+        }
     }
+
+    /// The screen went: the work still queued (a suggestion being made) stops.
+    func stop() { queue?.cancel() }
 
     /// Lays `line` (canvas units), its ends joined within `reach`.
     func add(_ line: [CGPoint], reach: CGFloat) {
@@ -226,18 +246,22 @@ struct GlassLeadView: View {
                 Button("Cancel", action: onCancel)
                     .accessibilityIdentifier("glass-lead-cancel")
             }
-            ToolbarItem(placement: .primaryAction) {
-                Menu {
-                    Picker(selection: Binding(get: { model.start }, set: { model.begin($0) })) {
-                        Text("Suggested Lead").tag(GlassLeadModel.Start.suggested)
-                        Text("Blank").tag(GlassLeadModel.Start.blank)
+            // Until the painter changes the lead, as Edit's Start From: after, a start over would
+            // take what they did with no way back.
+            if !model.canUndo {
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        Picker(selection: Binding(get: { model.start }, set: { if $0 != model.start { model.begin($0) } })) {
+                            Text("Suggested Lead").tag(GlassLeadModel.Start.suggested)
+                            Text("Blank").tag(GlassLeadModel.Start.blank)
+                        } label: {
+                            Text("Start From")
+                        }
                     } label: {
-                        Text("Start From")
+                        SwiftUI.Label("Start From", systemImage: "square.on.square.dashed")
                     }
-                } label: {
-                    SwiftUI.Label("Start From", systemImage: "square.on.square.dashed")
-                }
-                .accessibilityIdentifier("glass-lead-start-from")
+                    .accessibilityIdentifier("glass-lead-start-from")
+            }
             }
             ToolbarItemGroup(placement: .bottomBar) {
                 Button("Undo", systemImage: "arrow.uturn.backward") { model.undo() }
@@ -282,6 +306,7 @@ struct GlassLeadView: View {
                 .accessibilityIdentifier("glass-lead-start")
             }
         }
+        .onDisappear { if !model.isMaking { model.stop() } }
         .onChange(of: model.pieces) { old, new in
             guard new > old else { return }
             AccessibilityNotification.Announcement(piecesText).post()
