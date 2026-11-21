@@ -7,12 +7,17 @@ import os
 /// gallery with nothing in it; `watercolor-paint`, a library picture opened with a few washes
 /// still wet; `watercolor-painted`, the same picture with every area painted and dried;
 /// `watercolor-tour`, the picture painted on screen a wash every 0.4 s, for the frame report
-/// (`WatercolorRenderer.report`, in the log; never screenshotted).
+/// (`WatercolorRenderer.report`, in the log; never screenshotted); `watercolor-making-of`, the
+/// picture's Making Of held mid-flood, its light washes laid and the darks going on.
 @MainActor
 enum WatercolorDemo {
     static let picture = "great-wave"
 
-    static func run(scenario: String?, shelf: WatercolorShelf, path: Binding<[UUID]>) async {
+    /// Seconds into the Making Of that `watercolor-making-of` holds.
+    static let makingOfMoment: Double = 2.2
+
+    static func run(scenario: String?, shelf: WatercolorShelf, path: Binding<[UUID]>,
+                    makingOf: Binding<WatercolorFilm?>) async {
         guard let scenario, scenario.hasPrefix("watercolor-") else { return }
         if scenario == "watercolor-empty" {
             DemoMode.markReady()
@@ -24,6 +29,17 @@ enum WatercolorDemo {
             let (template, settings) = try await WatercolorShelf.template(of: photo, length: .quick)
             let artwork = try await shelf.create(template: template, settings: settings, photo: photo, title: sample.title,
                                                  sampleName: sample.id)
+            if scenario == "watercolor-making-of" {
+                guard let film = await WatercolorFilm.prepare(template: template, seed: WatercolorPainting.seed(of: artwork.id),
+                                                              hold: makingOfMoment)
+                else { return }
+                makingOf.wrappedValue = film
+                Task {
+                    while !film.isHeld { try? await Task.sleep(for: .milliseconds(100)) }
+                    try? await Task.sleep(for: .seconds(0.5))
+                    DemoMode.markReady()
+                }
+            }
             path.wrappedValue = [artwork.id]
         } catch {
             Log.demo.error("Watercolor demo: \(String(describing: error), privacy: .public)")
@@ -32,7 +48,8 @@ enum WatercolorDemo {
 
     /// Paints the demo's painting as the scenario asks, before it shows.
     static func prepare(_ painting: WatercolorPainting) {
-        guard let scenario = DemoMode.scenario, scenario.hasPrefix("watercolor-") else { return }
+        // The Making Of's scenario is ready when its film is (`run`).
+        guard let scenario = DemoMode.scenario, scenario.hasPrefix("watercolor-"), scenario != "watercolor-making-of" else { return }
         let t = painting.template
         let labels = t.labels.sorted { $0.radius > $1.radius }
         var seen = Set<UInt32>()

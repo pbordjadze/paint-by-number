@@ -48,6 +48,10 @@
 //       paint by paint, S seconds apart (0.12), and the sheet drawn as the app draws it
 //       (Watercolor.swift's doc comment): painting.ppm dried, frame-<t>.ppm wet at each time,
 //       watercolor.json (the tap log), and the steps' and the replay's timings printed.
+//       With --making-of [--fps N]: the app's Making Of instead (WatercolorMakingOf), frame-NNNN.ppm
+//       every 1/N second shown (15) until it settles and on through the app's ending,
+//       making-of.csv, and its steps' cost printed;
+//       tools/watercolor_making_of.py makes its contact sheet and film.
 //   pbn drawing <photo.ppm> <outdir> [--palette crayons|pastels|earth|sea|garden] [--paints N]
 //       [--seed N] [--detail F] [--smooth F] [--cleaned]
 //       starts a painting from a drawing (GenerationSettings.drawing): the photo of a line

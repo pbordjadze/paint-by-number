@@ -10,6 +10,7 @@ import PaintCore
 ///
 ///   pbn watercolor <photo | template.pbnt> --out <dir> [--seed N] [--spacing S] [--frames t1,t2,…]
 ///       [generate options]
+///   pbn watercolor <photo | template.pbnt> --out <dir> --making-of [--fps N]   (`runMakingOf`)
 ///
 /// Writes painting.ppm (dried), frame-<t>.ppm for each time asked (seconds from the first tap,
 /// wet), watercolor.json (the tap log) and prints the steps' timings.
@@ -35,6 +36,10 @@ func runWatercolor(_ options: Options) throws {
     let sheet = WatercolorSheet(template: template, seed: seed)
     print(String(format: "sheet %d x %d, %d areas, made in %.0f ms", sheet.width, sheet.height, sheet.regionCount,
                  Date().timeIntervalSince(made) * 1000))
+    if options.watercolorMakingOf {
+        try runMakingOf(template: template, sheet: sheet, fps: options.watercolorFPS ?? 15, out: outDir)
+        return
+    }
     let sim = WatercolorSim(sheet: sheet)
     // Paint by paint, each paint's areas from the top left down.
     let order = template.labels.indices
@@ -84,13 +89,58 @@ func runWatercolor(_ options: Options) throws {
     print(String(format: "replay of the log: %.0f ms", Date().timeIntervalSince(replayed) * 1000))
 }
 
-/// The sheet as the app's shader draws it, at twice the simulation's grid.
-func watercolorRaster(_ sim: WatercolorSim, template t: Template) -> RGBAImage {
+/// The Making Of as the app plays it (`WatercolorMakingOf`): its own simulation stepped to the
+/// step each frame shows, drawn wet every 1/`fps` second shown, the numbers fading as the app's
+/// do, on past the moment it settles for the app's hold and lift (`tail` seconds), as the app
+/// steps on while it ends. Writes making-of.csv (per frame: the step, the share of the sheet wet,
+/// and whether it has settled) and prints the steps' cost: the app makes them off the main
+/// actor as the frames come due.
+func runMakingOf(template: Template, sheet: WatercolorSheet, fps: Double, out: URL, tail: Double = 1.7) throws {
+    let plan = WatercolorMakingOf(template: template, sheet: sheet)
+    let sim = WatercolorSim(sheet: sheet)
+    let fine = WatercolorSheet.paperHeight(width: sheet.width * 2, height: sheet.height * 2, seed: sheet.seed &+ 11)
+    var cursor = 0, frame = 0
+    var stepping: Double = 0, worstFrame: Double = 0
+    var settledAt: Double?
+    var csv = "frame,shown,step,simulated,wet,settled\n"
+    let cells = sheet.width * sheet.height
+    while true {
+        let shown = Double(frame) / fps
+        let t0 = Date()
+        plan.play(sim, to: plan.step(at: shown), cursor: &cursor)
+        let settled = settledAt != nil || plan.isSettled(sim, cursor: cursor)
+        let took = Date().timeIntervalSince(t0)
+        if settledAt == nil {
+            stepping += took
+            worstFrame = max(worstFrame, took)
+        }
+        if settled, settledAt == nil { settledAt = shown }
+        try writePPM(watercolorRaster(sim, template: template, fine: fine, numbers: true, wet: true),
+                     String(format: "frame-%04d.ppm", frame), in: out)
+        var wet = 0
+        for i in 0..<cells where sim.W[i] > 0 { wet += 1 }
+        csv += String(format: "%d,%.3f,%d,%.3f,%.4f,%d\n", frame, shown, sim.step, sim.time, Double(wet) / Double(cells), settled ? 1 : 0)
+        frame += 1
+        if let settledAt, shown >= settledAt + tail { break }
+    }
+    try csv.write(to: out.appendingPathComponent("making-of.csv"), atomically: true, encoding: .utf8)
+    let settledStep = plan.step(at: settledAt ?? 0)
+    print(String(format: "making of: %d taps, settled at %.1f s shown (%d steps, %.1f s simulated); stepping %.0f ms in all, %.2f ms a step, worst frame %.0f ms",
+                 plan.log.taps.count, settledAt ?? 0, settledStep, Double(settledStep) * Double(WatercolorSim.dt),
+                 stepping * 1000, stepping * 1000 / Double(max(settledStep, 1)), worstFrame * 1000))
+}
+
+/// The sheet as the app's shader draws it, at twice the simulation's grid (`fine`: the paper's
+/// fine tooth there, made once for many frames). With `numbers`, a dot of number ink at each
+/// label fading as its area is painted, as the shader's numbers do (the app draws the digits);
+/// with `wet`, the shader's wet paint, darker with a sheen where the water's surface tilts.
+func watercolorRaster(_ sim: WatercolorSim, template t: Template, fine: [Float]? = nil, numbers: Bool = false,
+                      wet: Bool = false) -> RGBAImage {
     let sheet = sim.sheet
     let w = sheet.width, h = sheet.height, W2 = w * 2, H2 = h * 2
     var targets: [(gain: SIMD3<Float>, aim: SIMD3<Float>)] = []
     for r in 0..<sheet.regionCount { targets.append(sim.target(of: r)) }
-    let fine = WatercolorSheet.paperHeight(width: W2, height: H2, seed: sheet.seed &+ 11)
+    let fine = fine ?? WatercolorSheet.paperHeight(width: W2, height: H2, seed: sheet.seed &+ 11)
     var image = RGBAImage(width: W2, height: H2, fill: SIMD4(0, 0, 0, 255))
     func cell(_ x: Int, _ y: Int) -> Int { min(max(y, 0), h - 1) * w + min(max(x, 0), w - 1) }
     let graphite = SIMD3<Float>(0.30, 0.30, 0.33)
@@ -124,6 +174,21 @@ func watercolorRaster(_ sim: WatercolorSim, template t: Template) -> RGBAImage {
             let sy = fine[min(y + 1, H2 - 1) * W2 + x] - fine[max(y - 1, 0) * W2 + x]
             let under = min(max((d.x + d.y + d.z) / 3 / 1.2, 0), 1)
             refl *= min(max(1 + 0.45 * (sx + sy) * (1 - 0.6 * under), 0.85), 1.1)
+            if wet {
+                func water(_ gx: Float, _ gy: Float) -> Float {
+                    let x0 = Int(gx.rounded(.down)), y0 = Int(gy.rounded(.down))
+                    let fx = gx - Float(x0), fy = gy - Float(y0)
+                    return (sim.W[cell(x0, y0)] * (1 - fx) + sim.W[cell(x0 + 1, y0)] * fx) * (1 - fy)
+                        + (sim.W[cell(x0, y0 + 1)] * (1 - fx) + sim.W[cell(x0 + 1, y0 + 1)] * fx) * fy
+                }
+                let wetness = min(max(water(gx, gy) / 0.6, 0), 1)
+                if wetness > 0 {
+                    let wx = water(gx + 2, gy) - water(gx - 2, gy), wy = water(gx, gy + 2) - water(gx, gy - 2)
+                    refl *= 1 - 0.07 * wetness
+                    let spec = pow(min(max(-(wx + wy) * 0.8, 0), 1), 2) * wetness
+                    refl += SIMD3(repeating: 0.12 * spec)
+                }
+            }
             // Pencil where the region changes within a canvas unit.
             let here = t.region(at: canvas), right = t.region(at: canvas + SIMD2(1, 0)), down = t.region(at: canvas + SIMD2(0, 1))
             if here != right || here != down {
@@ -135,6 +200,25 @@ func watercolorRaster(_ sim: WatercolorSim, template t: Template) -> RGBAImage {
             let srgb = ColorScience.p3ToSRGBLinear(p3)
             func byte(_ v: Float) -> UInt8 { UInt8(min(max(ColorScience.encodeSRGB(v), 0), 1) * 255 + 0.5) }
             image[x, y] = SIMD4(byte(srgb.x), byte(srgb.y), byte(srgb.z), 255)
+        }
+    }
+    if numbers {
+        let ink = SIMD3<Float>(0.19, 0.18, 0.2)
+        for label in t.labels {
+            let fade = min(max(1 - (sim.time - sim.paintedAt[Int(label.region)]) / 0.35, 0), 1)
+            guard fade > 0 else { continue }
+            let cx = label.position.x * 2 * sheet.scale, cy = label.position.y * 2 * sheet.scale
+            let rad = max(1.5, min(label.radius * sheet.scale * 0.6, 4))
+            for y in max(0, Int(cy - rad))...min(H2 - 1, Int(cy + rad)) {
+                for x in max(0, Int(cx - rad))...min(W2 - 1, Int(cx + rad)) {
+                    let dx = Float(x) + 0.5 - cx, dy = Float(y) + 0.5 - cy
+                    guard dx * dx + dy * dy <= rad * rad else { continue }
+                    let p = image[x, y]
+                    let old = SIMD3(Float(p.x), Float(p.y), Float(p.z))
+                    let mixed = old + (ink * 255 - old) * (0.8 * fade)
+                    image[x, y] = SIMD4(UInt8(mixed.x), UInt8(mixed.y), UInt8(mixed.z), 255)
+                }
+            }
         }
     }
     return image

@@ -1364,9 +1364,14 @@ tap log, and `watercolor.sheet`, the sim's LZFSE snapshot, so a painting opens w
 drawn in linear Display P3: Beer–Lambert pigment, granulation, paper, wet sheen, pencil and numbers
 that fade as a wash covers them; logs step times to `Log.canvas`), `WatercolorCanvas` (an MTKView
 under a zooming scroll view, paused when nothing is wet), `WatercolorPaintView` (canvas and paint
-box; Reduce Motion settles each wash at once). 1502 opens `Era.watercolor`, whose passage is a
+box; Reduce Motion settles each wash at once), `WatercolorMakingOfView` (the Making Of: a new
+painting painted once by a simulation of its own stepped off the main actor, PaintCore's
+`WatercolorMakingOf` its plan and clock, drawn with the same shader by `WatercolorFilmRenderer`,
+over the painting screen opening beneath; about six seconds, a tap lifts it away; Reduce Motion
+crossfades the finished painting in and out; VoiceOver skips it). 1502 opens `Era.watercolor`, whose passage is a
 wash flooding the screen (`EraPassage.drawWash`). `pbn watercolor` paints a template off the
-device. Demos: `watercolor-empty`, `watercolor-paint`, `watercolor-painted` (`WatercolorDemo`) and
+device. Demos: `watercolor-empty`, `watercolor-paint`, `watercolor-painted`, `watercolor-making-of`
+(held mid-flood) (`WatercolorDemo`) and
 `era-passage-watercolor`.
 
 ## Outside the app: widgets and stickers
