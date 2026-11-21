@@ -14,6 +14,8 @@ public struct BookStrings: Sendable {
     public var glass = "glass"
     public var stone = "glass, or marble to match"
     public var gold = "gold leaf smalti"
+    /// Gold smalti by shade, lightest first: pale, yellow, antique, dark.
+    public var goldShades = ["Pale gold", "Yellow gold", "Antique gold", "Dark gold"]
     public var note = "Codes are Orsoni smalti as Mosaic Workshop sells them, matched to each colour from photos: check them against samples before you order; ≈ marks the nearest where none is close. Counts include 15% spare for breakage."
     /// "S23" as ordered; "≈ S23" for a match that is only near.
     public var code: @Sendable (String, Bool) -> String = { code, near in near ? "≈ Orsoni \(code)" : "Orsoni \(code)" }
@@ -612,6 +614,10 @@ extension StoneBook {
             let kind = r.kind == .gold ? strings.gold : r.kind == .stone ? strings.stone : strings.glass
             if let smalto = r.smalto {
                 c.text(strings.code(smalto.code, r.distance > 0.06), m + 34, y + 5.6, 3.8, 600)
+                let detail = [names[r.paint], kind].compactMap { $0 }.joined(separator: " · ")
+                c.text(detail, m + 34, y + 9.6, 2.6, 400, BookStyle.muted)
+            } else if let shade = r.goldShade, strings.goldShades.indices.contains(shade) {
+                c.text(strings.goldShades[shade], m + 34, y + 5.6, 3.8, 600)
                 let detail = [names[r.paint], kind].compactMap { $0 }.joined(separator: " · ")
                 c.text(detail, m + 34, y + 9.6, 2.6, 400, BookStyle.muted)
             } else {
