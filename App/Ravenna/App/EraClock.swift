@@ -19,6 +19,7 @@ public struct EraClock: View {
     @State private var year: Int
     @State private var settling: Task<Void, Never>?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
     /// The wheel and the rails' gap grow with the numerals' text size.
     /// Tall enough for two years above and below the one read, fading as a system wheel does.
     @ScaledMetric(relativeTo: .title2) private var wheelWidth: CGFloat = 120
@@ -30,6 +31,10 @@ public struct EraClock: View {
     static let rest: Duration = .milliseconds(700)
     /// How long a wheel rests beside an era's year before it is drawn on to it.
     static let pull: Duration = .milliseconds(320)
+    /// The rest with VoiceOver, which steps the wheel a year a swipe and says each: long enough
+    /// to hear a year and swipe on past it. Nothing is pulled then, or a lit year beside the one
+    /// spoken would take the wheel from under the next swipe.
+    static let spokenRest: Duration = .seconds(2)
 
     public init(year: Int, onSettle: @escaping (Int) -> Void) {
         self.onSettle = onSettle
@@ -80,13 +85,13 @@ public struct EraClock: View {
         .onChange(of: year) { _, year in
             settling?.cancel()
             settling = Task {
-                if let era = Self.pulled(from: year) {
+                if !voiceOver, let era = Self.pulled(from: year) {
                     try? await Task.sleep(for: Self.pull)
                     guard !Task.isCancelled else { return }
                     withAnimation(reduceMotion ? nil : .smooth(duration: 0.45)) { self.year = era }
                     return
                 }
-                try? await Task.sleep(for: Self.rest)
+                try? await Task.sleep(for: voiceOver ? Self.spokenRest : Self.rest)
                 guard !Task.isCancelled else { return }
                 onSettle(year)
             }
