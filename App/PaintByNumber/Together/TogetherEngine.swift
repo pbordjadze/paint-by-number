@@ -22,13 +22,19 @@ final class TogetherEngine {
     private var flushing: Task<Void, Never>?
     private let started = ContinuousClock.now
     private let regionCount: Int
+    /// Whether this painter started the session: the areas painted before it began are theirs.
+    private let isHost: Bool
 
     /// `ledger` is the one this painting had earlier in the session (closed and opened again),
     /// so its stamps go on from where they were and the painter's fills don't lose to older ones.
-    init(session: PaintingSession, painter: UInt64, ledger: TogetherLedger? = nil, send: @escaping (Data) -> Void) {
+    init(
+        session: PaintingSession, painter: UInt64, ledger: TogetherLedger? = nil, isHost: Bool = true,
+        send: @escaping (Data) -> Void
+    ) {
         self.painter = painter
         self.session = session
         self.send = send
+        self.isHost = isHost
         regionCount = session.progress.regionCount
         let painted = (0..<session.progress.regionCount).map(session.isPainted)
         if var kept = ledger, kept.regionCount == painted.count, kept.painter == painter {
@@ -41,6 +47,20 @@ final class TogetherEngine {
             self.ledger = TogetherLedger(seeding: painted, painter: painter)
         }
         session.onEvent { [weak self] event in self?.observe(event) }
+        #if UNRELEASED
+        let channel = session.together
+        channel.send = { [weak self] message in self?.send(message.encoded()) }
+        channel.friendsAreas = { [weak self] in self?.friendsAreas ?? [] }
+        #endif
+    }
+
+    /// The areas the friend painted: stamped by them, or painted before the session began on the
+    /// host's side (`TogetherStamp.seed`) when the friend is the host.
+    var friendsAreas: Set<Int> {
+        Set((0..<regionCount).filter { region in
+            guard let by = ledger.paintedBy(region) else { return false }
+            return by == TogetherStamp.seed.painter ? !isHost : by != painter
+        })
     }
 
     /// Says hello: whoever is already there answers with everything painted.
@@ -59,20 +79,51 @@ final class TogetherEngine {
         switch message {
         case .hello:
             sendSnapshot()
+            arrived()
         case let .ops(ops, origin):
             apply(ops, origin: origin)
+            arrived()
         case let .snapshot(ops):
             apply(ops, origin: nil)
+            arrived()
+        #if UNRELEASED
+        case let .presence(point, color):
+            guard let session else { return }
+            session.together.friendMoved(to: point, color: Int(color), paletteCount: session.paletteCount)
+        case let .ripple(point):
+            session?.together.friendRippled(at: point)
+        case let .star(point):
+            session?.together.friendStarred(at: point)
+        #endif
         default:
-            // Presence, ripples, stars and the shared finish come with the next build.
+            // The shared finish is each side's own (both see the last area painted), and a newer
+            // peer's kinds are skipped.
             break
         }
+    }
+
+    /// The friend is here: whatever they sent says so.
+    private func arrived() {
+        #if UNRELEASED
+        session?.together.friendArrived()
+        #endif
+    }
+
+    /// No one else is in the session any more.
+    func friendLeft() {
+        #if UNRELEASED
+        session?.together.friendLeft()
+        #endif
     }
 
     func stop() {
         flushing?.cancel()
         flushing = nil
         flush()
+        #if UNRELEASED
+        session?.together.friendLeft(quietly: true)
+        session?.together.send = nil
+        #endif
     }
 
     private var now: Double {
@@ -111,7 +162,16 @@ final class TogetherEngine {
     private func flush() {
         let ops = batcher.flush(at: now, force: true)
         guard !ops.isEmpty else { return }
-        for message in TogetherMessage.chunked(ops, origin: nil) { send(message.encoded()) }
+        for message in TogetherMessage.chunked(ops, origin: origin) { send(message.encoded()) }
+    }
+
+    /// Where the friend's copy of these fills spreads from: the painter's finger.
+    private var origin: SIMD2<Float>? {
+        #if UNRELEASED
+        session?.together.lastTouch
+        #else
+        nil
+        #endif
     }
 
     private func apply(_ ops: [TogetherOp], origin: SIMD2<Float>?) {

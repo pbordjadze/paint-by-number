@@ -7,8 +7,8 @@ import UIKit
 /// First step of the create flow, the Paint page (painting-company row 239, "Paint Now, through
 /// the Shelf's door"): one shelf of pictures. Tonight's Picture (a library painting, another each
 /// day) large at the top, then Your Own: a photo from the system picker, the camera, a blank page
-/// and, in SideStore and Debug builds, a drawing on paper; then The Library, its paintings
-/// and photographs. A picture picked opens as a painting with no preview step
+/// and, in SideStore and Debug builds, the Museum (`MuseumView`, the open-access catalog); then
+/// The Library, its paintings and photographs. A picture picked opens as a painting with no preview step
 /// (`CreateModel.paintsNow`); a blank page opens the drawing tools (`CreateModel.loadScratch()`).
 ///
 /// No inline photo picker: the Shelf scrolls, and the inline picker scrolls out of process,
@@ -24,6 +24,11 @@ struct PhotoSourceView: View {
     @State private var isShowingCamera = false
     /// Blank Page was tapped before Unlimited Paintings, which the drawing tools come with, was bought.
     @State private var offersRefineUnlock = false
+    #if UNRELEASED
+    @State private var isShowingMuseum = false
+    /// The work the Museum handed over, loaded once its cover has gone.
+    @State private var museumPick: (data: Data, title: String)?
+    #endif
     @Environment(UnlimitedPaintings.self) private var paintings
     @State private var width: CGFloat = 0
     @State private var height: CGFloat = 0
@@ -104,6 +109,24 @@ struct PhotoSourceView: View {
             }
             .ignoresSafeArea()
         }
+        #if UNRELEASED
+        .fullScreenCover(isPresented: $isShowingMuseum, onDismiss: paintMuseumPick) {
+            MuseumView { data, title in
+                museumPick = (data, title)
+                isShowingMuseum = false
+            } onClose: {
+                isShowingMuseum = false
+            }
+        }
+        #if DEBUG
+        .onAppear {
+            if ShellDemo.current == .museum, !Self.demoOpenedMuseum {
+                Self.demoOpenedMuseum = true
+                isShowingMuseum = true
+            }
+        }
+        #endif
+        #endif
     }
 
     // MARK: The shelf
@@ -147,6 +170,13 @@ struct PhotoSourceView: View {
                 .accessibilityHint(Text("Draw your own picture on a blank page"))
                 .accessibilityValue(paintings.locksRefine ? Text("Comes with Unlimited Paintings") : Text(verbatim: ""))
                 .accessibilityIdentifier("from-scratch")
+                #if UNRELEASED
+                Button { isShowingMuseum = true } label: {
+                    OwnTile(title: Text("Museum"), systemImage: "building.columns")
+                }
+                .accessibilityHint(Text("Browse thousands of artworks to paint"))
+                .accessibilityIdentifier("museum")
+                #endif
             }
             .buttonStyle(PressableCardStyle())
         }
@@ -215,6 +245,23 @@ struct PhotoSourceView: View {
         model.load(sample: sample)
         onPicked()
     }
+
+    #if UNRELEASED
+    #if DEBUG
+    /// The `museum` scenarios open the Museum once, not again as the page comes back.
+    private static var demoOpenedMuseum = false
+    #endif
+
+    /// A work from the Museum, painted as a picked photo is, named after the work.
+    private func paintMuseumPick() {
+        guard let pick = museumPick else { return }
+        museumPick = nil
+        PaintTips.photoChosen()
+        model.paintsNow = true
+        model.load(imageData: pick.data, title: pick.title)
+        onPicked()
+    }
+    #endif
 
     /// The full picker, for a photo.
     private func browseAll() {
