@@ -101,6 +101,8 @@ final class CaveRenderer {
     private let relief: any MTLTexture
     private let rock: any MTLTexture
     private let pigment: any MTLTexture
+    /// The year wheel cut into the rock under the mouth (`CaveFossils.carving`).
+    private let carving: any MTLTexture
     private let spriteBuffers: [any MTLBuffer]
     private var frame = 0
     private let inFlight = DispatchSemaphore(value: CaveRenderer.framesInFlight)
@@ -120,6 +122,11 @@ final class CaveRenderer {
         relief = try texture(.r16Float, width: CaveWall.mapWidth * slots, height: CaveWall.mapHeight)
         rock = try texture(.rgba8Unorm, width: CaveWall.mapWidth * slots, height: CaveWall.mapHeight)
         pigment = try texture(.rgba8Unorm, width: CavePigmentLayer.width * slots, height: CavePigmentLayer.height)
+        let cut = CaveFossils.carving()
+        carving = try texture(.r8Unorm, width: cut.width, height: cut.height)
+        cut.bytes.withUnsafeBytes { raw in
+            carving.replace(region: MTLRegionMake2D(0, 0, cut.width, cut.height), mipmapLevel: 0, withBytes: raw.baseAddress!, bytesPerRow: cut.width)
+        }
         var buffers: [any MTLBuffer] = []
         for _ in 0..<Self.framesInFlight {
             guard let b = context.device.makeBuffer(length: MemoryLayout<CaveSprite>.stride * Self.maxSprites, options: .storageModeShared)
@@ -187,6 +194,7 @@ final class CaveRenderer {
         encoder.setFragmentTexture(relief, index: 0)
         encoder.setFragmentTexture(rock, index: 1)
         encoder.setFragmentTexture(pigment, index: 2)
+        encoder.setFragmentTexture(carving, index: 3)
         encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
         let count = min(sprites.count, Self.maxSprites)
         if count > 0 {
