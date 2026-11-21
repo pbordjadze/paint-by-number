@@ -10,6 +10,8 @@ workers_dev = true
 [vars]
 # The private repository the reports go to.
 FEEDBACK_REPO = "pbordjadze/paint-feedback"
+# Tonight's Picture's schedule, which says which ballots are open (votes.js).
+NIGHTS_URL = "https://raw.githubusercontent.com/pbordjadze/paint-by-number/nights/nights.json"
 
 # A flood brake per IP address: a limiter's period is 10 or 60 seconds, so this is 3 a minute, not
 # a limit per hour. Counted per Cloudflare location, approximately.
@@ -31,6 +33,26 @@ namespace_id = "3142"
   [ratelimits.simple]
   limit = 10
   period = 60
+
+# Votes for a coming night's picture (votes.js): 6 a minute an address, a flood brake only, since
+# the app keeps one vote a ballot itself.
+[[ratelimits]]
+name = "VOTE_LIMITER"
+namespace_id = "3143"
+
+  [ratelimits.simple]
+  limit = 6
+  period = 60
+
+# Each night's ballot counts in a Durable Object of its own (votes.js, Ballot), on SQLite storage,
+# which the free plan offers.
+[[durable_objects.bindings]]
+name = "BALLOTS"
+class_name = "Ballot"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Ballot"]
 
 # Only what the worker logs itself (errors), not every request.
 [observability]

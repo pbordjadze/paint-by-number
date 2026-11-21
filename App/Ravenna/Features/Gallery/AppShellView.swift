@@ -82,6 +82,7 @@ struct AppShellView: View {
                 } isTargeted: { isDropTargeted = $0 }
                 .overlay { if isDropTargeted { DropHighlight().transition(.opacity) } }
                 .animation(.easeOut(duration: 0.2), value: isDropTargeted)
+                .background { NavigationBarShown() }
                 .navigationTitle("Paint by Mosaic")
                 // At accessibility sizes the count goes with the large title (`toolbar`).
                 .navigationSubtitle(dynamicTypeSize.isAccessibilitySize ? "" : subtitle)
@@ -454,5 +455,28 @@ private struct DropHighlight: View {
             }
             .padding(16)
             .allowsHitTesting(false)
+    }
+}
+
+/// A painting swiped back while its zoom in was still running left the gallery's bar see-through:
+/// the push fades the bar out (the painting hides it), the swipe turns the push round, and nothing
+/// fades it back in. The gallery then had no Settings or +, and its large title sat over the first
+/// row until another painting closed (the look of painting-company row 324, but staying). The
+/// gallery shows the bar again each time it appears.
+private struct NavigationBarShown: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> Controller { Controller() }
+    func updateUIViewController(_ controller: Controller, context: Context) {}
+
+    final class Controller: UIViewController {
+        override func viewDidAppear(_ animated: Bool) {
+            super.viewDidAppear(animated)
+            // Only with the gallery on top: a painting pushed as the gallery first appears (one
+            // reopened at launch) fades the bar out itself.
+            guard let navigation = navigationController, navigation.viewControllers.count == 1 else { return }
+            let bar = navigation.navigationBar
+            guard bar.alpha < 1 else { return }
+            Log.library.notice("The gallery's bar came back see-through (alpha \(bar.alpha, privacy: .public)): shown")
+            bar.alpha = 1
+        }
     }
 }

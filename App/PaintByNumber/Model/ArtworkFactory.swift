@@ -174,7 +174,12 @@ nonisolated enum ArtworkFactory {
     }
 
     private static func sampleURL(of artwork: Artwork) -> URL? {
-        artwork.sampleName.flatMap(Sample.named)?.url
+        guard let sample = artwork.sampleName.flatMap(Sample.named) else { return nil }
+        #if UNRELEASED
+        // A night's thumbnail is no picture to make a painting from.
+        if sample.isThumbnailOnly { return nil }
+        #endif
+        return sample.url
     }
 
     /// Progress with `fraction` of the regions painted the way people paint: color by

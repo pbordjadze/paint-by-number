@@ -77,6 +77,10 @@ public struct StoneBook: Sendable {
         /// The nearest smalto in `Smalti.orsoni`, and how far it is (ΔE, OKLab).
         public var smalto: Smalti.Entry?
         public var distance: Double
+        /// A gold's name among the book's golds: gold leaf smalti have no codes, so the list names
+        /// them by shade beside a swatch of each, 0 to 3 `BookStrings.goldShades` (lightest first);
+        /// a book with more than four golds numbers them instead, 4 being the lightest's 1.
+        public var goldShade: Int? = nil
     }
 
     // The book's measures.
@@ -350,6 +354,13 @@ public struct StoneBook: Sendable {
                              areaCM2: cm2, kilograms: cm2 / 1e4 * StoneBook.kilogramsPerM2 * (1 + StoneBook.spare),
                              kind: kind, smalto: match?.entry, distance: match?.distance ?? 0))
         }
+        // golds named lightest to darkest, so no two on a list share a name
+        let golds = out.indices.filter { out[$0].kind == .gold }
+            .map { ($0, StoneBook.oklab(palette[out[$0].paint]).x) }
+            .sorted { $0.1 != $1.1 ? $0.1 > $1.1 : $0.0 < $1.0 }.map(\.0)
+        let shades = golds.count <= 1 ? [1] : golds.count == 2 ? [1, 2] : golds.count == 3 ? [0, 1, 2] : golds.count == 4 ? [0, 1, 2, 3]
+            : Array(4..<(4 + golds.count))
+        for (rank, i) in golds.enumerated() { out[i].goldShade = shades[rank] }
         return out
     }
 
