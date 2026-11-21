@@ -38,7 +38,8 @@ HTTP.
   which you used.
   What earlier sessions learned about this setup (in every app):
   - `inspect_screen` bounds are points; the screenshot is scaled (the root element's bounds give
-    the screen in points). A `point` is whole percentages (`"52%,38%"`; `"30.7%"` is refused) or
+    the screen in points). `take_screenshot` returns the screen scaled down (to about 1500 px);
+    evidence at full device pixels comes from `takeScreenshot` in a flow (below). A `point` is whole percentages (`"52%,38%"`; `"30.7%"` is refused) or
     absolute points (`"317,547"`).
   - While a popover (a tip) is showing, `inspect_screen` lists only the popover: close it with its
     Close button first. Tips also go away on their own, so look again right before acting.
@@ -157,7 +158,10 @@ Report these only if they look wrong in another way:
   gallery instead (its log says the reopen "never settled").
 - The log line "Hand-off: the painting never drew; the cover fades away" means the new painting
   took over 2.5 s to draw, usual on this runner; judge the screen.
-- The release build has no Refine (the debug build does): it is left out of the first release.
+- Neither build can buy Unlimited Paintings here: no StoreKit test configuration is installed, so
+  the store finds no product (no price, Buy does nothing useful). Judge the paywall's look and
+  words, not a purchase. Refine ships in both builds; the release build locks it behind the
+  purchase, the debug build leaves it open.
 - In Refine (debug build): a touch held on the picture picks the photo's color, not the cell's
   paint, where the photo shows more than the paint (Photo on, Paint under half its opacity), as
   the Eyedropper does. A paint that Make Cell, the Eraser or the Line Eraser takes every area
