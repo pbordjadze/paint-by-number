@@ -11,6 +11,7 @@ struct AppShellView: View {
     @Environment(Library.self) private var library
     @Environment(UnlimitedPaintings.self) private var paintings
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.scenePhase) private var scenePhase
     /// The search field has the keyboard (⌘F, `GalleryCommands`).
     @FocusState private var isSearchFocused: Bool
     @Namespace private var zoom
@@ -177,6 +178,13 @@ struct AppShellView: View {
         .modifier(OutsideComings(library: library, open: path.last))
         .onChange(of: library.placeholders.isEmpty) { presentIncomingImage() }
         .task { await TogetherLink.shared.listen() }
+        #if UNRELEASED
+        // Tonight's Picture's schedule from the museums, at launch and each time the app comes back
+        // (`Nights.refresh`: quiet offline, and never in Debug without `-nightsNetwork YES`).
+        .onChange(of: scenePhase, initial: true) { _, phase in
+            if phase == .active { Task { await Nights.shared.refresh() } }
+        }
+        #endif
         // Someone started painting a picture together: it is added as a painting they sent and
         // opens straight away, as an opened `.moonlight` file does.
         .onChange(of: TogetherLink.shared.arrived?.data) { _, data in

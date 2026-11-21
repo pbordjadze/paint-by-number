@@ -9,6 +9,9 @@
 //     bundle   the zip FeedbackPackage writes (checked by `PK\x03\x04`)
 //   and the header X-Moonlight-App, the app's version and build.
 //
+// It also counts the painters' votes for a coming night's picture (POST /v1/votes, GET
+// /v1/ballots/<date>): votes.js, whose header is that part's manual.
+//
 // It commits the three files to refs/heads/main of the repository named by the variable
 // FEEDBACK_REPO, in one commit made with the Git Data API (blobs, tree, commit, ref), under
 //   reports/<yyyy-mm-dd>/<HHMMSS>-<6 hex>/   (UTC; the picture and the bundle keep their names,
@@ -40,6 +43,10 @@
 
 import { Buffer } from "node:buffer";
 
+import { handleVotes, routesVotes } from "./votes.js";
+
+export { Ballot } from "./votes.js";
+
 const PATH = "/v1/feedback";
 const BRANCH = "main";
 const MAX_BODY = 30 * 1024 * 1024;
@@ -66,6 +73,7 @@ export default {
  */
 export async function handle(request, env, deps = {}) {
   const url = new URL(request.url);
+  if (routesVotes(url.pathname)) return handleVotes(request, env, deps);
   if (url.pathname !== PATH) return reject(404);
   if (request.method !== "POST") return reject(405, { allow: "POST" });
   if (!configured(env)) {

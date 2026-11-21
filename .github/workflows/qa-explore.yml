@@ -146,6 +146,15 @@ jobs:
           echo "WORK=$WORK" >> "$GITHUB_ENV"
           echo "TOOLS=$RUNNER_TEMP/qa-tools" >> "$GITHUB_ENV"
           echo "$MODE on $DEVICE for $MINUTES min (agent: $MODEL, $TURNS turns, \$$BUDGET)"
+      - name: Clear the earlier attempt's results
+        # A re-run keeps the run id, so refs/qa-runs/<run id> still holds the earlier attempt's
+        # hello, results and STATUS.md, which `qa.py send` would read as this attempt's.
+        if: github.run_attempt > 1
+        env:
+          QA_PUSH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/qa-empty"
+          python3 -I "$TOOLS/qa.py" publish "$RUNNER_TEMP/qa-empty" "refs/qa-runs/$GITHUB_RUN_ID" "QA explore $GITHUB_RUN_ID: attempt $GITHUB_RUN_ATTEMPT starting"
       - name: Start simulator
         id: sim
         run: |

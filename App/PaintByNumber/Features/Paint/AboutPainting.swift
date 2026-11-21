@@ -24,8 +24,24 @@ nonisolated struct OriginalWork: Identifiable, Hashable, Sendable {
     /// The work behind the library picture a painting was made from (`Artwork.sampleName`); nil
     /// for a painter's own photo, and for a picture the library no longer offers.
     static func of(_ sampleName: String?) -> OriginalWork? {
-        sampleName.flatMap { all[$0] }
+        guard let sampleName else { return nil }
+        #if UNRELEASED
+        if all[sampleName] == nil { return night(sampleName) }
+        #endif
+        return all[sampleName]
     }
+
+    #if UNRELEASED
+    /// A night's picture from the museums, while the schedule still holds its record (`Nights`:
+    /// the last month's nights).
+    private static func night(_ id: String) -> OriginalWork? {
+        guard let picture = Nights.shared.schedule?.pictures[id], let sample = Nights.shared.sample(id),
+              let provenance = sample.provenance, let source = link(picture.source) else { return nil }
+        return OriginalWork(
+            sample: sample, provenance: provenance, source: source, medium: sentence(picture.medium),
+            place: text(picture.place), wikipedia: nil)
+    }
+    #endif
 
     /// The library's works, by picture id.
     static let all: [String: OriginalWork] = {

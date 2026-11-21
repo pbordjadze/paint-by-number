@@ -1,0 +1,49 @@
+name: Nights
+
+# Tonight's Picture's schedule (painting-company row 368): tools/nights/publish.py closes the ballot
+# for tomorrow night with the relay's tally, opens the next, and lays out nights.json and the
+# pictures the app downloads on the `nights` branch, which it rewrites as one orphan commit each run
+# (ci.yml ignores the branch; nothing else pushes it). Daily just after the ballots close at 08:00
+# UTC, and on request (Actions › Nights › Run workflow). publish.py's docstring is the manual.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '7 8 * * *'
+    - cron: '7 14 * * *'
+
+concurrency:
+  group: nights
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - name: The branch as it stands
+        run: |
+          git fetch --depth=1 origin nights:refs/remotes/origin/nights 2>/dev/null || true
+          mkdir -p "$RUNNER_TEMP/state"
+          if git rev-parse --verify -q refs/remotes/origin/nights >/dev/null; then
+            git archive refs/remotes/origin/nights | tar -x -C "$RUNNER_TEMP/state"
+          fi
+      - name: Publish
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet pillow
+          "$RUNNER_TEMP/venv/bin/python" tools/nights/publish.py "$RUNNER_TEMP/state" \
+            --relay https://moonlight-feedback.paul-bordjadze.workers.dev
+      - name: Push
+        working-directory: ${{ runner.temp }}/state
+        run: |
+          git init --quiet -b nights
+          git add -A
+          git -c user.name="Nights" -c user.email="actions@users.noreply.github.com" \
+            commit --quiet -m "Nights $(TZ=America/New_York date '+%Y-%m-%d %H:%M ET')"
+          git push --force --quiet "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" nights:nights
