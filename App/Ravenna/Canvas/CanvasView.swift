@@ -220,6 +220,9 @@ final class CanvasView: UIView, PaintingCanvas {
     private static let finishPause: Float = 0.35
     private static let finishFlight: CFTimeInterval = 0.8
     private static let finishFitSlack: CGFloat = 0.05
+    /// A zoom this close to the fit counts as fitted when the canvas's room changes
+    /// (`layoutSubviews`): the band `finish` leaves a mosaic in as showing all of it.
+    private static var fittedSlack: CGFloat { finishFitSlack }
 
     private struct Camera: Equatable {
         var zoom: CGFloat
@@ -471,29 +474,39 @@ final class CanvasView: UIView, PaintingCanvas {
         if contentScaleFactor != scale { contentScaleFactor = scale }
         let drawable = CGSize(width: (bounds.width * scale).rounded(), height: (bounds.height * scale).rounded())
         if metalLayer.drawableSize != drawable { metalLayer.drawableSize = drawable }
+        // Where the camera looked, read before the scroll view takes the new size: grown, it pulls
+        // its offset in to its new bounds, and the place was lost (Paint by Moonlight's
+        // `DuoLayoutTests` caught it 70 canvas units off).
+        let roomChanged = bounds.size != laidOutSize || chromeInsets != laidOutInsets
+        let old = CGRect(origin: .zero, size: laidOutSize).inset(by: laidOutInsets)
+        let lookedAt = roomChanged && laidOutSize != .zero ? canvasPoint(forView: CGPoint(x: old.midX, y: old.midY)) : nil
         if scrollView.frame != bounds { scrollView.frame = bounds }
         guard bounds.width > 1, bounds.height > 1 else { return }
-        guard bounds.size != laidOutSize || chromeInsets != laidOutInsets else { return }
+        guard roomChanged else { return }
 
-        // Keep looking at the same place across rotation / chrome changes.
-        let relative: CGFloat
+        // Keep looking at the same place across a rotation or a chrome change: a mosaic that was
+        // fitted fits its new room, and one zoomed in keeps its scale (the tiles under the finger
+        // stay their size, the new room showing more or less around them), centered where it was
+        // (Paint by Moonlight's, painting-company row 212, ported for row 330).
+        let zoom: (_ fit: CGFloat) -> CGFloat
         let center: SIMD2<Float>
-        if laidOutSize != .zero {
-            relative = scrollView.zoomScale / fitZoom
-            let old = CGRect(origin: .zero, size: laidOutSize).inset(by: laidOutInsets)
-            center = canvasPoint(forView: CGPoint(x: old.midX, y: old.midY))
+        if let lookedAt {
+            let scale = scrollView.zoomScale
+            let fitted = abs(scale / fitZoom - 1) <= Self.fittedSlack
+            zoom = { fit in fitted ? fit : scale }
+            center = lookedAt
         } else if let initial = initialCamera {
-            relative = initial.zoom
+            zoom = { fit in fit * initial.zoom }
             center = initial.center
         } else {
-            relative = 1
+            zoom = { fit in fit }
             center = SIMD2(Float(template.width), Float(template.height)) / 2
         }
         laidOutSize = bounds.size
         laidOutInsets = chromeInsets
         updateZoomLimits()
         restrictNavigationToFingers()
-        let z = clampZoom(fitZoom * relative)
+        let z = clampZoom(zoom(fitZoom))
         let flight = cameraAnimation
         cameraAnimation = nil
         apply(zoom: z, offset: offset(centering: center, zoom: z))
