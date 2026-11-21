@@ -793,7 +793,14 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   with the palette staying (the tools are full screen), one undo across paint and edits, the
   preview's sliders on this path, and a refined painting's kept base (its first ✎ makes the
   base again). Demos opening on a preview, drafts and drawings resumed keep the preview.
-  `PaintNowTests`.
+  `PaintNowTests`. In SideStore and Debug builds (`#if UNRELEASED`, painting-company row 361) Tonight's
+  Picture is made before it is picked (`TonightAhead`): 3 s after the app settles with no painting open
+  (`TonightAhead.Preparing` on `AppShellView`; never in demo or test launches), at background priority,
+  `CreateModel.makeAhead` decodes, analyzes, suggests and makes its base as the pick would, kept in
+  memory under its `Key` (picture and file, Painting Length, line art, tuning, mix, candidates, pipeline
+  version); `load(sample:)` takes it on an exact match (`begin` uses it, `adopt` lays the base with no
+  draft first, so the forming lines draw at once) and otherwise makes it as ever, stopping the making
+  ahead. A painting opened stops it, a memory warning lets it go. `TonightAheadTests`.
 - **The picture forming** (SideStore and Debug builds, `#if UNRELEASED`; painting-company row 293;
   `FormingPlan`, `Features/Create/Forming.swift`): a picture picked on the Paint page waits as its
   photo alone, with no draft, painted picture or divider over it (`CompareView` with no `after`),
