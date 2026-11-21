@@ -956,7 +956,9 @@ private struct ProgressGroup: View {
                     .fixedSize()
             }
             if showsPercent {
-                Text(Double(percent) / 100, format: .percent.precision(.fractionLength(0)))
+                // Formatted here: a `Text` with a format resolves through an attributed string,
+                // whose attribute scopes Foundation loads on its first change, under the first fill.
+                Text(verbatim: (Double(percent) / 100).formatted(.percent.precision(.fractionLength(0))))
                     .font(.subheadline.weight(.semibold))
                     .monospacedDigit()
                     .foregroundStyle(showsTitle ? Color.secondary : Color.primary)
