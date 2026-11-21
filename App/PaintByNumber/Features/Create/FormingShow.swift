@@ -554,7 +554,7 @@ struct FormingPageStars: View {
     @State private var arrivals: [(point: CGPoint, radius: CGFloat, arrival: Double)] = []
 
     var body: some View {
-        let arrivals = arrivals, gold = Color(.sRGB, red: FormingShow.goldRGB.x, green: FormingShow.goldRGB.y, blue: FormingShow.goldRGB.z)
+        let shownArrivals = arrivals, gold = Color(.sRGB, red: FormingShow.goldRGB.x, green: FormingShow.goldRGB.y, blue: FormingShow.goldRGB.z)
         TimelineView(.animation(paused: isOver || held != nil)) { context in
             let progress = held ?? frontProgress(at: isOver ? .distantFuture : context.date)
             ZStack(alignment: .topLeading) {
@@ -567,7 +567,7 @@ struct FormingPageStars: View {
                     }
                 if progress < 1 + FormingShow.Stars.life {
                     Canvas { context, _ in
-                        FormingShow.Stars.draw(arrivals, in: &context, progress: progress, color: gold)
+                        FormingShow.Stars.draw(shownArrivals, in: &context, progress: progress, color: gold)
                     }
                     .frame(width: size.width, height: size.height)
                 }

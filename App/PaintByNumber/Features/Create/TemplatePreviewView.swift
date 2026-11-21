@@ -1405,7 +1405,7 @@ final class PreviewPictureProbe {
     func formingDrawn() async {
         let wait = FormingPlan.liftWait(remaining: formingDone.map { Self.seconds($0 - ContinuousClock.now) })
         guard wait > 0 else { return }
-        let sleep = Task { try? await Task.sleep(for: .seconds(wait)) }
+        let sleep = Task { _ = try? await Task.sleep(for: .seconds(wait)) }
         waiting = sleep
         await sleep.value
         waiting = nil
