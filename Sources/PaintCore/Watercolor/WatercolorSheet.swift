@@ -31,7 +31,7 @@ public struct WatercolorSheet: Sendable {
     public let encoded: [SIMD3<Float>]
     /// Each region's wash group (`washGroups`): neighbours a painter would lay as one wash.
     public let group: [Int32]
-    /// Regions no more than about three cells across anywhere (a trim, a rail, a sliver of
+    /// Regions no more than about four cells across anywhere (a trim, a rail, a sliver of
     /// leaves): too narrow to hold a wash of their own on the grid, where each became a blocky
     /// line. They don't stop their neighbours' water, and their paint is laid as a glaze where
     /// they are drawn, at the template's own resolution (`WatercolorSim.glaze(of:)`).
@@ -119,7 +119,7 @@ public struct WatercolorSheet: Sendable {
         thin = Self.thinRegions(labels: labels, width: w, height: h, count: regionCount)
     }
 
-    /// A region is thin when none of its cells lies more than a cell from its edge.
+    /// A region is thin when none of its cells lies more than a cell and a half from its edge.
     static func thinRegions(labels: [Int32], width w: Int, height h: Int, count: Int) -> [Bool] {
         var edge = [Bool](repeating: false, count: w * h)
         for y in 0..<h {
@@ -132,7 +132,7 @@ public struct WatercolorSheet: Sendable {
         let inside = WatercolorSim.chamfer(seeds: edge, width: w, height: h)
         var deepest = [Float](repeating: -1, count: count)
         for (i, r) in labels.enumerated() { deepest[Int(r)] = max(deepest[Int(r)], inside[i]) }
-        return deepest.map { $0 >= 0 && $0 <= 1 }
+        return deepest.map { $0 >= 0 && $0 <= 1.5 }
     }
 
     /// The region of a canvas point, nil off the sheet.

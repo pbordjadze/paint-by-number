@@ -217,7 +217,7 @@ public final class WatercolorSim {
         var ownCount = 0
         let kin = sheet.group[r]
         for j in 0..<n {
-            if !own[j], !creep[j], out[j] <= 3.5, sheet.group[Int(sheet.labels[global(j)])] == kin { soften[j] = true }
+            if !own[j], !creep[j], out[j] <= 1.5, sheet.group[Int(sheet.labels[global(j)])] == kin { soften[j] = true }
             mask[j] = own[j] || creep[j] || soften[j]
             if own[j] { ownCount += 1 }
         }
@@ -296,11 +296,8 @@ public final class WatercolorSim {
         // open for its neighbours to run into. A ring is an accent of a broad, light wash: a
         // small area or a dark paint dries with a faint edge, so a busy picture isn't a field of
         // ringed shapes.
-        let side = sheet.workingArea[r].squareRoot()
-        let broad = min(max((side - 60) / 120, 0), 1)
-        let size = min(max((side - 25) / 110, 0.08), 1)
-        let light = min(max(1.25 - 0.45 * ownDark, 0.12), 1)
-        let accent = size * light
+        let broad = min(max((sheet.workingArea[r].squareRoot() - 60) / 120, 0), 1)
+        let accent = Self.accent(of: r, on: sheet)
         let edge = tide * accent
         let carried = puddle * (1 + 0.5 * broad)
         // How each edge dries depends on what the wash meets there: still-wet paint feathers
@@ -333,7 +330,7 @@ public final class WatercolorSim {
             let arrival = when + duration * pow(max(df / dmax + jitter, 0), 0.75)
             // The drop lands where you touched: more water there pushes the pigment out, so the
             // touch stays a lighter bloom with the color gathered where the front comes to rest.
-            let drop = 1 + 0.9 * exp(-df / (0.18 * dmax + 2))
+            let drop = 1 + 0.9 * min(0.15 + accent, 1) * exp(-df / (0.18 * dmax + 2))
             // Past the pencil the wash thins in pigment, not in water: a thinner film there drew the
             // wash's water, and its pigment with it, out to the creep's edge, where it dried as a
             // dark ring round every shape.
@@ -448,8 +445,17 @@ public final class WatercolorSim {
         // ragged where the paper's tooth makes some paths easier; pigment rides it, upwind, and
         // diffuses a little within wet paint.
         let kw: Float = 0.22, ks: Float = 0.06
-        // Pigment crossing from one area's wash into a lighter one's is held back, as the square
-        // of how much lighter: a dark wash feathers into a light neighbour but never fills it.
+        // Water and pigment crossing from one area's wash into a lighter one's are held back, as
+        // the square of how much lighter: a dark wash feathers into a light neighbour but never
+        // fills it. Pigment alone held back, the clean water that crossed pushed the light
+        // wash's own pigment off the edge and left a pale seam.
+        @inline(__always) func hold(_ f: Float, _ i: Int, _ j: Int) -> Float {
+            let di = dark[i], dj = dark[j]
+            guard di != dj else { return f }
+            let (from, to) = f > 0 ? (di, dj) : (dj, di)
+            let k = min(to / max(from, 1e-3), 1)
+            return f * (k * k)
+        }
         @inline(__always) func across(_ p: SIMD4<Float>, _ i: Int, _ j: Int) -> SIMD4<Float> {
             let di = dark[i], dj = dark[j]
             guard di != dj else { return p }
@@ -466,7 +472,7 @@ public final class WatercolorSim {
                     if x + 1 < b.x1, wasWet[i], wasWet[i + 1] {
                         let j = i + 1
                         let pj = W[j] + 0.7 * E[j] * soft[j]
-                        let f = min(max(kw * (pi - pj) * (0.45 + paper[j]), -0.24 * W[j]), 0.24 * W[i])
+                        let f = hold(min(max(kw * (pi - pj) * (0.45 + paper[j]), -0.24 * W[j]), 0.24 * W[i]), i, j)
                         fx[i] = f
                         var p = (f > 0 ? conc : S[j] / max(W[j], 0.15)) * f + ks * (S[i] - S[j])
                         p = simd_clamp4(p, -0.24 * S[j], 0.24 * S[i])
@@ -478,7 +484,7 @@ public final class WatercolorSim {
                     if y + 1 < b.y1, wasWet[i], wasWet[i + w] {
                         let j = i + w
                         let pj = W[j] + 0.7 * E[j] * soft[j]
-                        let f = min(max(kw * (pi - pj) * (0.45 + paper[j]), -0.24 * W[j]), 0.24 * W[i])
+                        let f = hold(min(max(kw * (pi - pj) * (0.45 + paper[j]), -0.24 * W[j]), 0.24 * W[i]), i, j)
                         fy[i] = f
                         var p = (f > 0 ? conc : S[j] / max(W[j], 0.15)) * f + ks * (S[i] - S[j])
                         p = simd_clamp4(p, -0.24 * S[j], 0.24 * S[i])
@@ -718,11 +724,24 @@ public final class WatercolorSim {
         for c in 0..<3 where mean[c] > 1e-3 {
             gain[c] = min(max(aim[c] / mean[c], 0.7), 1.4)
         }
-        return (gain, aim)
+        // Pigment piled where a wash's water came to rest is capped toward its own paint, close
+        // to it on a small or dark area (its edge reads, faintly) and further on a broad light
+        // one (an accent): the renderers cap at 1.35 × what this returns.
+        return (gain, aim * ((1.08 + 0.7 * Self.accent(of: region, on: sheet)) / 1.35))
     }
 }
 
 extension WatercolorSim {
+    /// How much a region's edges may show, 0…1: a broad, light wash's tide-line and its crisp
+    /// edge are accents; a small or dark area's are faint, so a busy picture isn't a contour map.
+    static func accent(of r: Int, on sheet: WatercolorSheet) -> Float {
+        let side = sheet.workingArea[r].squareRoot()
+        let size = min(max((side - 60) / 200, 0.03), 1)
+        let p = sheet.want[r]
+        let light = min(max(1.15 - 0.5 * (p.x + p.y + p.z), 0.05), 1)
+        return pow(size * light, 1.5)
+    }
+
     /// How much of a thin area's paint (`WatercolorSheet.thin`) to lay as a glaze where it is
     /// drawn, over whatever its neighbours' water left there: 1 once it is painted, else 0.
     /// The renderers add `aim × glaze` to the density after the target solve's cap.
