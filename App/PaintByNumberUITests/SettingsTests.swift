@@ -300,11 +300,12 @@ final class SettingsTests: XCTestCase {
                 _ = wheel.waitForNonExistence(timeout: 3)
                 continue
             }
-            if (year == 547 && shown < year) || (year != present && abs(shown - year) <= 150) {
+            if (year == 547 && shown < year) || (year != present && abs(shown - year) <= 400 && !Self.eras.contains(shown)) {
                 // Up from the long reach's far end to 0547, and the last row to an era's year,
                 // one row at a time: a flick of a few rows went from 0001 to 0400 and back over
                 // 0500, 0547 and 0600 without resting beside it (CI, November 20), and one past
-                // 1502 can rest beside 1248 and open Stained Glass instead (November 21). A tap on
+                // 1502 can rest beside 1248 and open Stained Glass instead (November 21; from an
+                // era's own year a row away glides back to it, so that one flicks). A tap on
                 // the row beyond the one read turns the wheel a row; if one left it where it was,
                 // a short drag of a row does instead.
                 let center = wheel.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
@@ -329,6 +330,9 @@ final class SettingsTests: XCTestCase {
             _ = wheel.waitForNonExistence(timeout: 2.5)
         }
     }
+
+    /// The years that open an era on the wheel (`EraYear.modes` in SideStore and Debug builds).
+    private static let eras = [547, 1248, 1502]
 
     /// About one row of the year setter's wheel, in points (`EraClock`'s rails are 36 apart).
     private static let row: CGFloat = 38
