@@ -32,6 +32,14 @@ final class StartHandoff {
         self.timeout = timeout
     }
 
+    /// Start the Mosaic is saving the mosaic, or has: from here until the hand-off is `reset` the
+    /// create flow is up and opaque over the shelf, which comes back into view only from the
+    /// mosaic. What changes on the shelf meanwhile (the new mosaic's card, its thumbnail) changes
+    /// unseen (`EnvironmentValues.shelfIsOutOfSight`, which the shell sets from this).
+    private(set) var shelfIsOutOfSight = false
+    /// Counts the starts and the resets: a save that fails says which start it was (`startFailed`).
+    @ObservationIgnored private var start = 0
+
     var phase: StartHandoffLogic.Phase { logic.phase }
     /// A hand-off is under way or waiting to be taken in: the cover is up for it.
     var isRunning: Bool { logic.isRunning }
@@ -39,6 +47,20 @@ final class StartHandoff {
     var isFinished: Bool { logic.isFinished }
 
     func isOpening(_ id: UUID) -> Bool { logic.isOpening(id) }
+
+    /// The create flow is about to save the mosaic Start the Mosaic asked for. Returns the start's
+    /// number, for `startFailed`.
+    func willStart() -> Int {
+        start += 1
+        shelfIsOutOfSight = true
+        return start
+    }
+
+    /// The save of start `number` failed: its flow stays as it was, and may yet be closed over the
+    /// shelf. Ignored from a flow that is no longer the one starting (another replaced it since).
+    func startFailed(_ number: Int) {
+        if number == start { shelfIsOutOfSight = false }
+    }
 
     /// Start has saved the painting `id`. True when the shell is to push it now; false when a
     /// hand-off is already under way, so a second Start does not push it twice.
@@ -71,6 +93,8 @@ final class StartHandoff {
         fallback?.cancel()
         fallback = nil
         logic.reset()
+        start += 1
+        shelfIsOutOfSight = false
     }
 
     private func timeOut() {

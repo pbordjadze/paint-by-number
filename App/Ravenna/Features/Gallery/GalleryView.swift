@@ -2,6 +2,18 @@ import Foundation
 import os
 import SwiftUI
 
+extension EnvironmentValues {
+    /// Start the Mosaic is handing over (`StartHandoff.shelfIsOutOfSight`): the shelf is under the
+    /// create flow, which stays opaque until the mosaic has taken its place, so nothing of the shelf
+    /// shows. What changes on it meanwhile (the card of the mosaic just made, its thumbnail) comes
+    /// without its animation: SwiftUI draws a moving or fading card's picture on the main thread
+    /// at every frame, and in Paint by Moonlight that was half a second of it, unseen, while the
+    /// flow's own picture moved to its page at 15 to 20 frames a second (painting-company row 292).
+    /// Not for the flow's whole time up: as its cover rises or falls, the shelf is in view and
+    /// animates as ever.
+    @Entry var shelfIsOutOfSight = false
+}
+
 /// The gallery: paintings in progress, ready to paint (nobody has painted on them yet) and
 /// finished, each section an adaptive grid of cards.
 struct GalleryView: View {
@@ -20,6 +32,7 @@ struct GalleryView: View {
     @Environment(Library.self) private var library
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.shelfIsOutOfSight) private var isOutOfSight
     @State private var width: CGFloat = 0
     @State private var renaming: Artwork?
     @State private var renameText = ""
@@ -118,10 +131,12 @@ struct GalleryView: View {
         .onChange(of: library.tipFacts) { PaintTips.shelfMoment(library) }
         .onChange(of: PaintTips.desk.answers) { PaintTips.shelfMoment(library) }
         .onChange(of: PaintTips.desk.shelfReturns) { PaintTips.shelfMoment(library) }
-        // Deleting, filtering, searching and (un)favoriting all move cards.
-        .animation(reduceMotion ? nil : .snappy, value: shownIDs)
-        .animation(reduceMotion ? nil : .snappy, value: library.placeholders)
-        .animation(.easeInOut(duration: 0.35), value: isBare)
+        // Deleting, filtering, searching and (un)favoriting all move cards. Not out of sight
+        // (`shelfIsOutOfSight`): the card of the mosaic Start the Mosaic is handing over would
+        // move in unseen, its neighbours with it.
+        .animation(reduceMotion || isOutOfSight ? nil : .snappy, value: shownIDs)
+        .animation(reduceMotion || isOutOfSight ? nil : .snappy, value: library.placeholders)
+        .animation(isOutOfSight ? nil : .easeInOut(duration: 0.35), value: isBare)
         .alert("This mosaic can’t be restarted.", isPresented: $restartFailed) {}
         // A photo shared in from another app can't present over a question: the shell closes it.
         .onChange(of: hasQuestion) { _, asks in isAsking = asks }
