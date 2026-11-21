@@ -68,8 +68,10 @@ public struct CavePigmentLayer: Sendable {
         self.pixels = pixels
         coverage = [Float](repeating: 0, count: n)
         color = [SIMD3<Float>](repeating: .zero, count: n)
-        done = [Bool](repeating: false, count: plan.areaCount)
-        settled = [Float](repeating: 0, count: plan.areaCount)
+        // An area with no pixel in the bay (only a damaged plan has one) could never be blown:
+        // it is done from the start, so the painting can still be finished.
+        done = pixels.map(\.isEmpty)
+        settled = pixels.map { $0.isEmpty ? 1 : 0 }
         covered = [Int](repeating: 0, count: plan.areaCount)
     }
 

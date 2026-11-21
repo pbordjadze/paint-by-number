@@ -29,6 +29,8 @@ nonisolated final class CaveSound: @unchecked Sendable {
     private var isRunning = false
     private var isBuilt = false
     private var nextDrip = 0
+    /// Bumped by each start, so a drip waiting from before a stop doesn't run on beside the new ones.
+    private var dripRun = 0
     private var haptics: CHHapticEngine?
     private var rumble: (any CHHapticAdvancedPatternPlayer)?
     private let soundsOn: Bool
@@ -50,7 +52,8 @@ nonisolated final class CaveSound: @unchecked Sendable {
         queue.async { [self] in
             startAudio()
             startHaptics()
-            scheduleDrip()
+            dripRun += 1
+            scheduleDrip(run: dripRun)
         }
     }
 
@@ -172,6 +175,15 @@ nonisolated final class CaveSound: @unchecked Sendable {
         do {
             let engine = try CHHapticEngine()
             engine.isAutoShutdownEnabled = true
+            // A reset engine (the app sent to the background, a server restart) starts again on
+            // the next use; the rumble's player went with it.
+            engine.resetHandler = { [weak self] in
+                guard let self else { return }
+                self.queue.async {
+                    self.rumble = nil
+                    try? self.haptics?.start()
+                }
+            }
             try engine.start()
             haptics = engine
         } catch {
@@ -180,16 +192,16 @@ nonisolated final class CaveSound: @unchecked Sendable {
     }
 
     /// Water dripping somewhere in the dark, every few seconds, placed at random about the listener.
-    private func scheduleDrip() {
+    private func scheduleDrip(run: Int) {
         let wait = Double.random(in: 2.5...7)
         queue.asyncAfter(deadline: .now() + wait) { [self] in
-            guard isRunning, let buffer = buffers["drip"] else { return }
+            guard run == dripRun, isRunning, let buffer = buffers["drip"] else { return }
             let node = drips[nextDrip % drips.count]
             nextDrip += 1
             node.position = AVAudio3DPoint(x: Float.random(in: -4...4), y: Float.random(in: -1...2.5), z: -Float.random(in: 1.5...5))
             node.volume = Float.random(in: 0.25...0.6)
             node.scheduleBuffer(buffer, at: nil, options: .interrupts)
-            scheduleDrip()
+            scheduleDrip(run: run)
         }
     }
 

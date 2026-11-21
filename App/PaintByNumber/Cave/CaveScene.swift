@@ -1,6 +1,7 @@
 #if UNRELEASED
 import Foundation
 import PaintCore
+import simd
 
 /// What happens in the cave (painting-company row 371), frame by frame, with no drawing of its own:
 /// `CaveWallView` hands it the touches and draws what it says. The wall is one long row of bays
@@ -139,11 +140,17 @@ final class CaveScene {
         return Bay(content: .bare, tools: tools, key: "bare-\(index)-\(tools == .charcoal)")
     }
 
-    /// The bays worth holding: those on screen and one more either side.
+    /// The bays worth holding: those on screen and one more either side, as many as the
+    /// renderer has slots for (`CaveShader.slots`), the margins given up first, so no two share one.
     var wantedBays: [Int] {
-        let first = Int((camera / Float(CaveWall.bayWidth)).rounded(.down)) - 1
-        let last = Int(((camera + visibleWidth) / Float(CaveWall.bayWidth)).rounded(.down)) + 1
-        return (max(0, first)...max(0, min(last, activeBay + 1))).map { $0 }
+        let onScreenFirst = Int((camera / Float(CaveWall.bayWidth)).rounded(.down))
+        let onScreenLast = Int(((camera + visibleWidth) / Float(CaveWall.bayWidth)).rounded(.down))
+        var first = max(0, onScreenFirst - 1)
+        var last = max(first, min(onScreenLast + 1, activeBay + 1))
+        while last - first + 1 > CaveShader.slots {
+            if last > onScreenLast { last -= 1 } else if first < onScreenFirst { first += 1 } else { last -= 1 }
+        }
+        return Array(first...last)
     }
 
     /// A painting's pigment for its bay, as saved, or the layer's.

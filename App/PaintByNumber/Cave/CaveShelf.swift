@@ -111,9 +111,9 @@ final class CaveShelf {
         try await Background.run {
             let folder = root.appending(path: id.uuidString, directoryHint: .isDirectory)
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-            try plan.encoded().write(to: folder.appending(path: planFile), options: .atomic)
-            try painting.progress.encoded().write(to: folder.appending(path: progressFile), options: .atomic)
-            try JSONEncoder().encode(Wall(paintings: order)).write(to: root.appending(path: wallFile), options: .atomic)
+            try plan.encoded().write(to: folder.appending(path: CaveShelf.planFile), options: .atomic)
+            try painting.progress.encoded().write(to: folder.appending(path: CaveShelf.progressFile), options: .atomic)
+            try JSONEncoder().encode(Wall(paintings: order)).write(to: root.appending(path: CaveShelf.wallFile), options: .atomic)
         }
         self.order = order
         paintings.append(painting)

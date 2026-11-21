@@ -117,7 +117,7 @@ final class CaveRenderer {
             guard let t = context.device.makeTexture(descriptor: d) else { throw CaveRenderError.noTexture }
             return t
         }
-        relief = try texture(.r32Float, width: CaveWall.mapWidth * slots, height: CaveWall.mapHeight)
+        relief = try texture(.r16Float, width: CaveWall.mapWidth * slots, height: CaveWall.mapHeight)
         rock = try texture(.rgba8Unorm, width: CaveWall.mapWidth * slots, height: CaveWall.mapHeight)
         pigment = try texture(.rgba8Unorm, width: CavePigmentLayer.width * slots, height: CavePigmentLayer.height)
         var buffers: [any MTLBuffer] = []
@@ -131,11 +131,12 @@ final class CaveRenderer {
 
     /// Puts a bay's maps in its slot. The slot's earlier bay is off screen by then (slots hold a
     /// screen and more either side), so no frame in flight is reading it.
-    func hold(_ maps: CaveBay.Maps) {
+    func hold(_ maps: CaveBay.Maps, relief half: [Float16]) {
         let slot = maps.index % CaveShader.slots
         let w = maps.width, h = maps.height
-        maps.relief.withUnsafeBytes { bytes in
-            relief.replace(region: MTLRegionMake2D(slot * w, 0, w, h), mipmapLevel: 0, withBytes: bytes.baseAddress!, bytesPerRow: w * 4)
+        guard half.count == w * h, maps.rock.count == w * h * 4 else { return }
+        half.withUnsafeBytes { bytes in
+            relief.replace(region: MTLRegionMake2D(slot * w, 0, w, h), mipmapLevel: 0, withBytes: bytes.baseAddress!, bytesPerRow: w * 2)
         }
         maps.rock.withUnsafeBytes { bytes in
             rock.replace(region: MTLRegionMake2D(slot * w, 0, w, h), mipmapLevel: 0, withBytes: bytes.baseAddress!, bytesPerRow: w * 4)
@@ -143,10 +144,10 @@ final class CaveRenderer {
         held[slot] = maps.index
     }
 
-    /// Forgets a bay (its content changed), so nothing draws it until it is held again.
-    func release(_ bay: Int) {
-        let slot = bay % CaveShader.slots
-        if held[slot] == bay { held[slot] = -1 }
+    /// The relief as the texture holds it: half floats, which every Apple GPU filters (heights
+    /// run about -0.6 to 1.5). Made off the main thread with the maps.
+    nonisolated static func halfRelief(_ maps: CaveBay.Maps) -> [Float16] {
+        maps.relief.map { Float16($0) }
     }
 
     /// Writes a rectangle of a bay's pigment (RGBA8, `rect`'s size), or clears all of it.

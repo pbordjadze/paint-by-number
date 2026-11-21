@@ -28,13 +28,15 @@ struct CaveEra: View {
         ZStack {
             Color.black
             if isReady {
-                CaveWall(paintings: shelf.paintings, shelf: shelf, reduceMotion: reduceMotion,
+                CaveWallSurface(paintings: shelf.paintings, shelf: shelf, reduceMotion: reduceMotion,
                          onChoosePhoto: { if !isDrawing { picking = true } }, onLeave: leave)
             }
         }
         .ignoresSafeArea()
         .statusBarHidden()
         .persistentSystemOverlays(.hidden)
+        // A hand of four or five fingers is laid on the rock, not taken by the system.
+        .defersSystemGestures(on: .all)
         .photosPicker(isPresented: $picking, selection: $picked, matching: .images)
         .onChange(of: picked) { _, item in
             guard let item else { return }
@@ -81,8 +83,8 @@ struct CaveEra: View {
     }
 }
 
-/// The wall as a SwiftUI view: its `CaveWallView`, given the paintings as the shelf has them.
-struct CaveWall: UIViewRepresentable {
+/// The wall as a SwiftUI view (PaintCore's `CaveWall` is its geometry): its `CaveWallView`, given the paintings as the shelf has them.
+struct CaveWallSurface: UIViewRepresentable {
     let paintings: [CaveScene.Painting]
     let shelf: CaveShelf
     let reduceMotion: Bool

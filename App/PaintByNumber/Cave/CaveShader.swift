@@ -19,7 +19,7 @@ import Foundation
 /// ellipse laid over, or a stick tapering to its foot.
 nonisolated enum CaveShader {
     /// Bays held in the textures at once (`CaveRenderer`): each in slot `bay % slots`.
-    static let slots = 6
+    static let slots = 8
 
     static let source = """
     #include <metal_stdlib>
@@ -44,7 +44,7 @@ nonisolated enum CaveShader {
 
     constant float BAY = 400.0;
     constant float WALL = 852.0;
-    constant int SLOTS = 6;
+    constant int SLOTS = 8;
 
     struct WallOut { float4 position [[position]]; };
 

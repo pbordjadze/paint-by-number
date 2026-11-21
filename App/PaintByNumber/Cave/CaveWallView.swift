@@ -115,7 +115,10 @@ final class CaveWallView: UIView {
             making[index] = bay.key
             let content = bay.content, tools = bay.tools, key = bay.key
             Task {
-                let maps = await Background.run { CaveBay.maps(index: index, content: content, tools: tools) }
+                let (maps, half) = await Background.run { () -> (CaveBay.Maps, [Float16]) in
+                    let maps = CaveBay.maps(index: index, content: content, tools: tools)
+                    return (maps, CaveRenderer.halfRelief(maps))
+                }
                 guard self.making[index] == key else { return }
                 self.making[index] = nil
                 // Still wanted, as it was asked for.
@@ -123,7 +126,7 @@ final class CaveWallView: UIView {
                 for other in self.held.keys where other != index && other % CaveShader.slots == index % CaveShader.slots {
                     self.held[other] = nil
                 }
-                renderer.hold(maps)
+                renderer.hold(maps, relief: half)
                 renderer.paint(bay: index, rgba: self.scene.pigment(of: index))
                 self.held[index] = key
             }
