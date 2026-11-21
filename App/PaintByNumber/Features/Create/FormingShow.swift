@@ -351,7 +351,7 @@ nonisolated enum GraphiteSketch {
     /// How much of the ink's strength the pencil has.
     static let pencil: Float = 0.8
     /// One context for every drawing (Core Image's contexts are thread-safe and costly to make).
-    nonisolated(unsafe) private static let context = CIContext(options: [.cacheIntermediates: false])
+    private static let context = CIContext(options: [.cacheIntermediates: false])
 
     @concurrent
     static func draw(_ photo: CGImage, sheet: FormingPlan.Sheet) async -> CGImage? {
