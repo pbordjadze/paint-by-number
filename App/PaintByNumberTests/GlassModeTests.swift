@@ -7,17 +7,20 @@ import Testing
 @testable import PaintByNumber
 
 /// Stained Glass as a mode of the painting canvas (painting-company row 366): the canvas's own
-/// frame recipe (`RenderContext.encode`) with `GlassMode` in the content draws the window's glass
-/// and lead in place of the paint, and leaves out the canvas's outlines and numbers.
+/// frame recipe (`RenderContext.encode`) with `GlassMode` in the content draws the window's
+/// lenses over its photo and its lead in place of the paint, and leaves out the canvas's outlines
+/// and numbers.
 @MainActor
 struct GlassModeTests {
-    @Test func glazedGlassShinesOverUnlitAndTheLeadIsDark() throws {
+    @Test func aPouredGlassTintsItsLensAndTheLeadIsDark() throws {
         let t = Fixtures.mosaic
         let context = try #require(RenderContext.shared)
         let scene = try #require(CanvasScene(template: t, context: context))
-        let mode = try #require(GlassMode(template: t, texture: GlassTexture(template: t), offered: t.palette, context: context))
-        // The brightest paint, glazed into its first piece.
-        let glass = t.palette.indices.max { t.palette[$0].oklab.x < t.palette[$1].oklab.x }!
+        let photo = try #require(Self.greyPhoto(width: t.width, height: t.height))
+        let mode = try #require(GlassMode(template: t, texture: GlassTexture(template: t), offered: t.palette, photo: photo,
+                                          context: context))
+        // The most colorful paint, glazed into its first piece, over a plain grey photo.
+        let glass = t.palette.indices.max { Self.chroma(t.palette[$0]) < Self.chroma(t.palette[$1]) }!
         let r = try #require(t.regions.indices.first { Int(t.regions[$0].colorIndex) == glass })
         let other = try #require(t.regions.indices.first { $0 != r })
         let uniforms = CanvasSnapshot.uniforms(scene: scene, width: t.width, height: t.height, options: .painting)
@@ -33,27 +36,40 @@ struct GlassModeTests {
                 content: RenderContext.Content(outlines: outlines, numbers: numbers, mode: mode),
                 width: t.width, height: t.height, context: context))
         }
-        let unlit = try frame(glazed: false), lit = try frame(glazed: true)
-        record(unlit, "glass-mode-unlit")
-        record(lit, "glass-mode-lit")
-        let before = PixelReader(unlit), after = PixelReader(lit)
+        let clear = try frame(glazed: false), poured = try frame(glazed: true)
+        record(clear, "glass-mode-clear")
+        record(poured, "glass-mode-poured")
+        let before = PixelReader(clear), after = PixelReader(poured)
         let inside = t.anchor(ofRegion: r), elsewhere = t.anchor(ofRegion: other)
         func luma(_ p: SIMD3<Int>) -> Int { (p.x * 3 + p.y * 6 + p.z) / 10 }
-        #expect(luma(after[Int(inside.x), Int(inside.y)]) > luma(before[Int(inside.x), Int(inside.y)]) + 40,
-                "a glazed piece shines over its unlit glass")
+        func colorfulness(_ p: SIMD3<Int>) -> Int { max(p.x, p.y, p.z) - min(p.x, p.y, p.z) }
+        let x = Int(inside.x), y = Int(inside.y)
+        #expect(colorfulness(before[x, y]) < 12, "a clear lens shows the grey photo")
+        #expect(colorfulness(after[x, y]) > colorfulness(before[x, y]) + 30, "a poured glass tints its lens")
         #expect(after[Int(elsewhere.x), Int(elsewhere.y)] == before[Int(elsewhere.x), Int(elsewhere.y)],
                 "the other pieces stay as they were")
-        // A pixel on the lead between two pieces is darker than the glazed glass it holds.
+        // A pixel on the lead between two pieces is darker than the clear lens beside it.
         let edge = try #require((0..<(t.width - 1)).lazy.compactMap { x -> SIMD2<Int>? in
-            let y = Int(inside.y)
             return t.regionMap[x, y] != t.regionMap[x + 1, y] ? SIMD2(x, y) : nil
         }.first)
-        #expect(luma(after[edge.x, edge.y]) + 40 < luma(after[Int(inside.x), Int(inside.y)]), "the lead is dark")
+        #expect(luma(before[edge.x, edge.y]) + 40 < luma(before[x, y]), "the lead is dark")
         // The lead is the drawing: the canvas's own outlines and numbers never show.
         let bare = PixelReader(try frame(glazed: true, outlines: false, numbers: false))
-        for (x, y) in [(Int(inside.x), Int(inside.y)), (edge.x, edge.y), (Int(elsewhere.x), Int(elsewhere.y))] {
-            #expect(bare[x, y] == after[x, y])
+        for (px, py) in [(x, y), (edge.x, edge.y), (Int(elsewhere.x), Int(elsewhere.y))] {
+            #expect(bare[px, py] == after[px, py])
         }
+    }
+
+    private static func chroma(_ p: PaletteColor) -> Float { (p.oklab.y * p.oklab.y + p.oklab.z * p.oklab.z).squareRoot() }
+
+    private static func greyPhoto(width: Int, height: Int) -> CGImage? {
+        guard let space = CGColorSpace(name: CGColorSpace.displayP3),
+              let ctx = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0, space: space,
+                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        ctx.setFillColor(CGColor(colorSpace: space, components: [0.5, 0.5, 0.5, 1]) ?? CGColor(gray: 0.5, alpha: 1))
+        ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        return ctx.makeImage()
     }
 
     /// A whole window stands in the light of the hour: moonlight dims it at night, the day is

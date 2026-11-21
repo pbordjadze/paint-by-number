@@ -241,8 +241,7 @@ fragment float4 fillFragment(FillOut in [[stage_in]],
 // Must match `GlassMode.Parameters` (GlassMode.swift).
 struct GlassParameters {
     float4 lead;        // rgb: the lead (sRGB-curved), w: its width on average (canvas units)
-    float4 warm;        // rgb: light through the glass deep in a piece (sRGB-curved), w: the unlit tint
-    float4 unlit;       // rgb: unlit glass's dark (sRGB-curved), w: how many glasses there are
+    float4 lens;        // x: the lens's rim (canvas units), y: how many glasses there are
 };
 
 // Smooth value noise, 0…1, on the integer lattice.
@@ -267,37 +266,68 @@ static float3 curveDecode(float3 c) {
     return select(pow((c + 0.055) / 1.055, 2.4), c / 12.92, c <= 0.04045);
 }
 
-/// A piece of a Stained Glass window (painting-company row 366), as PaintCore's `GlassTexture`
-/// paints it: lit glass its glass's color by the shade of the pixel plus warm light deep in the
-/// piece; unlit glass flat and dark with a hint of the suggested glass; the lead where the pixel
-/// is near the piece's edge. A glass pours in from the touch over the glass before it.
-/// `states[r].mode` is the glass + 1, plus 1024 × (the glass it replaces + 1). The fields
-/// texture is `GlassTexture.fields()`: lead distance, shade, depth, grain.
+/// Light through poured glass: its glass tinting the photo seen through the lens, never covering
+/// it (its light and its detail come through), brighter deep in the piece and streaked.
+static float3 pouredGlass(float3 glass, float3 seen, float3 detail, float glow) {
+    float luma = (seen.r + seen.g + seen.b) / 3.0;
+    return (glass * (0.45 + 0.85 * luma) + detail * 1.4 + seen * 0.12) * glow;
+}
+
+/// A piece of a Stained Glass window (painting-company row 366) as Liquid Glass misused: every
+/// piece a clear lens over the photo, flat inside and rounded at its rim, where it bends the photo
+/// in from the lead and catches light from the top left, a thin bright line all round; a glass
+/// poured into it tints the lens, from the touch over the glass before it. The lead stays heavy
+/// medieval came. `states[r].mode` is the glass + 1, plus 1024 × (the glass it replaces + 1). The
+/// fields texture is `GlassTexture.fields()` (lead distance, shade, depth, grain), the photo
+/// texture the window's photo at the template's size, mipmapped.
 fragment float4 glassFillFragment(FillOut in [[stage_in]],
-                                  const device float4 *regionColors [[buffer(0)]],
                                   const device RegionState *states [[buffer(1)]],
                                   constant FrameUniforms &u [[buffer(2)]],
                                   const device float4 *glasses [[buffer(3)]],
                                   constant GlassParameters &g [[buffer(4)]],
-                                  texture2d<float> fields [[texture(0)]]) {
-    constexpr sampler linear(filter::linear, address::clamp_to_edge);
+                                  texture2d<float> fields [[texture(0)]],
+                                  texture2d<float> photo [[texture(1)]]) {
+    constexpr sampler linear(filter::linear, mip_filter::linear, address::clamp_to_edge);
     uint r = in.region;
     RegionState s = states[r];
-    float4 f = fields.sample(linear, in.canvas / u.viewport.zw);
-    float3 suggested = curveEncode(regionColors[r].rgb);
-    float3 unlit = (suggested * g.warm.w + g.unlit.rgb * (1.0 - g.warm.w)) * f.w;
-    uint code = uint(max(s.mode, 0.0) + 0.5);
-    // A glass past the last offered (never written so) reads as the last.
-    uint count = uint(max(g.unlit.w, 1.0));
-    uint now = min(code % 1024u, count), before = min(code / 1024u, count);
-    float3 lit = now > 0u ? curveEncode(glasses[now - 1u].rgb) * f.y + g.warm.rgb * f.z : unlit;
-    float3 under = before > 0u ? curveEncode(glasses[before - 1u].rgb) * f.y + g.warm.rgb * f.z : unlit;
-    PaintSample ps = samplePaint(s, in.canvas, u.time.x, 1.0 / u.transform.z);
-    float3 c = mix(under, lit, ps.coverage);
-    // The lead: medieval came, half of it on each side of the edge (a piece's edge pixels are 1
-    // away), heavy and uneven as cast by hand, its rounded face catching a soft sheen.
+    float2 size = u.viewport.zw;
+    float2 uv = in.canvas / size;
+    float4 f = fields.sample(linear, uv);
+    // The lead: half on each side of the edge (a piece's edge pixels are 1 away), uneven as cast
+    // by hand.
     float d = f.x - 0.5;
     float halfWidth = 0.5 * g.lead.w * (0.8 + 0.4 * valueNoise(in.canvas / (2.5 * g.lead.w)));
+    // The lens: 0 at the lead, 1 past its rim; the way into the piece from the lead's distance.
+    float rim = max(g.lens.x, 1.0);
+    float inner = saturate((d - halfWidth) / rim), t = 1.0 - inner;
+    // Measured a quarter of the rim apart: the chamfer's distance turns in steps, and nearer
+    // its normals streaked the rim.
+    float2 e = float2(0.25 * rim, 0.0) / size;
+    float2 n = float2(fields.sample(linear, uv + e.xy).x - fields.sample(linear, uv - e.xy).x,
+                      fields.sample(linear, uv + e.yx).x - fields.sample(linear, uv - e.yx).x);
+    float slope = length(n);
+    n = slope > 1e-4 ? n / slope : float2(0.0);
+    // The rim pulls the photo in from deeper in the piece.
+    float2 seenAt = (in.canvas + n * pow(t, 2.2) * rim * 1.1) / size;
+    float3 seen = curveEncode(photo.sample(linear, seenAt, bias(0.5)).rgb) * 0.94 + 0.05;
+    float3 soft = curveEncode(photo.sample(linear, seenAt, level(3.0)).rgb) * 0.94 + 0.05;
+    float3 detail = seen - soft;
+    float glow = (0.55 + 0.6 * pow(inner, 1.5)) * (0.9 + 0.1 * f.y);
+    uint code = uint(max(s.mode, 0.0) + 0.5);
+    // A glass past the last offered (never written so) reads as the last.
+    uint count = uint(max(g.lens.y, 1.0));
+    uint now = min(code % 1024u, count), before = min(code / 1024u, count);
+    float3 lit = now > 0u ? pouredGlass(curveEncode(glasses[now - 1u].rgb), seen, detail, glow) : seen;
+    float3 under = before > 0u ? pouredGlass(curveEncode(glasses[before - 1u].rgb), seen, detail, glow) : seen;
+    PaintSample ps = samplePaint(s, in.canvas, u.time.x, 1.0 / u.transform.z);
+    float3 c = mix(under, lit, ps.coverage);
+    // Light on the rim from the top left, a thin bright line all round, its shade at the bottom right.
+    float facing = saturate(-(n.x + n.y) * 0.70710678);
+    float t3 = t * t * t;
+    float sigma = rim / 26.0, off = inner * rim - 2.5 * sigma;
+    c += t3 * facing * facing * 0.9 + 0.35 * exp(-off * off / (2.0 * sigma * sigma));
+    c -= t3 * saturate((n.x + n.y) * 0.70710678) * 0.12;
+    // The came, its rounded face catching a soft sheen.
     float aa = max(fwidth(d), 1e-3);
     float across = saturate(d / halfWidth);
     float crown = (across - 0.38) / 0.22;

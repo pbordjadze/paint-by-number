@@ -8,10 +8,9 @@ import UIKit
 import os
 
 /// Glazing a window (painting-company row 366; Paul's free glazing, November 20, 2026): the room
-/// dark, the window's glass unlit, each piece keeping a faint tint of the glass the photo
-/// suggests, and below it the glasses as beads, the window's own then the glazier's classics
-/// (`GlassPalette.offered`). Any glass goes in any piece: a touch, or a drag across pieces, pours
-/// the bead's glass in from the finger, lit. Glazed whole, the sun passes behind the window once.
+/// dark, the window's pieces clear lenses over its photo, and below it the glasses as beads, the
+/// window's own then the glazier's classics (`GlassPalette.offered`). Any glass goes in any piece:
+/// a touch, or a drag across pieces, pours the bead's glass in from the finger, tinting its lens. Glazed whole, the sun passes behind the window once.
 /// The window is on the painting screen's own canvas (`GlassCanvas`), in Stained Glass's mode
 /// (`GlassMode`).
 @MainActor

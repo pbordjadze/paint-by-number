@@ -318,7 +318,8 @@ struct GlassWindowScreen: View {
                 let opened = try await shelf.open(artwork)
                 guard let context = await RenderContext.ready(),
                       let mode = await Background.run({
-                          GlassMode(template: opened.template, texture: opened.texture, offered: opened.offered, context: context)
+                          GlassMode(template: opened.template, texture: opened.texture, offered: opened.offered, photo: opened.photo,
+                                    context: context)
                       })
                 else {
                     unavailable = true
@@ -327,7 +328,8 @@ struct GlassWindowScreen: View {
                 let made = GlassGlazeModel(id: id, template: opened.template, glazing: opened.glazing, offered: opened.offered,
                                            mode: mode)
                 made.onChange = { [shelf] glazing in
-                    shelf.enqueue(glazing, of: id, template: opened.template, offered: opened.offered, texture: opened.texture)
+                    shelf.enqueue(glazing, of: id, template: opened.template, offered: opened.offered, texture: opened.texture,
+                                  mode: mode)
                 }
                 #if DEBUG
                 GlassDemo.prepare(made)

@@ -1,21 +1,26 @@
 #if UNRELEASED
+import CoreGraphics
 import Metal
 import PaintCore
 import os
 
 /// Stained Glass on the canvas (painting-company row 366): the canvas's mode (`CanvasMode`) for a
-/// window, drawing each piece as `GlassTexture` paints it, lit or unlit, with its lead, from the
-/// window's fields (`GlassTexture.fields()`, one texture at the template's size) and the glasses
-/// offered. A piece's glass rides in its region state (`RegionState.mode`, `code(glass:replacing:)`),
-/// so a glass pours in from the touch over the one before it. No outlines and no numbers: the
-/// lead is the drawing, and glazing is free.
+/// window, Liquid Glass misused as its glass (Paul's pick, November 21, 2026): each piece a clear
+/// lens over the window's photo, its rim bending the photo and catching the light, tinted by the
+/// glass poured into it; the lead heavy medieval came (`glassFillFragment`). It draws from the
+/// window's fields (`GlassTexture.fields()`, one texture at the template's size), its photo and the
+/// glasses offered. A piece's glass rides in its region state (`RegionState.mode`,
+/// `code(glass:replacing:)`), so a glass pours in from the touch over the one before it. No
+/// outlines and no numbers: the lead is the drawing, and glazing is free.
 nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
     /// Must match `GlassParameters` (Shaders.metal).
     struct Parameters {
         var lead: SIMD4<Float>
-        var warm: SIMD4<Float>
-        var unlit: SIMD4<Float>
+        var lens: SIMD4<Float>
     }
+
+    /// The lens's rounded rim, as a share of the window's long side.
+    static let rimShare: Float = 0.025
 
     let drawsOutlines = false
     let drawsNumbers = false
@@ -27,6 +32,7 @@ nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
     private let pipeline: any MTLRenderPipelineState
     private let lightPipeline: any MTLRenderPipelineState
     private let fields: any MTLTexture
+    private let photo: any MTLTexture
     private let glasses: any MTLBuffer
     private let parameters: Parameters
     /// The light over the window: the sun's pass (x its start on the renderer's clock, y its
@@ -43,29 +49,30 @@ nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
     /// How long the hour's light takes to come over a window.
     static let dayFade: Float = 1.5
 
-    /// The window `template`, its fields `texture` and the glasses `offered` (as the
-    /// glazing names them). Uploads to the GPU and waits for it: make it off the main actor.
-    init?(template: Template, texture: GlassTexture, offered: [PaletteColor], context: RenderContext) {
+    /// The window `template`, its fields `texture`, the glasses `offered` (as the glazing names
+    /// them) and its `photo` (none: the lenses look onto the dark room). Uploads to the GPU and
+    /// waits for it: make it off the main actor.
+    init?(template: Template, texture: GlassTexture, offered: [PaletteColor], photo: CGImage?, context: RenderContext) {
         guard texture.width == template.width, texture.height == template.height,
               let pipeline = context.makePipeline(vertex: "fillVertex", fragment: "glassFillFragment", blends: false),
               let lightPipeline = context.makePipeline(vertex: "canvasRectVertex", fragment: "glassLightFragment", blends: true),
               let fields = Self.upload(texture, context: context),
+              let photo = photo.flatMap({ context.makePhotoTexture($0) }) ?? Self.darkRoom(context: context),
               let glasses = CanvasScene.buffer(
                 offered.map { SIMD4(CanvasColor.linearP3($0, space: template.colorSpace), 1) }, context.device)
         else { return nil }
         self.pipeline = pipeline
         self.lightPipeline = lightPipeline
         self.fields = fields
+        self.photo = photo
         self.glasses = glasses
         let width = Float(GlassPicture.leadWidth(width: template.width, height: template.height))
-        parameters = Parameters(
-            lead: SIMD4(GlassPicture.lead, width),
-            warm: SIMD4(GlassTexture.warm, GlassTexture.unlitTint),
-            unlit: SIMD4(GlassTexture.unlitBase, Float(offered.count)))
+        let rim = Self.rimShare * Float(max(template.width, template.height))
+        parameters = Parameters(lead: SIMD4(GlassPicture.lead, width), lens: SIMD4(rim, Float(offered.count), 0, 0))
     }
 
     /// The value a piece's region state carries: the glass in it (nil: none) and the one it pours
-    /// over (nil: unlit glass). See `glassFillFragment`.
+    /// over (nil: the clear lens). See `glassFillFragment`.
     static func code(glass: Int?, replacing before: Int?) -> Float {
         Float((glass.map { $0 + 1 } ?? 0) + 1024 * (before.map { $0 + 1 } ?? 0))
     }
@@ -79,12 +86,12 @@ nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
         encoder.setVertexBuffer(scene.positions, offset: 0, index: 0)
         encoder.setVertexBuffer(scene.vertexRegions, offset: 0, index: 1)
         encoder.setVertexBytes(&u, length: size, index: 2)
-        encoder.setFragmentBuffer(scene.regionColors, offset: 0, index: 0)
         encoder.setFragmentBuffer(frame.states, offset: 0, index: 1)
         encoder.setFragmentBytes(&u, length: size, index: 2)
         encoder.setFragmentBuffer(glasses, offset: 0, index: 3)
         encoder.setFragmentBytes(&p, length: MemoryLayout<Parameters>.stride, index: 4)
         encoder.setFragmentTexture(fields, index: 0)
+        encoder.setFragmentTexture(photo, index: 1)
         encoder.drawIndexedPrimitives(
             type: .triangle, indexCount: scene.indexCount, indexType: .uint32,
             indexBuffer: scene.indices, indexBufferOffset: 0)
@@ -137,6 +144,17 @@ nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
         encoder.setFragmentBytes(&u, length: size, index: 0)
         encoder.setFragmentBytes(&l, length: MemoryLayout<Light>.stride, index: 1)
         encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
+    }
+
+    /// One pixel of the dark room, for a window whose photo is gone.
+    private static func darkRoom(context: RenderContext) -> (any MTLTexture)? {
+        guard let space = CGColorSpace(name: CGColorSpace.displayP3),
+              let ctx = CGContext(data: nil, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 0, space: space,
+                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        ctx.setFillColor(GlassPicture.cgColor(GlassPicture.nave, space: .displayP3))
+        ctx.fill(CGRect(x: 0, y: 0, width: 1, height: 1))
+        return ctx.makeImage().flatMap { context.makePhotoTexture($0) }
     }
 
     /// The fields as a half-float texture, uploaded by blit into private storage (which every GPU

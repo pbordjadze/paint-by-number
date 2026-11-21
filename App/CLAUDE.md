@@ -1346,13 +1346,15 @@ blank window by Start From; the finger's lines laid one by one, ends joined as t
 pieces a line closes flashing; Erase's tap takes lead away junction to junction, as Edit's Line
 Eraser does; lead that closes nothing stays as drawn, Paul's choice), `GlassGlaze`
 (free glazing on the painting screen's own `CanvasView` in `GlassMode`, Canvas above: any bead's
-glass in any piece, poured from the finger over the glass before it, unlit pieces keeping a
-faint tint of the suggested glass, the sun passing once when it is whole, drawn by
-`glassFillFragment` and `glassLightFragment`; VoiceOver has a piece element each; saves queued
+glass in any piece, poured from the finger over the glass before it, the sun passing once when
+it is whole, drawn by `glassFillFragment` and `glassLightFragment`: Liquid Glass misused as the
+window's glass, each piece a clear lens over the window's photo, its rim bending the photo and
+catching the light, a poured glass tinting it, the lead heavy came (`GlassMode`; the shelf's
+pictures are drawn by it too, `GlassShelf.picture`); VoiceOver has a piece element each; saves queued
 in order, `GlassShelf.enqueue`), `GlassPicture` (lead and glass colors, and the shelf's
-pictures). How glass looks is PaintCore's `GlassTexture` (lit glass bright deep in a piece and
-streaked, unlit flat and matte: one RGBA buffer a piece repaints for the shelf's pictures, and
-`fields()`, the lead's distance, shade, depth and grain, which the canvas's shader paints from), and the glasses a window suggests are `GlassPalette`'s jewel glasses
+pictures). PaintCore's `GlassTexture` holds `fields()`, the lead's distance, shade, depth and
+grain, which the canvas's shader paints from (its own painted glass is the pictures' look where a
+device has no Metal), and the glasses a window suggests are `GlassPalette`'s jewel glasses
 (never olive, khaki or brown; never near unlit's dark). A window with a taken title gets a number
 (`GlassShelf.title(on:)`). The door: the year wheel (`EraClock`) reaches back to 0001 in these
 builds, lights the eras' years (`EraYear.modes`) and draws a wheel resting beside one on to it
