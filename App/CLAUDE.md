@@ -1314,6 +1314,11 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
 - **Demos:** `-demo ravenna-<name>` opens the era on Ravenna's own scenario `<name>` (its
   `ShellDemo`, `PaintDemoView`, `MakingOfDemoView`); `ci/scenarios.txt` takes a few. No tests of
   its own in the app's targets: its engine's are the package's (Linux), the rest is screenshots.
+- **Set in Stone** (painting-company row 367; SideStore and Debug builds): a mosaic's Share ›
+  Set in Stone… (in Print Template…'s place, which a mosaic without its tiles on disk keeps) opens
+  `SetInStoneSheet` (`Export/SetInStone.swift`): the book `MosaicCore`'s `StoneBook` lays out, drawn
+  by `StoneBookRenderer` to the preview's pages and the PDF that prints and shares; `-demo
+  ravenna-gallery-set-in-stone` screenshots it.
 - **The App Review note** for the version that ships it (Guideline 2.3.1):
   `docs/ravenna/app-review-note.md`.
 

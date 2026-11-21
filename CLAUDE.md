@@ -131,6 +131,10 @@ before planning app work).
   platform for OKLab). Tests `Tests/Mosaic*Tests`, fixtures `Tests/MosaicFixtures`; the paints'
   names come from `docs/ravenna/paint-names.json` through `tools/ravenna/paint_names.py`. The
   app's era behind the secret door: App/CLAUDE.md › Ravenna.
+  `Sources/MosaicCore/Book`: Set in Stone (painting-company row 367), the book for setting a mosaic
+  in real stone (`StoneBook`'s doc comment): pieces cut to fit (`BookPieces`), steps, pages as
+  drawing lists (`BookPage`), Orsoni smalti codes (`Smalti`); `mosaic book <mosaic.json> <dir>`
+  writes its pages as SVG for a look on Linux, `StoneBookTests` guard it.
 - `Tests/PaintCoreTests` (Swift Testing; helpers in `TestSupport.swift`, `TestScenes.swift`,
   `ColorTestSupport.swift`). `Fixtures/`: `template-*.pbnt` are frozen (Saved data), and so is
   `edits-v1.json` (every kind of edit, as `refinements.json` keeps them: `EditGoldenTests`);
