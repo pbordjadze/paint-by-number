@@ -88,6 +88,7 @@ struct WatercolorUniforms {
     var paper: SIMD4<Float>
     var background: SIMD4<Float>
     var numberInk: SIMD4<Float>
+    var sheet: SIMD4<Float>
 }
 
 /// Mirrors `WatercolorRegion` in Watercolor.metal.
@@ -124,14 +125,21 @@ final class WatercolorRenderer: NSObject, MTKViewDelegate {
     /// Canvas units at the view's top-left pixel, and per pixel (the canvas view's scroll).
     var offset = SIMD2<Float>(0, 0)
     var unitsPerPixel: Float = 1
-    /// Around the sheet: `WatercolorEra.desk`, linear.
-    var background = SIMD4<Float>(0.807, 0.768, 0.694, 1)
+    /// Under the sheet: `WatercolorEra.desk`, linear.
+    var background = SIMD4<Float>(0.13, 0.15, 0.18, 1)
     /// Told when the sheet stops needing frames, or needs them again.
     var onActivity: ((Bool) -> Void)?
 
     static let colorFormat: MTLPixelFormat = .bgra8Unorm_srgb
     static let paperColor = SIMD4<Float>(WatercolorSheet.paperColor, 1)
     static let numberInk = SIMD4<Float>(0.19, 0.18, 0.2, 1)
+
+    /// The sheet's paper past the canvas, in canvas units: its side and top margin, and the deeper
+    /// bottom one a painting is signed in (`WatercolorCanvasView`).
+    nonisolated static func margins(of t: Template) -> (side: Float, bottom: Float) {
+        let side = 0.035 * Float(max(t.width, t.height, 1))
+        return (side, side * 1.7)
+    }
 
     init?(painting: WatercolorPainting, assets: WatercolorAssets) {
         guard let device = MTLCreateSystemDefaultDevice(), let queue = device.makeCommandQueue(),
@@ -251,12 +259,14 @@ final class WatercolorRenderer: NSObject, MTKViewDelegate {
                         offset: SIMD2<Float>, unitsPerPixel: Float) {
         let t = painting.template
         let sheet = painting.sim.sheet
+        let margins = Self.margins(of: t)
         var uniforms = WatercolorUniforms(
             offset: offset, unitsPerPixel: unitsPerPixel, time: painting.sim.time,
             canvasSize: SIMD2(Float(t.width), Float(t.height)),
             paperTexel: SIMD2(1 / Float(paper.width), 1 / Float(paper.height)),
             simTexel: SIMD2(1 / Float(sheet.width), 1 / Float(sheet.height)),
-            paper: Self.paperColor, background: background, numberInk: Self.numberInk)
+            paper: Self.paperColor, background: background, numberInk: Self.numberInk,
+            sheet: SIMD4(margins.side, margins.bottom, 0, 0))
         pass.colorAttachments[0].loadAction = .dontCare
         pass.colorAttachments[0].storeAction = .store
         guard let encoder = commands.makeRenderCommandEncoder(descriptor: pass) else { return }

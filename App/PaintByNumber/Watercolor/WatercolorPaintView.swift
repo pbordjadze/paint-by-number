@@ -46,7 +46,9 @@ struct WatercolorPaintScreen: View {
     }
 }
 
-/// The sheet and the paints: a tap lays a wash of the paint in hand where it lands, or water.
+/// The sheet and the paints: a tap lays a wash of the paint in hand where it lands, or water. The
+/// paint box lies on the desk below the sheet; finished, it is put away and the sheet, signed,
+/// settles into the room it leaves.
 struct WatercolorPaintView: View {
     let shelf: WatercolorShelf
     let painting: WatercolorPainting
@@ -54,22 +56,36 @@ struct WatercolorPaintView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var taps = 0
+    @State private var boxHeight: CGFloat = 0
 
     var body: some View {
-        VStack(spacing: 0) {
-            WatercolorCanvas(renderer: renderer) { point in
-                if painting.tap(at: point) != nil { taps += 1 }
+        GeometryReader { proxy in
+            ZStack(alignment: .bottom) {
+                WatercolorCanvas(renderer: renderer,
+                                 bottomInset: proxy.safeAreaInsets.bottom + (painting.isComplete ? 0 : boxHeight + 10),
+                                 signed: painting.isComplete,
+                                 title: shelf.painting(painting.id)?.title ?? "",
+                                 reduceMotion: reduceMotion) { point in
+                    if painting.tap(at: point) != nil { taps += 1 }
+                }
+                .accessibilityElement()
+                .accessibilityLabel(Text("Watercolor sheet"))
+                .accessibilityValue(Text(progress))
+                .accessibilityAction(named: Text("Lay the Next Wash")) {
+                    if let point = painting.nextArea(), painting.tap(at: point) != nil { taps += 1 }
+                }
+                .accessibilityIdentifier("watercolor-sheet")
+                .ignoresSafeArea(edges: [.horizontal, .bottom])
+                if !painting.isComplete {
+                    WatercolorPaintBox(painting: painting)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { boxHeight = $0 }
+                        .padding(.horizontal, 12)
+                        .padding(.bottom, 4)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
-            .accessibilityElement()
-            .accessibilityLabel(Text("Watercolor sheet"))
-            .accessibilityValue(Text(progress))
-            .accessibilityAction(named: Text("Lay the Next Wash")) {
-                if let point = painting.nextArea(), painting.tap(at: point) != nil { taps += 1 }
-            }
-            .accessibilityIdentifier("watercolor-sheet")
-            .ignoresSafeArea(edges: .horizontal)
-            WatercolorPaletteBar(painting: painting)
         }
+        .animation(reduceMotion ? nil : .smooth(duration: 0.5), value: painting.isComplete)
         .sensoryFeedback(.impact(flexibility: .soft, intensity: 0.5), trigger: taps)
         .onAppear { painting.settlesAtOnce = reduceMotion }
         .onChange(of: reduceMotion) { _, reduce in painting.settlesAtOnce = reduce }
@@ -107,38 +123,48 @@ struct WatercolorPaintView: View {
     }
 }
 
-/// The paint box: a pan of each paint, its number on it; the one in hand raised, a paint whose
-/// areas are all painted marked done. Finished, the box gives way to a word.
-struct WatercolorPaletteBar: View {
+/// The paint box: a tin of half pans, one for each paint, its number below it; the pan in hand
+/// lifted, a paint whose areas are all painted scooped out to the white of its pan. All the pans
+/// in a row when they fit, scrolling sideways otherwise.
+struct WatercolorPaintBox: View {
     let painting: WatercolorPainting
 
     var body: some View {
-        Group {
-            if painting.isComplete {
-                Text("Finished")
-                    .font(.display(.title3))
-                    .foregroundStyle(WatercolorEra.ink)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 22)
-            } else {
-                ScrollViewReader { reader in
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 10) {
-                            ForEach(painting.template.palette.indices, id: \.self) { i in
-                                pan(i).id(i)
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                    }
+        ViewThatFits(in: .horizontal) {
+            pans
+            ScrollViewReader { reader in
+                ScrollView(.horizontal, showsIndicators: false) { pans }
+                    .clipShape(.rect(cornerRadius: 26, style: .continuous))
                     .onChange(of: painting.selected) { _, selected in
                         guard let selected else { return }
                         withAnimation { reader.scrollTo(selected, anchor: .center) }
                     }
-                }
+                    .onAppear {
+                        if let selected = painting.selected { reader.scrollTo(selected, anchor: .center) }
+                    }
             }
         }
-        .background(.bar)
+        .background {
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .fill(WatercolorEra.tin.gradient)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                        .strokeBorder(.white.opacity(0.55), lineWidth: 1)
+                }
+                .shadow(color: .black.opacity(0.32), radius: 14, y: 6)
+        }
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+    }
+
+    private var pans: some View {
+        HStack(spacing: 10) {
+            ForEach(painting.template.palette.indices, id: \.self) { i in
+                pan(i).id(i)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 14)
+        .padding(.bottom, 8)
     }
 
     private func pan(_ i: Int) -> some View {
@@ -153,31 +179,77 @@ struct WatercolorPaletteBar: View {
         return Button {
             painting.selected = i
         } label: {
-            ZStack {
-                Circle().fill(color)
-                Circle().strokeBorder(.black.opacity(0.12), lineWidth: 1)
-                if done {
-                    Image(systemName: "checkmark").font(.caption.bold()).foregroundStyle(.white.opacity(0.9))
-                        .shadow(radius: 1)
-                } else {
-                    Text(verbatim: "\(i + 1)")
-                        .font(.system(.caption, design: .serif, weight: .semibold))
-                        .monospacedDigit()
-                        .foregroundStyle(t.palette[i].oklab.x > 0.62 ? Color.black.opacity(0.7) : Color.white.opacity(0.92))
+            VStack(spacing: 5) {
+                WatercolorPan(color: color, done: done)
+                    .frame(width: 40, height: 46)
+                    .shadow(color: .black.opacity(selected ? 0.3 : 0.14), radius: selected ? 6 : 1, y: selected ? 7 : 1)
+                    .offset(y: selected ? -7 : 0)
+                Group {
+                    if done {
+                        Image(systemName: "checkmark").font(.caption2.bold())
+                    } else {
+                        Text(verbatim: "\(i + 1)").font(.system(.caption, design: .serif, weight: selected ? .bold : .semibold))
+                    }
                 }
+                .monospacedDigit()
+                .foregroundStyle(selected ? WatercolorEra.panInk : Color.black.opacity(done ? 0.3 : 0.62))
             }
-            .frame(width: 44, height: 44)
-            .opacity(done ? 0.45 : 1)
-            .scaleEffect(selected ? 1.12 : 1)
-            .overlay {
-                if selected { Circle().strokeBorder(WatercolorEra.ink, lineWidth: 2.5).padding(-5) }
-            }
+            .contentShape(.rect)
             .animation(.snappy, value: selected)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text(verbatim: label))
         .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityShowsLargeContentViewer {
+            Text(verbatim: "\(i + 1)")
+        }
         .accessibilityIdentifier("watercolor-paint-\(i + 1)")
+    }
+}
+
+/// A half pan: a white well with its cake of paint, a little sheen on top; used up, the cake
+/// scooped out to the well.
+private struct WatercolorPan: View {
+    let color: Color
+    let done: Bool
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: 7, style: .continuous)
+            .fill(WatercolorEra.well)
+            .overlay {
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    .fill(color)
+                    .overlay {
+                        // The cake's edge, a shade darker where it meets the well.
+                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                            .strokeBorder(.black.opacity(0.16), lineWidth: 2)
+                            .blur(radius: 1.5)
+                    }
+                    .overlay(alignment: .top) {
+                        if !done {
+                            Capsule()
+                                .fill(.white.opacity(0.24))
+                                .frame(height: 6)
+                                .padding(.horizontal, 6)
+                                .padding(.top, 3)
+                                .blur(radius: 2)
+                        }
+                    }
+                    .overlay {
+                        if done {
+                            Ellipse()
+                                .fill(WatercolorEra.well.opacity(0.85))
+                                .padding(4)
+                                .blur(radius: 2.5)
+                        }
+                    }
+                    .clipShape(.rect(cornerRadius: 4, style: .continuous))
+                    .padding(4)
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .strokeBorder(.black.opacity(0.1), lineWidth: 0.5)
+            }
     }
 }
 #endif

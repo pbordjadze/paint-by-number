@@ -1362,9 +1362,16 @@ Settings with the Year row), `WatercolorShelf` (an `ArtworkStore` at
 tap log, and `watercolor.sheet`, the sim's LZFSE snapshot, so a painting opens without replaying),
 `WatercolorPainting` (the observable model), `WatercolorRenderer` + `Watercolor.metal` (the sheet
 drawn in linear Display P3: Beer–Lambert pigment, granulation, paper, wet sheen, pencil and numbers
-that fade as a wash covers them; logs step times to `Log.canvas`), `WatercolorCanvas` (an MTKView
-under a zooming scroll view, paused when nothing is wet), `WatercolorPaintView` (canvas and paint
-box; Reduce Motion settles each wash at once). 1502 opens `Era.watercolor`, whose passage is a
+that fade as a wash covers them; past the canvas the sheet's paper margins, deckled, and its
+shadow on a slate desk, `watercolor_surround`, apart from the pigment; logs step times to
+`Log.canvas`), `WatercolorCanvas` (an MTKView under a zooming scroll view, paused when nothing is
+wet; the sheet with its margins, `WatercolorRenderer.margins`, fitted above the paint box; a
+finished painting signed in pencil in its bottom margin, its title and 1502), `WatercolorPaintView`
+(canvas and paint box, `WatercolorPaintBox`: a tin of half pans lying over the desk, the pan in
+hand lifted, a used-up one scooped to its white, put away when the painting is finished, the
+sheet settling into its room; Reduce Motion settles each wash at once and moves nothing). The era
+is dark (`preferredColorScheme`, as Stained Glass), its gallery sheets on the slate
+(`WatercolorCard`, `DeckleEdge`), empty a blank sheet with its two ways in. 1502 opens `Era.watercolor`, whose passage is a
 wash flooding the screen (`EraPassage.drawWash`). `pbn watercolor` paints a template off the
 device. Demos: `watercolor-empty`, `watercolor-paint`, `watercolor-painted` (`WatercolorDemo`) and
 `era-passage-watercolor`.
