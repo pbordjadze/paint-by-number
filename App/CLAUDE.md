@@ -1427,16 +1427,16 @@ and at the top of a gallery card's menu, beside Share, in every build: it makes 
 the session on screen, whatever is painted) and hands it, as data, with no file to delete, to the
 system's print dialog (`PrintSheet`, `UIPrintInteractionController`), which hangs from the card
 or the More button on an iPad. Share's Print Template… left on November 17, 2026 (one way to print
-per menu: painting-company `process/design-budget.md`); Paint by Mosaic's card keeps its own. In SideStore and Debug builds (`#if UNRELEASED`, until 1.3;
-painting-company row 357) Print… opens Print's preview first (`PrintPreviewSheet`,
+per menu: painting-company `process/design-budget.md`); Paint by Mosaic's card keeps its own. From 1.3 (painting-company row 357) Print… opens Print's preview first (`PrintPreviewSheet`,
 `Export/PrintPreview.swift`): the pages as they will print, drawn from the PDF itself
 (`PrintPages`), a Blank / Painted switch (`PDFExporter.Layout.painted`: the template's pages
-painted in, never printed), and two of `PDFExporter.Layout`'s choices: Size (`PDFExporter.sizes`:
-the fewest legible sheets, then the picture across more, with its printed size) and Color Key
-(the paper is the region's and the page turns the picture's way: the system's dialog asks for
-both after); its Print hands that layout's blank PDF to the dialog and closes once
+painted in, never printed), and two rows of `PDFExporter.Layout`'s choices: Size (`PDFExporter.sizes`:
+the fewest legible sheets, then the picture across more, with its printed size; without
+numbers there is no legibility floor) and Layers, one menu that stays open over the pages
+(row 370: Numbers, Color Hints, Color Key over the lines, which always print; `Layout.templateStyle`; Numbers off takes the key and the header's counts with it, a coloring page). The paper is the
+region's and the page turns the picture's way: the system's dialog asks for both after; its Print hands that layout's blank PDF to the dialog and closes once
 it has printed (`PrintSheet.onPrinted`). `Layout(paper:)` is the PDF as it always was.
-`print-preview` (with `-dark`, `-long-text`), `-painted` and `-sheets` are its screenshots,
+`print-preview` (with `-dark`, `-long-text`), `-painted`, `-sheets`, `-no-numbers` and `-hints` are its screenshots,
 `PrintLayoutTests` its tests.
 Printing takes no free painting. One dialog at a time (the controller is the system's one), and
 Print… is not offered where the device can't print, nor in Refine's Try Painting (More offers it
