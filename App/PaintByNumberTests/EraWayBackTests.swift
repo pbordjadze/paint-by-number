@@ -167,4 +167,18 @@ struct EraWayBackTests {
         let time = EraWayBack.halfFallen
         #expect(EraWayBack.tile(delay: 0.6, index: 12, at: time) == EraWayBack.tile(delay: 0.6, index: 12, at: time))
     }
+
+    /// The way in from the gallery swaps Paint by Mosaic in once the apse's dark lies under the
+    /// whole screen, before the last courses are set, so its loading is over before the tiles
+    /// lift; from anywhere else, and under Reduce Motion, the swap waits for the whole cover.
+    @Test func theWayInSwapsUnderAWholeBedBeforeTheTilesLift() {
+        let wayIn = EraPassage.moments(to: .byzantium, from: .moonlight, reduceMotion: false)
+        #expect(wayIn.covered == EraPassage.wait + EraPassage.cover * EraPassage.bedded)
+        #expect(wayIn.done == EraPassage.total)
+        #expect(wayIn.covered - EraPassage.wait > 0.4, "the sheet that asked has gone first")
+        #expect(EraPassage.wait + EraPassage.cover + EraPassage.hold - wayIn.covered > 0.5,
+                "half a second for the era to load before anything lifts")
+        let whole = EraPassage.moments(to: .byzantium, from: .moonlight, reduceMotion: true)
+        #expect(whole.covered == EraPassage.wait + EraPassage.cover)
+    }
 }
