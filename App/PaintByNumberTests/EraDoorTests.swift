@@ -74,9 +74,13 @@ struct EraDoorTests {
     @Test func theWheelStartsAt0547AndEndsAtThePresent() {
         let years = EraClock.years
         #if UNRELEASED
-        #expect(years.first == 1, "SideStore's wheel reaches back to 0001")
-        #expect(years.contains(EraYear.byzantium) && years.contains(EraYear.stainedGlass))
-        #expect(years.count < 60, "a few flicks from end to end")
+        #expect(years.first == EraYear.farthest, "SideStore's wheel reaches back to 15,000 BC")
+        #expect(years.filter { $0 < 1 } == Array(stride(from: -15000, through: -100, by: 100)),
+                "every century before Christ, a step each: a long scroll, on purpose")
+        #expect(years.contains(1) && years.contains(EraYear.byzantium) && years.contains(EraYear.stainedGlass))
+        #expect(years.filter { $0 >= 1 }.count < 60, "a few flicks from 0001 to the present")
+        #expect(EraClock.text(of: EraYear.farthest).contains("15"), "15,000 BC")
+        #expect(EraClock.text(of: -100) != EraClock.text(of: 100), "100 BC isn't 0100")
         #else
         #expect(years.first == EraYear.byzantium)
         #expect(years.count < 30, "the far end is a flick away, not a long scroll")

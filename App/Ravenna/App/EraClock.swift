@@ -7,7 +7,9 @@ import SwiftUI
 /// each century, then the last years one by one up to the present (`years`), so the far end is
 /// a flick away. It answers as it turns: the further back the year, the warmer its numerals,
 /// toward the gold of a smalto, and the heavier each step back is in the hand. In SideStore and
-/// Debug builds (painting-company row 366) it reaches back to 0001, the years that open an era
+/// Debug builds (painting-company row 366) it reaches back to 15,000 BC (`EraYear.farthest`), a
+/// century a step and no faster for being far, so the oldest years are found only by really
+/// scrolling; the years that open an era
 /// (`EraYear.modes`) lit in gold among quieter ones, and a wheel left on a year beside one of
 /// them is drawn on to it (`pull`), where it clicks into place, so the eras are found without
 /// being shown.
@@ -103,13 +105,21 @@ public struct EraClock: View {
     /// inside the cap, and not on the clock, which sees the painter's own size). Tall enough for
     /// two years above and below the one read, fading as a system wheel does.
     private struct WheelFrame: ViewModifier {
-        @ScaledMetric(relativeTo: .title2) private var width: CGFloat = 120
+        @ScaledMetric(relativeTo: .title2) private var width: CGFloat = EraClock.wheelWidth
         @ScaledMetric(relativeTo: .title2) private var height: CGFloat = 176
 
         func body(content: Content) -> some View {
             content.frame(width: width, height: height).clipped()
         }
     }
+
+    /// The wheel's width at the default text size: room for 0547, and in SideStore and Debug
+    /// builds for the long reach's years before Christ ("15,000 BC", "v. Chr.", "紀元前…年").
+    #if UNRELEASED
+    static let wheelWidth: CGFloat = 200
+    #else
+    static let wheelWidth: CGFloat = 120
+    #endif
 
     /// Smalti gold, as Ravenna's theme has it.
     static let gold = Color(red: 0.788, green: 0.635, blue: 0.290)
@@ -135,15 +145,18 @@ public struct EraClock: View {
         return years.filter { $0 >= EraYear.byzantium && $0 <= max(present, EraYear.byzantium) }.sorted()
     }
 
-    /// The wheel reaching back to 0001 (SideStore and Debug builds): the centuries to 1700, the
-    /// decades from 1800, the present's last seven years one by one, and every era's year.
+    /// The wheel reaching back to 15,000 BC (SideStore and Debug builds): every century before
+    /// Christ, then 0001, the centuries to 1700, the decades from 1800, the present's last seven
+    /// years one by one, and every era's year. A year before Christ is negative: -15000 is
+    /// 15,000 BC (the wheel has no year 0 to be off by).
     static var longReach: [Int] {
         let present = EraYear.present
         let recent = present - 6
+        let beforeChrist = stride(from: EraYear.farthest, through: -100, by: 100)
         let centuries = stride(from: 100, through: 1700, by: 100)
         let decades = stride(from: 1800, to: recent, by: 10)
-        let years = Set([1] + centuries + decades + Array(recent...present) + EraYear.modes)
-        return years.filter { $0 >= 1 && $0 <= max(present, 1) }.sorted()
+        let years = Set(Array(beforeChrist) + [1] + centuries + decades + Array(recent...present) + EraYear.modes)
+        return years.filter { $0 >= EraYear.farthest && $0 <= max(present, 1) }.sorted()
     }
 
     /// Whether the wheel lights `year`: an era's (SideStore and Debug builds; the release's
@@ -183,9 +196,13 @@ public struct EraClock: View {
         years.min { abs($0 - year) < abs($1 - year) || (abs($0 - year) == abs($1 - year) && $0 > $1) } ?? year
     }
 
-    /// A year as the setter writes it: four digits, so the far end reads 0547.
+    /// A year as the setter writes it: four digits, so 547 reads 0547; a year before Christ as
+    /// its language writes one ("15,000 BC").
     public static func text(of year: Int) -> String {
-        String(format: "%04ld", min(max(year, 0), 9999))
+        guard year < 1 else { return String(format: "%04ld", min(year, 9999)) }
+        let before = (-year).formatted()
+        return String(localized: "eraClock.beforeChrist", defaultValue: "\(before) BC", bundle: .ravenna,
+                      comment: "A year before Christ on the year wheel behind the secret door; the argument is the year, like 15,000")
     }
 
     /// How far back a year is, from 0 at the present (and after) to 1 at 0547 and before it.
@@ -201,6 +218,10 @@ public struct EraClock: View {
 /// is Paint by Moonlight's own. Every other year opens nothing.
 public enum EraYear {
     public static let byzantium = 547
+
+    /// 15,000 BC, the wheel's far end in SideStore and Debug builds: the age of the cave
+    /// paintings (painting-company row 371), whose year lights only once its era is built.
+    public static let farthest = -15000
 
     /// The present year, by the Gregorian calendar whatever the device's (547 is a Gregorian
     /// year; the Japanese calendar's present would be a single digit).
