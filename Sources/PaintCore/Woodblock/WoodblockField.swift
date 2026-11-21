@@ -76,7 +76,7 @@ public struct WoodblockField: Sendable {
     /// an open stroke drawn to a point at its ends.
     static func carvedWidths(of line: Line, long: Float) -> [Float] {
         let pts = line.points
-        let scale = long * 0.03
+        let scale = long * 0.018
         var along = [Float](repeating: 0, count: pts.count)
         for k in pts.indices.dropFirst() {
             let d = pts[k] - pts[k - 1]
@@ -86,7 +86,7 @@ public struct WoodblockField: Sendable {
         let taper = long * 0.012
         return pts.indices.map { k in
             let p = pts[k] / scale
-            let swell = 0.7 + 0.6 * WoodblockBench.noise(p.x, p.y, 7)
+            let swell = 0.45 + 1.1 * WoodblockBench.noise(p.x, p.y, 7)
             var w = line.halfWidth * swell
             if line.tapers && taper > 0 {
                 let end = min(along[k], total - along[k]) / taper
@@ -103,16 +103,9 @@ public struct WoodblockField: Sendable {
         let shortest = long * 0.03
         var lines: [Line] = []
         if let art = t.lineArt, art.edgeLayers.count == t.edges.count {
-            for (i, e) in t.edges.enumerated() {
-                if LineLayer.isDrawn(art.edgeLayers[i]) {
-                    let weight = i < art.edgeWeights.count ? Float(art.edgeWeights[i]) / 255 : 0.5
-                    lines.append(Line(points: Array(t.points(of: e)), halfWidth: half * (0.8 + 0.4 * weight)))
-                } else if Int(e.left) < t.regions.count, Int(e.right) < t.regions.count,
-                          t.regions[Int(e.left)].colorIndex != t.regions[Int(e.right)].colorIndex {
-                    // A colour the drawing left open is closed by a finer line, as the kyōgō
-                    // proof marks every colour's edge on the key.
-                    lines.append(Line(points: Array(t.points(of: e)), halfWidth: half * 0.7))
-                }
+            for (i, e) in t.edges.enumerated() where LineLayer.isDrawn(art.edgeLayers[i]) {
+                let weight = i < art.edgeWeights.count ? Float(art.edgeWeights[i]) / 255 : 0.5
+                lines.append(Line(points: Array(t.points(of: e)), halfWidth: half * (0.8 + 0.4 * weight)))
             }
             for s in art.strokes {
                 let lo = Int(s.pointStart), hi = lo + Int(s.pointCount)
