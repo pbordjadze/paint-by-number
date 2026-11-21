@@ -111,6 +111,59 @@ struct GlassTests {
         #expect(leading.window().template.encoded() == all.template.encoded())
     }
 
+    /// The lead a photo suggests goes round what stands out in it, and is the ground the painter
+    /// starts from: nothing to undo, and the window is valid.
+    @Test func theSuggestedLeadGoesRoundTheSubject() throws {
+        var photo = RGBAImage(width: Self.width, height: Self.height, fill: Self.sage)
+        for y in 0..<Self.height {
+            for x in 0..<Self.width where hypot(Float(x - 160), Float(y - 90)) < 50 { photo[x, y] = Self.orange }
+        }
+        let leading = try GlassWindow.Leading.suggested(photo: photo, width: Self.width, height: Self.height, colorSpace: .sRGB)
+        let t = leading.template
+        expectValid(t)
+        #expect(t.regions.count >= 2)
+        #expect(!leading.canUndo && leading.lines.isEmpty)
+        #expect(Self.region(at: 160, 90, in: t) != Self.region(at: 30, 90, in: t), "the disc is a piece of its own")
+        // Lead runs round the disc's edge; the broad sage and the disc are cut into panes besides.
+        let round = leading.lead.joined().filter { abs(hypot($0.x - 160, $0.y - 90) - 50) < 8 }
+        #expect(round.count >= 20)
+        #expect(t.regions.count > 2, "broad glass is cut into panes")
+    }
+
+    /// A piece too narrow for heavy lead joins the neighbour it shares the most lead with; wide
+    /// pieces stay apart.
+    @Test func aNarrowPieceJoinsItsNeighbour() throws {
+        var leading = try GlassWindow.Leading(photo: Self.photo(), width: Self.width, height: Self.height, colorSpace: .sRGB)
+        leading.add([SIMD2(0, 90), SIMD2(240, 90)])
+        leading.add([SIMD2(0, 95), SIMD2(240, 95)])
+        leading.add([SIMD2(120, 0), SIMD2(120, 90)])
+        let t = leading.template
+        #expect(t.regions.count == 4)
+        let pieces = GlassLeadSuggestion.pieces(of: t, narrowest: 6)
+        let strip = Self.region(at: 60, 92, in: t), below = Self.region(at: 60, 150, in: t)
+        let left = Self.region(at: 60, 40, in: t), right = Self.region(at: 180, 40, in: t)
+        #expect(pieces[strip] == pieces[below], "the strip shares the most lead with the piece below")
+        #expect(Set([pieces[left], pieces[right], pieces[below]]).count == 3)
+        #expect(GlassLeadSuggestion.pieces(of: t, narrowest: 1) == Array(0..<t.regions.count))
+    }
+
+    /// A tap takes a line of lead away, junction to junction, and Undo puts it back.
+    @Test func eraseTakesALineAndUndoPutsItBack() throws {
+        var leading = try GlassWindow.Leading(photo: Self.photo(), width: Self.width, height: Self.height, colorSpace: .sRGB)
+        for line in Self.lines { leading.add(line) }
+        let three = leading.template.encoded()
+        #expect(leading.template.regions.count == 3)
+        let erased = leading.erase(at: SIMD2(200, 90), reach: 4)
+        #expect(erased)
+        #expect(leading.template.regions.count == 2)
+        let bare = leading.erase(at: SIMD2(60, 40), reach: 4)
+        #expect(!bare, "nothing to take on bare glass")
+        try leading.undo()
+        #expect(leading.template.encoded() == three)
+        try leading.undo()
+        #expect(leading.lines.count == 1)
+    }
+
     @Test func noLinesIsOnePiece() throws {
         let w = try Self.window([])
         expectValid(w.template)
@@ -159,6 +212,34 @@ struct GlassTests {
         var again = [UInt8](repeating: 0, count: lit.count)
         GlassTexture(template: t).paint(r, rgb: glass, lit: true, into: &again)
         #expect(again == lit)
+    }
+
+    /// The fields the canvas paints the glass from: the lead's distance 1 on a piece's edge and
+    /// growing inside it, and the same shade, depth and grain `paint` uses (a lit pixel's red is
+    /// its glass by the shade plus the warm light by the depth).
+    @Test func fieldsAreWhatPaintUses() throws {
+        let t = try Self.window().template
+        let texture = GlassTexture(template: t)
+        let fields = texture.fields()
+        #expect(fields.count == t.width * t.height * 4)
+        let r = t.regions.indices.max { t.regions[$0].area < t.regions[$1].area }!
+        let glass = SIMD3<Float>(0.8, 0.3, 0.2)
+        var lit = [UInt8](repeating: 0, count: t.width * t.height * 4)
+        texture.paint(r, rgb: glass, lit: true, into: &lit)
+        var deepest: Float = 0
+        for y in 1..<(t.height - 1) {
+            for x in 1..<(t.width - 1) where Self.region(at: x, y, in: t) == r {
+                let i = y * t.width + x
+                let k = Int(t.regionMap[x, y])
+                if Int(t.regionMap[x - 1, y]) != k || Int(t.regionMap[x + 1, y]) != k {
+                    #expect(fields[i * 4] <= 1.5, "a piece's edge is next to its lead")
+                }
+                deepest = max(deepest, fields[i * 4])
+                let red = glass.x * fields[i * 4 + 1] + GlassTexture.warm.x * fields[i * 4 + 2]
+                #expect(abs(Float(lit[i * 4]) - min(255, max(0, red * 255))) <= 1.5)
+            }
+        }
+        #expect(deepest > 3, "the lead's distance grows inside a piece")
     }
 
     // MARK: Glazing
