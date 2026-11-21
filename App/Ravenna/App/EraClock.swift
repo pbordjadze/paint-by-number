@@ -43,13 +43,17 @@ public struct EraClock: View {
         let text: String
         let isLit: Bool
         let ink: Color
+        /// Its ink while it is the year read: a quiet year at full strength, as a system wheel
+        /// draws the row under its band.
+        let readInk: Color
         var id: Int { year }
     }
 
     private static func rows() -> [Row] {
         let present = EraYear.present
         return years.map { year in
-            Row(year: year, text: text(of: year), isLit: isLit(year), ink: ink(of: year, present: present))
+            Row(year: year, text: text(of: year), isLit: isLit(year), ink: ink(of: year, present: present),
+                readInk: ink(of: year, present: present, read: true))
         }
     }
 
@@ -59,7 +63,7 @@ public struct EraClock: View {
                 Text(verbatim: row.text)
                     .font(.system(.title2, design: .serif, weight: row.isLit ? .bold : .semibold))
                     .monospacedDigit()
-                    .foregroundStyle(row.ink)
+                    .foregroundStyle(row.year == year ? row.readInk : row.ink)
                     .tag(row.year)
             }
         } label: {
@@ -153,12 +157,13 @@ public struct EraClock: View {
     }
 
     /// The numerals' color: warmer the further back; an era's year in full gold, and in
-    /// SideStore and Debug builds every other year quieter, so the lit ones stand out.
-    static func ink(of year: Int, present: Int = EraYear.present) -> Color {
+    /// SideStore and Debug builds every other year quieter, so the lit ones stand out, but for
+    /// the year `read`, under the band, which is never quieter than its neighbours.
+    static func ink(of year: Int, present: Int = EraYear.present, read: Bool = false) -> Color {
         if isLit(year) { return gold }
         let warm = Color.primary.mix(with: gold, by: age(of: year, present: present))
         #if UNRELEASED
-        return warm.opacity(0.6)
+        return read ? warm : warm.opacity(0.6)
         #else
         return warm
         #endif
