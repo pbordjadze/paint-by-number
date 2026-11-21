@@ -96,7 +96,8 @@ public struct EraClock: View {
                 }
                 try? await Task.sleep(for: voiceOver ? Self.spokenRest : Self.rest)
                 guard !Task.isCancelled else { return }
-                reading?.year = year
+                // A rest that lands while the row is closing the wheel leaves the row its own year.
+                if let reading, reading.isOpen { reading.year = year }
                 onSettle(year)
             }
         }
@@ -116,6 +117,8 @@ public struct EraClock: View {
     @Observable
     public final class Reading {
         public var year: Int?
+        /// False once the row has closed the wheel: a rest still settling then changes nothing.
+        @ObservationIgnored public var isOpen = true
 
         public init() {}
     }

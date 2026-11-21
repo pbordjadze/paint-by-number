@@ -1322,8 +1322,8 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
   `.moonlight` file type (a mosaic sent opens as a painting of tiles).
 - **Release:** the door ships (painting-company row 236): Release leaves out no source (the
   extensions ship from 1.3), and `ci/check_release.sh` requires
-  `RavennaResources.bundle`, `RavennaEra` and `EraClock` in the Release app. The `Ravenna` target defines `UNRELEASED` in every
-  configuration, as Ravenna's own app did.
+  `RavennaResources.bundle`, `RavennaEra` and `EraClock` in the Release app. The `Ravenna` target defines `UNRELEASED` in
+  Debug alone, as the app does (above).
 - **Demos:** `-demo ravenna-<name>` opens the era on Ravenna's own scenario `<name>` (its
   `ShellDemo`, `PaintDemoView`, `MakingOfDemoView`); `ci/scenarios.txt` takes a few. No tests of
   its own in the app's targets: its engine's are the package's (Linux), the rest is screenshots.

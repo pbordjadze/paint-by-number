@@ -204,6 +204,7 @@ struct SettingsView: View {
                         Button {
                             withAnimation { showsClock.toggle() }
                             // Closed without opening an era: the row reads its own year again.
+                            clockYear.isOpen = showsClock
                             if !showsClock { clockYear.year = nil }
                         } label: {
                             LabeledContent {

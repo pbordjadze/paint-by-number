@@ -785,6 +785,7 @@ struct PaintView: View {
             Button("Restart", role: .destructive) {
                 undoManager?.removeAllActions(withTarget: session)
                 session.reset()
+                linesShown = false
             }
         } message: {
             Text("Every tile will be lifted.")
