@@ -124,10 +124,10 @@ struct GlassTests {
         #expect(t.regions.count >= 2)
         #expect(!leading.canUndo && leading.lines.isEmpty)
         #expect(Self.region(at: 160, 90, in: t) != Self.region(at: 30, 90, in: t), "the disc is a piece of its own")
-        // Every line of the lead lies near the disc's edge.
-        for line in leading.lead { for p in line where p.x > 1 && p.x < 239 && p.y > 1 && p.y < 179 {
-            #expect(abs(hypot(p.x - 160, p.y - 90) - 50) < 8)
-        } }
+        // Lead runs round the disc's edge; the broad sage and the disc are cut into panes besides.
+        let round = leading.lead.joined().filter { abs(hypot($0.x - 160, $0.y - 90) - 50) < 8 }
+        #expect(round.count >= 20)
+        #expect(t.regions.count > 2, "broad glass is cut into panes")
     }
 
     /// A piece too narrow for heavy lead joins the neighbour it shares the most lead with; wide

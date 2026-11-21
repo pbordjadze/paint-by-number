@@ -24,7 +24,7 @@ public struct GlassTexture: Sendable {
 
     /// The dark of unlit glass, and how much of its own color shows through it.
     public static let unlitBase = SIMD3<Float>(30, 31, 40) / 255
-    public static let unlitTint: Float = 0.17
+    public static let unlitTint: Float = 0.1
     /// Light through lit glass deep in its piece, so even a dark glass glows in its middle.
     public static let warm = SIMD3<Float>(30, 26, 18) / 255
 
