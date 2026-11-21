@@ -1,6 +1,7 @@
 #if UNRELEASED && DEBUG
 import PaintCore
 import SwiftUI
+import os
 
 /// Watercolor's demo scenarios (Debug builds; `-demo watercolor-<name>`): `watercolor-empty`, the
 /// gallery with nothing in it; `watercolor-paint`, a library picture opened with a few washes
