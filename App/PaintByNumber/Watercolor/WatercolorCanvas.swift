@@ -86,7 +86,9 @@ final class WatercolorCanvasView: UIView, UIScrollViewDelegate {
         insetChanged = false
         let sheet = sheetSize
         let fit = min(bounds.width / sheet.width, (bounds.height - bottomInset) / sheet.height) * 0.96
-        let wasFitted = fittedSize == .zero || abs(scroll.zoomScale - scroll.minimumZoomScale) < 0.001
+        // A settle under way counts as fitted: the new fit takes its place.
+        let wasFitted = fittedSize == .zero || settling != nil || abs(scroll.zoomScale - scroll.minimumZoomScale) < 0.001
+        cancelSettling()
         let refitting = fittedSize != .zero
         fittedSize = bounds.size
         // Only into more room (the paint box put away, a turn): less, as the box is first
@@ -102,6 +104,7 @@ final class WatercolorCanvasView: UIView, UIScrollViewDelegate {
         }
         center()
         updateView()
+        sharpenSignature()
     }
 
     private var settling: (link: CADisplayLink, from: CGFloat, to: CGFloat, start: CFTimeInterval)?
@@ -109,7 +112,7 @@ final class WatercolorCanvasView: UIView, UIScrollViewDelegate {
     /// Zooms to `zoom` over a moment, frame by frame, so the sheet the renderer draws follows
     /// (a UIView animation would move only the scroll view's presentation, not the sheet).
     private func settle(to zoom: CGFloat) {
-        settling?.link.invalidate()
+        cancelSettling()
         let link = CADisplayLink(target: self, selector: #selector(settleStep(_:)))
         settling = (link, scroll.zoomScale, zoom, CACurrentMediaTime())
         link.add(to: .main, forMode: .common)
@@ -126,6 +129,45 @@ final class WatercolorCanvasView: UIView, UIScrollViewDelegate {
             link.invalidate()
             settling = nil
             scroll.minimumZoomScale = s.to
+            sharpenSignature()
+        }
+    }
+
+    /// Stops a settle where it stands (a new fit, or the painter's own pinch or pan).
+    private func cancelSettling() {
+        guard let s = settling else { return }
+        s.link.invalidate()
+        settling = nil
+        scroll.minimumZoomScale = min(scroll.minimumZoomScale, scroll.zoomScale)
+    }
+
+    func scrollViewWillBeginZooming(_ scrollView: UIScrollView, with view: UIView?) { cancelSettling() }
+
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) { cancelSettling() }
+
+    func scrollViewDidEndZooming(_ scrollView: UIScrollView, with view: UIView?, atScale scale: CGFloat) {
+        sharpenSignature()
+    }
+
+    /// The title at the left of the bottom margin, no wider than most of it, and the year at the
+    /// right; each label only as large as its words, since it is drawn as sharp as the zoom.
+    private func layOutSignature() {
+        let b = signature.bounds
+        let lift = b.height * 0.034
+        for (i, label) in signature.subviews.enumerated() {
+            label.sizeToFit()
+            let width = min(label.bounds.width, b.width * 0.7)
+            let x = i == 0 ? 0 : b.width - width
+            label.frame = CGRect(x: x, y: (b.height - label.bounds.height) / 2 - lift, width: width, height: label.bounds.height)
+        }
+    }
+
+    /// The pencil drawn at the pixels the zoom shows it at (a label is drawn once, at its scale).
+    private func sharpenSignature() {
+        let scale = min(12, max(2, scroll.zoomScale * traitCollection.displayScale))
+        for label in signature.subviews where abs(label.contentScaleFactor - scale) > 0.5 {
+            label.contentScaleFactor = scale
+            label.setNeedsDisplay()
         }
     }
 
@@ -150,23 +192,19 @@ final class WatercolorCanvasView: UIView, UIScrollViewDelegate {
             let descriptor = base.withDesign(.serif)?.withSymbolicTraits(.traitItalic) ?? base
             let font = UIFont(descriptor: descriptor, size: size)
             let pencil = UIColor(red: 0.44, green: 0.43, blue: 0.44, alpha: 0.9)
-            let b = signature.bounds
-            let frames = [CGRect(x: 0, y: 0, width: b.width * 0.7, height: b.height),
-                          CGRect(x: b.width * 0.75, y: 0, width: b.width * 0.25, height: b.height)]
-            let texts = [(title, NSTextAlignment.left), (EraClock.text(of: EraYear.watercolor), .right)]
-            for ((text, alignment), frame) in zip(texts, frames) {
-                let label = UILabel(frame: frame.offsetBy(dx: 0, dy: -size * 0.1))
+            for text in [title, EraClock.text(of: EraYear.watercolor)] {
+                let label = UILabel()
                 label.text = text
                 label.font = font
                 label.textColor = pencil
-                label.textAlignment = alignment
                 label.lineBreakMode = .byTruncatingTail
-                // Drawn sharp enough to zoom into, as the sheet is.
-                label.contentScaleFactor = 4
                 label.isAccessibilityElement = false
                 signature.addSubview(label)
             }
+            sharpenSignature()
         }
+        if let written = signature.subviews.first as? UILabel, written.text != title { written.text = title }
+        layOutSignature()
         let alpha: CGFloat = signed ? 1 : 0
         guard signature.alpha != alpha else { return }
         if animated && !reduceMotion {
