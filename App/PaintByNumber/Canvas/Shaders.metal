@@ -240,10 +240,22 @@ fragment float4 fillFragment(FillOut in [[stage_in]],
 
 // Must match `GlassMode.Parameters` (GlassMode.swift).
 struct GlassParameters {
-    float4 lead;        // rgb: the lead (sRGB-curved), w: its width (canvas units)
+    float4 lead;        // rgb: the lead (sRGB-curved), w: its width on average (canvas units)
     float4 warm;        // rgb: light through the glass deep in a piece (sRGB-curved), w: the unlit tint
     float4 unlit;       // rgb: unlit glass's dark (sRGB-curved)
 };
+
+// Smooth value noise, 0…1, on the integer lattice.
+static float latticeHash(float2 p) {
+    return fract(sin(dot(p, float2(127.1, 311.7))) * 43758.5453);
+}
+
+static float valueNoise(float2 p) {
+    float2 i = floor(p), f = fract(p);
+    float2 w = f * f * (3.0 - 2.0 * f);
+    return mix(mix(latticeHash(i), latticeHash(i + float2(1, 0)), w.x),
+               mix(latticeHash(i + float2(0, 1)), latticeHash(i + float2(1, 1)), w.x), w.y);
+}
 
 static float3 curveEncode(float3 c) {
     c = max(c, 0.0);
@@ -280,26 +292,38 @@ fragment float4 glassFillFragment(FillOut in [[stage_in]],
     float3 under = before > 0u ? curveEncode(glasses[before - 1u].rgb) * f.y + g.warm.rgb * f.z : unlit;
     PaintSample ps = samplePaint(s, in.canvas, u.time.x, 1.0 / u.transform.z);
     float3 c = mix(under, lit, ps.coverage);
-    // The lead: half its width on each side of the edge (a piece's edge pixels are 1 away).
+    // The lead: medieval came, half of it on each side of the edge (a piece's edge pixels are 1
+    // away), heavy and uneven as cast by hand, its rounded face catching a soft sheen.
     float d = f.x - 0.5;
+    float halfWidth = 0.5 * g.lead.w * (0.8 + 0.4 * valueNoise(in.canvas / (2.5 * g.lead.w)));
     float aa = max(fwidth(d), 1e-3);
-    c = mix(c, g.lead.rgb, 1.0 - smoothstep(g.lead.w * 0.5 - aa, g.lead.w * 0.5 + aa, d));
+    float across = saturate(d / halfWidth);
+    float crown = (across - 0.38) / 0.22;
+    float3 came = g.lead.rgb * (1.0 + 2.2 * exp(-crown * crown) - 0.35 * smoothstep(0.75, 1.0, across));
+    c = mix(c, came, 1.0 - smoothstep(halfWidth - aa, halfWidth + aa, d));
     return float4(curveDecode(c), 1.0);
 }
 
-/// Light over a Stained Glass window, drawn on the sheet (canvasRectVertex, margin 0) and added to
-/// what is there: light from behind, brightest a little above the middle, and once the window is
-/// whole the sun passing behind it, a band crossing it corner to corner (the line x + 0.6 y).
-/// `sun`: x its start (renderer clock), y its duration, z where a demo holds it (0…1; < 0: none),
-/// w 1 while it may pass (Reduce Motion: never).
+// Must match `GlassMode.Light` (GlassMode.swift).
+struct GlassLight {
+    float4 sun;         // x: start (renderer clock), y: duration, z: where a demo holds it (0…1; < 0: none), w: 1 while it may pass
+    float4 day;         // rgb: the hour's light, added; w: how much it dims the window (night)
+    float4 dayFrom;     // x: when the hour's light starts to come (renderer clock), y: 1 while it shows
+};
+
+/// Light over a Stained Glass window, drawn on the sheet (canvasRectVertex, margin 0): light from
+/// behind, brightest a little above the middle; once the window is whole the sun passing behind
+/// it, a band crossing it corner to corner (the line x + 0.6 y), and then the hour's light,
+/// coming over it in `GlassMode.dayFade` seconds (premultiplied: rgb added, alpha dims).
 fragment float4 glassLightFragment(RectOut in [[stage_in]],
                                    constant FrameUniforms &u [[buffer(0)]],
-                                   constant float4 &sun [[buffer(1)]]) {
+                                   constant GlassLight &l [[buffer(1)]]) {
     float2 size = u.viewport.zw;
     float2 p = (in.position.xy - u.transform.xy) / u.transform.z;
     float reach = 0.7 * max(size.x, size.y);
     float glow = 0.14 * saturate(1.0 - length(p - float2(0.5 * size.x, 0.4 * size.y)) / reach);
     float3 light = float3(glow * 0.3);
+    float4 sun = l.sun;
     float t = sun.z >= 0.0 ? sun.z : (u.time.x - sun.x) / max(sun.y, 1e-3);
     if (sun.w > 0.5 && t > 0.0 && t < 1.0) {
         float band = 0.6 * size.x, depth = band * 1.36;
@@ -308,7 +332,13 @@ fragment float4 glassLightFragment(RectOut in [[stage_in]],
         float a = 0.42 * sin(3.14159265 * t) * saturate(1.0 - abs(2.0 * s - 1.0));
         light += float3(1.0, 0.95, 0.8) * a * 0.45;
     }
-    return float4(light, 0.0);
+    float dim = 0.0;
+    if (l.dayFrom.y > 0.5) {
+        float k = smoothstep(0.0, 1.5, u.time.x - l.dayFrom.x);
+        light += l.day.rgb * k * (0.6 + 0.4 * glow / 0.14);
+        dim = l.day.w * k;
+    }
+    return float4(light, dim);
 }
 
 // MARK: - Outlines

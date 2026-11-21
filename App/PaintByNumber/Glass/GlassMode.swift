@@ -29,9 +29,19 @@ nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
     private let fields: any MTLTexture
     private let glasses: any MTLBuffer
     private let parameters: Parameters
-    /// The sun: x its start on the renderer's clock, y its duration, z where it is held (0…1;
-    /// < 0: not held), w 1 while it may pass. Set from the main actor, read as frames encode.
-    private let sunState = OSAllocatedUnfairLock(initialState: SIMD4<Float>(0, GlassMode.sunDuration, -1, 0))
+    /// The light over the window: the sun's pass (x its start on the renderer's clock, y its
+    /// duration, z where it is held, 0…1, < 0: not held, w 1 while it may pass), then the hour's
+    /// light (`daylight`: rgb added, w how much it dims) from `dayFrom.x` on (the renderer's
+    /// clock; `dayFrom.y` 1 while a whole window shows it). Set from the main actor, read as
+    /// frames encode. Must match `GlassLight` (Shaders.metal).
+    struct Light {
+        var sun = SIMD4<Float>(0, GlassMode.sunDuration, -1, 0)
+        var day = SIMD4<Float>(0, 0, 0, 0)
+        var dayFrom = SIMD4<Float>(0, 0, 0, 0)
+    }
+    private let light = OSAllocatedUnfairLock(initialState: Light())
+    /// How long the hour's light takes to come over a window.
+    static let dayFade: Float = 1.5
 
     /// The window `template`, its fields `texture` and the glasses `offered` (as the
     /// glazing names them). Uploads to the GPU and waits for it: make it off the main actor.
@@ -47,7 +57,7 @@ nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
         self.lightPipeline = lightPipeline
         self.fields = fields
         self.glasses = glasses
-        let width = Float(max(template.width, template.height)) * 0.012
+        let width = Float(GlassPicture.leadWidth(width: template.width, height: template.height))
         parameters = Parameters(
             lead: SIMD4(GlassPicture.lead, width),
             warm: SIMD4(GlassTexture.warm, GlassTexture.unlitTint),
@@ -82,24 +92,50 @@ nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
 
     /// The sun starts across the window at `time` (the renderer's clock, `CanvasView.canvasTime`),
     /// or stays held `held` of the way across (demos); `passes` false (Reduce Motion, a window
-    /// no longer whole) keeps it away.
-    func sun(at time: Float, held: Float? = nil, passes: Bool) {
-        sunState.withLock { $0 = SIMD4(time, Self.sunDuration, held ?? -1, passes ? 1 : 0) }
+    /// no longer whole) keeps it away. The hour's light (`hour`, local, 0…24) comes over the
+    /// window once the sun has passed, at once without it; nil, none (a window not whole).
+    func sun(at time: Float, held: Float? = nil, passes: Bool, hour: Float?) {
+        light.withLock {
+            $0.sun = SIMD4(time, Self.sunDuration, held ?? -1, passes ? 1 : 0)
+            guard let hour, held == nil else { $0.dayFrom = .zero; return }
+            $0.day = Self.daylight(hour: hour)
+            $0.dayFrom = SIMD4(passes ? time + Self.sunDuration : time - Self.dayFade, 1, 0, 0)
+        }
+    }
+
+    /// The hour's light over a whole window: night's moonlight dims it, dawn is rose, the day
+    /// plain and clear, the evening amber. Keys hold from one hour to the next, eased between.
+    static func daylight(hour: Float) -> SIMD4<Float> {
+        let night = SIMD4<Float>(0.010, 0.016, 0.040, 0.35)
+        let keys: [(Float, SIMD4<Float>)] = [
+            (0, night), (5, night), (6.5, SIMD4(0.09, 0.05, 0.05, 0.08)), (9, SIMD4(0.05, 0.05, 0.045, 0)),
+            (16, SIMD4(0.05, 0.05, 0.045, 0)), (18.5, SIMD4(0.10, 0.055, 0.015, 0.05)),
+            (20.5, SIMD4(0.03, 0.025, 0.05, 0.2)), (22, night), (24, night),
+        ]
+        let h = min(max(hour, 0), 24)
+        for (a, b) in zip(keys, keys.dropFirst()) where h <= b.0 {
+            let t = (h - a.0) / max(b.0 - a.0, 1e-3)
+            let e = t * t * (3 - 2 * t)
+            return a.1 + (b.1 - a.1) * e
+        }
+        return night
     }
 
     func isAnimating(at time: Float) -> Bool {
-        let s = sunState.withLock { $0 }
-        return s.w > 0.5 && s.z < 0 && time >= s.x && time <= s.x + s.y
+        let l = light.withLock { $0 }
+        let sweeping = l.sun.w > 0.5 && l.sun.z < 0 && time >= l.sun.x && time <= l.sun.x + l.sun.y
+        let dawning = l.dayFrom.y > 0.5 && time <= l.dayFrom.x + Self.dayFade
+        return sweeping || dawning
     }
 
     func drawOver(_ encoder: any MTLRenderCommandEncoder, frame: CanvasModeFrame) {
-        var u = frame.uniforms, s = sunState.withLock { $0 }, margin: Float = 0
+        var u = frame.uniforms, l = light.withLock { $0 }, margin: Float = 0
         let size = MemoryLayout<CanvasUniforms>.stride
         encoder.setRenderPipelineState(lightPipeline)
         encoder.setVertexBytes(&u, length: size, index: 0)
         encoder.setVertexBytes(&margin, length: MemoryLayout<Float>.size, index: 1)
         encoder.setFragmentBytes(&u, length: size, index: 0)
-        encoder.setFragmentBytes(&s, length: MemoryLayout<SIMD4<Float>>.stride, index: 1)
+        encoder.setFragmentBytes(&l, length: MemoryLayout<Light>.stride, index: 1)
         encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
     }
 

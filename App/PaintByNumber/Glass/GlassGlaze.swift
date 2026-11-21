@@ -1,5 +1,6 @@
 #if UNRELEASED
 import CoreGraphics
+import Metal
 import Observation
 import PaintCore
 import SwiftUI
@@ -46,6 +47,9 @@ final class GlassGlazeModel: CanvasTouches {
     @ObservationIgnored private var touchShowedBeads = false
     @ObservationIgnored private var saving: Task<Void, Never>?
     private(set) var canUndo = false
+    /// A soft glass note per pour, pitched to its glass, as Settings' Sounds says.
+    @ObservationIgnored private let sounds = SoundPlayer()
+    @ObservationIgnored private var lastNote = Date.distantPast
     @ObservationIgnored var onChange: @MainActor (Glazing) -> Void = { _ in }
 
     init(id: UUID, template: Template, glazing: Glazing, offered: [PaletteColor], mode: GlassMode) {
@@ -100,9 +104,23 @@ final class GlassGlazeModel: CanvasTouches {
         glazing.glass[r] = glass
         canvas?.showMode(r, value: GlassMode.code(glass: Int(glass), replacing: Self.glass(before)), painted: true,
                          from: p, animated: animated)
+        ring(glass: Int(glass), poured: animated)
         if isComplete && !wasComplete { finished() }
         if p == nil { endStroke() }
         changed()
+    }
+
+    /// The glass's note, at most one a stroke's tenth of a second, so a drag rings, never rattles.
+    private func ring(glass: Int, poured: Bool) {
+        guard poured, UserDefaults.standard.object(forKey: SettingsKey.sounds) as? Bool ?? SettingsDefault.sounds,
+              Date.now.timeIntervalSince(lastNote) > 0.1 else { return }
+        lastNote = .now
+        sounds.glass(index: SoundPlayer.glassNote(lightness: offered[glass].oklab.x), velocity: 0.7)
+    }
+
+    /// The window's screen came or went: the sounds get ready, or rest.
+    func soundsReady(_ ready: Bool) {
+        if ready { sounds.prepare(sky: .moon) } else { sounds.rest() }
     }
 
     func endStroke() {
@@ -128,7 +146,7 @@ final class GlassGlazeModel: CanvasTouches {
         }
         if !isComplete {
             finishedAt = nil
-            mode.sun(at: 0, passes: false)
+            mode.sun(at: 0, passes: false, hour: nil)
         }
         canUndo = !undoStack.isEmpty
         changed()
@@ -142,7 +160,7 @@ final class GlassGlazeModel: CanvasTouches {
 
     private func finished() {
         finishedAt = .now
-        mode.sun(at: canvas?.canvasTime ?? 0, held: sunHold, passes: !reduceMotion)
+        mode.sun(at: canvas?.canvasTime ?? 0, held: sunHold, passes: !reduceMotion, hour: Self.hour())
     }
 
     /// Every glazed piece shown on a canvas just made, as it stands.
@@ -152,7 +170,53 @@ final class GlassGlazeModel: CanvasTouches {
             guard let glass = Self.glass(glazing.glass[r]) else { continue }
             canvas.showMode(r, value: GlassMode.code(glass: glass, replacing: nil), painted: true, from: nil, animated: false)
         }
-        if finishedAt != nil { mode.sun(at: canvas.canvasTime, held: sunHold, passes: !reduceMotion) }
+        if finishedAt != nil {
+            mode.sun(at: canvas.canvasTime, held: sunHold, passes: !reduceMotion, hour: Self.hour())
+        } else if isComplete {
+            // A window opened whole stands in the hour's light, with no sun passing.
+            mode.sun(at: canvas.canvasTime, passes: false, hour: Self.hour())
+        }
+    }
+
+    /// The hour now on the device's clock, 0…24.
+    static func hour(_ date: Date = .now) -> Float {
+        let c = Calendar.current.dateComponents([.hour, .minute], from: date)
+        return Float(c.hour ?? 12) + Float(c.minute ?? 0) / 60
+    }
+
+    /// The window as it stands, lit where it is glazed, drawn as the canvas draws it, as a PNG
+    /// named `title` to share (Paul's pick: a lit picture now; printing waits for the build book).
+    func sharedPicture(title: String) async throws -> URL {
+        let (template, glazing, count, mode) = (template, glazing, offered.count, mode)
+        return try await Background.run {
+            guard let image = Self.picture(template: template, glazing: glazing, offered: count, mode: mode,
+                                           longSide: ArtworkExporter.imagePixelSize),
+                  let png = ImageCodec.pngData(image)
+            else { throw CocoaError(.fileWriteUnknown) }
+            return try ArtworkExporter.temporaryFile(png, name: ArtworkExporter.fileName(title), pathExtension: "png")
+        }
+    }
+
+    /// The window in `mode` with the glasses `glazing` holds, `longSide` pixels on its long side.
+    nonisolated static func picture(template: Template, glazing: Glazing, offered count: Int, mode: GlassMode,
+                                    longSide: Int) -> CGImage? {
+        guard let context = RenderContext.shared, let scene = CanvasScene(template: template, context: context) else { return nil }
+        let states = template.regions.indices.map { r -> RegionState in
+            let g = r < glazing.glass.count ? Int(glazing.glass[r]) : -1
+            guard g >= 0, g < count else { return .settled(painted: false) }
+            var state = RegionState.settled(painted: true)
+            state.mode = GlassMode.code(glass: g, replacing: nil)
+            return state
+        }
+        let size = CanvasSnapshot.fittedSize(for: template, longSide: longSide)
+        let w = Int(size.width), h = Int(size.height)
+        let nave = CanvasColor.linearP3(sRGB: GlassPicture.nave)
+        return CanvasSnapshot.image(
+            scene: scene, states: states, uniforms: CanvasSnapshot.uniforms(scene: scene, width: w, height: h, options: .painting),
+            content: RenderContext.Content(
+                outlines: false, numbers: false,
+                clear: MTLClearColor(red: Double(nave.x), green: Double(nave.y), blue: Double(nave.z), alpha: 1), mode: mode),
+            width: w, height: h, context: context)
     }
 
     /// A glazing's glass as a place in `offered`, nil for none.
@@ -216,10 +280,16 @@ struct GlassGlazeView: View {
     /// Whether the glasses are out: glazed whole, the window stands alone in the dark until a
     /// touch brings them back.
     @State private var showsBeads: Bool
+    /// The lit picture being shared, while the share sheet is up.
+    @State private var sharedFile: URL?
+    @State private var isSharing = false
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
 
-    init(model: GlassGlazeModel) {
+    let title: String
+
+    init(model: GlassGlazeModel, title: String) {
         _model = State(initialValue: model)
+        self.title = title
         _showsBeads = State(initialValue: !model.isComplete)
     }
 
@@ -244,10 +314,21 @@ struct GlassGlazeView: View {
         .background(GlassPicture.color(GlassPicture.nave, space: .sRGB).ignoresSafeArea())
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
+                Button("Share", systemImage: "square.and.arrow.up", action: share)
+                    .disabled(isSharing || model.glazedCount == 0)
+                    .accessibilityIdentifier("glass-share")
+            }
+            ToolbarItem(placement: .primaryAction) {
                 Button("Undo", systemImage: "arrow.uturn.backward") { model.undo() }
                     .disabled(!model.canUndo)
                     .keyboardShortcut("z", modifiers: .command)
                     .accessibilityIdentifier("glass-undo")
+            }
+        }
+        .background {
+            ActivityShareSheet(item: sharedFile) {
+                if let sharedFile { ArtworkExporter.removeExport(at: sharedFile) }
+                sharedFile = nil
             }
         }
         .onChange(of: model.isComplete) { _, complete in
@@ -258,11 +339,29 @@ struct GlassGlazeView: View {
                 comment: "VoiceOver announcement when every piece of a stained glass window is glazed")).post()
         }
         .onChange(of: model.beadsAsked) { setBeads(shown: true, duration: 0.35) }
-        .onAppear { model.beadsHidden = !showsBeads }
+        .onAppear {
+            model.beadsHidden = !showsBeads
+            model.soundsReady(true)
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase != .active { model.flush() }
         }
-        .onDisappear { model.flush() }
+        .onDisappear {
+            model.flush()
+            model.soundsReady(false)
+        }
+    }
+
+    private func share() {
+        isSharing = true
+        Task {
+            defer { isSharing = false }
+            do {
+                sharedFile = try await model.sharedPicture(title: title)
+            } catch {
+                Log.library.error("Couldn't share a window: \(String(describing: error), privacy: .public)")
+            }
+        }
     }
 
     private func setBeads(shown: Bool, duration: TimeInterval) {

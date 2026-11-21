@@ -9,6 +9,7 @@ import Testing
 /// Stained Glass as a mode of the painting canvas (painting-company row 366): the canvas's own
 /// frame recipe (`RenderContext.encode`) with `GlassMode` in the content draws the window's glass
 /// and lead in place of the paint, and leaves out the canvas's outlines and numbers.
+@MainActor
 struct GlassModeTests {
     @Test func glazedGlassShinesOverUnlitAndTheLeadIsDark() throws {
         let t = Fixtures.mosaic
@@ -53,6 +54,29 @@ struct GlassModeTests {
         for (x, y) in [(Int(inside.x), Int(inside.y)), (edge.x, edge.y), (Int(elsewhere.x), Int(elsewhere.y))] {
             #expect(bare[x, y] == after[x, y])
         }
+    }
+
+    /// A whole window stands in the light of the hour: moonlight dims it at night, the day is
+    /// clear, the evening amber, and the hours between ease from one to the next.
+    @Test func theLightFollowsTheHour() {
+        let night = GlassMode.daylight(hour: 2), noon = GlassMode.daylight(hour: 12)
+        let evening = GlassMode.daylight(hour: 18.5), dusk = GlassMode.daylight(hour: 19.5)
+        #expect(night.w > 0.3 && noon.w == 0)
+        #expect(night.z > night.x, "moonlight is blue")
+        #expect(evening.x > evening.z * 3, "the evening is amber")
+        #expect(dusk.w > evening.w && dusk.w < night.w)
+        #expect(GlassMode.daylight(hour: 0) == GlassMode.daylight(hour: 24))
+        #expect(GlassGlazeModel.hour(Calendar.current.date(bySettingHour: 18, minute: 30, second: 0, of: .now)!) == 18.5)
+    }
+
+    /// A pour rings soft glass, pale glass higher than deep, on the Moon's scale.
+    @Test func aPourRingsItsGlass() {
+        #expect(SoundPlayer.glassNote(lightness: 0.8) > SoundPlayer.glassNote(lightness: 0.45))
+        #expect(SoundPlayer.glassNote(lightness: 0) == 0)
+        #expect(SoundPlayer.glassNote(lightness: 1) == SoundPlayer.moonScale.count - 1)
+        let cues = SoundPlayer.glassCues(index: 3, velocity: 0.7)
+        #expect(cues.first?.voice == .twinkle(index: 3))
+        #expect(cues.allSatisfy { $0.volume < 0.35 }, "a soft note")
     }
 
     /// A pour's region state carries both glasses: the one poured and the one under it.

@@ -58,7 +58,7 @@ nonisolated enum GlassPicture {
 
     /// The lead's width in canvas units: a fixed share of the window's long side, so a window
     /// reads alike at every size.
-    static func leadWidth(width: Int, height: Int) -> CGFloat { CGFloat(max(width, height)) * 0.012 }
+    static func leadWidth(width: Int, height: Int) -> CGFloat { CGFloat(max(width, height)) * 0.018 }
 
     static func cgSpace(_ space: RGBColorSpace) -> CGColorSpace {
         CGColorSpace(name: space == .displayP3 ? CGColorSpace.displayP3 : CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
@@ -105,7 +105,7 @@ nonisolated enum GlassPicture {
             ctx.restoreGState()
         }
         ctx.setStrokeColor(cgColor(lead, space: t.colorSpace))
-        ctx.setLineWidth(leadWidth(width: t.width, height: t.height) * 1.3)
+        ctx.setLineWidth(leadWidth(width: t.width, height: t.height))
         ctx.setLineCap(.round)
         ctx.addPath(leadPath(of: t))
         ctx.strokePath()
