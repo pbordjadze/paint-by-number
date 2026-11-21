@@ -54,8 +54,9 @@ let package = Package(
             dependencies: ["MosaicKit", "PaintCore"],
             swiftSettings: [.unsafeFlags(["-O"], .when(configuration: .debug))]
         ),
-        // `mosaic` runs the engine on files, for comparison with the prototype.
-        .executableTarget(name: "mosaic", dependencies: ["MosaicEngine", "MosaicKit"]),
+        // `mosaic` runs the engine on files, for comparison with the prototype, and lays out the stone
+        // book (`mosaic book`).
+        .executableTarget(name: "mosaic", dependencies: ["MosaicEngine", "MosaicKit", "MosaicCore"]),
         .testTarget(name: "MosaicKitTests", dependencies: ["MosaicKit"]),
         .testTarget(name: "MosaicEngineTests", dependencies: ["MosaicEngine", "MosaicKit"]),
         .testTarget(name: "MosaicCoreTests", dependencies: ["MosaicCore", "MosaicKit", "MosaicEngine", "PaintCore"]),

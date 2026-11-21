@@ -28,6 +28,10 @@ struct GalleryView: View {
     @State private var restartFailed = false
     /// The picture or template the share sheet is up for (`share(_:)`), deleted once it closes.
     @State private var sharedFile: URL?
+    #if UNRELEASED
+    /// The mosaic Set in Stone is open on.
+    @State private var settingInStone: SetInStoneRequest?
+    #endif
     /// The top of the pages is in view, where the bar's tips lie.
     @State private var showsTop = true
 
@@ -97,6 +101,12 @@ struct GalleryView: View {
                 sharedFile = nil
             }
         }
+        #if UNRELEASED
+        .sheet(item: $settingInStone) { request in
+            SetInStoneSheet(request: request)
+                .pageSizedOnPad()
+        }
+        #endif
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
         // The shelf's tips: a visit begins, the library changes under it (its pages come into view,
         // one is painted or finished), tips are switched on.
@@ -138,6 +148,9 @@ struct GalleryView: View {
         .task(id: library.artworks.first?.id) {
             // Demo: send the painting once it is ready.
             if ShellDemo.current?.sendsTemplate == true, sending == nil, let artwork = library.artworks.first { sending = artwork }
+            #if UNRELEASED
+            if ShellDemo.current?.setsInStone == true, settingInStone == nil, let artwork = library.artworks.first { setInStone(artwork) }
+            #endif
         }
         #endif
     }
@@ -328,7 +341,19 @@ struct GalleryView: View {
         }
         let template = PrintableTemplateFile(
             store: library.store, artwork: artwork, paper: .default(for: Locale.current.region))
+        #if UNRELEASED
+        // Set in Stone takes Print Template…'s place: its full-size pages are in the book
+        // (painting-company row 367). A mosaic sent from elsewhere has no tiles to set.
+        if SetInStoneRequest.isAvailable(store: library.store, artwork: artwork) {
+            Button(String(localized: "gallery.setInStone", defaultValue: "Set in Stone…", bundle: .ravenna,
+                          comment: "A mosaic's Share menu: opens a book for setting the mosaic in real stone, with the stones to buy"),
+                   systemImage: "square.grid.3x3.square") { setInStone(artwork) }
+        } else {
+            Button("Print Template…", systemImage: "printer") { share { try await template.export() } }
+        }
+        #else
         Button("Print Template…", systemImage: "printer") { share { try await template.export() } }
+        #endif
         // Paint by Moonlight opens it as a new painting, blank, refinements and all; the PDF above
         // is for whoever hasn't the app.
         Button("Send Template…", systemImage: "paperplane") {
@@ -358,6 +383,20 @@ struct GalleryView: View {
             }
         }
     }
+
+    #if UNRELEASED
+    private func setInStone(_ artwork: Artwork) {
+        PaintTips.used(.shelfHold)
+        let store = library.store
+        Task {
+            do {
+                settingInStone = try await SetInStoneRequest.saved(store: store, artwork: artwork)
+            } catch {
+                Log.library.error("Opening Set in Stone failed: \(String(describing: error), privacy: .public)")
+            }
+        }
+    }
+    #endif
 
     private func shareTimelapse(_ artwork: Artwork) {
         timelapse = TimelapseRequest(title: artwork.title, source: .saved(store: library.store, artwork: artwork))
