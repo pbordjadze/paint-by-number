@@ -20,7 +20,7 @@ final class GlassLeadModel {
     let height: Int
 
     /// Where the lead starts from.
-    enum Start { case suggested, blank }
+    nonisolated enum Start: Hashable, Sendable { case suggested, blank }
 
     /// The lead as laid, in canvas units: the suggestion's lines and the painter's.
     private(set) var lead: [[CGPoint]] = []
