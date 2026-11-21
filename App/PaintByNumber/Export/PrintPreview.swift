@@ -99,6 +99,8 @@ struct PrintPreviewSheet: View {
         // Numbers off or on changes the sizes offered (no legibility floor without them): a size
         // no longer offered goes back to the smallest, so the row says what prints.
         .onChange(of: layout.numbers) {
+            // A coloring page has no numbers to look up: the key goes with them, and comes back with them.
+            layout.colorKey = layout.numbers
             if !sizes.contains(where: { $0.across == layout.across }) { layout.across = nil }
         }
         .onChange(of: [layout.numbers, layout.colorHints, layout.colorKey]) { showsPainted = false }

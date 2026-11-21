@@ -234,8 +234,10 @@ nonisolated enum PDFExporter {
             page(ctx, box) { content in
                 let sheetsText = String(localized: "pdf.sheets", defaultValue: "\(sheets.count) sheets", bundle: .era,
                                         comment: "How many sheets the template is printed on; the argument is the count")
-                let overviewDetail = String(localized: "pdf.stats.withSheets", defaultValue: "\(stats) · \(sheetsText)", bundle: .era,
-                                            comment: "Header of the overview page of a template printed on several sheets; the arguments are the colors and areas text and the number of sheets")
+                let overviewDetail = layout.numbers
+                    ? String(localized: "pdf.stats.withSheets", defaultValue: "\(stats) · \(sheetsText)", bundle: .era,
+                             comment: "Header of the overview page of a template printed on several sheets; the arguments are the colors and areas text and the number of sheets")
+                    : sheetsText
                 let body = header(ctx, in: content, title: title, detail: overviewDetail)
                 let rect = fit(aspect: CGFloat(t.width) / CGFloat(t.height), in: body)
                 // A map for putting the sheets together; the numbers are on the sheets.
@@ -274,7 +276,8 @@ nonisolated enum PDFExporter {
             }
         } else {
             page(ctx, box) { content in
-                let body = header(ctx, in: content, title: title, detail: stats)
+                // A coloring page doesn't count its paints: they aren't on it.
+                let body = header(ctx, in: content, title: title, detail: layout.numbers ? stats : "")
                 let rect = fit(aspect: CGFloat(t.width) / CGFloat(t.height), in: body)
                 TemplateRasterizer.draw(t, painted: nil, style: templateStyle, in: ctx, rect: rect, rasterResolution: rasterResolution)
                 ctx.setStrokeColor(gray(0.75))
