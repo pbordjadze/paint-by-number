@@ -17,7 +17,7 @@ import Foundation
 /// put any glass in any piece (`Glazing`). The glasses offered are the window's own, then
 /// `classics` not already among them (`offered`).
 public enum GlassPalette {
-    public static let version = 1
+    public static let version = 2
 
     /// The glasses the window suggests: `glasses` in OKLab, background ones first; for each
     /// region its glass (`ofRegion`) and whether it was read as background (`isBackground`).
@@ -168,21 +168,35 @@ public enum GlassPalette {
         return out
     }
 
-    /// A piece's photo color as glass.
+    /// A piece's photo color as glass: every glass a jewel, lit well clear of unlit glass's dark
+    /// (`GlassTexture.unlitBase`), so what is glazed and what is left are never confused. The
+    /// subject brighter and richer than the photo, its light glass short of white (lit glass
+    /// carries more light still); the background deeper, yet colored glass, never khaki or brown: a
+    /// grey one turns slate blue, an olive one emerald, a brown one garnet. (Critic, round 3: olive glass lit read
+    /// as unlit brown.)
     static func glass(_ c: SIMD3<Float>, background: Bool) -> SIMD3<Float> {
         let chroma = (c.y * c.y + c.z * c.z).squareRoot()
-        let boost: Float, lightness: Float
+        // The hue, and a slate blue for a piece with none to speak of.
+        var hue = chroma < 0.02 ? SIMD2<Float>(-0.25, -0.97) : SIMD2(c.y, c.z) / chroma
+        let lightness: Float, target: Float
         if background {
-            boost = chroma < 0.03 ? 1.15 : 0.8
-            lightness = min(max(c.x * 0.62, 0.30), 0.46)
+            // Deep glass is never olive, khaki or brown, the muddy band of hues (30° to 125°):
+            // the greenish side becomes emerald, the brownish garnet.
+            let angle = atan2(hue.y, hue.x) * 180 / .pi
+            if angle > 30, angle < 125 {
+                let to: Float = (angle >= 80 ? 150 : 22) * .pi / 180
+                hue = SIMD2(cos(to), sin(to))
+            }
+            lightness = min(max(c.x * 0.7, 0.40), 0.54)
+            target = min(max(chroma * 0.9, 0.09), 0.12)
         } else if chroma < 0.03 {
-            boost = 1.15
-            lightness = min(max(c.x * 1.05, 0.20), 0.92)
+            lightness = min(max(c.x * 1.05, 0.40), 0.84)
+            target = chroma < 0.02 ? 0.03 : chroma * 1.15
         } else {
-            boost = min(max(0.17 / chroma, 1.6), 2.8)
-            lightness = min(max(0.16 + c.x * 0.92, 0.5), 0.9)
+            lightness = min(max(0.16 + c.x * 0.92, 0.52), 0.82)
+            target = max(0.12, chroma * min(max(0.17 / chroma, 1.6), 2.8))
         }
-        return SIMD3(lightness, c.y * boost, c.z * boost)
+        return SIMD3(lightness, hue.x * target, hue.y * target)
     }
 
     /// k-means of the pieces `indices` into `count` glasses appended to `centers`, from a

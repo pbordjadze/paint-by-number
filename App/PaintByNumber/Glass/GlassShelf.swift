@@ -49,7 +49,10 @@ final class GlassShelf {
     func load() async {
         let store = store
         let found = await Background.run { store.loadAll() }
-        windows = found.sorted { $0.modifiedAt > $1.modifiedAt }
+        // A save that finished while the shelf was read keeps what it wrote.
+        let current = windows
+        windows = found.map { read in current.first { $0.id == read.id && $0.modifiedAt > read.modifiedAt } ?? read }
+            .sorted { $0.modifiedAt > $1.modifiedAt }
         isLoaded = true
     }
 
@@ -96,7 +99,14 @@ final class GlassShelf {
             var glazing = Glazing(pieces: template.regions.count, offered: GlassPalette.offered(for: template))
             if let data = try? Data(contentsOf: url) {
                 do {
-                    glazing = try Glazing(encoded: data, pieces: template.regions.count)
+                    let read = try Glazing(encoded: data, pieces: template.regions.count)
+                    // Fewer glasses than the window's own is a damaged file: every piece's
+                    // suggested glass must be one offered.
+                    if read.offered.count >= template.palette.count {
+                        glazing = read
+                    } else {
+                        Log.library.error("Glazing of window \(artwork.id.uuidString, privacy: .public) offers too few glasses: starting it unglazed")
+                    }
                 } catch Glazing.CodingError.newerVersion(let version) {
                     throw Glazing.CodingError.newerVersion(version)
                 } catch {
@@ -110,13 +120,20 @@ final class GlassShelf {
     /// Writes a window's glazing, its picture on the shelf and its meta (the pieces glazed), after
     /// the window's saves before it, so an older glazing never lands over a newer one.
     func save(_ glazing: Glazing, of id: UUID, template: Template, offered: [PaletteColor], texture: GlassTexture) async {
+        await enqueue(glazing, of: id, template: template, offered: offered, texture: texture).value
+    }
+
+    /// `save`, queued now and run in its turn: a caller that can't wait still has its saves
+    /// written in the order it made them.
+    @discardableResult
+    func enqueue(_ glazing: Glazing, of id: UUID, template: Template, offered: [PaletteColor], texture: GlassTexture) -> Task<Void, Never> {
         let previous = saving[id]
         let task = Task {
             await previous?.value
             await write(glazing, of: id, template: template, offered: offered, texture: texture)
         }
         saving[id] = task
-        await task.value
+        return task
     }
 
     private func write(_ glazing: Glazing, of id: UUID, template: Template, offered: [PaletteColor], texture: GlassTexture) async {

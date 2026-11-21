@@ -40,7 +40,7 @@ final class GlassGlazeModel {
     @ObservationIgnored private var stroke: [(region: Int, glass: Int16)]?
     @ObservationIgnored private var saving: Task<Void, Never>?
     private(set) var canUndo = false
-    @ObservationIgnored var onChange: (Glazing) -> Void = { _ in }
+    @ObservationIgnored var onChange: @MainActor (Glazing) -> Void = { _ in }
 
     static let pourDuration: TimeInterval = 0.45
     static let sunDuration: TimeInterval = 2.6
@@ -60,7 +60,7 @@ final class GlassGlazeModel {
         // The bead in hand at first: the glass suggested for the largest piece left unglazed.
         let largest = template.regions.indices.filter { glazing.glass[$0] == Glazing.none }
             .max { template.regions[$0].area < template.regions[$1].area }
-        selected = largest.map { Int(template.regions[$0].colorIndex) } ?? 0
+        selected = min(largest.map { Int(template.regions[$0].colorIndex) } ?? 0, max(0, offered.count - 1))
     }
 
     var pieces: Int { template.regions.count }
@@ -84,7 +84,7 @@ final class GlassGlazeModel {
     /// Pours the bead in hand into piece `r` (VoiceOver's activation too, then a stroke of its own).
     func glaze(_ r: Int, from p: CGPoint? = nil, animated: Bool) {
         let glass = Int16(selected)
-        guard r < pieces, glazing.glass[r] != glass else { return }
+        guard r < pieces, selected < offered.count, glazing.glass[r] != glass else { return }
         let wasComplete = isComplete
         if stroke == nil { stroke = [] }
         stroke?.append((r, glazing.glass[r]))

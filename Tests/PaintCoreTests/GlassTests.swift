@@ -61,13 +61,27 @@ struct GlassTests {
         #expect(s.isBackground[left])
         #expect(!s.isBackground[right])
         let back = s.glasses[s.ofRegion[left]], subject = s.glasses[s.ofRegion[right]]
-        #expect(back.x <= 0.46, "background glass is deep")
-        #expect(subject.x >= 0.5, "subject glass is bright")
         let chroma = { (c: SIMD3<Float>) in (c.y * c.y + c.z * c.z).squareRoot() }
+        #expect(back.x <= 0.54, "background glass is deep")
+        #expect(chroma(back) >= 0.06, "and still colored glass, never khaki")
+        #expect(subject.x >= 0.5, "subject glass is bright")
         #expect(chroma(subject) > chroma(back))
         // Weighed by chroma, the checker reads orange-red, never the mud of its mean.
         #expect(subject.y > 0.05, "a warm glass")
         #expect(back.y < 0 || chroma(back) < 0.06, "the sage stays green and quiet")
+    }
+
+    /// Every glass a window suggests, lit, stays well clear of unlit glass's dark: a black photo
+    /// and a khaki one still give glass that reads glazed.
+    @Test func everyGlassIsClearOfUnlitGlass() {
+        let unlit = ColorScience.encodedToOKLab(GlassTexture.unlitBase, space: .sRGB).x
+        for c in [SIMD3<Float>(0.08, 0, 0), SIMD3(0.45, -0.005, 0.03), SIMD3(0.6, 0.002, 0.001), SIMD3(0.98, 0, 0)] {
+            for background in [false, true] {
+                let g = GlassPalette.glass(c, background: background)
+                #expect(g.x >= unlit + 0.15, "glass from \(c) is too dark: \(g)")
+                #expect(g.x <= 0.84, "glass from \(c) blows out lit: \(g)")
+            }
+        }
     }
 
     /// A raw line stopping short of the frame is joined to it, and closes a piece.

@@ -259,7 +259,7 @@ struct GlassWindowScreen: View {
                 let made = GlassGlazeModel(id: id, template: opened.template, glazing: opened.glazing, offered: opened.offered,
                                            texture: opened.texture)
                 made.onChange = { [shelf] glazing in
-                    Task { await shelf.save(glazing, of: id, template: opened.template, offered: opened.offered, texture: opened.texture) }
+                    shelf.enqueue(glazing, of: id, template: opened.template, offered: opened.offered, texture: opened.texture)
                 }
                 #if DEBUG
                 GlassDemo.prepare(made)

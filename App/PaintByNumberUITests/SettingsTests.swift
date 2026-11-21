@@ -292,30 +292,43 @@ final class SettingsTests: XCTestCase {
         let present = Calendar(identifier: .gregorian).component(.year, from: .now)
         // A flick returns while the wheel still turns, and the year counts once it has rested
         // (`EraClock.rest`, 0.7 s): each flick waits for the wheel to go before the next.
-        for _ in 0..<24 where wheels.count > 0 {
-            guard let shown = (wheels.firstMatch.value as? String).flatMap({ Int($0.prefix(4)) }) else { break }
+        var stepped: Int?
+        for _ in 0..<40 where wheels.count > 0 {
+            let wheel = wheels.firstMatch
+            guard let shown = (wheel.value as? String).flatMap({ Int($0.prefix(4)) }) else { break }
             if shown == year {
-                _ = wheels.firstMatch.waitForNonExistence(timeout: 3)
+                _ = wheel.waitForNonExistence(timeout: 3)
                 continue
             }
-            // To an end, flicks; to a year inside the wheel, a few rows at a time.
-            // Back to 0547 from past 1248, a flick to the wheel's far end first: rested on the
-            // way, the wheel would open the era it stopped beside.
-            let far = year == present || (year == 547 && (!Self.reachesBeforeByzantium || shown > 1248))
+            if year == 547, shown < year {
+                // Up from the long reach's far end to 0547, one row at a time: a flick of a few
+                // rows went from 0001 to 0400 and back over 0500, 0547 and 0600 without resting
+                // beside it (CI, November 20). A tap on the row below the one read turns the wheel
+                // a row; if one left it where it was, a short drag of a row does instead.
+                let center = wheel.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                if stepped == shown {
+                    center.press(forDuration: 0.1, thenDragTo: center.withOffset(CGVector(dx: 0, dy: -Self.row)),
+                                 withVelocity: .slow, thenHoldForDuration: 0.3)
+                } else {
+                    center.withOffset(CGVector(dx: 0, dy: Self.row)).tap()
+                }
+                stepped = shown
+                _ = wheel.waitForNonExistence(timeout: 2.5)
+                continue
+            }
+            // To an end, or down to 0547, flicks: rested on the way, a wheel that reaches past
+            // 0547 would open the era it stopped beside (1248's), and a flick down past 0547
+            // lands at the far end, where the rows above take it the rest of the way. To any other
+            // year inside the wheel, a few rows at a time.
+            let far = year == present || year == 547
             let velocity: XCUIGestureVelocity = far ? .fast : .slow
-            if shown > year { wheels.firstMatch.swipeDown(velocity: velocity) } else { wheels.firstMatch.swipeUp(velocity: velocity) }
-            _ = wheels.firstMatch.waitForNonExistence(timeout: 2.5)
+            if shown > year { wheel.swipeDown(velocity: velocity) } else { wheel.swipeUp(velocity: velocity) }
+            _ = wheel.waitForNonExistence(timeout: 2.5)
         }
     }
 
-    /// Whether the wheel reaches back past 0547 (SideStore and Debug builds).
-    private static var reachesBeforeByzantium: Bool {
-        #if UNRELEASED
-        return true
-        #else
-        return false
-        #endif
-    }
+    /// About one row of the year setter's wheel, in points (`EraClock`'s rails are 36 apart).
+    private static let row: CGFloat = 38
 
     #if UNRELEASED
     /// Stained Glass (painting-company row 366): 1248 on the wheel opens it, with no windows yet,
