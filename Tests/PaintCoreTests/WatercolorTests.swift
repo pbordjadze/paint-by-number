@@ -1,0 +1,268 @@
+import Foundation
+import Testing
+@testable import PaintCore
+
+/// Watercolor (painting-company row 373): the sheet, the simulation's guarantees and the tap log.
+@Suite struct WatercolorTests {
+    static let template: Template = {
+        // A classic template of the shared scene: a few dozen areas, small enough to step fast.
+        try! TemplateGenerator().generate(from: TestScenes.scene(width: 200, height: 150), cancel: .none).template
+    }()
+
+    static func largestRegion(_ t: Template) -> Int {
+        t.regions.indices.max { t.regions[$0].area < t.regions[$1].area }!
+    }
+
+    static func center(of r: Int, in t: Template) -> SIMD2<Float> {
+        t.labels.first { Int($0.region) == r }?.position ?? SIMD2(Float(t.width) / 2, Float(t.height) / 2)
+    }
+
+    static func digest(_ sim: WatercolorSim) -> [SIMD4<Float>] {
+        (0..<(sim.sheet.width * sim.sheet.height)).map { sim.D[$0] + sim.S[$0] }
+    }
+
+    @Test func sheetFollowsTheTemplate() {
+        let t = Self.template
+        let sheet = WatercolorSheet(template: t, seed: 1)
+        #expect(sheet.width == t.width && sheet.height == t.height)  // small templates step at their own size
+        #expect(sheet.regionCount == t.regions.count)
+        for y in stride(from: 0, to: sheet.height, by: 7) {
+            for x in stride(from: 0, to: sheet.width, by: 7) {
+                #expect(Int(sheet.labels[y * sheet.width + x]) == Int(t.regionMap[x, y]))
+            }
+        }
+        #expect(sheet.paper.allSatisfy { $0 >= 0 && $0 <= 1 })
+    }
+
+    @Test func theKeyKeepsDarksAndThinsLights() {
+        let paper = WatercolorSheet.density(of: WatercolorSheet.paperColor, area: 100)
+        #expect(paper.max() < 1e-4)
+        let dark = WatercolorSheet.density(of: SIMD3(0.02, 0.02, 0.03), area: 100)
+        let light = WatercolorSheet.density(of: SIMD3(0.6, 0.55, 0.4), area: 100)
+        let full = -log(SIMD3<Float>(0.6, 0.55, 0.4).x / WatercolorSheet.paperColor.x)
+        #expect(light.x < 0.5 * full)  // a thin wash the paper glows through
+        #expect(dark.x > 2.5)  // darks keep their weight
+        // A big flat area goes thinner than a small one of the same paint.
+        #expect(WatercolorSheet.density(of: SIMD3(0.3, 0.3, 0.3), area: 30_000).x
+            < WatercolorSheet.density(of: SIMD3(0.3, 0.3, 0.3), area: 500).x)
+    }
+
+    @Test func aTapLaysItsAreaAndDries() {
+        let t = Self.template
+        let sim = WatercolorSim(sheet: WatercolorSheet(template: t, seed: 1))
+        let r = Self.largestRegion(t)
+        sim.tap(region: r, at: Self.center(of: r, in: t), paint: true)
+        #expect(sim.laidCount == 1 && sim.laid[r])
+        sim.finish()
+        #expect(!sim.isActive)
+        let sheet = sim.sheet
+        var covered = 0, cells = 0
+        for i in 0..<(sheet.width * sheet.height) where sheet.labels[i] == Int32(r) {
+            cells += 1
+            if sim.D[i].x + sim.D[i].y + sim.D[i].z > 0.01 { covered += 1 }
+            #expect(sim.W[i] == 0)
+        }
+        #expect(covered > cells * 8 / 10)
+        // The target solve brings the area's mean to its paint (within the gain's range).
+        let target = sim.target(of: r)
+        #expect(target.gain.min() >= 0.7 && target.gain.max() <= 1.4)
+    }
+
+    @Test func noTapIsWrong() {
+        let t = Self.template
+        let r = Self.largestRegion(t)
+        // Another paint's tap is water alone: nothing laid, nothing to see once dry.
+        let water = WatercolorSim(sheet: WatercolorSheet(template: t, seed: 1))
+        water.tap(region: r, at: Self.center(of: r, in: t), paint: false)
+        water.finish()
+        #expect(water.laidCount == 0)
+        #expect(Self.digest(water).allSatisfy { $0 == .zero })
+        // A second tap of an area laid adds water, never paint: a bloom.
+        let sim = WatercolorSim(sheet: WatercolorSheet(template: t, seed: 1))
+        sim.tap(region: r, at: Self.center(of: r, in: t), paint: true)
+        sim.finish()
+        let laid = sim.laidDensity[r]
+        sim.tap(region: r, at: Self.center(of: r, in: t) + SIMD2(3, 2), paint: true)
+        sim.finish()
+        #expect(sim.laidDensity[r] == laid && sim.laidCount == 1)
+    }
+
+    @Test func whereYouTapChangesThePainting() {
+        let t = Self.template
+        let r = Self.largestRegion(t)
+        let b = t.regions[r].bounds
+        func painted(at p: SIMD2<Float>) -> [SIMD4<Float>] {
+            let sim = WatercolorSim(sheet: WatercolorSheet(template: t, seed: 1))
+            sim.tap(region: r, at: p, paint: true)
+            sim.finish()
+            return Self.digest(sim)
+        }
+        let a = painted(at: SIMD2(Float(b.minX) + 2, Float(b.minY) + 2))
+        let c = painted(at: Self.center(of: r, in: t))
+        #expect(a != c)
+    }
+
+    @Test func anEdgeDriesByHowWetItsNeighbourWas() {
+        // Two neighbours, laid one right after the other (the second runs into the first while
+        // it is wet) or once the first has dried: the edge between them comes out otherwise.
+        let t = Self.template
+        let sheet = WatercolorSheet(template: t, seed: 3)
+        let r = Self.largestRegion(t)
+        var adjacent = Set<Int>()
+        for i in 0..<(sheet.width * sheet.height) where Int(sheet.labels[i]) == r {
+            for j in [i - 1, i + 1, i - sheet.width, i + sheet.width] where j >= 0 && j < sheet.labels.count {
+                let o = Int(sheet.labels[j])
+                if o != r, sheet.group[o] != sheet.group[r] { adjacent.insert(o) }
+            }
+        }
+        guard let n = adjacent.max(by: { t.regions[$0].area < t.regions[$1].area }) else {
+            Issue.record("no neighbour of another group")
+            return
+        }
+        func painted(dryFirst: Bool) -> WatercolorSim {
+            let sim = WatercolorSim(sheet: sheet)
+            sim.tap(region: r, at: Self.center(of: r, in: t), paint: true)
+            if dryFirst { sim.finish() } else { for _ in 0..<20 { sim.advance() } }
+            #expect(dryFirst != sim.isActive)
+            sim.tap(region: n, at: Self.center(of: n, in: t), paint: true)
+            sim.finish()
+            return sim
+        }
+        let wet = painted(dryFirst: false), dry = painted(dryFirst: true)
+        // Within two cells of the edge, on the second area's side: wet-in-wet carries the first
+        // wash's pigment across (the two bleed); wet-on-dry leaves the second's own, crisper.
+        var bleedWet: Float = 0, bleedDry: Float = 0, cells = 0
+        let w = sheet.width
+        for i in 0..<(w * sheet.height) where Int(sheet.labels[i]) == n {
+            let x = i % w, y = i / w
+            var near = false
+            for dy in -2...2 { for dx in -2...2 {
+                let xx = x + dx, yy = y + dy
+                if xx >= 0, yy >= 0, xx < w, yy < sheet.height, Int(sheet.labels[yy * w + xx]) == r { near = true }
+            } }
+            guard near else { continue }
+            cells += 1
+            let a = wet.D[i] + wet.S[i], b = dry.D[i] + dry.S[i]
+            let diff = (a - b).replacing(with: b - a, where: a .< b)
+            bleedWet += diff.x + diff.y + diff.z
+            bleedDry += b.x + b.y + b.z
+        }
+        #expect(cells > 0)
+        // The edge differs by more than a tenth of what lies there.
+        #expect(bleedWet > 0.1 * bleedDry)
+        #expect(Self.digest(wet) != Self.digest(dry))
+    }
+
+    @Test func aThinAreaIsAGlazeNotAWash() {
+        // A 12 x 12 sheet: area 0 a broad block, area 1 a stripe two cells wide, area 2 a block.
+        let w = 12, h = 12
+        let labels = (0..<(w * h)).map { i -> Int32 in i % w < 5 ? 0 : (i % w < 7 ? 1 : 2) }
+        #expect(WatercolorSheet.thinRegions(labels: labels, width: w, height: h, count: 3) == [false, true, false])
+        // On a template, a thin area's tap lays nothing on the sheet; its paint is a glaze.
+        let t = Self.template
+        let sheet = WatercolorSheet(template: t, seed: 1)
+        guard let r = sheet.thin.indices.first(where: { sheet.thin[$0] && sheet.bounds[$0].x < sheet.bounds[$0].z }) else { return }
+        let sim = WatercolorSim(sheet: sheet)
+        #expect(sim.glaze(of: r) == 0)
+        sim.tap(region: r, at: Self.center(of: r, in: t), paint: true)
+        sim.finish()
+        #expect(sim.laid[r] && sim.glaze(of: r) == 1 && sim.target(of: r).gain == SIMD3(repeating: 1))
+        #expect(Self.digest(sim).allSatisfy { $0 == .zero })
+    }
+
+    @Test func aLogReplaysToTheSamePainting() throws {
+        let t = Self.template
+        let regions = t.regions.indices.sorted { t.regions[$0].area > t.regions[$1].area }.prefix(6)
+        let live = WatercolorSim(sheet: WatercolorSheet(template: t, seed: 9))
+        var log = WatercolorLog(seed: 9)
+        for (n, r) in regions.enumerated() {
+            let p = Self.center(of: r, in: t)
+            log.taps.append(.init(step: live.step, region: r, x: p.x, y: p.y, paint: n != 2))
+            live.tap(region: r, at: p, paint: n != 2)
+            for _ in 0..<(n * 7 + 3) { live.advance() }
+        }
+        live.finish()
+        let data = try log.encoded()
+        let read = try WatercolorLog(encoded: data, regions: t.regions.count, width: t.width, height: t.height)
+        #expect(read == log)
+        let again = WatercolorSim(sheet: WatercolorSheet(template: t, seed: read.seed))
+        again.replay(read)
+        #expect(Self.digest(again) == Self.digest(live))
+        #expect(again.laid == live.laid)
+    }
+
+    @Test func theCoreCountChangesNothing() {
+        let t = Self.template
+        func run() -> [SIMD4<Float>] {
+            let sim = WatercolorSim(sheet: WatercolorSheet(template: t, seed: 4))
+            for r in t.regions.indices.prefix(5) {
+                sim.tap(region: r, at: Self.center(of: r, in: t), paint: true)
+                for _ in 0..<5 { sim.advance() }
+            }
+            sim.finish()
+            return Self.digest(sim)
+        }
+        let one = Parallel.withBandCount(1) { run() }
+        let many = Parallel.withBandCount(5) { run() }
+        #expect(one == many)
+    }
+
+    @Test func aLogIsReadAsHostileInput() throws {
+        let t = Self.template
+        var log = WatercolorLog(seed: 1)
+        log.taps = [
+            .init(step: 5, region: 0, x: 1, y: 1, paint: true),
+            .init(step: 3, region: 0, x: 1, y: 1, paint: true),  // out of order
+            .init(step: 6, region: t.regions.count, x: 1, y: 1, paint: true),  // no such area
+            .init(step: 8, region: 0, x: Float(t.width) + 10, y: 1, paint: true),
+            .init(step: 9, region: 1, x: 2, y: 2, paint: false),
+        ]
+        let read = try WatercolorLog(encoded: try log.encoded(), regions: t.regions.count, width: t.width, height: t.height)
+        #expect(read.taps.map(\.step) == [5, 9])
+        var newer = log
+        newer.version = WatercolorLog.currentVersion + 1
+        #expect(throws: WatercolorLog.CodingError.newerVersion(newer.version)) {
+            _ = try WatercolorLog(encoded: try newer.encoded(), regions: t.regions.count, width: t.width, height: t.height)
+        }
+        // A newer log shaped differently is newer, never damaged.
+        let reshaped = Data(#"{"version":2,"seed":"one","strokes":[{"at":[1,2]}]}"#.utf8)
+        #expect(throws: WatercolorLog.CodingError.newerVersion(2)) {
+            _ = try WatercolorLog(encoded: reshaped, regions: t.regions.count, width: t.width, height: t.height)
+        }
+        #expect(throws: (any Error).self) {
+            _ = try WatercolorLog(encoded: Data("{".utf8), regions: 1, width: 1, height: 1)
+        }
+    }
+
+    @Test func aSnapshotOpensThePaintingAsItWas() throws {
+        let t = Self.template
+        let sheet = WatercolorSheet(template: t, seed: 2)
+        let sim = WatercolorSim(sheet: sheet)
+        let r = Self.largestRegion(t)
+        sim.tap(region: r, at: Self.center(of: r, in: t), paint: true)
+        sim.finish()
+        let data = sim.snapshot()
+        let opened = WatercolorSim(sheet: sheet)
+        try opened.restore(from: data)
+        #expect(Self.digest(opened) == Self.digest(sim))
+        #expect(opened.laid == sim.laid && opened.laidCount == 1 && opened.step == sim.step)
+        #expect(opened.target(of: r).gain == sim.target(of: r).gain)
+        // Damaged, truncated or another sheet's: refused, nothing changed.
+        let blank = WatercolorSim(sheet: sheet)
+        #expect(throws: WatercolorSim.SnapshotError.damaged) { try blank.restore(from: data.prefix(data.count - 3)) }
+        var other = data
+        other[8] &+= 1
+        #expect(throws: WatercolorSim.SnapshotError.otherSheet) { try blank.restore(from: other) }
+        var nan = data
+        let last = nan.count - 4
+        nan.replaceSubrange(last..<(last + 4), with: withUnsafeBytes(of: Float.nan.bitPattern.littleEndian) { Data($0) })
+        #expect(throws: WatercolorSim.SnapshotError.damaged) { try blank.restore(from: nan) }
+        #expect(blank.laidCount == 0)
+        var rng = SplitMix64(seed: 5)
+        for _ in 0..<50 {
+            var junk = data
+            for _ in 0..<8 { junk[Int(rng.next() % UInt64(junk.count))] = UInt8(truncatingIfNeeded: rng.next()) }
+            _ = try? WatercolorSim(sheet: sheet).restore(from: junk)
+        }
+    }
+}

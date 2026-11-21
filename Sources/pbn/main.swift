@@ -43,6 +43,16 @@
 //       (GlassLeadSuggestion), as the Lead screen starts. Writes window.pbnt, glass.json (pieces, glasses, offered, background pieces, valid and
 //       validation), lit.ppm (every piece in its suggested glass, lead along every boundary) and
 //       unlit.ppm (the window before glazing).
+//   pbn watercolor <photo | template.pbnt> --out <dir> [--seed N] [--spacing S] [--order paint|sweep]
+//       [--frames t1,t2,…] [generate options]
+//       a Watercolor painting (painting-company row 373; WatercolorSim): every area tapped once,
+//       paint by paint (sweep: top left down, any paint), S seconds apart (0.12), and the sheet drawn as the app draws it
+//       (Watercolor.swift's doc comment): painting.ppm dried, frame-<t>.ppm wet at each time,
+//       watercolor.json (the tap log), and the steps' and the replay's timings printed.
+//       With --making-of [--fps N]: the app's Making Of instead (WatercolorMakingOf), frame-NNNN.ppm
+//       every 1/N second shown (15) until it settles and on through the app's ending,
+//       making-of.csv, and its steps' cost printed;
+//       tools/watercolor_making_of.py makes its contact sheet and film.
 //   pbn drawing <photo.ppm> <outdir> [--palette crayons|pastels|earth|sea|garden] [--paints N]
 //       [--seed N] [--detail F] [--smooth F] [--cleaned]
 //       starts a painting from a drawing (GenerationSettings.drawing): the photo of a line
@@ -179,6 +189,7 @@ func run(_ command: String, _ options: Options) throws {
     case "generate": try runGenerate(options)
     case "drawing": try runDrawing(options)
     case "glass": try runGlass(options)
+    case "watercolor": try runWatercolor(options)
     case "edit": try runEdit(options)
     case "refine": try runRefine(options)
     case "practice": try runPractice(options)

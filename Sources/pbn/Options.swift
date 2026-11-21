@@ -37,6 +37,14 @@ struct Options {
     var steps = true
     /// How much of `--edges` goes under `--lines` when both are given (`EdgeMap.contourWeight`).
     var contourWeight = EdgeMap.contourWeight
+    /// `pbn watercolor`: seconds between the painter's taps, and the moments to draw wet.
+    var watercolorSpacing: Double?
+    var watercolorFrames: [Float]?
+    /// `pbn watercolor --making-of`: the Making Of as frames, `--fps` of them a second shown.
+    var watercolorMakingOf = false
+    var watercolorFPS: Double?
+    /// `pbn watercolor`: the order the painter taps the areas in (`paint` or `sweep`).
+    var watercolorOrder: String?
     /// `pbn drawing`'s settings (`DrawingSettings`): the palette set and how many of its paints.
     var drawing = DrawingSettings()
     /// `pbn drawing --cleaned`: the photo is a cleaned sheet already (no sheet is looked for).
@@ -164,6 +172,11 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--palette": o.drawing.palette = choice(a, value(a, &it))
         case "--paints": o.drawing.paints = number(a, &it)
         case "--cleaned": o.cleaned = true
+        case "--spacing": o.watercolorSpacing = number(a, &it)
+        case "--order": o.watercolorOrder = value(a, &it)
+        case "--frames": o.watercolorFrames = value(a, &it).split(separator: ",").compactMap { Float($0) }
+        case "--making-of": o.watercolorMakingOf = true
+        case "--fps": o.watercolorFPS = number(a, &it)
         case "--line-style": o.lineStyle = choice(a, value(a, &it))
         case "--line-art": o.lineArtFields.append(value(a, &it))
         case "--tuning": setTuning(&o.settings.tuning, value(a, &it))
