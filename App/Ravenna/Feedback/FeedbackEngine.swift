@@ -51,6 +51,9 @@ final class FeedbackEngine {
         prepare()
     }
 
+    /// The app left the foreground: the sounds rest until the next one.
+    func rest() { sounds.rest() }
+
     private func prepare() {
         if hapticsEnabled { touch.prepare() }
         if soundsEnabled { sounds.prepare(mode: Self.mode()) }
