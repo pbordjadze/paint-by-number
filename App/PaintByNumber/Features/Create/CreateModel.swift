@@ -550,6 +550,16 @@ final class CreateModel {
             phase = .failed(CreateError.unreadable.localizedDescription)
             return
         }
+        #if UNRELEASED
+        if sample.isThumbnailOnly {
+            // A night's picture from the museums is painted from its full picture, never its thumbnail.
+            let id = sample.id
+            begin(defaultTitle: sample.title, sampleName: sample.id) {
+                try await Self.decode(url: try await Nights.shared.fullPicture(for: id))
+            }
+            return
+        }
+        #endif
         begin(defaultTitle: sample.title, sampleName: sample.id) { try await Self.decode(url: url) }
     }
 
