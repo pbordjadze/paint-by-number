@@ -293,26 +293,44 @@ final class SettingsTests: XCTestCase {
         // A flick returns while the wheel still turns, and the year counts once it has rested
         // (`EraClock.rest`, 0.7 s): each flick waits for the wheel to go before the next.
         var stepped: Int?
-        for _ in 0..<40 where wheels.count > 0 {
+        for _ in 0..<80 where wheels.count > 0 {
             let wheel = wheels.firstMatch
             guard let shown = (wheel.value as? String).flatMap({ Int($0.prefix(4)) }) else { break }
+            print("SettingsTests.roll: the wheel shows \(shown), on the way to \(year)")
             if shown == year {
                 _ = wheel.waitForNonExistence(timeout: 3)
                 continue
             }
-            if year == 547, shown < year {
-                // Up from the long reach's far end to 0547, one row at a time: a flick of a few
-                // rows went from 0001 to 0400 and back over 0500, 0547 and 0600 without resting
-                // beside it (CI, November 20). A tap on the row below the one read turns the wheel
-                // a row; if one left it where it was, a short drag of a row does instead.
+            if (year == 547 && shown < year) || (year != present && year != 547 && !Self.eras.contains(shown)) {
+                // Up from the long reach's far end to 0547, and all the way to any other era's
+                // year, one row at a time: a flick of a few rows went from 0001 to 0400 and back
+                // over 0500, 0547 and 0600 without resting beside it (CI, November 20), and slow
+                // flicks from the present toward 1502 went past it, rested beside 1248 and opened
+                // Stained Glass (three runs, November 21). From an era's own year a row away glides
+                // back to it, so that one goes two rows at once (below). A tap on
+                // the row beyond the one read turns the wheel a row; if one left it where it was,
+                // a short drag of a row does instead.
                 let center = wheel.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                let toward: CGFloat = shown < year ? 1 : -1
                 if stepped == shown {
-                    center.press(forDuration: 0.1, thenDragTo: center.withOffset(CGVector(dx: 0, dy: -Self.row)),
+                    center.press(forDuration: 0.1, thenDragTo: center.withOffset(CGVector(dx: 0, dy: -toward * Self.row)),
                                  withVelocity: .slow, thenHoldForDuration: 0.3)
                 } else {
-                    center.withOffset(CGVector(dx: 0, dy: Self.row)).tap()
+                    center.withOffset(CGVector(dx: 0, dy: toward * Self.row)).tap()
                 }
                 stepped = shown
+                _ = wheel.waitForNonExistence(timeout: 2.5)
+                continue
+            }
+            if year != present && year != 547 && Self.eras.contains(shown) {
+                // Away from an era's own year toward another's, two rows in one drag: a row away
+                // glides back to it (`EraClock.pulled`), and a slow flick from 1502 went past
+                // 1248 to 0400 (CI, November 21). The rows one at a time do the rest.
+                let center = wheel.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                let toward: CGFloat = shown < year ? 1 : -1
+                center.press(forDuration: 0.1, thenDragTo: center.withOffset(CGVector(dx: 0, dy: -toward * 2 * Self.row)),
+                             withVelocity: .slow, thenHoldForDuration: 0.3)
+                stepped = nil
                 _ = wheel.waitForNonExistence(timeout: 2.5)
                 continue
             }
@@ -327,19 +345,32 @@ final class SettingsTests: XCTestCase {
         }
     }
 
+    /// The years that open an era on the wheel (`EraYear.modes` in SideStore and Debug builds).
+    private static let eras = [547, 1248, 1502]
+
     /// About one row of the year setter's wheel, in points (`EraClock`'s rails are 36 apart).
     private static let row: CGFloat = 38
 
     #if UNRELEASED
-    /// Stained Glass (painting-company row 366): 1248 on the wheel opens it, with no windows yet,
-    /// and its own Year row rolled to the present brings Paint by Moonlight back.
+    /// Watercolor (painting-company row 373) and Stained Glass (row 366): 1502 on the wheel opens
+    /// Watercolor, its own Year row rolled to 1248 opens Stained Glass, each with nothing in it
+    /// yet, and Stained Glass's rolled to the present brings Paint by Moonlight back. In that
+    /// order because a wheel rolled a few rows at a time from the present to 1248 would rest
+    /// beside 1502 on the way and open Watercolor (`EraClock.pulled`).
     @MainActor
-    func testTheClockAt1248OpensStainedGlass() throws {
+    func testTheClockOpensWatercolorAndStainedGlass() throws {
         let app = openSettings()
         let presentYear = app.descendants(matching: .any)["about-year"]
         scroll(app, to: presentYear)
         presentYear.tap()
         XCTAssertTrue(app.descendants(matching: .any)["era-clock"].waitForExistence(timeout: 5), "The Year row brought out no year setter")
+        roll(app, to: 1502)
+        XCTAssertTrue(app.buttons["watercolor-choose-photo"].waitForExistence(timeout: 30), "1502 didn't open Watercolor")
+        attachScreenshot(of: app, named: "watercolor-through-the-door")
+        app.buttons["watercolor-settings"].tap()
+        let watercolorYear = app.descendants(matching: .any)["about-year"]
+        XCTAssertTrue(watercolorYear.waitForExistence(timeout: 10), "Watercolor's Settings has no Year row")
+        watercolorYear.tap()
         roll(app, to: 1248)
         XCTAssertTrue(app.buttons["glass-choose-photo"].waitForExistence(timeout: 30), "1248 didn't open Stained Glass")
         attachScreenshot(of: app, named: "stained-glass-through-the-door")

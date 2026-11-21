@@ -29,13 +29,13 @@ nonisolated struct PrintPreviewRequest: Identifiable, Sendable {
 }
 
 /// Print (painting-company row 357): the pages as they will come out of the printer, on paper,
-/// with the two layout choices a painter needs (how big the picture prints, the color key),
+/// with the layout choices a painter needs (how big the picture prints; what prints: the
+/// template's numbers and color hints, and the color key, row 370),
 /// starting where Print… has always printed (`PDFExporter.Layout(paper:)`): the region's paper,
 /// turned the picture's way. The system's dialog that follows asks for paper and orientation
 /// already, so the preview doesn't (the critic, painting-company row 357). Painted shows the
 /// template's pages painted in, what the painter will make; it never prints. Print hands the
 /// system's dialog the PDF the preview shows, blank, and the preview closes once it has printed.
-/// SideStore and Debug builds, until 1.3; the release's Print… opens the dialog straight away.
 struct PrintPreviewSheet: View {
     let request: PrintPreviewRequest
 
@@ -49,10 +49,15 @@ struct PrintPreviewSheet: View {
     @State private var job: TemplatePrintJob?
     @State private var preparing = false
 
-    /// `showsPainted` and `across` open it on another view (the demo scenarios').
-    init(request: PrintPreviewRequest, showsPainted: Bool = false, across: Int? = nil) {
+    /// `showsPainted`, `across`, `numbers` and `colorHints` open it on another view (the demo
+    /// scenarios').
+    init(request: PrintPreviewRequest, showsPainted: Bool = false, across: Int? = nil, numbers: Bool = true, colorHints: Bool = false) {
         self.request = request
-        _layout = State(initialValue: PDFExporter.Layout(paper: .default(for: Locale.current.region), across: across))
+        var layout = PDFExporter.Layout(paper: .default(for: Locale.current.region), across: across)
+        layout.numbers = numbers
+        layout.colorHints = colorHints
+        layout.colorKey = numbers
+        _layout = State(initialValue: layout)
         _showsPainted = State(initialValue: showsPainted)
     }
 
@@ -79,11 +84,7 @@ struct PrintPreviewSheet: View {
                 }
                 Section {
                     sizePicker
-                    Toggle(isOn: $layout.colorKey) {
-                        Text("Color Key")
-                        Text("The paints, and the finished picture")
-                    }
-                    .accessibilityIdentifier("print-color-key")
+                    layersMenu
                 }
             }
             .navigationTitle("Print")
@@ -96,6 +97,14 @@ struct PrintPreviewSheet: View {
             .safeAreaInset(edge: .bottom) { printButton }
         }
         .task(id: key) { await draw(key) }
+        // Numbers off or on changes the sizes offered (no legibility floor without them): a size
+        // no longer offered goes back to the smallest, so the row says what prints.
+        .onChange(of: layout.numbers) {
+            // A coloring page has no numbers to look up: the key goes with them, and comes back with them.
+            layout.colorKey = layout.numbers
+            if !sizes.contains(where: { $0.across == layout.across }) { layout.across = nil }
+        }
+        .onChange(of: [layout.numbers, layout.colorHints, layout.colorKey]) { showsPainted = false }
     }
 
     // MARK: The pages
@@ -190,6 +199,60 @@ struct PrintPreviewSheet: View {
         }
         .pickerStyle(.menu)
         .accessibilityIdentifier("print-size")
+    }
+
+    /// What prints, one menu over the pages so each change shows on them as it is made: the
+    /// template's layers over its lines, which always print (`PDFExporter.Layout`'s `numbers`,
+    /// `colorHints`), and the color key's page. A layer changed shows the pages blank again,
+    /// since Painted draws none of them (the critic, row 370). Numbers off is a coloring page (painting-company row 370: a painter printed
+    /// templates and took the numbers out by hand).
+    private var layersMenu: some View {
+        // Laid as Size's row is: the name in the text's color, the choice the tinted menu.
+        LabeledContent {
+            Menu {
+                Toggle(isOn: $layout.numbers) { Text("Numbers") }
+                    .accessibilityIdentifier("print-numbers")
+                Toggle(isOn: $layout.colorHints) {
+                    Text("Color Hints")
+                    Text("Each area a pale wash of its paint")
+                }
+                .accessibilityIdentifier("print-color-hints")
+                Toggle(isOn: $layout.colorKey) {
+                    Text("Color Key")
+                    Text("The paints, and the finished picture")
+                }
+                .accessibilityIdentifier("print-color-key")
+            } label: {
+                HStack(spacing: 4) {
+                    Text(layersText)
+                        .multilineTextAlignment(.trailing)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.footnote.weight(.medium))
+                        .accessibilityHidden(true)
+                }
+            }
+            // Several layers in one visit, each seen on the pages behind the menu.
+            .menuActionDismissBehavior(.disabled)
+            .accessibilityLabel(Text("Layers"))
+            .accessibilityValue(Text(layersText))
+            .accessibilityIdentifier("print-layers")
+        } label: {
+            Text("Layers")
+        }
+    }
+
+    /// The layers chosen, in the menu's order, as a list ("Numbers, Color Key"); the lines
+    /// always print, so with nothing else chosen, "Lines Only".
+    private var layersText: String {
+        var chosen: [String] = []
+        if layout.numbers { chosen.append(String(localized: "Numbers")) }
+        if layout.colorHints { chosen.append(String(localized: "Color Hints")) }
+        if layout.colorKey { chosen.append(String(localized: "Color Key")) }
+        guard !chosen.isEmpty else {
+            return String(localized: "print.layers.linesOnly", defaultValue: "Lines Only",
+                          comment: "Print's preview, the Layers row with numbers, color hints and the color key all off: the template prints as its lines alone")
+        }
+        return chosen.formatted(.list(type: .and, width: .narrow))
     }
 
     private func sheetsText(_ count: Int) -> String {
@@ -304,7 +367,9 @@ nonisolated enum PrintPages {
 #if DEBUG
 /// Demo scenarios of Print's preview, as the sheet a painting's More gives it, over the paper, on
 /// The Great Wave: `print-preview` (with `-dark`, `-long-text`), `print-preview-painted` (Painted
-/// chosen) and `print-preview-sheets` (the next size up, on several sheets).
+/// chosen), `print-preview-sheets` (the next size up, on several sheets), and two of the layers'
+/// (painting-company row 370): `print-preview-no-numbers` (a coloring page) and
+/// `print-preview-hints` (Color Hints on).
 struct PrintPreviewDemo: View {
     let scenario: String
     @State private var request: PrintPreviewRequest?
@@ -314,7 +379,9 @@ struct PrintPreviewDemo: View {
             .sheet(item: $request) { request in
                 PrintPreviewSheet(
                     request: request, showsPainted: scenario.hasPrefix("print-preview-painted"),
-                    across: scenario.hasPrefix("print-preview-sheets") ? 2 : nil)
+                    across: scenario.hasPrefix("print-preview-sheets") ? 2 : nil,
+                    numbers: !scenario.hasPrefix("print-preview-no-numbers"),
+                    colorHints: scenario.hasPrefix("print-preview-hints"))
                     .pageSizedOnPad()
             }
             .task {

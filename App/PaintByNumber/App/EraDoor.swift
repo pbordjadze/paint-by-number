@@ -14,12 +14,16 @@ enum Era: String {
     /// Stained Glass, at 1248 (SideStore and Debug builds; painting-company row 366): a mode of
     /// the app's own, not a copy of it (`GlassEra`).
     case glass
+    /// Watercolor, at 1502 (SideStore and Debug builds; painting-company row 373): real water on
+    /// the app's own templates (`WatercolorEra`).
+    case watercolor
 
     /// The era a year on the clock opens, nil for a year that opens none.
     static func opened(by year: Int) -> Era? {
         if EraYear.opensByzantium(year) { return .byzantium }
         #if UNRELEASED
         if EraYear.opensStainedGlass(year) { return .glass }
+        if EraYear.opensWatercolor(year) { return .watercolor }
         #endif
         if EraYear.returnsToThePresent(year) { return .moonlight }
         return nil
@@ -53,8 +57,9 @@ final class EraDoor {
         #if UNRELEASED
         shown = era
         #else
-        // Stained Glass is SideStore's and Debug's: a release opening on it opens at home.
-        shown = era == .glass ? .moonlight : era
+        // Stained Glass and Watercolor are SideStore's and Debug's: a release opening on either
+        // opens at home.
+        shown = era == .glass || era == .watercolor ? .moonlight : era
         #endif
     }
 
@@ -111,18 +116,23 @@ struct EraPassage: View {
     static let hold: TimeInterval = 0.25
     static let lift: TimeInterval = 1.0
     static var total: TimeInterval { wait + cover + hold + lift }
+    /// How far through the way in's cover its bed of the apse's dark is whole, the last courses
+    /// still being set: Paint by Mosaic goes in beneath from then, so the work of the swap is
+    /// over before the tiles lift, as the way back's is (`EraWayBack.swap`).
+    static let bedded = 0.75
 
     /// Whether the passage to `destination` is the way back's own: to Paint by Moonlight from
-    /// the mosaic era, with motion. Stained Glass's passages are the nave's, either way; every
-    /// other passage is the tiles set and lifted.
+    /// the mosaic era, with motion. Stained Glass's passages are the nave's, either way, and
+    /// Watercolor's a wash's (`drawWash`); every other passage is the tiles set and lifted.
     static func isWayBack(to destination: Era, from origin: Era? = nil, reduceMotion: Bool) -> Bool {
-        return destination == .moonlight && origin != .glass && !reduceMotion
+        return destination == .moonlight && origin != .glass && origin != .watercolor && !reduceMotion
     }
 
     /// When the screen is wholly covered, so the era can go in beneath, and when the passage is
     /// over (seconds from its start).
     static func moments(to destination: Era, from origin: Era? = nil, reduceMotion: Bool) -> (covered: TimeInterval, done: TimeInterval) {
         if isWayBack(to: destination, from: origin, reduceMotion: reduceMotion) { return (EraWayBack.swap, EraWayBack.total) }
+        if destination == .byzantium, origin == .moonlight, !reduceMotion { return (wait + cover * bedded, total) }
         return (wait + cover, total)
     }
 
@@ -173,6 +183,7 @@ struct EraPassage: View {
         switch DemoMode.scenario {
         case "era-passage": return wait + cover * 0.67
         case "era-passage-glass": return wait + cover + hold * 0.5
+        case "era-passage-watercolor": return wait + cover * 0.6
         case "era-passage-back": return EraWayBack.halfFallen
         case "era-passage-night": return EraWayBack.clears
         default: return nil
@@ -205,6 +216,10 @@ struct EraPassage: View {
         let apse = Color(red: 0.082, green: 0.075, blue: 0.059)
         if (destination == .glass || origin == .glass) && !reduceMotion {
             drawNave(in: &graphics, size: size, elapsed: elapsed)
+            return
+        }
+        if (destination == .watercolor || origin == .watercolor) && !reduceMotion {
+            drawWash(in: &graphics, size: size, elapsed: elapsed)
             return
         }
         if reduceMotion {
@@ -246,13 +261,50 @@ struct EraPassage: View {
         graphics.blendMode = .destinationOver
         let whole = Path(CGRect(origin: .zero, size: size))
         if t < Self.cover {
-            let front = min(layout.farthest, CGFloat(t / Self.cover / 0.75) * layout.farthest)
+            let front = min(layout.farthest, CGFloat(t / Self.cover / Self.bedded) * layout.farthest)
             let centre = layout.centre
             let bed = Path(ellipseIn: CGRect(x: centre.x - front, y: centre.y - front, width: 2 * front, height: 2 * front))
             graphics.fill(bed, with: .color(apse))
         } else {
             let lifted = max(0, (t - Self.cover - Self.hold) / Self.lift)
             graphics.fill(whole, with: .color(apse.opacity(max(0, 1 - lifted * 1.4))))
+        }
+    }
+
+    /// Watercolor's passage: water floods the screen from its top-left corner, a ragged front of
+    /// paper wash with pigment gathered at its rim, holds a moment, and dries away lighter.
+    private func drawWash(in graphics: inout GraphicsContext, size: CGSize, elapsed: TimeInterval) {
+        let t = elapsed - Self.wait
+        guard t > 0 else { return }
+        let paper = Color(red: 0.95, green: 0.93, blue: 0.88)
+        let rim = Color(red: 0.36, green: 0.45, blue: 0.62)
+        let reach = (size.width * size.width + size.height * size.height).squareRoot() * 1.2
+        let flood = EraWayBack.ease(min(1, t / Self.cover))
+        let dry = t < Self.cover + Self.hold ? 0 : min(1, (t - Self.cover - Self.hold) / Self.lift)
+        let radius = reach * flood
+        // The front: a quarter circle from the corner, ragged at two scales, creeping as it goes.
+        var front = Path()
+        front.move(to: .zero)
+        let steps = 96
+        for k in 0...steps {
+            let a = Double(k) / Double(steps) * .pi / 2
+            let ragged = 1 + 0.05 * sin(7 * a + t * 1.7) + 0.03 * sin(19 * a - t * 2.3) + 0.015 * sin(41 * a + t * 3.1)
+            let r = radius * ragged
+            front.addLine(to: CGPoint(x: cos(a) * r, y: sin(a) * r))
+        }
+        front.closeSubpath()
+        graphics.drawLayer { wash in
+            wash.opacity = 1 - EraWayBack.ease(dry)
+            wash.fill(front, with: .color(paper))
+            // The pigment the water carries, gathered at its front: a dark rim that softens as it dries.
+            var edge = wash
+            edge.addFilter(.blur(radius: 10 + 30 * dry))
+            edge.stroke(front, with: .color(rim.opacity(0.55 * (1 - dry))), lineWidth: 14)
+            // A bloom of blue in the wash's middle, fading as it lands.
+            let centre = CGPoint(x: radius * 0.35, y: radius * 0.3)
+            wash.fill(front, with: .radialGradient(
+                Gradient(colors: [rim.opacity(0.18 * (1 - flood * 0.6)), .clear]), center: centre,
+                startRadius: 0, endRadius: max(radius * 0.6, 1)))
         }
     }
 

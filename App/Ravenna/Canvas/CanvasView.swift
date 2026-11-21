@@ -220,6 +220,9 @@ final class CanvasView: UIView, PaintingCanvas {
     private static let finishPause: Float = 0.35
     private static let finishFlight: CFTimeInterval = 0.8
     private static let finishFitSlack: CGFloat = 0.05
+    /// A zoom this close to the fit counts as fitted when the canvas's room changes
+    /// (`layoutSubviews`): the band `finish` leaves a mosaic in as showing all of it.
+    private static var fittedSlack: CGFloat { finishFitSlack }
 
     private struct Camera: Equatable {
         var zoom: CGFloat
@@ -357,7 +360,88 @@ final class CanvasView: UIView, PaintingCanvas {
 
     // MARK: Lifecycle
 
-    override var canBecomeFirstResponder: Bool { true }
+    /// Not while a menu is open over the mosaic (More, the Finished bar's Share): a menu opened
+    /// over the canvas as first responder raised the software keyboard for it, with nothing to
+    /// type into, over the lower half of the painting until the menu closed (Paint by Moonlight's
+    /// fix of November 9, ported for painting-company row 330).
+    /// Under a menu its input is an empty view, so the system has no keyboard to show for it, and
+    /// a keyboard coming anyway sends it to resign (`keyboardWillShow`); `regainFocus` takes first
+    /// responder back once the menu has gone.
+    override var canBecomeFirstResponder: Bool { !Self.presentsMenu(window) }
+
+    override var inputView: UIView? { Self.presentsMenu(window) ? noKeyboard : nil }
+    private let noKeyboard = UIView(frame: .zero)
+
+    @objc private func keyboardWillShow(_ note: Notification) {
+        guard isFirstResponder, Self.presentsMenu(window) else { return }
+        Log.canvas.notice("A keyboard came for the canvas under a menu: the canvas lets first responder go")
+        _ = resignFirstResponder()
+    }
+
+    /// Whether anything is presented over the controller the canvas is in (a sheet, an alert, a
+    /// menu): the canvas may itself be in a presented one, so it is the top of the window's
+    /// presentations that must hold the canvas.
+    private var presentsAbove: Bool {
+        var top = window?.rootViewController
+        while let presented = top?.presentedViewController { top = presented }
+        guard let view = top?.viewIfLoaded else { return false }
+        return !isDescendant(of: view)
+    }
+
+    /// Whether a menu is presented in `window` (UIKit's context menu controllers, by name: there
+    /// is no API that says).
+    static func presentsMenu(_ window: UIWindow?) -> Bool {
+        var presented = window?.rootViewController?.presentedViewController
+        while let controller = presented {
+            if String(describing: type(of: controller)).contains("ContextMenu") { return true }
+            presented = controller.presentedViewController
+        }
+        return false
+    }
+
+    /// Whether the canvas means to be first responder: from the time it is in a window until
+    /// `releaseFocus` (feedback mode), and again from `focus`.
+    private var wantsFocus = true
+    /// Waiting for whatever took first responder (a menu, a sheet, an alert) to go.
+    private var regaining: Task<Void, Never>?
+
+    func focus() {
+        wantsFocus = true
+        _ = becomeFirstResponder()
+    }
+
+    func releaseFocus() {
+        wantsFocus = false
+        regaining?.cancel()
+        _ = resignFirstResponder()
+    }
+
+    override func resignFirstResponder() -> Bool {
+        let resigned = super.resignFirstResponder()
+        if resigned, wantsFocus { regainFocus() }
+        return resigned
+    }
+
+    /// First responder back once nothing is presented over the painting any more: UIKit gives
+    /// it back after a sheet or an alert, but not always after a menu, which took it while the
+    /// canvas couldn't have it (`canBecomeFirstResponder`), and ⌘Z and three-finger undo need it.
+    /// Never under anything presented, where it would take a field's focus or undo fills behind
+    /// a modal.
+    private func regainFocus() {
+        guard regaining == nil else { return }
+        regaining = Task { @MainActor [weak self] in
+            defer { self?.regaining = nil }
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(250))
+                guard let self, wantsFocus, window != nil, !isFirstResponder else { return }
+                if !presentsAbove {
+                    _ = becomeFirstResponder()
+                    return
+                }
+            }
+        }
+    }
+
     /// None while a replay plays: ⌘Z, the Edit menu and three-finger undo would take fills off
     /// the painting being played back.
     override var undoManager: UndoManager? { isReplaying ? nil : super.undoManager }
@@ -375,9 +459,12 @@ final class CanvasView: UIView, PaintingCanvas {
             requestRender()
             // First responder so the window's undo manager serves three-finger undo and ⌘Z.
             Task { self.becomeFirstResponder() }
+            NotificationCenter.default.addObserver(
+                self, selector: #selector(keyboardWillShow(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
         } else {
             displayLink?.invalidate()
             displayLink = nil
+            NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
         }
     }
 
@@ -387,29 +474,39 @@ final class CanvasView: UIView, PaintingCanvas {
         if contentScaleFactor != scale { contentScaleFactor = scale }
         let drawable = CGSize(width: (bounds.width * scale).rounded(), height: (bounds.height * scale).rounded())
         if metalLayer.drawableSize != drawable { metalLayer.drawableSize = drawable }
+        // Where the camera looked, read before the scroll view takes the new size: grown, it pulls
+        // its offset in to its new bounds, and the place was lost (Paint by Moonlight's
+        // `DuoLayoutTests` caught it 70 canvas units off).
+        let roomChanged = bounds.size != laidOutSize || chromeInsets != laidOutInsets
+        let old = CGRect(origin: .zero, size: laidOutSize).inset(by: laidOutInsets)
+        let lookedAt = roomChanged && laidOutSize != .zero ? canvasPoint(forView: CGPoint(x: old.midX, y: old.midY)) : nil
         if scrollView.frame != bounds { scrollView.frame = bounds }
         guard bounds.width > 1, bounds.height > 1 else { return }
-        guard bounds.size != laidOutSize || chromeInsets != laidOutInsets else { return }
+        guard roomChanged else { return }
 
-        // Keep looking at the same place across rotation / chrome changes.
-        let relative: CGFloat
+        // Keep looking at the same place across a rotation or a chrome change: a mosaic that was
+        // fitted fits its new room, and one zoomed in keeps its scale (the tiles under the finger
+        // stay their size, the new room showing more or less around them), centered where it was
+        // (Paint by Moonlight's, painting-company row 212, ported for row 330).
+        let zoom: (_ fit: CGFloat) -> CGFloat
         let center: SIMD2<Float>
-        if laidOutSize != .zero {
-            relative = scrollView.zoomScale / fitZoom
-            let old = CGRect(origin: .zero, size: laidOutSize).inset(by: laidOutInsets)
-            center = canvasPoint(forView: CGPoint(x: old.midX, y: old.midY))
+        if let lookedAt {
+            let scale = scrollView.zoomScale
+            let fitted = abs(scale / fitZoom - 1) <= Self.fittedSlack
+            zoom = { fit in fitted ? fit : scale }
+            center = lookedAt
         } else if let initial = initialCamera {
-            relative = initial.zoom
+            zoom = { fit in fit * initial.zoom }
             center = initial.center
         } else {
-            relative = 1
+            zoom = { fit in fit }
             center = SIMD2(Float(template.width), Float(template.height)) / 2
         }
         laidOutSize = bounds.size
         laidOutInsets = chromeInsets
         updateZoomLimits()
         restrictNavigationToFingers()
-        let z = clampZoom(fitZoom * relative)
+        let z = clampZoom(zoom(fitZoom))
         let flight = cameraAnimation
         cameraAnimation = nil
         apply(zoom: z, offset: offset(centering: center, zoom: z))

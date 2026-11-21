@@ -24,6 +24,10 @@ enum Theme {
     static let gold = Color(red: 0.788, green: 0.635, blue: 0.290)
     /// `outline`: rules and hairlines. Joint, #3A342A.
     static let outline = Color("Outline", bundle: .ravenna)
+    /// Quieter text that still reads, as Paint by Moonlight's: lime-plaster white at 70%, 9.4:1 on
+    /// the apse and 8.9:1 on the bench, where the system's `.secondary` gives 6.2:1 and 5.9:1 (and
+    /// less over the glass of the painting screen's bars, which lets the tiles show through).
+    static let quietInk = Color.primary.opacity(0.7)
     /// A failure's note: red, which reads on the bench (about 5:1).
     static let errorInk = Color.red
     // Navigation titles are New York already: Paint by Moonlight styles them for the whole app.
