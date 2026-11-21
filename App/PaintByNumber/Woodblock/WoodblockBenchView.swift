@@ -498,9 +498,9 @@ extension WoodblockBenchModel {
             canPeel = true
         default: break
         }
-        step = bench.step
-        block = bench.block
-        showsPrint = bench.step == .peeled
+        self.step = bench.step
+        self.block = bench.block
+        self.showsPrint = bench.step == .peeled
     }
 
     /// Holds the peel `fraction` of the way, the block's ink laid on the sheet (demos).
