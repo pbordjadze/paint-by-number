@@ -42,7 +42,7 @@ struct UnlockSheet: View {
                         }
                     }
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.quietInk)
                     .fixedSize(horizontal: false, vertical: true)
                 }
                 .multilineTextAlignment(.center)
@@ -87,7 +87,7 @@ struct UnlockSheet: View {
         // At accessibility sizes the content outgrows any sheet: it opens full height, and scrolls.
         .presentationDetents(typeSize.isAccessibilitySize ? [.large] : [.height(contentHeight)])
         // Opaque, as Paint by Moonlight's: on iPad the glass let the painting behind show through
-        // its words. On the bench its secondary and red notes read at AA (6:1 and 5:1).
+        // its words. On the bench its quiet and red notes read at AA (8.9:1 and 5:1).
         .presentationBackground(Theme.surface)
         .task { await loadPrice() }
         // Bought here, restored, or approved while the sheet was up (Ask to Buy).
@@ -114,7 +114,7 @@ struct UnlockSheet: View {
 
     private var samplesNote: some View {
         Text("Paintings someone sends you are always free.")
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Theme.quietInk)
     }
 
     private var restoreButton: some View {
@@ -152,10 +152,10 @@ struct UnlockSheet: View {
         switch note {
         case .pending:
             Text("Waiting for approval. Your paintings unlock as soon as it comes.")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.quietInk)
         case .nothingToRestore:
             Text("This Apple Account hasn’t bought Unlimited Paintings yet.")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.quietInk)
         case .failed(let message):
             Text(message)
                 .foregroundStyle(.red)

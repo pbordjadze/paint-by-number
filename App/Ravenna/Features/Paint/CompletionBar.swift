@@ -68,7 +68,7 @@ struct CompletionBar: View {
                     }
                 }
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.quietInk)
                 .lineLimit(titleLines)
             }
             Spacer(minLength: 0)

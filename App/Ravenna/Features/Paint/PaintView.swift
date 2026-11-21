@@ -981,7 +981,7 @@ private struct ProgressGroup: View {
                 Text(verbatim: (Double(percent) / 100).formatted(.percent.precision(.fractionLength(0))))
                     .font(.subheadline.weight(.semibold))
                     .monospacedDigit()
-                    .foregroundStyle(showsTitle ? Color.secondary : Color.primary)
+                    .foregroundStyle(showsTitle ? Theme.quietInk : Color.primary)
                     .contentTransition(.numericText())
                     .animation(reduceMotion ? nil : .snappy, value: percent)
                     .lineLimit(1)
