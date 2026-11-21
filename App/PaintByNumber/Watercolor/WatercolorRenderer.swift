@@ -315,7 +315,7 @@ final class WatercolorRenderer: NSObject, MTKViewDelegate {
         for r in changed where Int(r) < painting.regionCount {
             let target = sim.target(of: Int(r))
             let at = sim.paintedAt[Int(r)]
-            states[Int(r)] = WatercolorRegion(gain: SIMD4(target.gain, at.isFinite ? at : 1e9), aim: SIMD4(target.aim, 0))
+            states[Int(r)] = WatercolorRegion(gain: SIMD4(target.gain, at.isFinite ? at : 1e9), aim: SIMD4(target.aim, sim.glaze(of: Int(r))))
         }
     }
 

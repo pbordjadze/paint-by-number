@@ -234,7 +234,7 @@ nonisolated final class WatercolorFilmPlayer: @unchecked Sendable {
             let target = sim.target(of: Int(r))
             let at = sim.paintedAt[Int(r)]
             frame.gains.append(SIMD4(target.gain, at.isFinite ? at : 1e9))
-            frame.aims.append(SIMD4(target.aim, 0))
+            frame.aims.append(SIMD4(target.aim, sim.glaze(of: Int(r))))
         }
         return frame
     }
