@@ -810,8 +810,8 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   (`CompareView.lines`: stroked once, a soft-edged mask travelling over them, `drawIn` 0.7 s,
   eased), while the photo calms 45% toward the paper under them (`wash`), so the ink reads on a
   dark or busy picture; paper and ink are the page's own, dark paper's too (`FormingPlan.sheet`,
-  `FormingPaper`, `FormingLines`). The hand-off's lift waits for the rest of the drawing (`liftWait`, from
-  `PreviewPictureProbe.linesBegan`; the save runs meanwhile, so at most 0.7 s more), and its
+  `FormingPaper`, `FormingLines`). The hand-off's lift waits for the rest of the drawing (`liftWait`, until
+  `PreviewPictureProbe.formingDone`; the save runs meanwhile, so at most 0.7 s more), and its
   picture is the washed photo under those lines
   (`PictureDeparture.Content.forming`: photo, wash, lines and page laid out once at the page's
   place, `lay(at:)`, and carried there by one transform, `FormingPlan.carry`, since a page
@@ -824,8 +824,19 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   lift on, the release's durations and marks. Reduce Motion: no lines or wash, and
   the photo stays where it was (`staying`) and fades as the page fades in at its place. With The
   Making-of on: the wait is the same photo under the one status, no lines, and the show takes the photo as ever. A page from scratch, a drawing and the
-  settings' preview keep what they showed, and so does the release. `FormingTests`; the scenarios
-  `create-forming`, `-drawing`, `-lines` and `-page` hold it at a moment each (`ShellDemo.formingHold`), and
+  settings' preview keep what they showed. **The short Making-of** (SideStore and Debug builds only,
+  `FormingShow.isOn`; row 361, "graphite and fuse"; the release keeps the forming above) plays over it
+  as everyone's wait: the photo's color drains under a graphite drawing of it (`GraphiteSketch`, one Core
+  Image pass off the main actor) spreading from the middle (`FormingShow.Front`, a wavering blot every
+  beat shares) and lingering until the template is made; then its lines burn in behind a gold front with
+  the page's paper (`fuse`, the plain drawing in's 0.7 s; lit at least `graphiteAtLeast` after the
+  graphite began, so the tail past the making is at most `longestTail`), and during the glide the page's
+  numbers come out behind the same front with a twinkle each (`FormingPageStars`, in the hand-off's own
+  `settle`). A tap skips (`FormingShow.skip`): made, to the painting; not yet, to the plain forming. Reduce
+  Motion and The Making-of on bring none of it (`hasLines`). `FormingTests`, `FormingShowTests`; the scenarios
+  `create-forming`, `-drawing`, `-lines` and `-page` hold it at a moment each (`ShellDemo.formingHold`; with
+  the short Making-of: the graphite whole, the fuse half burned, the lines burned in), `-graphite` the
+  graphite half spread and `-stars` the numbers half out at the painting's place, and
   `StartHandoffUITests.testSlowedPickedPictureFormsIntoThePainting` attaches its frames.
 - `PhotoSourceView` (the Paint page, above): one scroll view; Tonight's Picture held to about 45%
   of the window's height, Your Own a grid (never a row that scrolls: its last ways in went unseen),
