@@ -9,7 +9,8 @@ import SwiftUI
 /// toward the gold of a smalto, and the heavier each step back is in the hand. In SideStore and
 /// Debug builds (painting-company row 366) it reaches back to 0001, the years that open an era
 /// (`EraYear.modes`) lit in gold among quieter ones, and a wheel left on a year beside one of
-/// them is drawn on to it (`pull`), so the eras are found without being shown.
+/// them is drawn on to it (`pull`), where it clicks into place, so the eras are found without
+/// being shown.
 public struct EraClock: View {
     private let onSettle: (Int) -> Void
     /// The wheel's rows, made once, not at each turn (the wheel's body runs again at every year
@@ -71,7 +72,10 @@ public struct EraClock: View {
         .overlay { rails }
         .frame(maxWidth: .infinity)
         .sensoryFeedback(trigger: year) { old, new in
-            new < old ? .impact(weight: .heavy, intensity: 0.25 + 0.75 * Self.age(of: new)) : nil
+            // An era's year clicks into place, from either side; a step back otherwise weighs
+            // what its age does. A step forward has the wheel's own tick alone.
+            if Self.isLit(new) { return .impact(flexibility: .rigid, intensity: 1) }
+            return new < old ? .impact(weight: .heavy, intensity: 0.25 + 0.75 * Self.age(of: new)) : nil
         }
         .onChange(of: year) { _, year in
             settling?.cancel()
