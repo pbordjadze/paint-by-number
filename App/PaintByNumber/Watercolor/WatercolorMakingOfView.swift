@@ -305,7 +305,9 @@ final class WatercolorFilmRenderer: NSObject, MTKViewDelegate {
             paper.replace(region: MTLRegionMake2D(0, 0, assets.paperWidth, assets.paperHeight), mipmapLevel: 0,
                           withBytes: bytes.baseAddress!, bytesPerRow: assets.paperWidth * 2)
         }
-        for (texture, bytes) in [(pencil, assets.pencil), (numbers, assets.numbers)] {
+        // The film hides the numbers (the bare sheet brings them back): a blank layer in their place.
+        let blank = [UInt8](repeating: 0, count: assets.numbers.count)
+        for (texture, bytes) in [(pencil, assets.pencil), (numbers, blank)] {
             bytes.withUnsafeBytes { raw in
                 texture.replace(region: MTLRegionMake2D(0, 0, assets.rasterWidth, assets.rasterHeight), mipmapLevel: 0,
                                 withBytes: raw.baseAddress!, bytesPerRow: assets.rasterWidth)
@@ -365,7 +367,7 @@ final class WatercolorFilmRenderer: NSObject, MTKViewDelegate {
             canvasSize: SIMD2(Float(template.width), Float(template.height)),
             paperTexel: SIMD2(1 / Float(paper.width), 1 / Float(paper.height)),
             simTexel: SIMD2(1 / Float(sheet.width), 1 / Float(sheet.height)),
-            film: SIMD2(pencilFade, 1),
+            film: SIMD2(pencilFade, 1),  // y: the water shown more (Watercolor.metal)
             paper: WatercolorRenderer.paperColor, background: WatercolorRenderer.paperColor,
             numberInk: WatercolorRenderer.numberInk, sheet: .zero)
         pass.colorAttachments[0].loadAction = .dontCare

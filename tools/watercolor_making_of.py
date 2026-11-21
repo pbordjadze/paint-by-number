@@ -8,7 +8,10 @@ Reads <dir>/frame-NNNN.ppm (pbn's frames, 1/fps second shown apart) and making-o
 frame settled) and writes <dir>/contact.jpg (--tiles frames evenly spaced up to the settled one,
 each with its time shown) and, when ffmpeg is on the path, <dir>/making-of.mp4: the frames, then
 the app's ending on the frames after (the painting held, drying on, then lifted away, a little
-larger and fading, off the bare pencilled sheet the painter paints). Pillow only.
+larger and fading, off the bare pencilled sheet the painter paints, its numbers drawn at the
+film's own size from labels.csv, as the painting screen draws them, fading in once the lift is
+done; the last of these is also written as last-frame.png). Pillow only; the numbers in DejaVu
+Sans where it is installed.
 """
 import argparse
 import csv
@@ -18,13 +21,16 @@ import shutil
 import subprocess
 import tempfile
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 DESK = (232, 227, 217)
 HOLD = 0.8  # seconds the finished painting is held (WatercolorMakingOfView.hold)
 LIFT = 0.9  # seconds it lifts away (WatercolorMakingOfView.lift)
 PUSH = 1.15  # the push in toward a drying bloom (WatercolorMakingOfView.pushIn)
 PUSH_SECONDS = 2.6  # its ease in and out (WatercolorMakingOfView.pushSeconds)
+NUMBERS_IN = 0.35  # seconds the numbers fade in over once the lift is done
+NUMBER_INK = (48, 46, 51)  # WatercolorRenderer.numberInk, near enough
+FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 
 
 def pushed(sheet, zoom, focus):
@@ -62,12 +68,33 @@ def lifted(finished, bare, size, u, zoom=1.0, focus=(0.5, 0.5)):
     return Image.blend(top, base, ease)
 
 
+def numbered(sheet, size, labels, alpha):
+    """The bare sheet on the desk with its numbers at `alpha`, drawn at the film's pixels."""
+    out = on_desk(sheet, size)
+    if not labels or alpha <= 0:
+        return out
+    w, h = size
+    s = min(w / sheet.width, h / sheet.height) * 0.94
+    tw, th = round(sheet.width * s), round(sheet.height * s)
+    x0, y0 = (w - tw) // 2, (h - th) // 2
+    layer = Image.new("L", size, 0)
+    draw = ImageDraw.Draw(layer)
+    fonts = {}
+    for x, y, frac, number in labels:
+        px = max(round(frac * tw), 6)
+        if px not in fonts:
+            fonts[px] = ImageFont.truetype(FONT, px) if os.path.exists(FONT) else ImageFont.load_default()
+        draw.text((x0 + x * tw, y0 + y * th), str(number), fill=round(255 * 0.9 * alpha), font=fonts[px], anchor="mm")
+    ink = Image.new("RGB", size, NUMBER_INK)
+    return Image.composite(ink, out, layer)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("dir")
     ap.add_argument("--fps", type=float, default=15)
     ap.add_argument("--tiles", type=int, default=12)
-    ap.add_argument("--width", type=int, default=1280, help="the film's width (16:10 frame)")
+    ap.add_argument("--width", type=int, default=2048, help="the film's width (16:10 frame; an iPad's 2048 by default)")
     args = ap.parse_args()
     paths = sorted(glob.glob(os.path.join(args.dir, "frame-*.ppm")))
     if not paths:
@@ -117,6 +144,11 @@ def main():
     size = (args.width, round(args.width * 10 / 16) // 2 * 2)
     bare_file = os.path.join(args.dir, "bare.ppm")
     bare = Image.open(bare_file if os.path.exists(bare_file) else paths[0]).convert("RGB")
+    labels = []
+    labels_file = os.path.join(args.dir, "labels.csv")
+    if os.path.exists(labels_file):
+        with open(labels_file) as f:
+            labels = [(float(r["x"]), float(r["y"]), float(r["size"]), int(r["number"])) for r in csv.DictReader(f)]
     def ending_frame(j):
         return Image.open(ending[min(j, len(ending) - 1)]).convert("RGB")
     with tempfile.TemporaryDirectory() as tmp:
@@ -132,9 +164,13 @@ def main():
         for j in range(1, steps + 1):
             lifted(ending_frame(held + j), bare, size, j / steps, zoom(k), focus).save(os.path.join(tmp, f"{k:05d}.png"))
             k += 1
-        for _ in range(round(0.6 * args.fps)):
-            on_desk(bare, size).save(os.path.join(tmp, f"{k:05d}.png"))
+        fade_in = max(round(NUMBERS_IN * args.fps), 1)
+        last = None
+        for j in range(fade_in + round(0.8 * args.fps)):
+            last = numbered(bare, size, labels, min((j + 1) / fade_in, 1))
+            last.save(os.path.join(tmp, f"{k:05d}.png"))
             k += 1
+        last.save(os.path.join(args.dir, "last-frame.png"))
         out = os.path.join(args.dir, "making-of.mp4")
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(args.fps), "-i",
                         os.path.join(tmp, "%05d.png"), "-c:v", "libx264", "-pix_fmt", "yuv420p",

@@ -20,6 +20,14 @@ import Testing
             #expect(painted.contains { $0.region == bloom.region && $0.step < bloom.step })
         }
         #expect(zip(plan.log.taps, plan.log.taps.dropFirst()).allSatisfy { $0.step <= $1.step })
+        // The signature paints open it: saturated, a few paints, all down within half a second.
+        #expect(plan.signatures.count <= WatercolorMakingOf.signatureCount * WatercolorMakingOf.signatureAreas)
+        #expect(Set(plan.signatures.map { t.regions[$0].colorIndex }).count <= WatercolorMakingOf.signatureCount)
+        for r in plan.signatures {
+            let lab = t.palette[Int(t.regions[r].colorIndex)].oklab
+            #expect((lab.y * lab.y + lab.z * lab.z).squareRoot() >= WatercolorMakingOf.signatureChroma)
+            #expect(painted.contains { $0.region == r && Float($0.step) * WatercolorSim.dt <= 0.5 + 1e-3 })
+        }
         // The darkest areas come after the lightest.
         let darkness = sheet.want.map { ($0.x + $0.y + $0.z) / 3 }
         let n = plan.log.taps.count

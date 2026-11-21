@@ -17,7 +17,8 @@ struct WatercolorUniforms {
     float2 paperTexel;    // one texel of the fine paper, in uv
     float2 simTexel;      // one cell of the simulation, in uv
     float2 film;          // the Making Of's (zero on the painting screen): x, the pencil gone from
-                          // under painted areas; y, the numbers hidden
+                          // under painted areas; y, the water shown more, so the film's wet
+                          // paint reads at a glance
     float4 paper;         // the paper's color
     float4 background;    // around the sheet
     float4 numberInk;
@@ -150,10 +151,10 @@ fragment float4 watercolor_fragment(
         float2 step = u.simTexel * 2;
         float wx = float(density.sample(smooth, uv + float2(step.x, 0)).a - density.sample(smooth, uv - float2(step.x, 0)).a);
         float wy = float(density.sample(smooth, uv + float2(0, step.y)).a - density.sample(smooth, uv - float2(0, step.y)).a);
-        refl *= 1 - 0.07 * wet;
+        refl *= 1 - 0.07 * wet * (1 + 2 * u.film.y);
         // A soft sheen, not a glare: brighter read as white blotches on a pale wash.
         float spec = pow(clamp(-(wx + wy) * 0.8, 0.0, 1.0), 2.0) * wet;
-        refl += 0.12 * spec;
+        refl += 0.12 * spec * (1 + u.film.y);
     }
 
     // Graphite reads on bare paper and all but disappears under a wash.
@@ -163,7 +164,7 @@ fragment float4 watercolor_fragment(
 
     // A number fades once its area is painted.
     float fade = clamp(1 - (u.time - r.gain.w) / 0.35, 0.0, 1.0);
-    float n = float(numbers.sample(smooth, uv).r) * fade * (1 - u.film.y);
+    float n = float(numbers.sample(smooth, uv).r) * fade;
     refl = mix(refl, u.numberInk.rgb, n * 0.9);
     return float4(refl, 1);
 }
