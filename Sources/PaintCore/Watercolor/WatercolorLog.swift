@@ -49,8 +49,12 @@ public struct WatercolorLog: Codable, Sendable, Equatable {
     /// The log in `data`, its taps checked against a template of `regions` areas and
     /// `width` × `height` canvas units: what doesn't fit is dropped. A newer version throws.
     public init(encoded data: Data, regions: Int, width: Int, height: Int) throws {
+        // The version first: a newer app's log may not decode as this one's, and must never be
+        // taken for a damaged one (which the app would begin again and write over).
+        struct Versioned: Decodable { var version: Int }
+        let found = try JSONDecoder().decode(Versioned.self, from: data).version
+        guard found <= Self.currentVersion else { throw CodingError.newerVersion(found) }
         let read = try JSONDecoder().decode(WatercolorLog.self, from: data)
-        guard read.version <= Self.currentVersion else { throw CodingError.newerVersion(read.version) }
         version = read.version
         seed = read.seed
         var step = 0

@@ -130,7 +130,7 @@ final class WatercolorShelf {
                 }
             }
             let sheet = WatercolorSheet(template: template, seed: log.seed)
-            let sim = WatercolorSim(sheet: sheet)
+            var sim = WatercolorSim(sheet: sheet)
             var restored = false
             if let compressed = sheetData {
                 do {
@@ -142,6 +142,13 @@ final class WatercolorShelf {
                 } catch {
                     Log.library.error("Unreadable watercolor sheet of \(id.uuidString, privacy: .public): replaying its log")
                 }
+            }
+            // The log is written before the sheet: a save cut off between them leaves taps the
+            // sheet never saw, and the log, replayed, is the painting.
+            if restored, let last = log.taps.last, last.step > sim.step {
+                Log.library.error("Watercolor sheet of \(id.uuidString, privacy: .public) older than its log: replaying it")
+                sim = WatercolorSim(sheet: sheet)
+                restored = false
             }
             if !restored && !log.taps.isEmpty { sim.replay(log) }
             let assets = WatercolorAssets.make(template: template, sheet: sheet)
@@ -195,9 +202,16 @@ final class WatercolorShelf {
     func delete(_ id: UUID) {
         let store = store
         paintings.removeAll { $0.id == id }
+        let pending = saving.removeValue(forKey: id)
         Task {
+            // After its saves, or one would write the folder back; the era has no undo, so the
+            // trash is emptied at once.
+            await pending?.value
             do {
-                try await Background.run { try store.moveToTrash(id) }
+                try await Background.run {
+                    try store.moveToTrash(id)
+                    store.purgeTrash(id)
+                }
             } catch {
                 Log.library.error("Couldn't delete watercolor \(id.uuidString, privacy: .public)")
             }

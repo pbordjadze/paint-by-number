@@ -207,6 +207,11 @@ import Testing
         #expect(throws: WatercolorLog.CodingError.newerVersion(newer.version)) {
             _ = try WatercolorLog(encoded: try newer.encoded(), regions: t.regions.count, width: t.width, height: t.height)
         }
+        // A newer log shaped differently is newer, never damaged.
+        let reshaped = Data(#"{"version":2,"seed":"one","strokes":[{"at":[1,2]}]}"#.utf8)
+        #expect(throws: WatercolorLog.CodingError.newerVersion(2)) {
+            _ = try WatercolorLog(encoded: reshaped, regions: t.regions.count, width: t.width, height: t.height)
+        }
         #expect(throws: (any Error).self) {
             _ = try WatercolorLog(encoded: Data("{".utf8), regions: 1, width: 1, height: 1)
         }

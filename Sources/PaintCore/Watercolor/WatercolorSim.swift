@@ -590,10 +590,17 @@ public final class WatercolorSim {
             f32(laidDensity[r].x); f32(laidDensity[r].y); f32(laidDensity[r].z)
             f32(paintedAt[r].isFinite ? paintedAt[r] : -1)
         }
+        // The cells in one copy (the main thread saves while the painter paints): little-endian
+        // floats, as every platform this runs on lays them.
+        var cells = [Float](repeating: 0, count: count * 4)
         for i in 0..<count {
             let d = D[i] + S[i]
-            f32(d.x); f32(d.y); f32(d.z); f32(G[i])
+            cells[4 * i] = d.x; cells[4 * i + 1] = d.y; cells[4 * i + 2] = d.z; cells[4 * i + 3] = G[i]
         }
+        #if _endian(big)
+        for i in cells.indices { cells[i] = Float(bitPattern: cells[i].bitPattern.littleEndian) }
+        #endif
+        cells.withUnsafeBytes { out.append(contentsOf: $0) }
         return out
     }
 

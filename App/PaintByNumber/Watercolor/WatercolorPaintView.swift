@@ -11,11 +11,21 @@ struct WatercolorPaintScreen: View {
     let id: UUID
     @State private var opened: (painting: WatercolorPainting, renderer: WatercolorRenderer)?
     @State private var failed = false
+    @State private var needsNewerApp = false
 
     var body: some View {
         Group {
             if let opened {
                 WatercolorPaintView(shelf: shelf, painting: opened.painting, renderer: opened.renderer)
+            } else if needsNewerApp {
+                // Its files are left as they are: an older app never writes over a newer one's.
+                ContentUnavailableView {
+                    Label("Needs a Newer Version", systemImage: "arrow.up.circle")
+                } description: {
+                    Text(verbatim: String(localized: "gallery.recovery.newer.untitled",
+                                          defaultValue: "This painting was made with a newer version of Paint by Moonlight. Update the app to keep painting it.",
+                                          comment: "Recovery screen text for an untitled painting made by a newer app version"))
+                }
             } else if failed {
                 ContentUnavailableView("Can’t Open Painting", systemImage: "exclamationmark.triangle")
             } else {
@@ -38,6 +48,8 @@ struct WatercolorPaintScreen: View {
                 WatercolorDemo.prepare(painting)
                 #endif
                 opened = (painting, renderer)
+            } catch WatercolorLog.CodingError.newerVersion, WatercolorSim.SnapshotError.newerVersion {
+                needsNewerApp = true
             } catch {
                 Log.library.error("Couldn't open watercolor \(id.uuidString, privacy: .public): \(String(describing: error), privacy: .public)")
                 failed = true
@@ -199,6 +211,7 @@ struct WatercolorPaintBox: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text(verbatim: label))
+        .accessibilityValue(Text(verbatim: done ? PaintSpeech.finished : ""))
         .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityShowsLargeContentViewer {
             Text(verbatim: "\(i + 1)")
