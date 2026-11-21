@@ -156,12 +156,14 @@ fragment float4 watercolor_fragment(
     // One factor for all three channels, the most any channel's cap asks for: capped one by one,
     // a neighbour's pigment sampled across the edge took on a hue of its own (cyan and magenta
     // specks along the rims, CI, November 21).
-    float3 cap = max(r.aim.rgb * 1.7, 0.05);
+    float3 cap = max(r.aim.rgb * 1.35, 0.05);
     float3 capped = cap * tanh(d / cap);
     float3 ratio = select(capped / max(d, 1e-5), float3(1.0), d < 1e-5);
     d *= min(ratio.r, min(ratio.g, ratio.b));
-    // A thin area's paint, a glaze over what its neighbours' water left, coming in as a wash does.
-    d += r.aim.rgb * r.aim.w * clamp((u.time - r.gain.w) / 0.6, 0.0, 1.0);
+    // A thin area's paint, a glaze over what its neighbours' water left (a part of it, so their
+    // tint shows through and the two never stack to black), coming in as a wash does.
+    float glaze = r.aim.w * clamp((u.time - r.gain.w) / 0.6, 0.0, 1.0);
+    d = d * (1 - 0.6 * glaze) + r.aim.rgb * glaze;
     float g = float(granulation.sample(smooth, uv).r);
     float p2 = float(paper.sample(smooth, uv).r);
     d *= 1 + g * 0.6 * (0.5 - p2);

@@ -205,12 +205,13 @@ func watercolorRaster(_ sim: WatercolorSim, template t: Template, fine: [Float]?
             // One factor for all three channels (the shader's reason).
             var ratio: Float = 1
             for c in 0..<3 where d[c] >= 1e-5 {
-                let cap = max(target.aim[c] * 1.7, 0.05)
+                let cap = max(target.aim[c] * 1.35, 0.05)
                 ratio = min(ratio, cap * tanh(d[c] / cap) / d[c])
             }
             d *= ratio
-            // A thin area's paint, a glaze over what its neighbours' water left.
-            d += target.aim * glazes[r]
+            // A thin area's paint, a glaze over what its neighbours' water left (a part of it,
+            // so their tint shows through and the two never stack to black).
+            d = d * (1 - 0.6 * glazes[r]) + target.aim * glazes[r]
             let p2 = fine[y * W2 + x]
             d *= 1 + gr * 0.6 * (0.5 - p2)
             var refl = WatercolorSheet.paperColor * SIMD3(exp(-d.x), exp(-d.y), exp(-d.z))
