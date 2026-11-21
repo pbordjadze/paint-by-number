@@ -121,6 +121,25 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
         }
     }
 
+    /// A glass poured into a Stained Glass window (painting-company row 366): a clear bell, the
+    /// twinkle an octave above the Moon's note at `index` (`glassNote`), with that note soft under
+    /// it. `velocity` 0…1.
+    func glass(index: Int, velocity: Float) {
+        perform(Self.glassCues(index: index, velocity: velocity))
+    }
+
+    static func glassCues(index: Int, velocity: Float) -> [Cue] {
+        let i = min(max(index, 0), moonScale.count - 1), v = min(max(velocity, 0), 1)
+        return [Cue(voice: .twinkle(index: i), volume: 0.16 + 0.14 * v),
+                Cue(voice: .note(.moon, index: i), volume: (0.06 + 0.06 * v) * level(of: .moon), delay: 0.02)]
+    }
+
+    /// The note a glass rings at: pale glass high, deep glass low, on the Moon's scale.
+    static func glassNote(lightness: Float) -> Int {
+        let t = min(max((lightness - 0.35) / 0.5, 0), 1)
+        return Int((t * Float(moonScale.count - 1)).rounded())
+    }
+
     /// The finale in `sky`. Sun: a bright run up every note to an open, sunlit chord. Moon: a
     /// slower, softer run down that settles on a warm low chord, one star left ringing above it.
     func celebrate(sky: Sky) {

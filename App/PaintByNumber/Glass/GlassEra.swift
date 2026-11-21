@@ -20,11 +20,13 @@ struct GlassEra: View {
     @State private var picking = false
     @State private var picked: PhotosPickerItem?
     @State private var showsSettings = false
+    @State private var showsLibrary = false
     @State private var isLoadingPhoto = false
 
     var body: some View {
         NavigationStack(path: $path) {
-            GlassGalleryView(shelf: shelf, onNew: { picking = true }, onSettings: { showsSettings = true },
+            GlassGalleryView(shelf: shelf, onNew: { picking = true }, onLibrary: { showsLibrary = true },
+                             onSettings: { showsSettings = true },
                              onOpen: { path.append(.window($0)) })
                 .navigationDestination(for: GlassRoute.self) { route in
                     switch route {
@@ -46,6 +48,12 @@ struct GlassEra: View {
         }
         .sheet(isPresented: $showsSettings) {
             GlassSettingsView(leave: leave)
+        }
+        .sheet(isPresented: $showsLibrary) {
+            GlassLibraryView { sample in
+                showsLibrary = false
+                Task { await load(sample) }
+            }
         }
         .task {
             await shelf.load()
@@ -78,6 +86,21 @@ struct GlassEra: View {
             open(photo)
         } catch {
             Log.library.error("Couldn't load a photo for a window: \(String(describing: error), privacy: .public)")
+        }
+    }
+
+    /// A picture of the app's library, leaded as a photo is.
+    private func load(_ sample: Sample) async {
+        guard let url = sample.url else { return }
+        isLoadingPhoto = true
+        defer { isLoadingPhoto = false }
+        do {
+            let photo = try await Background.run {
+                try PhotoLoader.load(data: Data(contentsOf: url), maxPixelSize: ArtworkStore.sourceMaxPixelSize)
+            }
+            open(photo)
+        } catch {
+            Log.library.error("Couldn't load a library picture for a window: \(String(describing: error), privacy: .public)")
         }
     }
 
@@ -122,6 +145,7 @@ struct GlassLeadRoute: Hashable {
 struct GlassGalleryView: View {
     let shelf: GlassShelf
     let onNew: () -> Void
+    let onLibrary: () -> Void
     let onSettings: () -> Void
     let onOpen: (UUID) -> Void
 
@@ -148,8 +172,11 @@ struct GlassGalleryView: View {
                     .accessibilityIdentifier("glass-settings")
             }
             ToolbarItem(placement: .primaryAction) {
-                Button("New Window", systemImage: "plus", action: onNew)
-                    .accessibilityIdentifier("glass-new")
+                Menu("New Window", systemImage: "plus") {
+                    Button("A Photo", systemImage: "photo", action: onNew)
+                    Button("The Library", systemImage: "books.vertical", action: onLibrary)
+                }
+                .accessibilityIdentifier("glass-new")
             }
         }
     }
@@ -174,6 +201,35 @@ struct GlassGalleryView: View {
         .padding(32)
         .frame(maxWidth: 420)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+/// The app's library of pictures, to lead as a window: the paintings, then the photographs.
+struct GlassLibraryView: View {
+    let onPick: (Sample) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 14)], spacing: 14) {
+                    ForEach(Sample.all(of: .painting) + Sample.all(of: .photograph)) { sample in
+                        Button { onPick(sample) } label: { SampleTile(sample: sample) }
+                            .buttonStyle(.plain)
+                            .clipShape(.rect(cornerRadius: 10))
+                            .accessibilityIdentifier("glass-library-picture")
+                    }
+                }
+                .padding(16)
+            }
+            .navigationTitle(Text("The Library"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+        }
     }
 }
 
@@ -239,11 +295,15 @@ struct GlassWindowScreen: View {
     let id: UUID
     @State private var model: GlassGlazeModel?
     @State private var failed = false
+    /// The device can't draw the canvas.
+    @State private var unavailable = false
 
     var body: some View {
         Group {
             if let model {
-                GlassGlazeView(model: model, sunHold: GlassWindowScreen.demoSunHold)
+                GlassGlazeView(model: model, title: shelf.window(id)?.title ?? "")
+            } else if unavailable {
+                CanvasUnavailableView()
             } else if failed {
                 ContentUnavailableView("Can’t Open Window", systemImage: "exclamationmark.triangle")
             } else {
@@ -256,8 +316,16 @@ struct GlassWindowScreen: View {
             guard model == nil, let artwork = shelf.window(id) else { return }
             do {
                 let opened = try await shelf.open(artwork)
+                guard let context = await RenderContext.ready(),
+                      let mode = await Background.run({
+                          GlassMode(template: opened.template, texture: opened.texture, offered: opened.offered, context: context)
+                      })
+                else {
+                    unavailable = true
+                    return
+                }
                 let made = GlassGlazeModel(id: id, template: opened.template, glazing: opened.glazing, offered: opened.offered,
-                                           texture: opened.texture)
+                                           mode: mode)
                 made.onChange = { [shelf] glazing in
                     shelf.enqueue(glazing, of: id, template: opened.template, offered: opened.offered, texture: opened.texture)
                 }
@@ -274,14 +342,6 @@ struct GlassWindowScreen: View {
         }
     }
 
-    /// Where a demo holds the sun's pass (Debug builds), else nil.
-    static var demoSunHold: TimeInterval? {
-        #if DEBUG
-        return GlassDemo.sunHold
-        #else
-        return nil
-        #endif
-    }
 }
 
 /// The era's Settings: About's Year, whose wheel leaves the era.

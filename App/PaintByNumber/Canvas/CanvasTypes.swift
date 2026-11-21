@@ -235,7 +235,9 @@ nonisolated struct RegionState {
     var radius: Float
     var painted: Float
     var seed: Float
-    var pad: Float = 0
+    /// A mode's own value for the region (`CanvasMode`; Stained Glass: the glass in it, plus 1);
+    /// 0 without a mode, which never reads it.
+    var mode: Float = 0
 
     /// Painted or not, no animation. The shaders read the origin, radius and seed only while
     /// paint spreads (Shaders.metal `samplePaint`), so a settled state carries none.
