@@ -360,18 +360,13 @@ def send(args):
         wanted = f"relay/{n:04}.json"
     else:
         wanted = "relay/hello.json"
-    # A rerun under the same run name finds the earlier run's STATUS.md in the ref: only a
-    # STATUS.md other than the one there now says this run has ended.
-    git("fetch", "-q", "origin", f"+{ref}:{ref}", check=False)
-    stale_status = git("rev-parse", "-q", "--verify", f"{ref}:STATUS.md", check=False).strip()
     deadline = time.monotonic() + args.wait
     while True:
         git("fetch", "-q", "origin", f"+{ref}:{ref}", check=False)
         if subprocess.run(["git", "cat-file", "-e", f"{ref}:{wanted}"], capture_output=True).returncode == 0:
             break
         status = subprocess.run(["git", "show", f"{ref}:STATUS.md"], capture_output=True, text=True)
-        status_blob = git("rev-parse", "-q", "--verify", f"{ref}:STATUS.md", check=False).strip()
-        if status.returncode == 0 and status_blob != stale_status:
+        if status.returncode == 0:
             print(f"the run has ended without {wanted}:\n{status.stdout}", file=sys.stderr)
             return 2
         if time.monotonic() > deadline:
