@@ -1360,7 +1360,10 @@ reaches the app's metallib; a soft shadow marched toward the torch through the r
 `CaveSound` (synthesized fire, breath and drips in an `AVAudioEnvironmentNode`'s hall; Core
 Haptics; Settings' Sounds and Haptics) and `CaveShelf` (`Application Support/Cave/Wall/`, the
 paintings oldest first). Demos: `cave-mouth`, `cave-blowing`, `cave-hand`, `cave-wall`
-(`CaveDemo`); `CaveAppTests`.
+(`CaveDemo`); `CaveAppTests`. `CaveFossils`: Liquid Glass misused on purpose, the system's
+controls found as glass in the rock (a cracked "more" pill, the mouth as a back button, the year
+wheel carved under the mouth), drawn by the shader and lit only by the torch and the daylight;
+none of it is a control.
 
 ## Outside the app: widgets and stickers
 

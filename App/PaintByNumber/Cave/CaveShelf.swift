@@ -66,13 +66,17 @@ final class CaveShelf {
     }
 
     nonisolated private static func read(_ root: URL) -> ([UUID], [CaveScene.Painting]) {
-        guard let data = try? Data(contentsOf: root.appending(path: wallFile)) else { return ([], []) }
-        guard let wall = try? JSONDecoder().decode(Wall.self, from: data) else {
-            Log.library.error("The cave's wall.json can't be read: starting from what its folders hold")
-            return ([], [])
+        let ids: [UUID]
+        if let data = try? Data(contentsOf: root.appending(path: wallFile)), let wall = try? JSONDecoder().decode(Wall.self, from: data) {
+            ids = wall.paintings
+        } else {
+            // No wall.json, or one that can't be read: the order is made again from the paintings'
+            // folders, oldest first, so the next save never writes a wall without them.
+            ids = folders(root)
+            if !ids.isEmpty { Log.library.error("The cave's wall.json can't be read: ordering its \(ids.count) folders by age") }
         }
         var paintings: [CaveScene.Painting] = []
-        for id in wall.paintings {
+        for id in ids {
             let folder = root.appending(path: id.uuidString, directoryHint: .isDirectory)
             let plan: CavePlan
             do {
@@ -97,7 +101,17 @@ final class CaveShelf {
             }
             paintings.append(CaveScene.Painting(id: id, plan: plan, progress: progress, pigment: pigment))
         }
-        return (wall.paintings, paintings)
+        return (ids, paintings)
+    }
+
+    /// The paintings' folders, oldest first.
+    nonisolated private static func folders(_ root: URL) -> [UUID] {
+        let urls = (try? FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: [.creationDateKey])) ?? []
+        let dated = urls.compactMap { url -> (UUID, Date)? in
+            guard let id = UUID(uuidString: url.lastPathComponent) else { return nil }
+            return (id, (try? url.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? .distantPast)
+        }
+        return dated.sorted { $0.1 < $1.1 }.map(\.0)
     }
 
     /// Adds a painting just drawn, nothing blown, at the deep end of the wall.

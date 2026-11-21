@@ -440,6 +440,13 @@ final class CaveScene {
         lastSave = time
         unsaved = false
         pigmentLanded = false
+        // A hand still being blown is finished first: once saved, the painting is complete for good.
+        if let h = hand, layer != nil {
+            layer?.stencil(h.hand, amount: 1)
+            hand = nil
+            sound.blow(false)
+            sound.settle()
+        }
         guard let layer, let last = paintings.last, !last.isComplete else { return }
         let progress = layer.progress
         let rgba = layer.rgba()
