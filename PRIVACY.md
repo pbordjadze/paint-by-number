@@ -1,10 +1,10 @@
 # Paint by Moonlight: Privacy Policy
 
-*Last updated November 11, 2026*
+*Last updated November 21, 2026*
 
 Paint by Moonlight turns your photos into paint-by-numbers paintings on your iPhone or iPad. It
-has no accounts, no ads, no analytics and no tracking. The only thing it can send off your device
-is feedback about a painting, and only when you tap Send. This page explains what that means in
+has no accounts, no ads, no analytics and no tracking. The only thing it can send to us is
+feedback about a painting, and only when you tap Send. This page explains what that means in
 practice.
 
 ## What the app collects
@@ -12,8 +12,8 @@ practice.
 Nothing, unless you choose to send feedback. There are no accounts, no ads, no analytics, no
 tracking and no third-party SDKs. The app never sends your photos, your paintings or anything
 about you or your device to us or to anyone else, except what you share yourself through the share
-sheet and when you tap Send in Give Feedback: then the feedback you reviewed is uploaded to the
-developers (see Sharing and feedback below).
+sheet or Paint Together, and when you tap Send in Give Feedback: then the feedback you reviewed is
+uploaded to the developers (see Sharing and feedback below).
 
 That feedback is the only data the app collects. It is not linked to you (there is no account to
 link it to), it is not used for tracking, and it is used only to fix problems in the app. The
@@ -40,7 +40,7 @@ original photo only if you switch it on (photos).
 
 Five new paintings are free, and a free one comes back each day, up to five at a time; every new
 painting takes one, a mosaic too. Unlimited Paintings, a one-time purchase, lifts that limit and
-unlocks Refine, the drawing tools. You buy it from Apple through
+unlocks Edit, the drawing tools. You buy it from Apple through
 the App Store, under Apple's terms: Apple handles the payment and your Apple Account, and we never
 receive your name, email address or payment details (Apple's sales reports to developers count
 purchases without saying who made them). The app checks on your device whether you have bought
@@ -84,6 +84,24 @@ the picture instead).
 - **Your choice.** Nothing is sent unless you tap Send. If sending fails you can try again, share
   the report some other way (for example Mail, Messages or AirDrop), or cancel, which keeps what
   you wrote.
+
+## Paint Together
+
+**Paint Together** lets you paint a picture with someone on a FaceTime call, through Apple's
+SharePlay. When you start it, the painting you chose (its template, title and paint names, like
+the file Send Template makes, without your photo) goes to the people on the call with
+what is painted so far, and the areas each of you fills go back and forth while you paint. It all
+travels through Apple's SharePlay, between the devices on the call, under Apple's terms: it doesn't pass through us and we never
+see it. The app learns no names, phone numbers or email addresses of the people on the call. When
+the call or Paint Together ends, each of you keeps the painting on your own device.
+
+## Widgets and stickers
+
+The app's widgets and its sticker pack for Messages show pictures of your paintings that the app
+saves for them on your device (in a folder only the app and its widgets and stickers can read).
+Paint One Area on a widget is counted on your device and painted in by the app the next time you
+open it. Nothing about them leaves your device, except a sticker you choose to send in Messages,
+which goes where you send it, under Apple's terms.
 
 ## TestFlight
 
