@@ -103,6 +103,7 @@ struct GalleryView: View {
                     if !query.isActive {
                         GalleryShelf(
                             held: Set(library.artworks.compactMap(\.sampleName)),
+                            finished: Set(library.artworks.filter(\.isComplete).compactMap(\.sampleName)),
                             hasRoom: library.artworks.count + library.placeholders.count < Self.fewPaintings,
                             columns: columns, rowSpacing: spacing + 8,
                             onPaint: onPaint, onMore: onCreate)

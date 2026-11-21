@@ -712,7 +712,7 @@ final class Library {
             let photo: Data
             if store.hasSource(id) {
                 photo = try Data(contentsOf: store.url(.source, of: id))
-            } else if let url = artwork.sampleName.flatMap(Sample.named)?.url {
+            } else if let sample = artwork.sampleName.flatMap(Sample.named), let url = sample.url, !sample.isThumbnailOnly {
                 photo = try Data(contentsOf: url)
             } else {
                 throw ArtworkFactory.FactoryError.sourceUnavailable

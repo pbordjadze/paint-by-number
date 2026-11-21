@@ -29,6 +29,11 @@ nonisolated struct Sample: Identifiable, Hashable, Sendable {
     let id: String
     let title: String
     let provenance: Provenance?
+    /// A picture that isn't bundled: a demo launch's own photo, or a night's from the museums
+    /// (`Nights`), which `url` gives instead of a bundled one.
+    private(set) var file: URL?
+    /// A night's picture's 640 px thumbnail, there before its full picture may be (`Nights`).
+    private(set) var thumbnail: URL?
 
     init(id: String, title: String, provenance: Provenance? = nil) {
         self.id = id
@@ -37,19 +42,39 @@ nonisolated struct Sample: Identifiable, Hashable, Sendable {
     }
 
     #if DEBUG
-    /// A demo launch's own photo (`DemoMode.photos`), which `url` gives instead of a bundled one.
-    private(set) var file: URL?
-
     init(file: URL) {
         self.init(id: "demo-photo:\(file.path)", title: file.deletingPathExtension().lastPathComponent)
         self.file = file
     }
     #endif
 
+    #if UNRELEASED
+    /// A night's picture from the museums (`Nights.sample`): its full picture once downloaded,
+    /// and its thumbnail meanwhile.
+    init(night picture: Nights.Picture, file: URL, thumbnail: URL) {
+        self.init(
+            id: picture.id, title: picture.title,
+            provenance: Provenance(kind: .painting, creator: picture.creator, year: picture.year, credit: picture.credit, license: picture.license))
+        self.file = file
+        self.thumbnail = thumbnail
+    }
+
+    #endif
+
+    /// A night's picture whose `url` is only its thumbnail for now (`isThumbnailOnly`, in
+    /// every build): no picture to make a painting from.
+    var isThumbnailOnly: Bool {
+        guard thumbnail != nil, let file else { return false }
+        return !FileManager.default.fileExists(atPath: file.path)
+    }
+
+    /// The picture's file: bundled, a demo's, or a night's (its thumbnail until the full
+    /// picture is here, so its tile shows; `isThumbnailOnly` says which).
     var url: URL? {
-        #if DEBUG
-        if let file { return file }
-        #endif
+        if let file {
+            if thumbnail == nil || FileManager.default.fileExists(atPath: file.path) { return file }
+            return thumbnail
+        }
         return Bundle.main.url(forResource: id, withExtension: "jpg")
     }
 
@@ -70,7 +95,16 @@ nonisolated struct Sample: Identifiable, Hashable, Sendable {
 
     /// The Paint page's Tonight's Picture (`PhotoSourceView`): the library's paintings in turn,
     /// another each calendar day, the same all day; nil without paintings.
+    /// In SideStore and Debug builds the schedule's night comes first (`Nights`), the same for
+    /// every painter; the library's turn is the fallback, offline with nothing downloaded.
     static func tonight(on date: Date = .now, calendar: Calendar = .current) -> Sample? {
+        #if UNRELEASED
+        if let night = Nights.shared.night(on: date, calendar: calendar) { return night }
+        #endif
+        return libraryTonight(on: date, calendar: calendar)
+    }
+
+    private static func libraryTonight(on date: Date, calendar: Calendar) -> Sample? {
         let paintings = all(of: .painting)
         guard !paintings.isEmpty else { return nil }
         let day = calendar.dateComponents([.day], from: Date(timeIntervalSinceReferenceDate: 0), to: calendar.startOfDay(for: date)).day ?? 0
@@ -83,8 +117,15 @@ nonisolated struct Sample: Identifiable, Hashable, Sendable {
     static func nights(
         from date: Date = .now, count: Int, excluding held: Set<String> = [], calendar: Calendar = .current
     ) -> [Sample] {
+        #if UNRELEASED
+        if let tonight = Nights.shared.night(on: date, calendar: calendar) {
+            // The schedule's nights: tonight's, then the earlier ones, newest first.
+            let earlier = Nights.shared.earlierNights(before: date, calendar: calendar).map(\.sample)
+            return Array(([tonight] + earlier).filter { !held.contains($0.id) }.prefix(count))
+        }
+        #endif
         let paintings = all(of: .painting)
-        guard !paintings.isEmpty, count > 0, let first = tonight(on: date, calendar: calendar),
+        guard !paintings.isEmpty, count > 0, let first = libraryTonight(on: date, calendar: calendar),
               let start = paintings.firstIndex(of: first) else { return [] }
         let turn = paintings[start...] + paintings[..<start]
         return Array(turn.filter { !held.contains($0.id) }.prefix(count))
@@ -98,7 +139,11 @@ nonisolated struct Sample: Identifiable, Hashable, Sendable {
     /// regenerate from it when they have no stored photo; one the library no longer offers
     /// resolves to nil, so such a painting can't be regenerated (`ArtworkFactory.canRegenerate`).
     static func named(_ id: String) -> Sample? {
-        all.first { $0.id == id }
+        #if UNRELEASED
+        return all.first { $0.id == id } ?? Nights.shared.sample(id)
+        #else
+        return all.first { $0.id == id }
+        #endif
     }
 
     /// The pictures a `library.json` lists, in its order, each titled by the catalog's

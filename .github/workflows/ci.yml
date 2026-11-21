@@ -52,7 +52,7 @@ name: CI
 
 on:
   push:
-    branches-ignore: ['ci-shots/**', 'sidestore', 'claude/testflight-dryrun*', 'claude/testflight-testers*', 'claude/store-screenshots*', 'claude/store-listing*', 'claude/testflight-feedback*']
+    branches-ignore: ['ci-shots/**', 'sidestore', 'nights', 'claude/testflight-dryrun*', 'claude/testflight-testers*', 'claude/store-screenshots*', 'claude/store-listing*', 'claude/testflight-feedback*']
   workflow_dispatch:
     inputs:
       scenarios:
@@ -176,7 +176,7 @@ jobs:
         shell: bash
         run: |
           apt-get install -y -qq --no-install-recommends nodejs > /dev/null
-          node --test feedback-relay/worker.test.js
+          node --test feedback-relay/worker.test.js feedback-relay/votes.test.js
       - name: Quality regression
         # Also after failed tests: the metrics help explain them.
         if: ${{ !cancelled() && env.COMPILE != '1' }}

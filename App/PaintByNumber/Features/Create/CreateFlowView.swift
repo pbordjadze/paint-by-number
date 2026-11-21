@@ -149,7 +149,7 @@ struct CreateFlowView: View {
         #if DEBUG
         .task {
             // A cancelled wait must not signal readiness.
-            guard ShellDemo.current == .create || ShellDemo.current?.opensSamples == true else { return }
+            guard ShellDemo.current == .create || ShellDemo.current == .createNights || ShellDemo.current?.opensSamples == true else { return }
             do { try await Task.sleep(for: ShellDemo.pickerLoadAllowance) } catch { return }
             DemoMode.markReady()
         }

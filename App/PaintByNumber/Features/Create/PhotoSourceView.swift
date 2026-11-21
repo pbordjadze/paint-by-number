@@ -55,7 +55,17 @@ struct PhotoSourceView: View {
                     }
                     if let tonight = Sample.tonight() { tonightSection(tonight) }
                     yourOwnSection
+                    #if UNRELEASED
+                    // With the museums' schedule here, the earlier nights in the library's place.
+                    let _ = Nights.revision.value
+                    if Nights.shared.night(on: .now) != nil {
+                        earlierNightsSection
+                    } else {
+                        librarySection
+                    }
+                    #else
                     librarySection
+                    #endif
                 }
                 // Room for the press scale and hover lift inside the scroll view's clip.
                 .padding(.horizontal, horizontalPadding)
@@ -135,10 +145,18 @@ struct PhotoSourceView: View {
     private func tonightSection(_ tonight: Sample) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle("Tonight’s Picture", style: isWide ? .title2 : .title3)
-            Button { pick(tonight) } label: { SampleTile(sample: tonight) }
+            Button { pick(tonight) } label: {
+                SampleTile(sample: tonight)
+                    #if UNRELEASED
+                    .overlay(alignment: .topLeading) { if isYourPick(tonight) { YourPickChip() } }
+                    #endif
+            }
                 .buttonStyle(PressableCardStyle())
                 .frame(maxWidth: tonightWidth)
                 .frame(maxWidth: .infinity)
+                #if UNRELEASED
+                .accessibilityValue(isYourPick(tonight) ? Text("Your pick") : Text(verbatim: ""))
+                #endif
                 .accessibilityIdentifier("tonights-picture")
         }
     }
@@ -195,6 +213,55 @@ struct PhotoSourceView: View {
         let column = max(0, width - 2 * horizontalPadding - 8)
         return min(column, ownTileMinimumWidth)
     }
+
+    #if UNRELEASED
+    /// Tonight's picture is the one this painter voted for.
+    private func isYourPick(_ tonight: Sample) -> Bool {
+        Nights.shared.choice(for: Nights.day(of: .now, in: .current)) == tonight.id
+    }
+
+    /// The month's earlier nights, newest first, in one row that scrolls, each under its night:
+    /// "Last Night", a weekday this past week, a date before that.
+    private var earlierNightsSection: some View {
+        let nights = Nights.shared.earlierNights(before: .now)
+        return VStack(alignment: .leading, spacing: 10) {
+            SectionTitle("Earlier Nights", style: isWide ? .title2 : .title3)
+            ScrollView(.horizontal) {
+                LazyHStack(alignment: .top, spacing: 12) {
+                    ForEach(nights, id: \.day) { night in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(Self.when(night.day))
+                                .font(.footnote.weight(.medium))
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 4)
+                            Button { pick(night.sample) } label: { SampleTile(sample: night.sample) }
+                                .buttonStyle(PressableCardStyle())
+                                .accessibilityValue(Text(Self.when(night.day)))
+                                .accessibilityIdentifier("library-picture")
+                        }
+                        .frame(width: earlierTileWidth)
+                    }
+                }
+                .padding(.vertical, 4)
+                .padding(.horizontal, horizontalPadding)
+            }
+            .scrollIndicators(.hidden)
+            .padding(.horizontal, -horizontalPadding)
+        }
+    }
+
+    /// An earlier night's tile: a third of a phone's row, wider with the text size.
+    private var earlierTileWidth: CGFloat { max(150, min(tileMinimumWidth * 1.2, 260)) }
+
+    /// An earlier night as the painter says it: "Last Night", "Tuesday", "Nov 12".
+    static func when(_ day: String, now: Date = .now, calendar: Calendar = .current) -> String {
+        guard let date = Nights.date(of: day, in: calendar) else { return day }
+        let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: date), to: calendar.startOfDay(for: now)).day ?? 0
+        if days == 1 { return String(localized: "Last Night") }
+        if days < 7 { return date.formatted(.dateTime.weekday(.wide)) }
+        return date.formatted(.dateTime.month(.abbreviated).day())
+    }
+    #endif
 
     /// The library: its paintings, then its photographs.
     private var librarySection: some View {
@@ -466,3 +533,23 @@ private struct CaptionBelow<Caption: View>: ViewModifier {
         }
     }
 }
+
+#if UNRELEASED
+/// On tonight's picture when it is the one this painter voted for.
+private struct YourPickChip: View {
+    var body: some View {
+        Label {
+            Text("Your pick")
+        } icon: {
+            Image(systemName: "moon.fill").foregroundStyle(Theme.gold)
+        }
+        .font(.footnote.weight(.semibold))
+        .foregroundStyle(.black)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(.white.opacity(0.85), in: .capsule)
+        .padding(12)
+        .accessibilityHidden(true)
+    }
+}
+#endif
