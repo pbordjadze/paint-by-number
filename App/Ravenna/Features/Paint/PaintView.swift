@@ -131,6 +131,11 @@ struct PaintView: View {
                 CanvasUnavailableView(onClose: onClose)
             } else {
                 canvasAndChrome(geo: geo, palette: paletteLayout(in: geo.size))
+                    // The safe area's size, whatever a bar or a card asks: wider, the stack grew
+                    // to the right of the reader's leading edge, and the canvas, ignoring the safe
+                    // area within it, stopped short of the left one (an iPhone on its side; Paint
+                    // by Moonlight's fix, painting-company row 263, ported for row 330).
+                    .frame(width: geo.size.width, height: geo.size.height)
             }
         }
         // Nothing here takes typing: a keyboard over a sheet (feedback's notes) leaves the
@@ -165,7 +170,7 @@ struct PaintView: View {
         }
         .onChange(of: reduceMotion, initial: true) { _, reduce in session.reduceMotion = reduce }
         // Choosing a color is something done: the tips' hand has not rested yet.
-        .onChange(of: session.selectedColor) { chrome.activity() }
+        .background { SelectionWatch(session: session) { chrome.activity() } }
         // The photo shown, held or kept, is the Photo control used.
         .onChange(of: peek.isShown) { _, shown in
             if shown { PaintTips.used(.benchShowPhoto) }
@@ -316,6 +321,12 @@ struct PaintView: View {
                         .padding(.bottom, Self.edge)
                 }
                 .environment(\.colorScheme, chromeScheme)
+            }
+
+            if !session.isComplete {
+                // What finishing shows, met once a launch, out of sight.
+                FinishWarmup(session: session, share: completionShare)
+                    .environment(\.colorScheme, chromeScheme)
             }
 
             // The capture's flash as feedback starts.
@@ -627,7 +638,7 @@ struct PaintView: View {
     /// Largest first. The name outranks the percentage: when a long (translated) name doesn't
     /// fit beside the percentage, the last variant keeps the ring and lets the name shrink.
     private var badgeVariants: [BadgeVariant] {
-        let showsColor = sizeClass == .regular && !session.isComplete && session.selectedColor != nil
+        let showsColor = sizeClass == .regular && !session.isComplete && session.hasSelectedColor
         var variants: [BadgeVariant] = []
         if !title.isEmpty { variants.append(BadgeVariant(showsTitle: true, showsColor: showsColor)) }
         variants.append(BadgeVariant(showsColor: showsColor))
@@ -933,6 +944,20 @@ struct PaintView: View {
     #endif
 }
 
+/// Tells `action` of each change of the selected color, from a view of its own: watched in the
+/// painting screen's body, every change of color (each finished color's, in Zen Mode under the
+/// fill that finished it) rendered the whole screen.
+private struct SelectionWatch: View {
+    let session: PaintingSession
+    let action: () -> Void
+
+    var body: some View {
+        Color.clear
+            .onChange(of: session.selectedColor) { action() }
+            .accessibilityHidden(true)
+    }
+}
+
 /// The progress badge's ring and percentage. They change with every fill, so they read the
 /// session in a view of their own: a fill re-renders them, not the painting screen around them.
 /// They show what is on the canvas, which during a replay is not what the painting holds
@@ -956,10 +981,12 @@ private struct ProgressGroup: View {
                     .fixedSize()
             }
             if showsPercent {
-                Text(Double(percent) / 100, format: .percent.precision(.fractionLength(0)))
+                // Formatted here: a `Text` with a format resolves through an attributed string,
+                // whose attribute scopes Foundation loads on its first change, under the first fill.
+                Text(verbatim: (Double(percent) / 100).formatted(.percent.precision(.fractionLength(0))))
                     .font(.subheadline.weight(.semibold))
                     .monospacedDigit()
-                    .foregroundStyle(showsTitle ? Color.secondary : Color.primary)
+                    .foregroundStyle(showsTitle ? Theme.quietInk : Color.primary)
                     .contentTransition(.numericText())
                     .animation(reduceMotion ? nil : .snappy, value: percent)
                     .lineLimit(1)
