@@ -130,6 +130,23 @@ struct GlassTests {
         } }
     }
 
+    /// A piece too narrow for heavy lead joins the neighbour it shares the most lead with; wide
+    /// pieces stay apart.
+    @Test func aNarrowPieceJoinsItsNeighbour() throws {
+        var leading = try GlassWindow.Leading(photo: Self.photo(), width: Self.width, height: Self.height, colorSpace: .sRGB)
+        leading.add([SIMD2(0, 90), SIMD2(240, 90)])
+        leading.add([SIMD2(0, 95), SIMD2(240, 95)])
+        leading.add([SIMD2(120, 0), SIMD2(120, 90)])
+        let t = leading.template
+        #expect(t.regions.count == 4)
+        let pieces = GlassLeadSuggestion.pieces(of: t, narrowest: 6)
+        let strip = Self.region(at: 60, 92, in: t), below = Self.region(at: 60, 150, in: t)
+        let left = Self.region(at: 60, 40, in: t), right = Self.region(at: 180, 40, in: t)
+        #expect(pieces[strip] == pieces[below], "the strip shares the most lead with the piece below")
+        #expect(Set([pieces[left], pieces[right], pieces[below]]).count == 3)
+        #expect(GlassLeadSuggestion.pieces(of: t, narrowest: 1) == Array(0..<t.regions.count))
+    }
+
     /// A tap takes a line of lead away, junction to junction, and Undo puts it back.
     @Test func eraseTakesALineAndUndoPutsItBack() throws {
         var leading = try GlassWindow.Leading(photo: Self.photo(), width: Self.width, height: Self.height, colorSpace: .sRGB)
