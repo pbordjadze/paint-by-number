@@ -11,7 +11,9 @@ import SwiftUI
 /// `about-photograph` are the page about a library picture's real work (`AboutPaintingDemo`),
 /// `print-preview…` Print's preview (`PrintPreviewDemo`). In SideStore and Debug builds Stained Glass
 /// (`GlassEra`) shows while the clock is at 1248, and for its scenarios, `-demo glass-<name>`
-/// (`GlassDemo`); `era-passage-glass` holds the way to it at the rose window's light.
+/// (`GlassDemo`); `era-passage-glass` holds the way to it at the rose window's light. The Cave
+/// (`CaveEra`) shows while the clock is at 15,000 BC, and for its scenarios, `-demo cave-<name>`
+/// (`CaveDemo`).
 struct RootView: View {
     @State private var door = EraDoor.shared
 
@@ -21,6 +23,8 @@ struct RootView: View {
                 RavennaEra(leave: { year in door.go(to: Era.opened(by: year) ?? .moonlight) })
             } else if showsGlass {
                 glass
+            } else if showsCave {
+                cave
             } else {
                 moonlight
             }
@@ -48,6 +52,22 @@ struct RootView: View {
         return door.shown == .glass || GlassEra.isDemoScenario
         #else
         return false
+        #endif
+    }
+
+    /// Whether the Cave is on screen: its era, or one of its demo scenarios (`cave-…`).
+    private var showsCave: Bool {
+        #if UNRELEASED
+        return door.shown == .cave || CaveEra.isDemoScenario
+        #else
+        return false
+        #endif
+    }
+
+    /// The Cave (SideStore and Debug builds; `CaveEra`): its way out is the daylight, home.
+    @ViewBuilder private var cave: some View {
+        #if UNRELEASED
+        CaveEra(leave: { door.go(to: .moonlight) })
         #endif
     }
 

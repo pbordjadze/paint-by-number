@@ -366,6 +366,28 @@ public struct CaveHand: Sendable, Equatable {
     }
 
     func shape() -> Shape { Shape(self) }
+
+    /// A right hand spread flat, thumb at the left, its fingertips round `spot`: the hand waited
+    /// for, and VoiceOver's.
+    public static func spread(at spot: SIMD2<Float>) -> CaveHand {
+        CaveHand(fingers: [spot + SIMD2(-54, 40), spot + SIMD2(-30, -18), spot + SIMD2(-4, -32), spot + SIMD2(22, -22), spot + SIMD2(42, 4)],
+                 widths: [11, 9, 9, 9, 8])
+    }
+
+    /// A few grains of ochre already round where a hand would go, once a painting is finished: the
+    /// only sign that the rock is waiting for one.
+    public static func grains(at spot: SIMD2<Float>) -> [SIMD2<Float>] {
+        let shape = spread(at: spot).shape()
+        var out: [SIMD2<Float>] = []
+        for y in stride(from: Int(spot.y) - 70, to: Int(spot.y) + 120, by: 3) {
+            for x in stride(from: Int(spot.x) - 110, to: Int(spot.x) + 110, by: 3) {
+                guard !shape.covers(x, y) else { continue }
+                let near = [(4, 0), (-4, 0), (0, 4), (0, -4)].contains { shape.covers(x + $0.0, y + $0.1) }
+                if near && CaveNoise.unit(Int32(x), Int32(y), 503) > 0.55 { out.append(SIMD2(Float(x), Float(y))) }
+            }
+        }
+        return out
+    }
 }
 
 /// What a cave painting keeps beside its pigment: which areas are done and the hand stencilled

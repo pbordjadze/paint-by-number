@@ -81,6 +81,12 @@ before planning app work).
     glasses a window suggests, its background found by focus, and the classics offered after
     them) and `Glazing` (free glazing's `glazing.bin`: any glass in any piece, read as hostile
     input); `pbn glass` previews a window lit and unlit.
+  - `Cave/`: the Cave (painting-company row 371): `CaveWall` (the wall's geometry, pigments and
+    rock noise, a pure function of wall coordinates so bays meet), `CavePlan` (a photo's subject
+    drawn as an animal in four earth pigments, or `CaveFigure`'s stick figure; `PBCV`, read as
+    hostile input), `CaveBay` (a bay's relief and rock maps), `CavePigmentLayer` (blown pigment,
+    target-solved so every blow lands well; the hand stencil; `CaveProgress`, `PBCP`);
+    `pbn cave` writes a plan and a lit preview of its bay.
   - `Edit/`: `TemplateEditor`, the painter's pen, Cell Edge, Merge, Paint Brush, Bend Line and Move Edge (`reshape`), Move Number, eraser, line eraser, fill, Only
     This Area (`paintArea`), Looks and Edit Paint (looks and repaints, `Recolor.swift`) and the
     retired Color Splitter's splits made to a finished

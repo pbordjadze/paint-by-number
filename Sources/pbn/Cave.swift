@@ -58,8 +58,7 @@ func runCave(_ options: Options) throws {
     var finished = CavePigmentLayer(plan: plan)
     finished.finishAll()
     let h = CaveWall.handSpot
-    finished.stencil(CaveHand(fingers: [h + SIMD2(-54, 40), h + SIMD2(-30, -18), h + SIMD2(-4, -32), h + SIMD2(22, -22), h + SIMD2(42, 4)],
-                              widths: [11, 9, 9, 9, 8]), amount: 1)
+    finished.stencil(CaveHand.spread(at: h), amount: 1)
     var half = CavePigmentLayer(plan: plan)
     for a in 1...plan.areaCount where a % 2 == 1 {
         let points = half.points(of: a)

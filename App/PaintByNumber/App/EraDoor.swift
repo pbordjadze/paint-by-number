@@ -14,12 +14,16 @@ enum Era: String {
     /// Stained Glass, at 1248 (SideStore and Debug builds; painting-company row 366): a mode of
     /// the app's own, not a copy of it (`GlassEra`).
     case glass
+    /// The Cave, at 15,000 BC (SideStore and Debug builds; painting-company row 371): no app on
+    /// screen, only a torch-lit rock wall (`CaveEra`).
+    case cave
 
     /// The era a year on the clock opens, nil for a year that opens none.
     static func opened(by year: Int) -> Era? {
         if EraYear.opensByzantium(year) { return .byzantium }
         #if UNRELEASED
         if EraYear.opensStainedGlass(year) { return .glass }
+        if year == CaveEra.year { return .cave }
         #endif
         if EraYear.returnsToThePresent(year) { return .moonlight }
         return nil
@@ -53,8 +57,8 @@ final class EraDoor {
         #if UNRELEASED
         shown = era
         #else
-        // Stained Glass is SideStore's and Debug's: a release opening on it opens at home.
-        shown = era == .glass ? .moonlight : era
+        // Stained Glass and the Cave are SideStore's and Debug's: a release opening on one opens at home.
+        shown = era == .glass || era == .cave ? .moonlight : era
         #endif
     }
 
@@ -116,7 +120,7 @@ struct EraPassage: View {
     /// the mosaic era, with motion. Stained Glass's passages are the nave's, either way; every
     /// other passage is the tiles set and lifted.
     static func isWayBack(to destination: Era, from origin: Era? = nil, reduceMotion: Bool) -> Bool {
-        return destination == .moonlight && origin != .glass && !reduceMotion
+        return destination == .moonlight && origin != .glass && origin != .cave && !reduceMotion
     }
 
     /// When the screen is wholly covered, so the era can go in beneath, and when the passage is
@@ -207,6 +211,10 @@ struct EraPassage: View {
             drawNave(in: &graphics, size: size, elapsed: elapsed)
             return
         }
+        if destination == .cave || origin == .cave {
+            drawCave(in: &graphics, size: size, elapsed: elapsed, leaving: origin == .cave)
+            return
+        }
         if reduceMotion {
             let fade = 0.35
             let t = elapsed - Self.wait
@@ -254,6 +262,23 @@ struct EraPassage: View {
             let lifted = max(0, (t - Self.cover - Self.hold) / Self.lift)
             graphics.fill(whole, with: .color(apse.opacity(max(0, 1 - lifted * 1.4))))
         }
+    }
+
+    /// The passages of the Cave: going in, the screen goes wholly dark and lifts on the cave's
+    /// mouth; coming out, the daylight the cave left on the screen fades from white onto the
+    /// gallery. Under Reduce Motion the same fades, which are no motion.
+    private func drawCave(in graphics: inout GraphicsContext, size: CGSize, elapsed: TimeInterval, leaving: Bool) {
+        let t = elapsed - Self.wait
+        let whole = Path(CGRect(origin: .zero, size: size))
+        if leaving {
+            let lifting = t < Self.cover + Self.hold ? 0 : EraWayBack.ease(min(1, (t - Self.cover - Self.hold) / Self.lift))
+            graphics.fill(whole, with: .color(Color(white: 1).opacity(1 - lifting)))
+            return
+        }
+        guard t > 0 else { return }
+        let dark = t < Self.cover ? EraWayBack.ease(min(1, t / (Self.cover * 0.8)))
+            : max(0, 1 - EraWayBack.ease((t - Self.cover - Self.hold) / Self.lift))
+        graphics.fill(whole, with: .color(Color.black.opacity(dark)))
     }
 
     /// The passage to Stained Glass: the screen goes as dark as a nave, and as it is darkest a

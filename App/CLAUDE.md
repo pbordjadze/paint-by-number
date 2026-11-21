@@ -1347,6 +1347,21 @@ with a rose window's light (`EraPassage.drawNave`); Paint by Mosaic's wheel reac
 `glass-finished` (`GlassDemo`, on the mockup's monarch and lines, `GlassDemoLines`) and
 `era-passage-glass`; `EraDoorTests`, `SettingsTests.testTheClockAt1248OpensStainedGlass`.
 
+## The Cave (15,000 BC)
+
+SideStore and Debug builds only (`#if UNRELEASED`; painting-company row 371): no app on screen,
+only a rock wall in the dark lit by the painter's torch. `Cave/`: `CaveEra` (the root: the shelf
+loaded, the photo picker, a photo drawn through `CaveVision` and PaintCore's `CavePlan`),
+`CaveWallView` (a `CAMetalLayer` on a display link; each bay's maps made off the main thread as
+the camera nears it; VoiceOver's one element with its custom actions), `CaveScene` (the torch,
+the blow, the hand of four or five fingers, the walk at the screen's edges, the way out at the
+mouth's daylight), `CaveRenderer` and `CaveShader` (compiled at runtime from source, so nothing
+reaches the app's metallib; a soft shadow marched toward the torch through the relief),
+`CaveSound` (synthesized fire, breath and drips in an `AVAudioEnvironmentNode`'s hall; Core
+Haptics; Settings' Sounds and Haptics) and `CaveShelf` (`Application Support/Cave/Wall/`, the
+paintings oldest first). Demos: `cave-mouth`, `cave-blowing`, `cave-hand`, `cave-wall`
+(`CaveDemo`); `CaveAppTests`.
+
 ## Outside the app: widgets and stickers
 
 SideStore and Debug builds only (painting-company rows 348 and 349). Two extensions, each a
