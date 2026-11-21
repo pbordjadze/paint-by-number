@@ -9,14 +9,18 @@ import SwiftUI
 /// the way back over the gallery and hold it with the tiles half fallen, the night showing
 /// through, and at its still night, the crescent and stars out; `about-painting` and
 /// `about-photograph` are the page about a library picture's real work (`AboutPaintingDemo`),
-/// `print-preview…` Print's preview (`PrintPreviewDemo`).
+/// `print-preview…` Print's preview (`PrintPreviewDemo`). In SideStore and Debug builds Stained Glass
+/// (`GlassEra`) shows while the clock is at 1248, and for its scenarios, `-demo glass-<name>`
+/// (`GlassDemo`); `era-passage-glass` holds the way to it at the rose window's light.
 struct RootView: View {
     @State private var door = EraDoor.shared
 
     var body: some View {
         Group {
             if door.shown == .byzantium || RavennaEra.isDemoScenario {
-                RavennaEra(leave: { door.go(to: .moonlight) })
+                RavennaEra(leave: { year in door.go(to: Era.opened(by: year) ?? .moonlight) })
+            } else if showsGlass {
+                glass
             } else {
                 moonlight
             }
@@ -26,11 +30,31 @@ struct RootView: View {
         // `era-passage`: the gallery as the clock is set back, the passage held half laid.
         .task {
             if DemoMode.scenario == "era-passage" { door.go(to: .byzantium) }
+            #if UNRELEASED
+            // `era-passage-glass`: the way to Stained Glass, held at the rose window's light.
+            if DemoMode.scenario == "era-passage-glass" { door.go(to: .glass) }
+            #endif
             // `era-passage-back`, `era-passage-night`: the way back, held at a moment each.
             if DemoMode.scenario == "era-passage-back" || DemoMode.scenario == "era-passage-night" {
                 door.playDemoWayBack()
             }
         }
+        #endif
+    }
+
+    /// Whether Stained Glass is on screen: its era, or one of its demo scenarios (`glass-…`).
+    private var showsGlass: Bool {
+        #if UNRELEASED
+        return door.shown == .glass || GlassEra.isDemoScenario
+        #else
+        return false
+        #endif
+    }
+
+    /// Stained Glass (SideStore and Debug builds; `GlassEra`).
+    @ViewBuilder private var glass: some View {
+        #if UNRELEASED
+        GlassEra(leave: { year in door.go(to: Era.opened(by: year) ?? .moonlight) })
         #endif
     }
 

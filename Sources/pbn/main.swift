@@ -35,6 +35,13 @@
 //       photo's color there; radius a fraction of the photo's long side; a kind pbn doesn't
 //       know is skipped with a warning; stats.json gains `detailRegions`); --line-art sets a
 //       LineArtSettings field and --tuning a PipelineTuning factor by name
+//   pbn glass <photo> <lines.json> --out <dir> [generate options]
+//       a Stained Glass window (painting-company row 366; GlassWindow.leaded): the photo leaded
+//       by lines.json's {"lines": [[[x, y], ...], ...]} (fractions of the photo's width and
+//       height), each closed piece a region with the glass the photo suggests (GlassPalette).
+//       Writes window.pbnt, glass.json (pieces, glasses, offered, background pieces, valid and
+//       validation), lit.ppm (every piece in its suggested glass, lead along every boundary) and
+//       unlit.ppm (the window before glazing).
 //   pbn drawing <photo.ppm> <outdir> [--palette crayons|pastels|earth|sea|garden] [--paints N]
 //       [--seed N] [--detail F] [--smooth F] [--cleaned]
 //       starts a painting from a drawing (GenerationSettings.drawing): the photo of a line
@@ -163,13 +170,14 @@ import Foundation
 import PaintCore
 
 let args = CommandLine.arguments
-guard args.count >= 2 else { fail("usage: pbn generate|drawing|edit|refine|practice|suggest|bench|trace|check|names|vocab ...") }
+guard args.count >= 2 else { fail("usage: pbn generate|drawing|glass|edit|refine|practice|suggest|bench|trace|check|names|vocab ...") }
 let options = parse(args.dropFirst(2))
 
 func run(_ command: String, _ options: Options) throws {
     switch command {
     case "generate": try runGenerate(options)
     case "drawing": try runDrawing(options)
+    case "glass": try runGlass(options)
     case "edit": try runEdit(options)
     case "refine": try runRefine(options)
     case "practice": try runPractice(options)

@@ -12,9 +12,11 @@ import TipKit
 /// ids under `ravenna.`, log categories under `ravenna.`. Shared on purpose: the free paintings'
 /// count (a mosaic counts like any painting) and TipKit's datastore, configured once by the app.
 public struct RavennaEra: View {
-    private let leave: () -> Void
+    private let leave: (Int) -> Void
 
-    public init(leave: @escaping () -> Void) {
+    /// `leave` is handed the year the clock was set to: the present (or later), or another
+    /// era's (`EraYear.modes`).
+    public init(leave: @escaping (Int) -> Void) {
         self.leave = leave
     }
 
@@ -58,14 +60,15 @@ final class RavennaWorld {
     }
 }
 
-/// Sets the clock forward again: back to Paint by Moonlight (Settings' Year).
+/// Sets the clock again (Settings' Year): forward, back to Paint by Moonlight, or to another
+/// era's year.
 struct LeaveRavenna {
-    let action: () -> Void
-    func callAsFunction() { action() }
+    let action: (Int) -> Void
+    func callAsFunction(for year: Int) { action(year) }
 }
 
 extension EnvironmentValues {
-    @Entry var leaveRavenna = LeaveRavenna(action: {})
+    @Entry var leaveRavenna = LeaveRavenna(action: { _ in })
 }
 
 extension Bundle {

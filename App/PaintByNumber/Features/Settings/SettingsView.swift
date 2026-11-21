@@ -218,9 +218,9 @@ struct SettingsView: View {
                         .accessibilityIdentifier("about-year")
                         if showsClock {
                             EraClock(year: EraYear.present) { year in
-                                guard EraYear.opensByzantium(year) else { return }
+                                guard let era = Era.opened(by: year), era != .moonlight else { return }
                                 dismiss()
-                                EraDoor.shared.go(to: .byzantium)
+                                EraDoor.shared.go(to: era)
                             }
                             .accessibilityIdentifier("era-clock")
                             .id("era-clock")
