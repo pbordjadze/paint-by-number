@@ -3,12 +3,14 @@ import PaintCore
 
 /// `pbn watercolor`: a Watercolor painting (painting-company row 373) off the device, to judge
 /// the simulation's look and time its steps. A painter taps every area of the template once, paint
-/// by paint (each paint's areas top left first, `--spacing` seconds apart, at each area's label),
+/// by paint (each paint's areas top left first, `--spacing` seconds apart, at each area's label;
+/// `--order sweep` every area from the top left down whatever its paint),
 /// and the sheet is drawn as the app's shader draws it (`WatercolorRenderer.metal`, mirrored here
 /// on the CPU: the target solve, Beer–Lambert over the paper's color, granulation in the paper's
 /// fine valleys, the paper lit from the top left, pencil fading under paint; no sheen or numbers).
 ///
-///   pbn watercolor <photo | template.pbnt> --out <dir> [--seed N] [--spacing S] [--frames t1,t2,…]
+///   pbn watercolor <photo | template.pbnt> --out <dir> [--seed N] [--spacing S] [--order paint|sweep]
+///       [--frames t1,t2,…]
 ///       [generate options]
 ///   pbn watercolor <photo | template.pbnt> --out <dir> --making-of [--fps N]   (`runMakingOf`)
 ///
@@ -16,7 +18,7 @@ import PaintCore
 /// wet), watercolor.json (the tap log) and prints the steps' timings.
 func runWatercolor(_ options: Options) throws {
     guard options.positional.count == 1, let out = options.out else {
-        fail("usage: pbn watercolor <photo | template.pbnt> --out <dir> [--spacing S] [--frames t,…] [generate options]")
+        fail("usage: pbn watercolor <photo | template.pbnt> --out <dir> [--spacing S] [--order paint|sweep] [--frames t,…] [generate options]")
     }
     let path = options.positional[0]
     let template: Template
@@ -41,12 +43,21 @@ func runWatercolor(_ options: Options) throws {
         return
     }
     let sim = WatercolorSim(sheet: sheet)
-    // Paint by paint, each paint's areas from the top left down.
+    // Paint by paint, each paint's areas from the top left down; or `sweep`, every area from the
+    // top left down whatever its paint, so neighbours go on while each other is still wet.
+    let sweep: Bool
+    switch options.watercolorOrder ?? "paint" {
+    case "paint": sweep = false
+    case "sweep": sweep = true
+    default: fail("--order is paint or sweep")
+    }
     let order = template.labels.indices
         .sorted { a, b in
             let la = template.labels[a], lb = template.labels[b]
             let ca = template.regions[Int(la.region)].colorIndex, cb = template.regions[Int(lb.region)].colorIndex
-            return ca != cb ? ca < cb : la.position.x + la.position.y < lb.position.x + lb.position.y
+            if !sweep, ca != cb { return ca < cb }
+            let sa = la.position.x + la.position.y, sb = lb.position.x + lb.position.y
+            return sa != sb ? sa < sb : la.region < lb.region
         }
     var seen = Set<UInt32>()
     var log = WatercolorLog(seed: seed)

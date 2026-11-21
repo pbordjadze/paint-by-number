@@ -16,6 +16,11 @@ import Foundation
 ///   a tap of another paint, or of an area already laid, is water alone: a bloom.
 /// - The picture always reads: `targets()` rescales each area's pigment so its mean lands on its
 ///   paint, however the water moved it (the target solve, done where it is drawn).
+/// - Order and timing show at the edges: each cell's `E` is decided when the wash reaches it, by
+///   what lies past the edge then. Still-wet paint: the wash runs on into it and the two bleed,
+///   no rim on either side (wet-in-wet). Dry paper or a dried wash: a crisp edge, a touch darker
+///   (wet-on-dry). And a tide-line as strong as the water the brush carried, quieter on a broad
+///   area, laid as one big wet wash. A quick painter's picture comes out soft, a slow one's crisp.
 /// - Time runs in fixed steps of `dt`, and taps land on a step, so a tap log replays to the same
 ///   painting on the same device (`replay`); nothing in it reads a clock.
 ///
@@ -85,7 +90,7 @@ public final class WatercolorSim {
         var soften: [Bool] = []
         var density = SIMD4<Float>(repeating: 0)
         var granulation: Float = 0
-        var edge: Float = 1
+        var edge: [Float] = []
         var cursor = 0
         var box: Box
     }
@@ -156,28 +161,43 @@ public final class WatercolorSim {
         let out = Self.chamfer(seeds: own, width: bw, height: bh)
         var creep = [Bool](repeating: false, count: n)
         var dryPainted = [Bool](repeating: false, count: n)
-        var anyDry = false
+        // A neighbour still wet: the wash runs on into it (wet-in-wet), further, feathering.
+        var wetNear = [Bool](repeating: false, count: n)
+        var reachHere = [Float](repeating: Self.reach, count: n)
+        var glintSeed = [Bool](repeating: false, count: n)
+        var anyDry = false, anyWet = false
         for j in 0..<n where !own[j] {
             let g = global(j)
             let lf = sheet.lowFrequency[g], p = sheet.paper[g]
-            creep[j] = out[j] <= Self.reach * min(max(0.5 + 0.6 * lf + 0.5 * (p - 0.5), 0.15), 1.3)
+            if W[g] > Self.wetLine {
+                wetNear[j] = true
+                anyWet = true
+            }
+            reachHere[j] = Self.reach * (wetNear[j] ? 1.6 : 1) * min(max(0.5 + 0.6 * lf + 0.5 * (p - 0.5), 0.15), 1.3)
+            creep[j] = out[j] <= reachHere[j]
             let d = D[g]
             if d.x + d.y + d.z > 0.05 && W[g] < Self.wetLine {
                 dryPainted[j] = true
                 anyDry = true
+                if sheet.group[Int(sheet.labels[g])] != sheet.group[r] { glintSeed[j] = true }
             }
         }
-        if anyDry {
+        // A broad area (a sky, a background) is laid as a big wet wash: more water, so it stays
+        // open for its neighbours to run into, and a quieter rim, so it reads as one wash and
+        // not a field of ringed blotches.
+        let broad = min(max((sheet.workingArea[r].squareRoot() - 60) / 120, 0), 1)
+        if anyDry, broad < 0.5 {
             // A hair of paper left white where this wash meets one already dry (the glints a
-            // painter leaves by not quite touching), here and there along the edge.
-            let near = Self.chamfer(seeds: dryPainted, width: bw, height: bh)
+            // painter leaves by not quite touching), here and there along the edge; never against
+            // a wash of the same group, where a glint read as a scratch in one soft passage.
+            let near = Self.chamfer(seeds: glintSeed, width: bw, height: bh)
             for j in 0..<n {
                 let g = global(j)
                 let lf = sheet.lowFrequency[g]
-                if own[j], near[j] <= 1 + (lf > 0.3 ? 1.2 : 0), sheet.paper[g] + 0.3 * lf > 0.55 { own[j] = false }
-                if dryPainted[j] { creep[j] = false }
+                if own[j], near[j] <= 1 + (lf > 0.3 ? 1.2 : 0), sheet.paper[g] + 0.3 * lf > 0.68 { own[j] = false }
             }
         }
+        for j in 0..<n where dryPainted[j] { creep[j] = false }
         // The brush runs on into a dry wash of nearly the same paint, softening its rim.
         var soften = [Bool](repeating: false, count: n)
         var mask = [Bool](repeating: false, count: n)
@@ -234,15 +254,33 @@ public final class WatercolorSim {
         let wobble = 0.08 + 0.37 * rng.nextFloat()
         let u = max(rng.nextFloat(), 1e-7), v = rng.nextFloat()
         let normal = (-2 * log(u)).squareRoot() * cos(2 * Float.pi * v)
-        let edge = min(max(1 + 0.45 * normal, 0.15), 1.8) * min(max(sheet.workingArea[r].squareRoot() / 45, 0.25), 1)
+        // How much water the brush carried: a wash laid wet pools and dries to a tide-line, one
+        // laid damp dries flat. The tide-line's strength follows the water.
+        let puddle = 0.7 + 0.75 * rng.nextFloat()
+        let tide = min(max(0.05 + 1.5 * (puddle - 0.85) + 0.2 * normal, 0.04), 1.6)
+        let edge = tide * (1 - 0.55 * broad) * min(max(sheet.workingArea[r].squareRoot() / 45, 0.25), 1)
+        let carried = puddle * (1 + 0.5 * broad)
+        // How each edge dries depends on what the wash meets there: still-wet paint feathers
+        // into it (no rim, the two bleed), dry paper or a dried wash stops it crisp and a touch
+        // darker (wet-on-dry). Distances from the dry cells past the wash and from the wet ones.
+        var hardSeed = [Bool](repeating: false, count: n)
+        for j in 0..<n where !mask[j] && !wetNear[j] { hardSeed[j] = true }
+        let toHard = Self.chamfer(seeds: hardSeed, width: bw, height: bh)
+        let toWet = anyWet ? Self.chamfer(seeds: wetNear, width: bw, height: bh) : nil
+        if anyWet {
+            // The neighbour's wash, wet where this one runs in, loses its rim there too.
+            for j in 0..<n where wetNear[j] && out[j] <= 9 {
+                let g = global(j)
+                E[g] *= 0.25 + 0.75 * min(max((out[j] - 1) / 8, 0), 1)
+            }
+        }
         let duration = 0.25 + 0.45 * min(1, Float(ownCount).squareRoot() / 120)
         let when = time
 
         var flood = Flood(box: box)
         flood.density = SIMD4(density, 0)
         flood.granulation = WatercolorSheet.granulation(of: sheet.encoded[r])
-        flood.edge = edge
-        var order: [(Float, Int32, Float, Float, Bool)] = []
+        var order: [(Float, Int32, Float, Float, Bool, Float)] = []
         order.reserveCapacity(n)
         for j in 0..<n where dist[j] >= 0 {
             let g = global(j)
@@ -253,10 +291,17 @@ public final class WatercolorSim {
             // The drop lands where you touched: more water there pushes the pigment out, so the
             // touch stays a lighter bloom with the color gathered where the front comes to rest.
             let drop = 1 + 0.9 * exp(-df / (0.18 * dmax + 2))
-            let spread = own[j] ? 1 : 0.55 * min(max(1 - out[j] / (Self.reach + 1), 0.2), 1)
-            let water = drop * spread * min(max(1 + wobble * sheet.waterNoise[g], 0.3), 2)
-            let load = soften[j] ? 0 : min(max(1 + 0.15 * sheet.pigmentNoise[g], 0.4), 1.8)
-            order.append((arrival, Int32(g), water, load, soften[j]))
+            let spread = own[j] ? 1 : 0.55 * min(max(1 - out[j] / (reachHere[j] + 1), 0.2), 1)
+            let water = carried * drop * spread * min(max(1 + wobble * sheet.waterNoise[g], 0.3), 2)
+            let wetIn = toWet.map { exp(-$0[j] / 2.5) } ?? 0
+            let crisp = exp(-max(toHard[j] - 1, 0) / 0.8) * (1 - wetIn)
+            var load = soften[j] ? 0 : min(max(1 + 0.15 * sheet.pigmentNoise[g], 0.4), 1.8)
+            load *= 1 + 0.55 * crisp
+            // Over a neighbour's wash already dry (where it crept past the pencil), a thin glaze:
+            // laid full, every such overlap read as a dark outline round every shape.
+            let under = D[g]
+            if own[j], under.x + under.y + under.z > 0.05, W[g] < Self.wetLine { load *= 0.3 }
+            order.append((arrival, Int32(g), water, load, soften[j], edge * (1 - 0.75 * wetIn)))
         }
         order.sort { $0.0 != $1.0 ? $0.0 < $1.0 : $0.1 < $1.1 }
         flood.cells = order.map(\.1)
@@ -264,6 +309,7 @@ public final class WatercolorSim {
         flood.water = order.map(\.2)
         flood.load = order.map(\.3)
         flood.soften = order.map(\.4)
+        flood.edge = order.map(\.5)
         floods.append(flood)
     }
 
@@ -316,7 +362,7 @@ public final class WatercolorSim {
                 W[i] += water
                 S[i] += flood.density * (water * flood.load[c])
                 G[i] = flood.granulation
-                E[i] = flood.edge
+                E[i] = flood.edge[c]
                 L[i] = flood.soften[c] ? 1 : 0
                 let x = i % w, y = i / w
                 arrived = Box(x0: x, y0: y, x1: x + 1, y1: y + 1).union(arrived)
@@ -412,7 +458,7 @@ public final class WatercolorSim {
                     d += settle
                     if wasWet[i] {
                         let rim = min(max(1 - soft[i], 0), 1)
-                        water -= dt * evaporation * (0.6 + 1.8 * rim) * min(max(1 + 0.45 * evapNoise[i], 0.3), 2)
+                        water -= dt * evaporation * (0.6 + 1.8 * rim * min(E[i], 1)) * min(max(1 + 0.45 * evapNoise[i], 0.3), 2)
                         if water <= Self.wetLine {
                             d += s
                             s = .zero

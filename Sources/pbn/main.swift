@@ -42,10 +42,10 @@
 //       Writes window.pbnt, glass.json (pieces, glasses, offered, background pieces, valid and
 //       validation), lit.ppm (every piece in its suggested glass, lead along every boundary) and
 //       unlit.ppm (the window before glazing).
-//   pbn watercolor <photo | template.pbnt> --out <dir> [--seed N] [--spacing S] [--frames t1,t2,…]
-//       [generate options]
+//   pbn watercolor <photo | template.pbnt> --out <dir> [--seed N] [--spacing S] [--order paint|sweep]
+//       [--frames t1,t2,…] [generate options]
 //       a Watercolor painting (painting-company row 373; WatercolorSim): every area tapped once,
-//       paint by paint, S seconds apart (0.12), and the sheet drawn as the app draws it
+//       paint by paint (sweep: top left down, any paint), S seconds apart (0.12), and the sheet drawn as the app draws it
 //       (Watercolor.swift's doc comment): painting.ppm dried, frame-<t>.ppm wet at each time,
 //       watercolor.json (the tap log), and the steps' and the replay's timings printed.
 //       With --making-of [--fps N]: the app's Making Of instead (WatercolorMakingOf), frame-NNNN.ppm
