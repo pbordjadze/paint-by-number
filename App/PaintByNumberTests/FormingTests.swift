@@ -126,15 +126,14 @@ struct FormingTests {
         #expect(FormingPlan.drawIn >= 0.6 && FormingPlan.drawIn / StartHandoffPlan.glide <= 1.6)
         #expect(FormingPlan.wash >= 0.35 && FormingPlan.wash <= 0.5)
         #expect(FormingPlan.feather > 0 && FormingPlan.feather < 0.5)
-        let drawn = 5 + FormingPlan.drawIn
-        #expect(FormingPlan.liftWait(until: drawn, now: 5) == FormingPlan.drawIn)
-        #expect(abs(FormingPlan.liftWait(until: drawn, now: 5 + FormingPlan.drawIn / 2) - FormingPlan.drawIn / 2) < 1e-9)
+        #expect(FormingPlan.liftWait(remaining: FormingPlan.drawIn) == FormingPlan.drawIn)
+        #expect(FormingPlan.liftWait(remaining: FormingPlan.drawIn / 2) == FormingPlan.drawIn / 2)
         // A save that outlasted the drawing waits for nothing, nor does a picture with no lines;
-        // a clock gone backward, no longer than the longest drawing (`FormingShow`'s too).
-        #expect(FormingPlan.liftWait(until: drawn, now: drawn) == 0)
-        #expect(FormingPlan.liftWait(until: drawn, now: 30) == 0)
-        #expect(FormingPlan.liftWait(until: nil, now: 5) == 0)
-        #expect(FormingPlan.liftWait(until: 1000, now: 5) == max(FormingPlan.drawIn, FormingShow.longestTail))
+        // a clock gone backward, no longer than the drawing.
+        #expect(FormingPlan.liftWait(remaining: 0) == 0)
+        #expect(FormingPlan.liftWait(remaining: -25) == 0)
+        #expect(FormingPlan.liftWait(remaining: nil) == 0)
+        #expect(FormingPlan.liftWait(remaining: 1000) == FormingPlan.drawIn)
         #expect(FormingPlan.dries == StartHandoffPlan.settle)
         #expect(FormingPlan.dries <= StartHandoffPlan.glide)
     }

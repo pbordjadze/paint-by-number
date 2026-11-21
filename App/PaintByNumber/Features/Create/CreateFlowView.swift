@@ -180,9 +180,11 @@ struct CreateFlowView: View {
             // `create-tip` is ready once its tip is up (`ShellDemo.prepare`).
             // `create-refine-guide` is ready once the guide's practice canvas shows (`RefineModel.land`).
             // `create-refine-unlock` is ready once the sheet shows its price (`UnlockSheet`).
-            // `create-forming-page` and `-stars` are ready once the page is in its place (`handOver`).
+            // `create-forming-page` and `-stars` are ready once the page is in its place (`handOver`),
+            // `create-forming` and `-graphite` once the graphite is drawn (`TemplatePreviewView`).
             if (openingSample != nil && ShellDemo.current != .createTip && ShellDemo.current?.opensGuide == nil
-                && ShellDemo.current != .createRefineUnlock && ShellDemo.current?.formingHold?.starts != true)
+                && ShellDemo.current != .createRefineUnlock && ShellDemo.current?.formingHold?.starts != true
+                && ShellDemo.current?.formingHold?.readyOnGraphite != true)
                 || ShellDemo.current == .createFromFile || ShellDemo.current?.opensDrawing == true {
                 DemoMode.markReady()
             }
@@ -318,10 +320,7 @@ struct CreateFlowView: View {
         handingOver = Task {
             // The picture forming's lines are still being drawn, or burned in: the lift waits for
             // the rest (the painting was saved meanwhile), or for a tap that skips it.
-            let deadline = Date.now.addingTimeInterval(liftWait())
-            while liftWait() > 0, Date.now < deadline, !Task.isCancelled {
-                try? await Task.sleep(for: .milliseconds(16))
-            }
+            await previewPicture.formingDrawn()
             if entry != nil || staying != nil {
                 withAnimation(.easeOut(duration: StartHandoffPlan.lift)) {
                     departure?.opacity = 1
@@ -385,12 +384,6 @@ struct CreateFlowView: View {
             isOpening = true
             finishIfReady()
         }
-    }
-
-    /// How long the hand-off's lift still waits for the preview's lines (`FormingPlan.liftWait`).
-    private func liftWait() -> Double {
-        FormingPlan.liftWait(
-            until: previewPicture.formingDone?.timeIntervalSinceReferenceDate, now: Date.now.timeIntervalSinceReferenceDate)
     }
 
     /// What leaves the preview for the painting: its picture, or, when the picture forms

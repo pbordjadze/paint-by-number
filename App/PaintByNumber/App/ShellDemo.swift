@@ -75,7 +75,7 @@ import PaintCore
 ///   across the photo, half washed; all drawn over the washed photo, nothing started; and,
 ///   started, the page it has dried into at the painting's place, before the painting opens.
 ///   With the short Making-of (`FormingShow`, SideStore and Debug builds; row 361) the wait is
-///   the graphite spread over the photo, the lines half burned in with the gold front between
+///   the graphite wholly spread over the photo (held there), the lines half burned in with the gold front between
 ///   them, and all burned in on the page's paper. `create-forming-graphite` holds the graphite
 ///   halfway spread, and `create-forming-stars` the page halfway into the departing picture at
 ///   the painting's place, its numbers coming out like stars.
@@ -260,6 +260,9 @@ enum ShellDemo: Equatable {
 
         /// The painting starts and goes to its place.
         var starts: Bool { self == .page || self == .stars }
+        /// Ready once the short Making-of's graphite is over the photo (`TemplatePreviewView`),
+        /// not merely once the template is made.
+        var readyOnGraphite: Bool { self == .waiting || self == .graphite }
     }
 
     /// The scenario's picture is picked as on the Paint page (`CreateModel.paintsNow`) and
