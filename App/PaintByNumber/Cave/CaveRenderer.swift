@@ -123,10 +123,11 @@ final class CaveRenderer {
         rock = try texture(.rgba8Unorm, width: CaveWall.mapWidth * slots, height: CaveWall.mapHeight)
         pigment = try texture(.rgba8Unorm, width: CavePigmentLayer.width * slots, height: CavePigmentLayer.height)
         let cut = CaveFossils.carving()
-        carving = try texture(.r8Unorm, width: cut.width, height: cut.height)
+        let carving = try texture(.r8Unorm, width: cut.width, height: cut.height)
         cut.bytes.withUnsafeBytes { raw in
             carving.replace(region: MTLRegionMake2D(0, 0, cut.width, cut.height), mipmapLevel: 0, withBytes: raw.baseAddress!, bytesPerRow: cut.width)
         }
+        self.carving = carving
         var buffers: [any MTLBuffer] = []
         for _ in 0..<Self.framesInFlight {
             guard let b = context.device.makeBuffer(length: MemoryLayout<CaveSprite>.stride * Self.maxSprites, options: .storageModeShared)
