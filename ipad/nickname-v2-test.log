@@ -1,0 +1,150 @@
+Building for debugging...
+[Computing dependencies]
+[Pre-planning 1 / 561]
+[Planning deferred tasks]
+[Starting]
+[55 / 266] MosaicKitTests-product
+[124 / 266]
+[130 / 266]
+[132 / 268] MosaicKit
+[135 / 306]
+[138 / 306] PaintCore
+[141 / 314]
+[142 / 314]
+[144 / 314]
+[149 / 314]
+[150 / 314]
+[151 / 314]
+[154 / 314]
+[155 / 314]
+[157 / 314]
+[160 / 314]
+[163 / 314]
+[165 / 314]
+[166 / 314]
+[167 / 314]
+[171 / 314] PaintCore
+[172 / 314] MosaicKit
+[175 / 314] PaintCore
+[185 / 314] pbn-product
+[186 / 314] pbn-product
+[187 / 314] PaintCore
+[188 / 314] MosaicKit
+[189 / 314] MosaicKitTests-product
+[190 / 314] MosaicKitTests-product
+[196 / 315]
+[198 / 360]
+[199 / 360]
+[200 / 360]
+[202 / 360]
+[204 / 360]
+[205 / 360]
+[207 / 360]
+[208 / 360]
+[210 / 360]
+[213 / 360]
+[214 / 360]
+[215 / 360]
+[217 / 360]
+[218 / 360]
+[219 / 360]
+[220 / 360]
+[221 / 360]
+[222 / 360]
+[224 / 360]
+[226 / 360]
+[227 / 360]
+[229 / 360]
+[230 / 360]
+[231 / 360]
+[232 / 360]
+[234 / 360]
+[236 / 360]
+[237 / 360]
+[239 / 360] pbn-product
+[240 / 360] pbn-product
+[241 / 360] pbn-product
+[242 / 360]
+[243 / 360] MosaicKit
+[246 / 361] MosaicKit
+[249 / 363] PaintCore
+[250 / 367] MosaicEngine
+[251 / 367] MakingOf
+[254 / 371] MosaicEngine
+[255 / 375] MakingOf
+[256 / 375] MosaicEngine
+[268 / 375] MosaicEngineTests-product
+[270 / 375] MakingOf
+[277 / 375] MosaicCore
+[277 / 375] MosaicEngine
+[279 / 375] MosaicEngine
+[280 / 375] MakingOf
+[281 / 375] MakingOfTests-product
+[282 / 375] MakingOfTests-product
+[285 / 376]
+[287 / 378] mosaic-product
+[288 / 378] mosaic-product
+[292 / 378] PaintCoreTests-product
+[297 / 378] MosaicCore
+[306 / 380] MosaicKitTests-product
+[307 / 386]
+[307 / 386] pbn-product
+[310 / 390]
+[316 / 391]
+[318 / 391] MosaicKitTests-product
+[319 / 395] MosaicEngineTests-product
+[320 / 395] MosaicKitTests-product
+[331 / 395] PaintCoreTests-product
+[332 / 395] PaintCoreTests-product
+[333 / 395] PaintCoreTests-product
+[334 / 395] PaintCoreTests-product
+[335 / 395] PaintCoreTests-product
+[339 / 395] MosaicKitTests-product
+[340 / 395] MosaicEngineTests-product
+[342 / 395] MosaicKitTests-product
+[343 / 395] MosaicEngineTests-product
+[345 / 395] MosaicEngineTests-product
+[345 / 395] MosaicKitTests-product
+[346 / 395] MakingOf
+[348 / 395] MosaicKitTests-product
+[348 / 395] MakingOf
+[349 / 395]
+[351 / 395]
+[351 / 395] MosaicCore
+[351 / 395]
+[353 / 395] MosaicCoreTests-product
+[356 / 396] mosaic-product
+[357 / 400] mosaic-product
+[359 / 400] MosaicCoreTests-product
+[360 / 400] MosaicCoreTests-product
+[366 / 400] MosaicEngineTests-product
+[368 / 400] MosaicEngineTests-product
+[372 / 400]
+[374 / 400]
+[379 / 401] MakingOfTests-product
+[384 / 405] MakingOfTests-product
+[385 / 405] MakingOfTests-product
+[386 / 405] MakingOfTests-product
+[392 / 405] AllIncludingTests
+[397 / 405] MosaicEngineTests-product
+[399 / 405] MakingOfTests-product
+[401 / 405] MakingOfTests-product
+Build complete! (269.01 sec)
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "ColorNickname v2" started.
+◇ Test sharedPlatformPins() started.
+◇ Test drawStaysNearAndUniqueWithVariedSeeds() started.
+◇ Test integerDistanceWeightAndMappingBoundaries() started.
+◇ Test canonicalAnchorsAreFrozenAndMatchTheOriginalTable() started.
+◇ Test binary32QuantizationHasSpecifiedEdges() started.
+◇ Test fallbackIsIntegerAndHandlesExhaustionAndExtremeInputs() started.
+✔ Test integerDistanceWeightAndMappingBoundaries() passed after 0.021 seconds.
+✔ Test sharedPlatformPins() passed after 0.021 seconds.
+✔ Test binary32QuantizationHasSpecifiedEdges() passed after 0.021 seconds.
+✔ Test fallbackIsIntegerAndHandlesExhaustionAndExtremeInputs() passed after 0.001 seconds.
+✔ Test canonicalAnchorsAreFrozenAndMatchTheOriginalTable() passed after 0.023 seconds.
+✔ Test drawStaysNearAndUniqueWithVariedSeeds() passed after 0.067 seconds.
+✔ Suite "ColorNickname v2" passed after 0.067 seconds.
+✔ Test run with 6 tests in 1 suite passed after 0.068 seconds.
