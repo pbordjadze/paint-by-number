@@ -73,12 +73,13 @@ public struct CavePlan: Sendable, Equatable {
 
     /// A painting of `photo`'s subject. `subject` is the foreground mask (any size, 0 to 1 over
     /// the photo); without one, or with too little in it, or when `kind` is `.figure`, the subject
-    /// is a stick figure as tall as the subject's shape (or the photo's) suggests.
-    public static func make(photo: RGBAImage, subject: Grid<Float>?, kind: Kind) -> CavePlan {
+    /// is a stick figure as tall as the subject's shape (or the photo's) suggests, posed as the
+    /// photo's person is when Vision found one (`pose`).
+    public static func make(photo: RGBAImage, subject: Grid<Float>?, kind: Kind, pose: CavePose? = nil) -> CavePlan {
         let bounds = subject.flatMap { Self.bounds(of: $0) }
         guard kind == .animal, let subject, let bounds else {
             let aspect = bounds.map { Float($0.width) / Float(max(1, $0.height)) } ?? Float(photo.width) / Float(max(1, photo.height))
-            return CaveFigure.plan(aspect: aspect, seed: UInt64(photo.width &* 31 &+ photo.height))
+            return CaveFigure.plan(aspect: aspect, seed: UInt64(photo.width &* 31 &+ photo.height), pose: pose)
         }
         // The subject's box with a margin, in the photo's pixels.
         let sx = Float(photo.width) / Float(subject.width), sy = Float(photo.height) / Float(subject.height)
@@ -94,7 +95,7 @@ public struct CavePlan: Sendable, Equatable {
         let inside = shape.reduce(0) { $0 + ($1 ? 1 : 0) }
         // A sliver of a subject draws nothing worth blowing: a figure instead.
         guard inside > w * h / 12 else {
-            return CaveFigure.plan(aspect: Float(w) / Float(h), seed: UInt64(w &* 31 &+ h))
+            return CaveFigure.plan(aspect: Float(w) / Float(h), seed: UInt64(w &* 31 &+ h), pose: pose)
         }
         let pigment = Self.pigments(luma: luma, mask: shape, width: w, height: h)
         let (areas, pigments) = Self.areas(pigment: pigment, width: w, height: h)

@@ -45,6 +45,29 @@ struct CaveTests {
         #expect(CavePlan.make(photo: Self.horse.photo, subject: nil, kind: .animal).kind == .figure)
     }
 
+    @Test func theFigureTakesThePhotosPose() {
+        // Both arms up over the head, legs apart: the photo's own left and right kept.
+        let pose = CavePose(joints: [
+            .nose: SIMD2(0.5, 0.2), .neck: SIMD2(0.5, 0.3), .root: SIMD2(0.5, 0.55),
+            .leftWrist: SIMD2(0.7, 0.05), .rightWrist: SIMD2(0.3, 0.05),
+            .leftElbow: SIMD2(0.65, 0.2), .rightElbow: SIMD2(0.35, 0.2),
+            .leftAnkle: SIMD2(0.7, 0.9), .rightAnkle: SIMD2(0.3, 0.9),
+        ])
+        let posed = CaveFigure.plan(aspect: 0.7, seed: 1, pose: pose)
+        let plain = CaveFigure.plan(aspect: 0.7, seed: 1)
+        #expect(posed.kind == .figure)
+        #expect(posed.pigments == plain.pigments)
+        #expect(posed != plain)
+        // A hand high on both sides: limb (area 2) in the top fifth, left and right of the head.
+        func limbAbove(_ x0: Int, _ x1: Int, _ plan: CavePlan) -> Bool {
+            (0..<plan.height / 5).contains { y in (x0..<x1).contains { plan.areas[y * plan.width + $0] == 2 } }
+        }
+        #expect(limbAbove(0, posed.width / 3, posed) && limbAbove(posed.width * 2 / 3, posed.width, posed))
+        // Too little of a person: the figure keeps its own pose, bit for bit.
+        let neckOnly = CavePose(joints: [.neck: SIMD2(0.5, 0.3), .root: SIMD2(0.5, 0.6), .leftWrist: SIMD2(.nan, 0.2)])
+        #expect(CaveFigure.plan(aspect: 0.7, seed: 1, pose: neckOnly) == plain)
+    }
+
     @Test func blowingLandsWhereItBelongs() throws {
         var layer = CavePigmentLayer(plan: Self.plan)
         let a = try #require(layer.nextArea(of: .redOchre))

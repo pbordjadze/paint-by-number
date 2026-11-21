@@ -90,7 +90,7 @@ struct CaveEra: View {
             guard let image = PhotoLoader.cgImage(from: photo) else { return }
             let found = await CaveVision.look(at: image)
             let plan = await Background.run {
-                CavePlan.make(photo: photo, subject: found.subject, kind: found.isAnimal ? .animal : .figure)
+                CavePlan.make(photo: photo, subject: found.subject, kind: found.isAnimal ? .animal : .figure, pose: found.pose)
             }
             try await shelf.add(plan)
         } catch {

@@ -83,7 +83,7 @@ before planning app work).
     input); `pbn glass` previews a window lit and unlit.
   - `Cave/`: the Cave (painting-company row 371): `CaveWall` (the wall's geometry, pigments and
     rock noise, a pure function of wall coordinates so bays meet), `CavePlan` (a photo's subject
-    drawn as an animal in four earth pigments, or `CaveFigure`'s stick figure; `PBCV`, read as
+    drawn as an animal in four earth pigments, or `CaveFigure`'s stick figure, posed as the photo's person (`CavePose`, from Vision on the device); `PBCV`, read as
     hostile input), `CaveBay` (a bay's relief and rock maps), `CavePigmentLayer` (blown pigment,
     target-solved so every blow lands well; the hand stencil; `CaveProgress`, `PBCP`);
     `pbn cave` writes a plan and a lit preview of its bay.
