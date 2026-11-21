@@ -32,6 +32,8 @@ struct PaintView: View {
     /// and again when a layout moves it: the create flow's picture moves there (`StartHandoff`).
     /// Read when the canvas is made.
     var onTemplateFrame: ((CGRect) -> Void)?
+    /// False as the screen is left: `ArtworkPaintingView.close`.
+    var hidesStatusBar = true
 
     @State private var controller = CanvasController()
     /// Where the canvas is in global coordinates, read when its first frame is on screen. A
@@ -114,7 +116,7 @@ struct PaintView: View {
     init(
         session: PaintingSession, title: String = "", onClose: (() -> Void)? = nil,
         initialCamera: CanvasCamera? = nil, fillDurationScale: Float = 1, showsPhoto: Bool = false,
-        onTemplateFrame: ((CGRect) -> Void)? = nil
+        onTemplateFrame: ((CGRect) -> Void)? = nil, hidesStatusBar: Bool = true
     ) {
         self.session = session
         self.title = title
@@ -122,6 +124,7 @@ struct PaintView: View {
         self.initialCamera = initialCamera
         self.fillDurationScale = fillDurationScale
         self.onTemplateFrame = onTemplateFrame
+        self.hidesStatusBar = hidesStatusBar
         _peek = State(initialValue: PhotoPeek(latched: showsPhoto))
     }
 
@@ -142,7 +145,7 @@ struct PaintView: View {
         // canvas where it is.
         .ignoresSafeArea(.keyboard)
         // The canvas runs under the top edge: the clock would sit on the painting.
-        .statusBarHidden()
+        .statusBarHidden(hidesStatusBar)
         .background(Color(uiColor: .systemGroupedBackground))
         .focusedSceneValue(\.painting, PaintingFocus(
             session: session, controller: controller, showsNumbers: $showsNumbers, showsPhoto: photoBinding,
