@@ -297,7 +297,7 @@ public struct CaveHand: Sendable, Equatable {
 
     /// The hand's shape on the rock: the palm a rounded block below the fingertips, each finger a
     /// tapering bar from the palm to its tip, a thumb (the lowest finger at either side) shorter
-    /// and wider, and the wrist and forearm running off out of the light.
+    /// and wider, and the wrist and a short forearm below it.
     struct Shape: Sendable {
         let centre: SIMD2<Float>
         let box: (minX: Int, minY: Int, maxX: Int, maxY: Int)
@@ -340,7 +340,7 @@ public struct CaveHand: Sendable, Equatable {
                 let cx = max(0, abs(px) - half + 12), cy = max(0, max(py - 22, -30 - py + 12))
                 if cx * cx + cy * cy < 144 { return true }
             }
-            if py >= 20 && py < 220 && abs(px - py * 0.08) < 25 + py * 0.03 { return true }
+            if py >= 20 && py < 120 && abs(px - py * 0.08) < 25 + py * 0.03 { return true }
             for b in bars {
                 let v = b.tip - b.base, l2 = max(1e-3, (v * v).sum())
                 let t0 = ((p - b.base) * v).sum() / l2

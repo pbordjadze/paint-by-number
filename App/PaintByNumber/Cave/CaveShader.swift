@@ -121,7 +121,7 @@ nonisolated enum CaveShader {
         float3 L = u.torch.xyz - P;
         float d = length(L);
         L /= d;
-        float att = 1.0 / (1.0 + pow(d / (330.0 + flare * 200.0), 2.0) * 1.2);
+        float att = 1.0 / (1.0 + pow(d / (230.0 + flare * 160.0), 2.0) * 1.6);
         // A soft shadow, marched over the relief toward the flame.
         float shade = 1.0;
         if (att > 0.04) {
@@ -161,8 +161,13 @@ nonisolated enum CaveShader {
         float3 Lm = M - P;
         float dm = length(Lm);
         Lm /= dm;
-        col += alb * float3(0.55, 0.68, 0.90) * (max(dot(N, Lm), 0.0) * 0.9 + 0.15) / (1.0 + pow(dm / 300.0, 3.0)) * 1.5;
-        float3 outside = mix(float3(1.9, 1.95, 2.05), float3(1.25, 1.4, 1.65), smoothstep(0.95, 0.3, A.a));
+        col += alb * float3(0.55, 0.68, 0.90) * (max(dot(N, Lm), 0.0) * 0.9 + 0.15) / (1.0 + pow(dm / 240.0, 3.0)) * 1.2;
+        // Outside, seen from the dark: a pale sky over the hill's soft green, too bright to hold
+        // detail, but never one flat white.
+        float sky = smoothstep(u.mouth.y + 120.0, u.mouth.y - 160.0, w.y);
+        float3 land = mix(float3(0.62, 0.70, 0.52), float3(0.80, 0.84, 0.70), vnoise(w * 0.02));
+        float3 outside = mix(land, mix(float3(0.95, 1.0, 1.08), float3(0.78, 0.88, 1.05), smoothstep(0.0, 1.0, (u.mouth.y - w.y) / 260.0)), sky);
+        outside = mix(outside * 0.75, outside, smoothstep(0.3, 0.95, A.a)) * 1.15;
         float open = smoothstep(0.02, 0.5, A.a);
         col = mix(col, outside, open);
         float glare = exp(-pow(length((w - u.mouth.xy) / float2(175.0, 265.0)), 2.0) * 1.3);
