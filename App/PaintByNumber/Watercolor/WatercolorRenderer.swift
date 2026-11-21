@@ -198,13 +198,7 @@ final class WatercolorRenderer: NSObject, MTKViewDelegate {
     }
 
     /// Whether the sheet needs a frame every display refresh: water moving, or a number fading.
-    var needsFrames: Bool {
-        painting.sim.isActive || painting.sim.time - lastPainted < 0.5
-    }
-
-    private var lastPainted: Float {
-        painting.lastPaintedAt
-    }
+    var needsFrames: Bool { painting.isRunning }
 
     // MARK: MTKViewDelegate
 
@@ -222,9 +216,12 @@ final class WatercolorRenderer: NSObject, MTKViewDelegate {
         let wasActive = needsFrames
         inFlight.wait()
         _ = painting.advance(by: elapsed)
-        let changes = painting.sim.takeChanges()
-        if let box = changes.box { upload(box, regions: changes.regions) } else if !changes.regions.isEmpty {
-            upload(nil, regions: changes.regions)
+        // Settling at once, the sheet shows nothing of a wash until it is done (its changes keep).
+        if !(painting.settlesAtOnce && painting.sim.isActive) {
+            let changes = painting.sim.takeChanges()
+            if let box = changes.box { upload(box, regions: changes.regions) } else if !changes.regions.isEmpty {
+                upload(nil, regions: changes.regions)
+            }
         }
         guard let pass = view.currentRenderPassDescriptor, let drawable = view.currentDrawable,
               let commands = queue.makeCommandBuffer()
@@ -347,6 +344,8 @@ final class WatercolorRenderer: NSObject, MTKViewDelegate {
         encode(commands, pass: pass, size: SIMD2(Float(w), Float(h)), offset: .zero, unitsPerPixel: 1 / scale)
         commands.commit()
         commands.waitUntilCompleted()
+        // In the background iOS refuses GPU work: no picture rather than a black one.
+        guard commands.status == .completed else { return nil }
         var bytes = [UInt8](repeating: 0, count: w * h * 4)
         bytes.withUnsafeMutableBytes { raw in
             target.getBytes(raw.baseAddress!, bytesPerRow: w * 4, from: MTLRegionMake2D(0, 0, w, h), mipmapLevel: 0)

@@ -26,9 +26,13 @@ final class WatercolorPainting {
     private(set) var laidCount: Int
     /// When an area was last painted (simulation seconds): its number is fading until a moment after.
     @ObservationIgnored private(set) var lastPaintedAt: Float = -1
+    /// Whether the sheet has changed since the shelf's picture was last made.
+    @ObservationIgnored var pictureIsStale = false
     /// Taps since the painting was last saved.
     @ObservationIgnored private(set) var unsavedTaps = 0
-    /// Lays the washes settled at once (Reduce Motion): the same picture, with no motion.
+    /// Shows the washes only once they have settled (Reduce Motion): the same picture, with no
+    /// motion. The steps run as fast as a frame's budget allows (`advance`), and the renderer
+    /// holds the sheet as it was until they are done.
     @ObservationIgnored var settlesAtOnce = false
     /// Told of every tap, after it is in the log.
     @ObservationIgnored var onTap: (() -> Void)?
@@ -82,8 +86,8 @@ final class WatercolorPainting {
         if took > 0.008 {
             Log.canvas.notice("watercolor tap: \(took * 1000, format: .fixed(precision: 1)) ms for an area of \(self.template.regions[r].area, format: .fixed(precision: 0))")
         }
-        if settlesAtOnce { sim.finish() }
         unsavedTaps += 1
+        pictureIsStale = true
         if paint && !wasLaid {
             let color = Int(template.regions[r].colorIndex)
             remaining[color] -= 1
@@ -116,25 +120,45 @@ final class WatercolorPainting {
         return candidates.max { $0.radius < $1.radius }?.position
     }
 
+    /// Whether the simulation's clock must run: water moving, or a number fading (half a second
+    /// after its area is painted, even an area too small to hold any water).
+    var isRunning: Bool {
+        sim.isActive || (lastPaintedAt >= 0 && sim.time - lastPaintedAt < 0.5)
+    }
+
     /// Steps the simulation for `seconds` of wall time, at most `maximumSteps` steps (a frame
-    /// that came late doesn't make the next one later still). The number of steps taken.
+    /// that came late doesn't make the next one later still). Settling at once, it steps for as
+    /// long as about two thirds of a frame instead. The number of steps taken.
     func advance(by seconds: Double, maximumSteps: Int = 3) -> Int {
-        guard sim.isActive else {
+        guard isRunning else {
             owed = 0
             return 0
         }
-        owed += seconds
         var steps = 0
+        if settlesAtOnce && sim.isActive {
+            let end = CACurrentMediaTime() + 0.011
+            while sim.isActive, CACurrentMediaTime() < end {
+                timedStep()
+                steps += 1
+            }
+            owed = 0
+            return steps
+        }
+        owed += seconds
         let dt = Double(WatercolorSim.dt)
-        while owed >= dt, steps < maximumSteps, sim.isActive {
-            let start = CACurrentMediaTime()
-            sim.advance()
-            stepTimes.append(CACurrentMediaTime() - start)
+        while owed >= dt, steps < maximumSteps, isRunning {
+            timedStep()
             owed -= dt
             steps += 1
         }
         if steps == maximumSteps { owed = min(owed, dt) }
         return steps
+    }
+
+    private func timedStep() {
+        let start = CACurrentMediaTime()
+        sim.advance()
+        stepTimes.append(CACurrentMediaTime() - start)
     }
 
     func takeStepTimes() -> [Double] {

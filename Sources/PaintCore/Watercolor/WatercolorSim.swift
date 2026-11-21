@@ -597,20 +597,14 @@ public final class WatercolorSim {
     public func target(of region: Int) -> (gain: SIMD3<Float>, aim: SIMD3<Float>) {
         let aim = laid[region] ? laidDensity[region] : sheet.want[region]
         guard laid[region] else { return (SIMD3(repeating: 1), aim) }
-        let b = sheet.bounds[region]
-        let w = sheet.width
         var sum = SIMD3<Float>(repeating: 0)
         var reached = 0
-        let r = Int32(region)
-        for y in Int(b.y)..<Int(b.w) {
-            for x in Int(b.x)..<Int(b.z) {
-                let i = y * w + x
-                guard sheet.labels[i] == r else { continue }
-                let d = D[i] + 0.9 * S[i]
-                if d.x + d.y + d.z > 0.01 {
-                    sum += SIMD3(d.x, d.y, d.z)
-                    reached += 1
-                }
+        for k in Int(sheet.regionStart[region])..<Int(sheet.regionStart[region + 1]) {
+            let i = Int(sheet.regionCells[k])
+            let d = D[i] + 0.9 * S[i]
+            if d.x + d.y + d.z > 0.01 {
+                sum += SIMD3(d.x, d.y, d.z)
+                reached += 1
             }
         }
         guard reached > 0 else { return (SIMD3(repeating: 1), aim) }

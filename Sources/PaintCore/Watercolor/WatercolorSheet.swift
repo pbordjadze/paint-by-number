@@ -34,6 +34,10 @@ public struct WatercolorSheet: Sendable {
     /// Each region's cells' bounding box on the grid, `x0, y0, x1, y1` (exclusive); empty
     /// (x0 == x1) for a region too small to hold a cell.
     public let bounds: [SIMD4<Int32>]
+    /// The cells of each region, in raster order: region `r`'s are
+    /// `regionCells[regionStart[r]..<regionStart[r + 1]]` (the target solve reads only its own).
+    public let regionCells: [Int32]
+    public let regionStart: [Int32]
     /// Each region's area at the app's working size, for the key: big flat areas go thinner.
     public let workingArea: [Float]
     /// The paper's height, 0…1: its tooth (capillarity, granulation's valleys).
@@ -78,6 +82,17 @@ public struct WatercolorSheet: Sendable {
             }
         }
         self.bounds = bounds.map { $0.x == Int32.max ? SIMD4(0, 0, 0, 0) : $0 }
+        var start = [Int32](repeating: 0, count: regionCount + 1)
+        for r in labels { start[Int(r) + 1] += 1 }
+        for r in 0..<regionCount { start[r + 1] += start[r] }
+        var next = start
+        var cells = [Int32](repeating: 0, count: w * h)
+        for (i, r) in labels.enumerated() {
+            cells[Int(next[Int(r)])] = Int32(i)
+            next[Int(r)] += 1
+        }
+        regionCells = cells
+        regionStart = start
 
         let working = Float(1100) / Float(long)
         workingArea = t.regions.map { $0.area * working * working }

@@ -77,7 +77,14 @@ struct WatercolorPaintView: View {
             if painting.unsavedTaps >= 12 { save(withPicture: false) }
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase != .active { save(withPicture: true) }
+            // The picture is drawn on the way out (inactive): in the background the GPU is refused.
+            switch phase {
+            case .inactive: save(withPicture: true)
+            case .background:
+                save(withPicture: false)
+                BackgroundSaving.shared.hold { [shelf, id = painting.id] in await shelf.saved(id) }
+            default: break
+            }
         }
         .onDisappear { save(withPicture: true) }
     }
@@ -87,11 +94,16 @@ struct WatercolorPaintView: View {
                comment: "VoiceOver value and caption of a watercolor painting: areas painted so far; the arguments are the areas painted and all its areas")
     }
 
-    private func save(withPicture: Bool) {
-        guard painting.unsavedTaps > 0 || withPicture else { return }
+    /// Saves what changed: the log and sheet after taps, and the shelf's picture when asked and
+    /// the sheet has changed since the last. The save under way, nil when there was nothing to save.
+    @discardableResult
+    private func save(withPicture: Bool) -> Task<Void, Never>? {
+        let drawsPicture = withPicture && painting.pictureIsStale
+        guard painting.unsavedTaps > 0 || drawsPicture else { return nil }
+        let picture = drawsPicture ? renderer.picture(maxPixelSize: ArtworkStore.thumbnailMaxPixelSize) : nil
+        if picture != nil { painting.pictureIsStale = false }
         let saved = painting.saving()
-        let picture = withPicture ? renderer.picture(maxPixelSize: ArtworkStore.thumbnailMaxPixelSize) : nil
-        shelf.enqueue(id: painting.id, log: saved.log, snapshot: saved.snapshot, painted: saved.laid, picture: picture)
+        return shelf.enqueue(id: painting.id, log: saved.log, snapshot: saved.snapshot, painted: saved.laid, picture: picture)
     }
 }
 

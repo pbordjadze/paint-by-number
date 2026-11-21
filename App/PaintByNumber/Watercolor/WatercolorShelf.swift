@@ -98,7 +98,8 @@ final class WatercolorShelf {
     /// A painting to open: its template, the sheet made for it, the assets it is drawn with and
     /// the simulation as it was left (its snapshot; a snapshot missing or damaged is the log
     /// replayed, which takes longer, and a log damaged a painting begun again, logged, never a
-    /// lost painting). A log from a newer app throws.
+    /// lost painting; a file that can't be read now throws, and is kept). A log or a sheet from a newer
+    /// app throws.
     struct Opened: Sendable {
         var template: Template
         var log: WatercolorLog
@@ -113,7 +114,13 @@ final class WatercolorShelf {
             let template = try store.readTemplate(id)
             let dir = store.directory(for: id)
             var log = WatercolorLog(seed: WatercolorPainting.seed(of: id))
-            if let data = try? Data(contentsOf: dir.appending(path: Self.logFile)) {
+            // A file there but unreadable now (protected while locked, an I/O error) is kept:
+            // opening without it would save a fresh painting over it.
+            let logURL = dir.appending(path: Self.logFile), sheetURL = dir.appending(path: Self.sheetFile)
+            let fm = FileManager.default
+            let logData = fm.fileExists(atPath: logURL.path(percentEncoded: false)) ? try Data(contentsOf: logURL) : nil
+            let sheetData = fm.fileExists(atPath: sheetURL.path(percentEncoded: false)) ? try Data(contentsOf: sheetURL) : nil
+            if let data = logData {
                 do {
                     log = try WatercolorLog(encoded: data, regions: template.regions.count, width: template.width, height: template.height)
                 } catch WatercolorLog.CodingError.newerVersion(let version) {
@@ -125,10 +132,13 @@ final class WatercolorShelf {
             let sheet = WatercolorSheet(template: template, seed: log.seed)
             let sim = WatercolorSim(sheet: sheet)
             var restored = false
-            if let compressed = try? Data(contentsOf: dir.appending(path: Self.sheetFile)) {
+            if let compressed = sheetData {
                 do {
                     try sim.restore(from: ArtworkStore.lzfseDecoded(compressed, maximumBytes: Self.maximumSheetBytes))
                     restored = true
+                } catch WatercolorSim.SnapshotError.newerVersion(let version) {
+                    // A newer app's sheet is never rewritten by this one.
+                    throw WatercolorSim.SnapshotError.newerVersion(version)
                 } catch {
                     Log.library.error("Unreadable watercolor sheet of \(id.uuidString, privacy: .public): replaying its log")
                 }
@@ -150,6 +160,11 @@ final class WatercolorShelf {
         }
         saving[id] = task
         return task
+    }
+
+    /// Returns once a painting's saves under way have landed.
+    func saved(_ id: UUID) async {
+        await saving[id]?.value
     }
 
     private func write(id: UUID, log: WatercolorLog, snapshot: Data, painted: Int, picture: CGImage?) async {
