@@ -37,7 +37,13 @@ struct ArtworkPaintingView: View {
     /// transition lays the screen out afresh every frame, and the painting screen rendered at
     /// each of them kept CI's simulator from answering for up to half a minute (hundreds of
     /// renders in one push), where the thumbnail costs next to nothing.
+    /// Under the create flow's cover nothing of the push is seen, so the mosaic is built at once
+    /// rather than after it (`isBuilt`): it waited 0.8 s for a zoom no one sees (Paint by
+    /// Moonlight's painting-company row 361).
     @State private var hasLanded = false
+    /// The mosaic was opened under the cover: built then, it stays built once the hand-off is
+    /// over though the push may not have landed yet.
+    @State private var builtUnderCover = false
     /// The safe area is as the mosaic has it, the status bar gone (or never in the way):
     /// `waitingPage` sees it, or `land` stops waiting for it (`statusBarWait`).
     @State private var statusBarGone = false
@@ -119,8 +125,8 @@ struct ArtworkPaintingView: View {
 
     /// The mosaic screen takes the thumbnail's place once the push has landed and the status bar
     /// has gone (built before the safe area followed, the canvas's first frames put the page lower
-    /// on an iPad, and it moved up). Under the create flow's cover, nothing waits for the bar.
-    private var isBuilt: Bool { hasLanded && (statusBarGone || isUnderCover) }
+    /// on an iPad, and it moved up), or at once under the create flow's cover (`hasLanded`).
+    private var isBuilt: Bool { (hasLanded && statusBarGone) || builtUnderCover }
 
     /// What the zoom transition shows, and where it lands while the mosaic loads: the thumbnail
     /// just where the canvas will open the page, laid out by `PaintView`'s own recipe
@@ -318,6 +324,9 @@ struct ArtworkPaintingView: View {
         .toolbar(.hidden, for: .navigationBar)
         .background { CanvasGesturesOverZoomDismissal(onAppear: land).frame(width: 0, height: 0) }
         .task { await open() }
+        .onChange(of: isUnderCover, initial: true) { _, under in
+            if under { builtUnderCover = true }
+        }
         .onChange(of: scenePhase) { _, phase in
             guard phase != .active else { return }
             autosaver?.saveNow(refreshThumbnail: true)
