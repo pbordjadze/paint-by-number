@@ -123,4 +123,17 @@ struct WoodblockTests {
         wrongBlock[13] = 99
         #expect(throws: WoodblockBench.CodingError.corrupt) { try WoodblockBench(decoding: wrongBlock, plan: plan) }
     }
+
+    @Test func aPaintAsPaleAsWashiIsLeftBare() throws {
+        let plan = WoodblockPlan(template: try Self.template())
+        let palette = plan.template.palette
+        // Paper paints go last, so the blocks the painter carves are numbered from 1 up.
+        let bare = palette.indices.filter { WoodblockPlan.isPaper(palette[$0].oklab) }
+        #expect(bare.allSatisfy { $0 >= palette.count - bare.count })
+        for b in plan.blocks where b.kind == .color {
+            #expect(!WoodblockPlan.isPaper(palette[b.paint!].oklab))
+        }
+        #expect(WoodblockPlan.isPaper(SIMD3(0.92, 0.01, 0.02)))
+        #expect(!WoodblockPlan.isPaper(SIMD3(0.92, 0.08, 0.02)))
+    }
 }

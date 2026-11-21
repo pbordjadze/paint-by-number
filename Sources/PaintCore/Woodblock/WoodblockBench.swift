@@ -55,6 +55,16 @@ public struct WoodblockBench: Sendable, Equatable {
         for i in 0..<n {
             sheet[4 * i] = paper.x; sheet[4 * i + 1] = paper.y; sheet[4 * i + 2] = paper.z; sheet[4 * i + 3] = paper.w
         }
+        // Washi's fibres: a faint cloud of kozo, and the odd long fibre lying along the sheet.
+        for y in 0..<height {
+            for x in 0..<width {
+                let i = y * width + x
+                let cloud = Self.noise(Float(x) / 9, Float(y) / 9, 91)
+                let fibre = max(0, Self.noise(Float(x) / 22, Float(y) / 1.4, 92) - 0.72) * 3.2
+                let shade = 1 - 0.035 * cloud - 0.05 * fibre - 0.012 * Self.hash(x, y, 93)
+                for c in 0..<3 { sheet[4 * i + c] = Self.byte(Float(sheet[4 * i + c]) / 255 * shade) }
+            }
+        }
     }
 
     public func isDone(in plan: WoodblockPlan) -> Bool { block >= plan.blocks.count }
@@ -297,8 +307,16 @@ public struct WoodblockBench: Sendable, Equatable {
                 let t = Float(inked[2 * i + 1]) / 255
                 guard t > 0 else { continue }
                 let speck = Self.hash(x, y, block)
-                let cover = min(max((t * 1.25 - speck * (1 - t) * 0.9), 0), 1) * Float(inked[2 * i]) / 255
-                let a = cover * b.opacity * wipe
+                var cover = min(max((t * 1.25 - speck * (1 - t) * 0.9), 0), 1) * Float(inked[2 * i]) / 255
+                // What the baren leaves: the block's grain drawn along the sheet, its mottle,
+                // the fibres taking more or less; a little more ink along an edge, where it gathers.
+                let grain = Self.noise(Float(x) / 60, Float(y) / 3.5, block)
+                let mottle = Self.noise(Float(x) / 13, Float(y) / 13, block + 40)
+                let take = b.kind == .key
+                    ? 0.9 + 0.07 * grain + 0.03 * speck
+                    : 0.8 + 0.1 * grain + 0.07 * mottle + 0.03 * speck
+                cover *= take * (field.shape[i] > -1.2 ? 1.1 : 1)
+                let a = min(cover, 1) * b.opacity * wipe
                 guard a > 0 else { continue }
                 for c in 0..<3 {
                     let lin = decode[Int(sheet[4 * i + c])]
@@ -339,6 +357,17 @@ public struct WoodblockBench: Sendable, Equatable {
             ^ UInt64(truncatingIfNeeded: b) &* 0x1656_67B1_9E37_79F9
         h ^= h >> 29; h &*= 0xBF58_476D_1CE4_E5B9; h ^= h >> 32
         return Float(h >> 40) / Float(1 << 24)
+    }
+
+    /// Smooth value noise, 0…1, at `(x, y)` in cells over a lattice of unit steps.
+    static func noise(_ x: Float, _ y: Float, _ seed: Int) -> Float {
+        let x0 = x.rounded(.down), y0 = y.rounded(.down)
+        let fx = x - x0, fy = y - y0
+        let ix = Int(x0), iy = Int(y0)
+        let sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy)
+        let a = hash(ix, iy, seed), b = hash(ix + 1, iy, seed)
+        let c = hash(ix, iy + 1, seed), d = hash(ix + 1, iy + 1, seed)
+        return (a + (b - a) * sx) * (1 - sy) + (c + (d - c) * sx) * sy
     }
 
     // MARK: The print

@@ -29,8 +29,10 @@ public struct WoodblockField: Sendable {
         switch plan.blocks[b].kind {
         case .key:
             shape = [Float](repeating: Self.band, count: grid.count)
+            let long = Float(max(t.width, t.height))
             for line in Self.keyLines(of: t) {
-                Self.stamp(line.points, halfWidth: line.halfWidth / grid.cellSize, grid: grid, into: &shape, signed: nil)
+                let widths = Self.carvedWidths(of: line, long: long).map { $0 / grid.cellSize }
+                Self.stamp(line.points, halfWidth: line.halfWidth / grid.cellSize, widths: widths, grid: grid, into: &shape, signed: nil)
             }
         case .color, .bokashi:
             let paint = plan.blocks[b].paint ?? -1
@@ -61,17 +63,44 @@ public struct WoodblockField: Sendable {
     /// Whether cell `i` stands to print.
     public func stays(_ i: Int) -> Bool { shape[i] < 0 }
 
-    /// A line of the key block: its points in canvas units and half its width.
+    /// A line of the key block: its points in canvas units and half its width; an open stroke
+    /// (`tapers`) is cut to a point at its ends.
     public struct Line: Sendable {
         public var points: [SIMD2<Float>]
         public var halfWidth: Float
+        public var tapers = false
+    }
+
+    /// Half a line's width at each of its points, as a knife cuts it: swelling and thinning
+    /// along its way (by where it lies, so lines meeting at a junction meet at one width), and
+    /// an open stroke drawn to a point at its ends.
+    static func carvedWidths(of line: Line, long: Float) -> [Float] {
+        let pts = line.points
+        let scale = long * 0.03
+        var along = [Float](repeating: 0, count: pts.count)
+        for k in pts.indices.dropFirst() {
+            let d = pts[k] - pts[k - 1]
+            along[k] = along[k - 1] + (d.x * d.x + d.y * d.y).squareRoot()
+        }
+        let total = along.last ?? 0
+        let taper = long * 0.012
+        return pts.indices.map { k in
+            let p = pts[k] / scale
+            let swell = 0.7 + 0.6 * WoodblockBench.noise(p.x, p.y, 7)
+            var w = line.halfWidth * swell
+            if line.tapers && taper > 0 {
+                let end = min(along[k], total - along[k]) / taper
+                w *= 0.35 + 0.65 * min(1, max(0, end))
+            }
+            return w
+        }
     }
 
     /// The key block's lines: the drawing as a carver would cut it.
     public static func keyLines(of t: Template) -> [Line] {
         let long = Float(max(t.width, t.height))
         let half = 0.5 * max(1.6, long * 0.0026)
-        let shortest = long * 0.018
+        let shortest = long * 0.03
         var lines: [Line] = []
         if let art = t.lineArt, art.edgeLayers.count == t.edges.count {
             for (i, e) in t.edges.enumerated() where LineLayer.isDrawn(art.edgeLayers[i]) {
@@ -84,7 +113,7 @@ public struct WoodblockField: Sendable {
                 let pts = Array(art.strokePoints[lo..<hi])
                 let closed = pts.first == pts.last
                 if !closed && length(of: pts) < shortest { continue }
-                lines.append(Line(points: pts, halfWidth: half * (0.8 + 0.4 * Float(s.weight) / 255)))
+                lines.append(Line(points: pts, halfWidth: half * (0.8 + 0.4 * Float(s.weight) / 255), tapers: !closed))
             }
         } else {
             for e in t.edges where e.right != BoundaryEdge.outside && Int(e.left) < t.regions.count && Int(e.right) < t.regions.count
@@ -104,9 +133,11 @@ public struct WoodblockField: Sendable {
 
     /// Lowers `shape` near a polyline (canvas units) to its distance in cells, less `halfWidth`
     /// (cells): unsigned for a line (`signed` nil), signed by `signed`'s cells for an edge.
-    static func stamp(_ pts: [SIMD2<Float>], halfWidth h: Float, grid: WoodblockGrid, into shape: inout [Float], signed: [Bool]?) {
+    static func stamp(_ pts: [SIMD2<Float>], halfWidth h: Float, widths: [Float]? = nil, grid: WoodblockGrid,
+                      into shape: inout [Float], signed: [Bool]?) {
         guard pts.count >= 2 else { return }
-        let reach = h + band
+        let widths = widths.flatMap { $0.count == pts.count ? $0 : nil }
+        let reach = (widths?.max() ?? h) + band
         for k in 0..<(pts.count - 1) {
             let a = grid.cells(pts[k]), b = grid.cells(pts[k + 1])
             let x0 = max(0, Int((min(a.x, b.x) - reach).rounded(.down))), x1 = min(grid.width - 1, Int((max(a.x, b.x) + reach).rounded(.up)))
@@ -120,7 +151,8 @@ public struct WoodblockField: Sendable {
                     let ac = c - a
                     let t = min(max((ac.x * ab.x + ac.y * ab.y) / len2, 0), 1)
                     let d = c - (a + ab * t)
-                    let dist = (d.x * d.x + d.y * d.y).squareRoot() - h
+                    let half = widths.map { $0[k] + ($0[k + 1] - $0[k]) * t } ?? h
+                    let dist = (d.x * d.x + d.y * d.y).squareRoot() - half
                     let i = y * grid.width + x
                     if let signed {
                         if signed[i] { shape[i] = max(shape[i], -dist) } else { shape[i] = min(shape[i], dist) }

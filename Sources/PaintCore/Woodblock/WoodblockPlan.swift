@@ -41,7 +41,12 @@ public struct WoodblockPlan: Sendable {
 
     /// The plan for a print of `template` (in the print's own space, as generated).
     public init(template printed: Template) {
+        // Paints light to dark; a paint as pale as the washi is the paper itself, left bare
+        // (no block cuts it), and goes last, so the blocks are numbered from 1.
+        let paper = printed.palette.indices.filter { Self.isPaper(printed.palette[$0].oklab) }
         let order = printed.palette.indices.sorted {
+            let pa = paper.contains($0), pb = paper.contains($1)
+            if pa != pb { return pb }
             let a = printed.palette[$0].oklab.x, b = printed.palette[$1].oklab.x
             return a != b ? a > b : $0 < $1
         }
@@ -51,18 +56,31 @@ public struct WoodblockPlan: Sendable {
         var blocks = [Block(kind: .key, paint: nil, ink: Self.sumi, opacity: 1)]
         var used = [Bool](repeating: false, count: t.palette.count)
         for r in t.regions where Int(r.colorIndex) < used.count { used[Int(r.colorIndex)] = true }
-        for p in t.palette.indices where used[p] {
-            blocks.append(Block(kind: .color, paint: p, ink: t.palette[p].rgb, opacity: 0.92))
+        for p in t.palette.indices where used[p] && !Self.isPaper(t.palette[p].oklab) {
+            blocks.append(Block(kind: .color, paint: p, ink: Self.pigment(t.palette[p].oklab, space: t.colorSpace), opacity: 0.9))
         }
         if let ground = Self.ground(of: t) {
-            var lab = t.palette[ground].oklab
-            lab.x *= 0.62
-            lab.y *= 1.25
-            lab.z *= 1.25
-            let ink = ColorScience.okLabToEncoded(lab, space: t.colorSpace)
-            blocks.append(Block(kind: .bokashi, paint: ground, ink: ink.clamped(lowerBound: .zero, upperBound: .one), opacity: 0.85))
+            blocks.append(Block(kind: .bokashi, paint: ground, ink: Self.ai, opacity: 0.9))
         }
         self.blocks = blocks
+    }
+
+    /// Ai, the indigo a printer wiped down the sky.
+    public static let ai = SIMD3<Float>(0.13, 0.22, 0.36)
+
+    /// Whether a paint is pale and quiet enough to be the bare washi.
+    static func isPaper(_ lab: SIMD3<Float>) -> Bool {
+        lab.x >= 0.86 && (lab.y * lab.y + lab.z * lab.z).squareRoot() <= 0.05
+    }
+
+    /// A paint as a block's ink: a pigment's, purer and a little lighter than the photo's mean,
+    /// since washi takes it transparently over its own cream.
+    static func pigment(_ lab: SIMD3<Float>, space: RGBColorSpace) -> SIMD3<Float> {
+        var ink = lab
+        ink.x = min(0.95, ink.x + 0.03)
+        ink.y *= 1.3
+        ink.z *= 1.3
+        return ColorScience.okLabToEncoded(ink, space: space).clamped(lowerBound: .zero, upperBound: .one)
     }
 
     /// The paint that holds the top of the picture (the top fifth's most common, if it holds at
