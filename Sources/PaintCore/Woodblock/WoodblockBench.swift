@@ -310,11 +310,12 @@ public struct WoodblockBench: Sendable, Equatable {
                 var cover = min(max((t * 1.25 - speck * (1 - t) * 0.9), 0), 1) * Float(inked[2 * i]) / 255
                 // What the baren leaves: the block's grain drawn along the sheet, its mottle,
                 // the fibres taking more or less; a little more ink along an edge, where it gathers.
-                let grain = Self.noise(Float(x) / 60, Float(y) / 3.5, block)
-                let mottle = Self.noise(Float(x) / 13, Float(y) / 13, block + 40)
+                let grain = Self.noise(Float(x) / 70, Float(y) / 4, block)
+                let mottle = Self.noise(Float(x) / 15, Float(y) / 15, block + 40)
+                let fine = Self.noise(Float(x) / 3.5, Float(y) / 3.5, block + 80)
                 let take = b.kind == .key
-                    ? 0.9 + 0.07 * grain + 0.03 * speck
-                    : 0.8 + 0.1 * grain + 0.07 * mottle + 0.03 * speck
+                    ? 0.9 + 0.05 * grain + 0.05 * fine
+                    : 0.74 + 0.06 * grain + 0.1 * mottle + 0.07 * fine + 0.03 * speck
                 cover *= take * (field.shape[i] > -1.2 ? 1.1 : 1)
                 let a = min(cover, 1) * b.opacity * wipe
                 guard a > 0 else { continue }

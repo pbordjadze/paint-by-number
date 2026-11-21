@@ -40,7 +40,8 @@ public struct WoodblockPlan: Sendable {
     public static let paper = SIMD3<Float>(0.95, 0.93, 0.875)
 
     /// The plan for a print of `template` (in the print's own space, as generated).
-    public init(template printed: Template) {
+    public init(template generated: Template) {
+        let printed = generated.flattenedToCells(minorShare: Self.minorShare, keepContrast: 0.3)
         // Paints light to dark; a paint as pale as the washi is the paper itself, left bare
         // (no block cuts it), and goes last, so the blocks are numbered from 1.
         let paper = printed.palette.indices.filter { Self.isPaper(printed.palette[$0].oklab) }
@@ -59,11 +60,14 @@ public struct WoodblockPlan: Sendable {
         for p in t.palette.indices where used[p] && !Self.isPaper(t.palette[p].oklab) {
             blocks.append(Block(kind: .color, paint: p, ink: Self.pigment(t.palette[p].oklab, space: t.colorSpace), opacity: 0.9))
         }
-        if let ground = Self.ground(of: t) {
+        if let ground = Self.ground(of: t), t.palette[ground].oklab.x >= 0.6 {
             blocks.append(Block(kind: .bokashi, paint: ground, ink: Self.ai, opacity: 0.9))
         }
         self.blocks = blocks
     }
+
+    /// A paint holding less of a cell of the drawing than this takes the cell's main paint.
+    public static let minorShare: Float = 0.3
 
     /// Ai, the indigo a printer wiped down the sky.
     public static let ai = SIMD3<Float>(0.13, 0.22, 0.36)

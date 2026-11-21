@@ -73,4 +73,39 @@ extension Template {
         }
         return out
     }
+
+    /// The template with each cell of its drawing (the areas its drawn lines close, `TemplateLineArt`)
+    /// printed in few paints: a paint holding less than `minorShare` of its cell takes the
+    /// cell's main paint, so no speck or island of colour lies where no line drew it, unless
+    /// it is lighter or darker than that paint by `keepContrast` (an eye's white, a shadow's
+    /// black). A template without line art is as it was.
+    public func flattenedToCells(minorShare: Float, keepContrast: Float) -> Template {
+        guard let art = lineArt, art.edgeLayers.count == edges.count, !regions.isEmpty else { return self }
+        var cells = DisjointSet(count: regions.count)
+        for (i, e) in edges.enumerated() where !LineLayer.isDrawn(art.edgeLayers[i]) {
+            let a = Int(e.left), b = Int(e.right)
+            guard a < regions.count, b < regions.count, a != b else { continue }
+            let ra = cells.find(a), rb = cells.find(b)
+            if ra != rb { cells.parent[max(ra, rb)] = min(ra, rb) }
+        }
+        var share: [Int: [UInt32: Float]] = [:]
+        var total: [Int: Float] = [:]
+        for (r, region) in regions.enumerated() {
+            let c = cells.find(r)
+            share[c, default: [:]][region.colorIndex, default: 0] += region.area
+            total[c, default: 0] += region.area
+        }
+        var out = self
+        for r in regions.indices {
+            let c = cells.find(r)
+            guard let paints = share[c], let sum = total[c], sum > 0,
+                  let main = paints.max(by: { $0.value != $1.value ? $0.value < $1.value : $0.key > $1.key })?.key,
+                  (paints[regions[r].colorIndex] ?? 0) < minorShare * sum,
+                  Int(main) < palette.count, Int(regions[r].colorIndex) < palette.count,
+                  abs(palette[Int(main)].oklab.x - palette[Int(regions[r].colorIndex)].oklab.x) < keepContrast
+            else { continue }
+            out.regions[r].colorIndex = main
+        }
+        return out
+    }
 }
