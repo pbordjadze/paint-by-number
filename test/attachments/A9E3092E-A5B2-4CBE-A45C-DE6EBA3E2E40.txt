@@ -1,0 +1,18 @@
+Attributes: PickerWheel, 0x1134aa440, {{456.0, 529.5}, {120.0, 176.0}}, value: 1502
+Element subtree:
+ →PickerWheel, 0x1134aa440, {{456.0, 529.5}, {120.0, 176.0}}, value: 1502
+Path to element:
+ →PickerWheel, 0x1134aa440, {{456.0, 529.5}, {120.0, 176.0}}, value: 1502
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  Output: {
+    Application, 0x113498640, pid: 53874, label: 'Paint by Moonlight'
+  }
+  ↪︎Find: Descendants matching type PickerWheel
+    Output: {
+      PickerWheel, 0x113422580, {{456.0, 529.5}, {120.0, 176.0}}, value: 0100
+    }
+    ↪︎Find: First Match
+      Output: {
+        PickerWheel, 0x114d29f40, {{456.0, 529.5}, {120.0, 176.0}}, value: 0100
+      }

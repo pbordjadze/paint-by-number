@@ -1,0 +1,15 @@
+Attributes: PickerWheel, 0x109869cc0, {{456.0, 951.0}, {120.0, 176.0}}, value: 2026
+Element subtree:
+ →PickerWheel, 0x109869cc0, {{456.0, 951.0}, {120.0, 176.0}}, value: 2026
+Path to element:
+ →PickerWheel, 0x109869cc0, {{456.0, 951.0}, {120.0, 176.0}}, value: 2026
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  ↪︎Find: Descendants matching type PickerWheel
+    Output: {
+      PickerWheel, 0x113452300, {{456.0, 951.0}, {120.0, 176.0}}, value: 1900
+    }
+    ↪︎Find: First Match
+      Output: {
+        PickerWheel, 0x10a016580, {{456.0, 951.0}, {120.0, 176.0}}, value: 1900
+      }
