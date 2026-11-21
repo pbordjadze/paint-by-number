@@ -74,6 +74,11 @@ import PaintCore
 ///   (`formingHold`): the photo alone under its one status; the made template's lines half drawn
 ///   across the photo, half washed; all drawn over the washed photo, nothing started; and,
 ///   started, the page it has dried into at the painting's place, before the painting opens.
+///   With the short Making-of (`FormingShow`, SideStore and Debug builds; row 361) the wait is
+///   the graphite spread over the photo, the lines half burned in with the gold front between
+///   them, and all burned in on the page's paper. `create-forming-graphite` holds the graphite
+///   halfway spread, and `create-forming-stars` the page halfway into the departing picture at
+///   the painting's place, its numbers coming out like stars.
 /// - `create-from-file`: a photo file opened as if shared from another app ("Open in Paint by
 ///   Moonlight"): the create flow on that photo's preview, titled with the file's name. The file
 ///   is the red fox written to the temporary directory at launch (`DemoMode.openFileURL`).
@@ -123,7 +128,7 @@ enum ShellDemo: Equatable {
          galleryDraft, galleryOpen, galleryOpenNew, galleryFineTune, gallerySend, galleryReceived, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings, createNights, galleryNights,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createRefineColors, createRefineColorsPicked, createRefineCard, createRefineLayers, createRefineSelect, createRefineGuide, createRefineGuideWriting,
          createSuggested,
-         createCustom, createForming, createFormingDrawing, createFormingLines, createFormingPage, createFromFile, createDrawing, createUnlock, createRefineUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
+         createCustom, createForming, createFormingGraphite, createFormingDrawing, createFormingLines, createFormingPage, createFormingStars, createFromFile, createDrawing, createUnlock, createRefineUnlock, galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
          settings, settingsLongText, settingsAcknowledgements, settingsClock, museum
 
     static let current: ShellDemo? = {
@@ -168,6 +173,8 @@ enum ShellDemo: Equatable {
         case "create-forming-drawing": .createFormingDrawing
         case "create-forming-lines": .createFormingLines
         case "create-forming-page": .createFormingPage
+        case "create-forming-graphite": .createFormingGraphite
+        case "create-forming-stars": .createFormingStars
         case "create-from-file": .createFromFile
         case "create-drawing", "create-drawing-dark": .createDrawing
         case "create-unlock", "create-unlock-dark", "create-unlock-long-text": .createUnlock
@@ -237,12 +244,22 @@ enum ShellDemo: Equatable {
     enum FormingHold {
         /// The wait: the template is made and never shows.
         case waiting
-        /// The lines half drawn across the photo, which has half its wash: nothing starts.
+        /// The wait with the short Making-of's graphite halfway spread (`FormingShow`).
+        case graphite
+        /// The lines half drawn across the photo, which has half its wash (the short Making-of:
+        /// half burned in, the gold front between): nothing starts.
         case drawing
-        /// The lines all drawn over the washed photo: nothing starts.
+        /// The lines all drawn over the washed photo (the short Making-of: on the page's paper):
+        /// nothing starts.
         case lines
         /// Started: the page at the painting's place, which never opens.
         case page
+        /// Started: the page at the painting's place halfway in, its numbers coming out like stars
+        /// (the short Making-of), and the painting never opens.
+        case stars
+
+        /// The painting starts and goes to its place.
+        var starts: Bool { self == .page || self == .stars }
     }
 
     /// The scenario's picture is picked as on the Paint page (`CreateModel.paintsNow`) and
@@ -253,6 +270,8 @@ enum ShellDemo: Equatable {
         case .createFormingDrawing: .drawing
         case .createFormingLines: .lines
         case .createFormingPage: .page
+        case .createFormingGraphite: .graphite
+        case .createFormingStars: .stars
         default: nil
         }
     }
@@ -283,7 +302,9 @@ enum ShellDemo: Equatable {
         // A painting and a photograph: the library's starters, or the first two fixed pictures.
         case .createPreview, .createLineArt: showsLibrary ? Sample.starters.first : pictures.first
         case .createSuggested: showsLibrary ? Sample.starters.last : pictures.dropFirst().first
-        case .createTip, .createForming, .createFormingDrawing, .createFormingLines, .createFormingPage: pictures.dropFirst().first
+        case .createTip, .createForming, .createFormingGraphite, .createFormingDrawing, .createFormingLines, .createFormingPage,
+             .createFormingStars:
+            pictures.dropFirst().first
         case .createCustom, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineLayers,
              .createRefineSelect, .createRefineGuide, .createRefineGuideWriting, .createRefineUnlock:
             DemoMode.photos.first ?? pictures.first
@@ -461,8 +482,8 @@ enum ShellDemo: Equatable {
             library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .create, .createNights, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
              .createLineArt, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineLayers, .createRefineSelect, .createRefineGuide, .createRefineGuideWriting, .createSuggested, .createCustom,
-             .createForming, .createFormingDrawing, .createFormingLines, .createFormingPage,
-             .createFromFile, .createDrawing, .createUnlock, .createRefineUnlock, .galleryReceived, .galleryEmpty, .settings,
+             .createForming, .createFormingGraphite, .createFormingDrawing, .createFormingLines, .createFormingPage,
+             .createFormingStars, .createFromFile, .createDrawing, .createUnlock, .createRefineUnlock, .galleryReceived, .galleryEmpty, .settings,
              .settingsTips, .settingsLongText, .settingsAcknowledgements:
             break
         case .settingsClock, .museum:

@@ -52,6 +52,14 @@ struct TemplatePreviewView: View {
     @AppStorage(SettingsKey.playsMakingOf) private var playsMakingOf = SettingsDefault.playsMakingOf
     /// VoiceOver has heard the picture forming's one status.
     @State private var hasAnnouncedForming = false
+    /// The short Making-of over the picture forming (`FormingShow`): the photo's graphite
+    /// drawing and when it began to spread, when the lines' fuse is lit, and where a tap sent it.
+    @State private var graphite: CGImage?
+    @State private var graphiteBegan: Date?
+    @State private var fuseLit: Date?
+    @State private var formingSkip: FormingShow.Skip?
+    @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
+    @Environment(\.colorScheme) private var colorScheme
     @FocusState private var titleFocused: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
@@ -59,7 +67,7 @@ struct TemplatePreviewView: View {
 
     // In two parts, which the compiler type-checks apart: as one chain it ran out of time.
     var body: some View {
-        observingTheModel(screen)
+        observingTheModel(playingTheShow(screen))
             .modifier(UnlockOffer(isPresented: $offersUnlock, start: start, declined: leaveIfPaintingNow))
             .alert("Couldn’t Create Painting", isPresented: isShowingStartError) {
                 Button("Try Again", action: start)
@@ -519,6 +527,7 @@ struct TemplatePreviewView: View {
                     .background {
                         if let pictureProbe { PreviewPictureAnchor(probe: pictureProbe, aspect: photoAspect, canvas: size) }
                     }
+                    .overlay { skipsTheShow }
                     .overlay(alignment: .bottom) {
                         status.padding(14)
                     }
@@ -554,7 +563,11 @@ struct TemplatePreviewView: View {
                 compares: false, aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged,
                 lines: forming.lines ? model.preview?.drawing : nil, linesHeld: heldDraw,
                 // The hand-off's lift waits for the lines to be drawn (`FormingPlan.liftWait`).
-                linesBegan: { [pictureProbe] in pictureProbe?.linesBegan = .now })
+                linesBegan: { [pictureProbe] in
+                    pictureProbe?.formingDone = Date.now.addingTimeInterval(FormingPlan.drawIn)
+                    pictureProbe?.formingShowed = false
+                },
+                formingShow: playsTheShow ? formingMoments : nil)
         }
         return CompareView(
             photo: source.preview, after: model.preview?.picture, afterID: model.preview?.id.uuidString ?? "none",
@@ -576,21 +589,125 @@ struct TemplatePreviewView: View {
         FormingPlan.forms(paintsNow: model.paintsNow, isScratch: model.isScratch, isDrawing: model.isDrawing)
     }
 
+    // MARK: The short Making-of
+
+    /// Whether the picture forming plays the short Making-of (`FormingShow`).
+    private var playsTheShow: Bool {
+        FormingShow.plays(forms: isForming, reduceMotion: reduceMotion, playsMakingOf: playsMakingOf, skipped: formingSkip)
+    }
+
+    private var formingMoments: FormingMoments {
+        FormingMoments(
+            graphite: graphite, graphiteBegan: graphiteBegan, fuseLit: fuseLit, heldGraphite: heldGraphite,
+            heldFuse: heldDraw.map { Double($0) })
+    }
+
+    /// What the graphite drawing is made for: this photo on this paper, while the show plays.
+    private struct GraphiteKey: Equatable {
+        var photo: UUID
+        var sheet: FormingPlan.Sheet
+    }
+
+    private var graphiteKey: GraphiteKey? {
+        guard playsTheShow, model.source != nil else { return nil }
+        return GraphiteKey(photo: model.photoID, sheet: FormingPlan.sheet(paperAppearance, interfaceIsDark: colorScheme == .dark))
+    }
+
+    /// The show's graphite as the photo shows, and its fuse once the template is made.
+    private func playingTheShow(_ content: some View) -> some View {
+        content
+            .onAppear {
+                pictureProbe?.formingDone = nil
+                pictureProbe?.formingShowed = false
+                pictureProbe?.skipsForming = { skipForming() }
+            }
+            // The probe outlives the preview: what it holds of the preview goes with it.
+            .onDisappear { pictureProbe?.skipsForming = nil }
+            .task(id: graphiteKey) {
+                guard let key = graphiteKey, let photo = model.source?.preview else { return }
+                guard let sketch = await GraphiteSketch.draw(photo, sheet: key.sheet), !Task.isCancelled else { return }
+                // Made meanwhile: the fuse burns over the photo itself.
+                guard playsTheShow, !forming.lines, fuseLit == nil else { return }
+                graphite = sketch
+                graphiteBegan = .now
+            }
+            .onChange(of: forming.lines, initial: true) { _, lines in lightFuse(lines) }
+    }
+
+    /// The template is made (`lines`): its lines' fuse is lit, once the graphite has shown a
+    /// moment (`FormingShow.fuseLit`), and the hand-off told when they will have burned in.
+    private func lightFuse(_ lines: Bool) {
+        guard playsTheShow else { return }
+        guard lines else {
+            fuseLit = nil
+            return
+        }
+        guard fuseLit == nil else { return }
+        let now = Date.now
+        if formingSkip == .toPainting {
+            fuseLit = now.addingTimeInterval(-FormingShow.fuse)
+            pictureProbe?.formingDone = now
+        } else {
+            let lit = FormingShow.fuseLit(
+                madeAt: now.timeIntervalSinceReferenceDate, graphiteBegan: graphiteBegan?.timeIntervalSinceReferenceDate)
+            fuseLit = Date(timeIntervalSinceReferenceDate: lit)
+            pictureProbe?.formingDone = Date(timeIntervalSinceReferenceDate: lit + FormingShow.fuse)
+        }
+        pictureProbe?.formingShowed = true
+    }
+
+    /// A tap on the show (`FormingShow.skip`): once the template is made, its lines are all there
+    /// and the hand-off lifts at once; before, the graphite goes and the plain forming waits.
+    private func skipForming() {
+        guard playsTheShow, formingSkip == nil, !hasFailed else { return }
+        let skip = FormingShow.skip(isMade: forming.lines)
+        switch skip {
+        case .toPainting:
+            formingSkip = skip
+            fuseLit = Date.now.addingTimeInterval(-FormingShow.fuse)
+            pictureProbe?.formingDone = Date.now
+        case .toPlainLines:
+            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.25)) { formingSkip = skip }
+            graphite = nil
+            graphiteBegan = nil
+        }
+    }
+
+    /// Taps during the show skip it; nothing else on the wait takes a touch then.
+    @ViewBuilder
+    private var skipsTheShow: some View {
+        if playsTheShow && formingSkip == nil && !hasFailed {
+            Color.clear
+                .contentShape(.rect)
+                .onTapGesture { skipForming() }
+                .accessibilityHidden(true)
+        }
+    }
+
     private var hasFailed: Bool {
         if case .failed = model.phase { return true }
         return false
     }
 
-    /// The `create-forming` demo holds the wait: its template is made and never shows.
+    /// The `create-forming` and `-graphite` demos hold the wait: the template is made and never shows.
     private var holdsTheWait: Bool {
         #if DEBUG
-        ShellDemo.current?.formingHold == .waiting
+        ShellDemo.current?.formingHold == .waiting || ShellDemo.current?.formingHold == .graphite
         #else
         false
         #endif
     }
 
-    /// How much of the lines the `create-forming-lines` and `-drawing` demos hold drawn.
+    /// How far the graphite has spread in the `create-forming-graphite` demo.
+    private var heldGraphite: Double? {
+        #if DEBUG
+        if ShellDemo.current?.formingHold == .graphite { return 0.55 }
+        #endif
+        return nil
+    }
+
+    /// How much of the lines the `create-forming-lines` and `-drawing` demos hold drawn (or
+    /// burned in, by the short Making-of's fuse).
     private var heldDraw: CGFloat? {
         #if DEBUG
         if ShellDemo.current?.formingHold == .lines { return 1 }
@@ -1042,8 +1159,8 @@ struct TemplatePreviewView: View {
     private func startPickedPicture() {
         guard model.source != nil else { return }
         #if DEBUG
-        // `create-forming`, `-drawing` and `-lines` hold the picture forming: nothing starts.
-        if let hold = ShellDemo.current?.formingHold, hold != .page { return }
+        // `create-forming`, `-graphite`, `-drawing` and `-lines` hold the picture forming: nothing starts.
+        if let hold = ShellDemo.current?.formingHold, !hold.starts { return }
         #endif
         start()
     }
@@ -1250,8 +1367,20 @@ final class PreviewPictureProbe {
     private weak var view: UIView?
     private var aspect: CGFloat = 0
     private var canvas: CGSize = .zero
-    /// When the picture forming's lines began to be drawn over the picture (`FormingPlan`).
-    var linesBegan: ContinuousClock.Instant?
+    /// When the picture forming's lines will have been drawn over the picture, or burned in by
+    /// the short Making-of (`FormingPlan.liftWait`, `FormingShow`): the hand-off's lift waits
+    /// until then. A tap that skips the show makes it now.
+    var formingDone: Date?
+    /// The short Making-of played on the preview: the photo has dried under its lines there,
+    /// and the page's numbers come out like stars on the way to the painting.
+    var formingShowed = false
+    /// Skips the short Making-of (`TemplatePreviewView`'s), from a tap anywhere on the flow.
+    var skipsForming: (() -> Void)?
+
+    /// A tap during the short Making-of: the preview skips it (`FormingShow.skip`).
+    func skipForming() {
+        skipsForming?()
+    }
 
     /// `view` has the comparison's frame, and the photo the `aspect`; `canvas` is the space the
     /// comparison sizes its lines by (`CompareView.canvasSize`).

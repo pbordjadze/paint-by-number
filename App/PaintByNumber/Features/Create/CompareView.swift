@@ -33,6 +33,9 @@ struct CompareView: View {
     var linesHeld: CGFloat?
     /// Told as the lines begin to be drawn in.
     var linesBegan: (() -> Void)?
+    /// The short Making-of over the picture forming (`FormingShow`): the graphite, then the
+    /// lines burning in. Nil: the lines are drawn in plainly.
+    var formingShow: FormingMoments?
     /// The drawing whose lines are drawn in, or are being: another's start undrawn.
     @State private var drawnLines: UUID?
     /// Fraction of the picture's width showing the photo; purely presentational, so owned here.
@@ -77,7 +80,11 @@ struct CompareView: View {
                                 Rectangle().frame(width: max(0, x))
                             }
 
-                        if let lines {
+                        if let formingShow {
+                            FormingShowLayers(
+                                moments: formingShow, lines: lines, picture: picture, size: size,
+                                scale: canvasScale(of: picture))
+                        } else if let lines {
                             formingLayers(lines, picture: picture, size: size, visible: visible)
                         }
 
