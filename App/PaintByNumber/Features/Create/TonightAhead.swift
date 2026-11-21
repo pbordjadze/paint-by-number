@@ -63,6 +63,9 @@ final class TonightAhead {
 
     private var kept: Kept?
     private var making: Making?
+    /// The key a flow asked for last: that flow makes it (or took it), so it isn't made again
+    /// beside it, even when the app comes back to the front mid-flow.
+    private var taken: Key?
 
     /// The key of what is kept, made and ready to be taken.
     var keptKey: Key? { kept?.key }
@@ -72,7 +75,7 @@ final class TonightAhead {
     @discardableResult
     func prepare(_ key: Key) -> Task<Void, Never>? {
         if let making, making.key == key { return making.task }
-        if kept?.key == key { return nil }
+        if kept?.key == key || taken == key { return nil }
         cancel()
         kept = nil
         let task = Task(priority: .background) { [weak self] in
@@ -99,6 +102,7 @@ final class TonightAhead {
     /// miss stops the same picture being made meanwhile (the flow makes it now) and lets go of
     /// one made of another length or line art.
     func take(_ key: Key) -> CreateModel.MadeAhead? {
+        taken = key
         if let kept, kept.key == key {
             self.kept = nil
             return kept.made
@@ -151,7 +155,8 @@ final class TonightAhead {
 
         private func prepare() async {
             guard scenePhase == .active, !isPainting else {
-                TonightAhead.shared.cancel()
+                // In the background nothing is kept, so iOS has less reason to end the app.
+                if scenePhase == .background { TonightAhead.shared.clear() } else { TonightAhead.shared.cancel() }
                 return
             }
             #if DEBUG

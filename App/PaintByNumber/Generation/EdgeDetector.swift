@@ -127,16 +127,10 @@ nonisolated enum EdgeDetector {
             : Resample.area(image, width: size.width, height: size.height)
         try cancel.throwIfCancelled()
         let loaded = try ModelPool.take(model)
+        defer { ModelPool.give(back: loaded, of: model) }
         let features = try MLDictionaryFeatureProvider(dictionary: ["image": MLFeatureValue(multiArray: paddedInput(input, for: model))])
         try cancel.throwIfCancelled()
-        let output: MLFeatureProvider
-        do {
-            output = try loaded.prediction(from: features)
-            ModelPool.give(back: loaded, of: model)
-        } catch {
-            ModelPool.give(back: loaded, of: model)
-            throw error
-        }
+        let output = try loaded.prediction(from: features)
         try cancel.throwIfCancelled()
         guard let values = output.featureValue(for: model.output)?.multiArrayValue else { throw DetectorError.unexpectedOutput }
         return try edgeMap(from: values, width: input.width, height: input.height)
@@ -174,7 +168,6 @@ nonisolated enum EdgeDetector {
     /// prediction cost about 1.7 s of a cold pick on the iPad Air 5, painting-company row 361).
     /// Called once the app has settled after launch; does nothing once the pool holds a model.
     static func warmUp() async {
-        _ = ModelPool.emptiedOnMemoryWarning
         guard !ModelPool.isWarm else { return }
         await Task.detached(priority: .background) {
             let blank = RGBAImage(width: 64, height: 64, fill: SIMD4(255, 255, 255, 255))
@@ -187,18 +180,19 @@ nonisolated enum EdgeDetector {
     /// Loaded models kept between photos: loading one costs most of a cold pick's wait. A
     /// prediction takes a model out and puts it back, so two photos made at once (a pick while a
     /// painting is cut ahead) never share one instance; the second loads its own, as before, and
-    /// the pool keeps one of each. Emptied on a memory warning (the weights are about 37 MB).
+    /// the pool keeps one of each. Emptied on a memory warning and when the app goes to the
+    /// background (the weights are about 37 MB), so a suspended app holds none.
     nonisolated enum ModelPool {
         private static let idle = OSAllocatedUnfairLock<[Model: MLModel]>(uncheckedState: [:])
 
-        /// Registered once, by `warmUp`; the center keeps the observer for the launch.
-        static let emptiedOnMemoryWarning: Void = {
-            _ = NotificationCenter.default.addObserver(
-                forName: UIApplication.didReceiveMemoryWarningNotification, object: nil, queue: nil
-            ) { _ in
-                ModelPool.empty()
+        /// Call on the main thread, once, at launch; the center keeps the observers for the launch.
+        static func emptiesWhenMemoryIsNeeded() {
+            for name in [UIApplication.didReceiveMemoryWarningNotification, UIApplication.didEnterBackgroundNotification] {
+                _ = NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { _ in
+                    ModelPool.empty()
+                }
             }
-        }()
+        }
 
         static var isWarm: Bool { idle.withLockUnchecked { !$0.isEmpty } }
 

@@ -45,7 +45,8 @@ struct TonightAheadTests {
         #expect(ahead.keptKey == key)
         #expect(ahead.prepare(key) == nil, "A picture kept was made again")
         // Another picture's pick takes nothing, and leaves it kept.
-        let wave = try #require(TonightAhead.key(for: try #require(Sample.named("great-wave")), paintingLength: .quick, lineArt: lineArt))
+        let greatWave = try #require(Sample.named("great-wave"))
+        let wave = try #require(TonightAhead.key(for: greatWave, paintingLength: .quick, lineArt: lineArt))
         #expect(ahead.take(wave) == nil)
         #expect(ahead.keptKey == key)
 

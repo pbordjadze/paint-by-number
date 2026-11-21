@@ -141,6 +141,7 @@ struct EdgeDetectorTests {
         let input = RGBAImage(width: 96, height: 64, fill: SIMD4(200, 120, 40, 255))
         EdgeDetector.ModelPool.empty()
         let fresh = try EdgeDetector.maps(for: input, cancel: .none)
+        EdgeDetector.ModelPool.empty()
         await EdgeDetector.warmUp()
         let kept = try EdgeDetector.maps(for: input, cancel: .none)
         #expect(kept.drawing == fresh.drawing && kept.contours == fresh.contours)
