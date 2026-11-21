@@ -76,6 +76,11 @@ before planning app work).
     writing through `Writing`), `DrawingPalette` (the sets and how their paints are laid so
     neighbours differ); `Model/DrawingSettings.swift` is what a painting records. Nothing
     changes for a photo: `drawing` is nil and absent from its settings.
+  - `Glass/`: Stained Glass (painting-company row 366): `GlassWindow` (a photo leaded by the
+    painter's own lines, each line a Pen draw on `TemplateEditor.blank`), `GlassPalette` (the
+    glasses a window suggests, its background found by focus, and the classics offered after
+    them) and `Glazing` (free glazing's `glazing.bin`: any glass in any piece, read as hostile
+    input); `pbn glass` previews a window lit and unlit.
   - `Edit/`: `TemplateEditor`, the painter's pen, Cell Edge, Merge, Paint Brush, Bend Line and Move Edge (`reshape`), Move Number, eraser, line eraser, fill, Only
     This Area (`paintArea`), Looks and Edit Paint (looks and repaints, `Recolor.swift`) and the
     retired Color Splitter's splits made to a finished
@@ -126,6 +131,10 @@ before planning app work).
   platform for OKLab). Tests `Tests/Mosaic*Tests`, fixtures `Tests/MosaicFixtures`; the paints'
   names come from `docs/ravenna/paint-names.json` through `tools/ravenna/paint_names.py`. The
   app's era behind the secret door: App/CLAUDE.md › Ravenna.
+  `Sources/MosaicCore/Book`: Set in Stone (painting-company row 367), the book for setting a mosaic
+  in real stone (`StoneBook`'s doc comment): pieces cut to fit (`BookPieces`), steps, pages as
+  drawing lists (`BookPage`), Orsoni smalti codes (`Smalti`); `mosaic book <mosaic.json> <dir>`
+  writes its pages as SVG for a look on Linux, `StoneBookTests` guard it.
 - `Tests/PaintCoreTests` (Swift Testing; helpers in `TestSupport.swift`, `TestScenes.swift`,
   `ColorTestSupport.swift`). `Fixtures/`: `template-*.pbnt` are frozen (Saved data), and so is
   `edits-v1.json` (every kind of edit, as `refinements.json` keeps them: `EditGoldenTests`);

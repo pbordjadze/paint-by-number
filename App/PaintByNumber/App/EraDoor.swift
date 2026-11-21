@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import Ravenna
 import SwiftUI
 
 /// The secret door (painting-company row 234): the app's year, set back to 0547 in Settings ›
@@ -10,6 +11,19 @@ import SwiftUI
 enum Era: String {
     case moonlight
     case byzantium
+    /// Stained Glass, at 1248 (SideStore and Debug builds; painting-company row 366): a mode of
+    /// the app's own, not a copy of it (`GlassEra`).
+    case glass
+
+    /// The era a year on the clock opens, nil for a year that opens none.
+    static func opened(by year: Int) -> Era? {
+        if EraYear.opensByzantium(year) { return .byzantium }
+        #if UNRELEASED
+        if EraYear.opensStainedGlass(year) { return .glass }
+        #endif
+        if EraYear.returnsToThePresent(year) { return .moonlight }
+        return nil
+    }
 }
 
 /// Which era is on screen, kept across launches (UserDefaults `era`, absent for Paint by
@@ -29,11 +43,19 @@ final class EraDoor {
     private(set) var shown: Era
     /// The era the passage is on its way to, while it plays (`EraPassage`).
     private(set) var passage: Era?
+    /// The era the passage leaves, while it plays: leaving Stained Glass is the nave's passage too.
+    private(set) var origin: Era?
     @ObservationIgnored private let defaults: UserDefaults
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        shown = defaults.string(forKey: Self.key).flatMap(Era.init(rawValue:)) ?? .moonlight
+        let era = defaults.string(forKey: Self.key).flatMap(Era.init(rawValue:)) ?? .moonlight
+        #if UNRELEASED
+        shown = era
+        #else
+        // Stained Glass is SideStore's and Debug's: a release opening on it opens at home.
+        shown = era == .glass ? .moonlight : era
+        #endif
     }
 
     /// Sets the clock: the passage starts, and the era is the new one from now on, this launch's
@@ -45,6 +67,7 @@ final class EraDoor {
         } else {
             defaults.set(era.rawValue, forKey: Self.key)
         }
+        origin = shown
         passage = era
     }
 
@@ -58,6 +81,7 @@ final class EraDoor {
     func passed() {
         if let passage { shown = passage }
         passage = nil
+        origin = nil
     }
 
     #if DEBUG
@@ -88,16 +112,17 @@ struct EraPassage: View {
     static let lift: TimeInterval = 1.0
     static var total: TimeInterval { wait + cover + hold + lift }
 
-    /// Whether the passage to `destination` is the way back's own: to Paint by Moonlight, with
-    /// motion, in SideStore and Debug builds. Every other passage is the tiles set and lifted.
-    static func isWayBack(to destination: Era, reduceMotion: Bool) -> Bool {
-        return destination == .moonlight && !reduceMotion
+    /// Whether the passage to `destination` is the way back's own: to Paint by Moonlight from
+    /// the mosaic era, with motion. Stained Glass's passages are the nave's, either way; every
+    /// other passage is the tiles set and lifted.
+    static func isWayBack(to destination: Era, from origin: Era? = nil, reduceMotion: Bool) -> Bool {
+        return destination == .moonlight && origin != .glass && !reduceMotion
     }
 
     /// When the screen is wholly covered, so the era can go in beneath, and when the passage is
     /// over (seconds from its start).
-    static func moments(to destination: Era, reduceMotion: Bool) -> (covered: TimeInterval, done: TimeInterval) {
-        if isWayBack(to: destination, reduceMotion: reduceMotion) { return (EraWayBack.swap, EraWayBack.total) }
+    static func moments(to destination: Era, from origin: Era? = nil, reduceMotion: Bool) -> (covered: TimeInterval, done: TimeInterval) {
+        if isWayBack(to: destination, from: origin, reduceMotion: reduceMotion) { return (EraWayBack.swap, EraWayBack.total) }
         return (wait + cover, total)
     }
 
@@ -105,9 +130,10 @@ struct EraPassage: View {
         if let destination = door.passage {
             TimelineView(.animation) { context in
                 let elapsed = Self.held(start.map { context.date.timeIntervalSince($0) } ?? 0)
-                let timing = Self.moments(to: destination, reduceMotion: reduceMotion)
+                let origin = door.origin
+                let timing = Self.moments(to: destination, from: origin, reduceMotion: reduceMotion)
                 Canvas { graphics, size in
-                    draw(in: &graphics, size: size, elapsed: elapsed, destination: destination)
+                    draw(in: &graphics, size: size, elapsed: elapsed, destination: destination, origin: origin)
                 }
                 .onChange(of: elapsed >= timing.covered) { _, covered in
                     if covered && !settledCover {
@@ -146,6 +172,7 @@ struct EraPassage: View {
     private static var demoHold: TimeInterval? {
         switch DemoMode.scenario {
         case "era-passage": return wait + cover * 0.67
+        case "era-passage-glass": return wait + cover + hold * 0.5
         case "era-passage-back": return EraWayBack.halfFallen
         case "era-passage-night": return EraWayBack.clears
         default: return nil
@@ -170,12 +197,16 @@ struct EraPassage: View {
         let color: Color
     }
 
-    private func draw(in graphics: inout GraphicsContext, size: CGSize, elapsed: TimeInterval, destination: Era) {
-        if Self.isWayBack(to: destination, reduceMotion: reduceMotion) {
+    private func draw(in graphics: inout GraphicsContext, size: CGSize, elapsed: TimeInterval, destination: Era, origin: Era?) {
+        if Self.isWayBack(to: destination, from: origin, reduceMotion: reduceMotion) {
             drawWayBack(in: &graphics, size: size, elapsed: elapsed)
             return
         }
         let apse = Color(red: 0.082, green: 0.075, blue: 0.059)
+        if (destination == .glass || origin == .glass) && !reduceMotion {
+            drawNave(in: &graphics, size: size, elapsed: elapsed)
+            return
+        }
         if reduceMotion {
             let fade = 0.35
             let t = elapsed - Self.wait
@@ -224,6 +255,86 @@ struct EraPassage: View {
             graphics.fill(whole, with: .color(apse.opacity(max(0, 1 - lifted * 1.4))))
         }
     }
+
+    /// The passage to Stained Glass: the screen goes as dark as a nave, and as it is darkest a
+    /// rose window's light comes and goes in the middle of it, then the dark lifts on the window.
+    private func drawNave(in graphics: inout GraphicsContext, size: CGSize, elapsed: TimeInterval) {
+        let nave = Color(red: 0.035, green: 0.035, blue: 0.055)
+        let t = elapsed - Self.wait
+        guard t > 0 else { return }
+        let dark = t < Self.cover ? EraWayBack.ease(min(1, t / (Self.cover * 0.8)))
+            : max(0, 1 - EraWayBack.ease((t - Self.cover - Self.hold) / Self.lift))
+        graphics.fill(Path(CGRect(origin: .zero, size: size)), with: .color(nave.opacity(dark)))
+        // The rose: twelve lancets of jewel glass round a gold heart, on a cobalt ground with a
+        // roundel between each two, in a ring of stone. Every pane is glass lit from behind,
+        // brightest at its middle; the light grows through the cover and the hold, and the dark
+        // lifts with it. Drawn opaque in a layer that fades whole, so no pane shows through another.
+        let lit = t < Self.cover * 0.45 ? 0 : t < Self.cover + Self.hold
+            ? EraWayBack.ease(min(1, (t - Self.cover * 0.45) / (Self.cover * 0.55)))
+            : max(0, 1 - (t - Self.cover - Self.hold) / (Self.lift * 0.6))
+        guard lit > 0 else { return }
+        let centre = CGPoint(x: size.width / 2, y: size.height / 2)
+        let radius = min(size.width, size.height) * 0.32
+        // Each glass as its light middle and its deep edge.
+        let ruby = (Color(red: 0.93, green: 0.25, blue: 0.3), Color(red: 0.42, green: 0.02, blue: 0.09))
+        let cobalt = (Color(red: 0.3, green: 0.5, blue: 0.98), Color(red: 0.04, green: 0.09, blue: 0.4))
+        let emerald = (Color(red: 0.3, green: 0.8, blue: 0.5), Color(red: 0.02, green: 0.25, blue: 0.16))
+        let amber = (Color(red: 1, green: 0.86, blue: 0.45), Color(red: 0.6, green: 0.33, blue: 0.03))
+        let lancets = [ruby, emerald, ruby, amber]
+        func circle(_ r: CGFloat, at c: CGPoint = centre) -> Path {
+            Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: 2 * r, height: 2 * r))
+        }
+        func glass(_ g: (Color, Color), at c: CGPoint, reach: CGFloat) -> GraphicsContext.Shading {
+            .radialGradient(Gradient(colors: [g.0, g.1]), center: c, startRadius: 0, endRadius: reach)
+        }
+        var glow = graphics
+        glow.addFilter(.blur(radius: radius * 0.35))
+        glow.fill(circle(radius * 1.2), with: .color(Self.glassGold.opacity(0.22 * lit)))
+        graphics.drawLayer { rose in
+            rose.opacity = lit
+            let hub = radius * 0.24, outer = radius * 0.94, lead = radius * 0.03
+            let ink = GraphicsContext.Shading.color(nave)
+            rose.fill(circle(radius * 1.06), with: .color(Color(red: 0.17, green: 0.16, blue: 0.18)))
+            rose.fill(circle(radius), with: .color(nave))
+            rose.fill(circle(outer), with: glass(cobalt, at: centre, reach: outer * 1.1))
+            for k in 0..<12 {
+                let angle = Double(k) / 12 * 2 * .pi
+                let turn = CGAffineTransform(translationX: centre.x, y: centre.y).rotated(by: angle)
+                // A lancet: from the heart, swelling, to a point at the ring.
+                var lancet = Path()
+                let base = hub * 0.95, tip = outer * 0.97, w = radius * 0.13
+                lancet.move(to: CGPoint(x: -w * 0.35, y: -base))
+                lancet.addCurve(to: CGPoint(x: 0, y: -tip), control1: CGPoint(x: -w * 1.3, y: -radius * 0.55),
+                                control2: CGPoint(x: -w * 0.7, y: -radius * 0.85))
+                lancet.addCurve(to: CGPoint(x: w * 0.35, y: -base), control1: CGPoint(x: w * 0.7, y: -radius * 0.85),
+                                control2: CGPoint(x: w * 1.3, y: -radius * 0.55))
+                lancet.closeSubpath()
+                let pane = lancet.applying(turn)
+                let middle = CGPoint(x: 0, y: -radius * 0.58).applying(turn)
+                rose.fill(pane, with: glass(lancets[k % lancets.count], at: middle, reach: radius * 0.4))
+                rose.stroke(pane, with: ink, lineWidth: lead)
+                // A roundel between this lancet and the next.
+                let at = CGPoint(x: 0, y: -radius * 0.8).applying(
+                    CGAffineTransform(translationX: centre.x, y: centre.y).rotated(by: angle + .pi / 12))
+                let roundel = circle(radius * 0.075, at: at)
+                rose.fill(roundel, with: glass(k.isMultiple(of: 2) ? amber : emerald, at: at, reach: radius * 0.09))
+                rose.stroke(roundel, with: ink, lineWidth: lead * 0.8)
+            }
+            rose.stroke(circle(outer), with: ink, lineWidth: lead * 1.6)
+            let heart = circle(hub)
+            rose.fill(heart, with: glass(amber, at: centre, reach: hub * 1.1))
+            rose.stroke(heart, with: ink, lineWidth: lead * 1.6)
+            rose.fill(circle(hub * 0.4), with: glass(ruby, at: centre, reach: hub * 0.45))
+            rose.stroke(circle(hub * 0.4), with: ink, lineWidth: lead)
+            // Light from behind, strongest at the heart.
+            var light = rose
+            light.blendMode = .screen
+            light.fill(circle(outer), with: .radialGradient(
+                Gradient(colors: [Color(white: 1).opacity(0.22), .clear]), center: centre, startRadius: 0, endRadius: outer))
+        }
+    }
+
+    private static let glassGold = Color(red: 0.96, green: 0.78, blue: 0.36)
 
     /// Draws one tessera, `side` across, placed and turned by `turn`.
     private static func set(_ tile: Tile, side: CGFloat, turn: CGAffineTransform, opacity: Double,
@@ -489,7 +600,7 @@ enum EraWayBack {
     }
 
     /// Smoothstep, held at its ends.
-    private static func ease(_ x: Double) -> Double {
+    static func ease(_ x: Double) -> Double {
         let t = min(1, max(0, x))
         return t * t * (3 - 2 * t)
     }

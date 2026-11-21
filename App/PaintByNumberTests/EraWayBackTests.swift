@@ -30,6 +30,8 @@ struct EraWayBackTests {
         #expect(EraPassage.isWayBack(to: .moonlight, reduceMotion: false))
         #expect(!EraPassage.isWayBack(to: .moonlight, reduceMotion: true))
         #expect(!EraPassage.isWayBack(to: .byzantium, reduceMotion: false))
+        #expect(!EraPassage.isWayBack(to: .moonlight, from: .glass, reduceMotion: false), "leaving Stained Glass is the nave's")
+        #expect(EraPassage.isWayBack(to: .moonlight, from: .byzantium, reduceMotion: false))
         let back = EraPassage.moments(to: .moonlight, reduceMotion: false)
         #expect(back.covered == EraWayBack.swap && back.done == EraWayBack.total)
         // The way in, and both ways under Reduce Motion, are as they were.
