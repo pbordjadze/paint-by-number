@@ -1,0 +1,82 @@
+{
+  "name": "Paint by Moonlight (CI builds)",
+  "identifier": "com.pbordjadze.paintbynumber.source",
+  "subtitle": "Automatic builds",
+  "iconURL": "https://raw.githubusercontent.com/pbordjadze/paint-by-number/sidestore/icon.png",
+  "website": "https://github.com/pbordjadze/paint-by-number",
+  "tintColor": "#7B3F7E",
+  "apps": [
+    {
+      "name": "Paint by Moonlight",
+      "bundleIdentifier": "com.pbordjadze.paintbynumber",
+      "developerName": "pbordjadze",
+      "subtitle": "Turn any photo into a painting",
+      "localizedDescription": "Turn your photos into paint-by-numbers canvases, entirely on device, and paint them with a finger or Apple Pencil. Built for iPad, works on iPhone.",
+      "iconURL": "https://raw.githubusercontent.com/pbordjadze/paint-by-number/sidestore/icon.png",
+      "tintColor": "#7B3F7E",
+      "category": "entertainment",
+      "versions": [
+        {
+          "version": "1.0.1217",
+          "buildVersion": "1217",
+          "date": "2026-11-21T15:19:30Z",
+          "localizedDescription": "Merge Paint by Mosaic's ported fixes: Back, swipe back, opening and Start (painting-company rows 324, 361, 364)",
+          "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-1217/PaintByNumber.ipa",
+          "size": 68356437,
+          "minOSVersion": "26.0"
+        },
+        {
+          "version": "1.0.1215",
+          "buildVersion": "1215",
+          "date": "2026-11-21T13:22:29Z",
+          "localizedDescription": "Merge Tonight's Picture: a picture a night from the museums, and the vote for the next (painting-company row 368)",
+          "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-1215/PaintByNumber.ipa",
+          "size": 68345120,
+          "minOSVersion": "26.0"
+        },
+        {
+          "version": "1.0.1214",
+          "buildVersion": "1214",
+          "date": "2026-11-21T09:26:45Z",
+          "localizedDescription": "Set in Stone: golds named by shade (painting-company row 367)",
+          "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-1214/PaintByNumber.ipa",
+          "size": 68260905,
+          "minOSVersion": "26.0"
+        },
+        {
+          "version": "1.0.1193",
+          "buildVersion": "1193",
+          "date": "2026-11-21T04:24:05Z",
+          "localizedDescription": "Merge Stained Glass: the first mode on the app's own code (painting-company row 366)",
+          "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-1193/PaintByNumber.ipa",
+          "size": 68254695,
+          "minOSVersion": "26.0"
+        },
+        {
+          "version": "1.0.1187",
+          "buildVersion": "1187",
+          "date": "2026-11-21T02:08:27Z",
+          "localizedDescription": "Set in Stone: estimates, a newcomer's lessons, and an assembly book's look (painting-company row 367)",
+          "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-1187/PaintByNumber.ipa",
+          "size": 68081073,
+          "minOSVersion": "26.0"
+        }
+      ],
+      "version": "1.0.1217",
+      "versionDate": "2026-11-21T15:19:30Z",
+      "versionDescription": "Merge Paint by Mosaic's ported fixes: Back, swipe back, opening and Start (painting-company rows 324, 361, 364)",
+      "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-1217/PaintByNumber.ipa",
+      "size": 68356437,
+      "appPermissions": {
+        "entitlements": [
+          "com.apple.security.application-groups"
+        ],
+        "privacy": {
+          "NSCameraUsageDescription": "Paint by Moonlight uses the camera to take a photo you can turn into a paint-by-numbers picture. The photo stays on your device.",
+          "NSPhotoLibraryAddUsageDescription": "Paint by Moonlight saves a painting or its time-lapse to your photo library when you choose Save Image or Save Video as you share it."
+        }
+      }
+    }
+  ],
+  "news": []
+}
