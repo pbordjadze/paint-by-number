@@ -41,6 +41,11 @@ struct PaintView: View {
     @State private var showsNumbers = true
     @State private var confirmRestart = false
     @State private var timelapse: TimelapseRequest?
+    /// The finished mosaic shows the sheet's lines over its tiles (More › Show Lines,
+    /// `CanvasView.showsLines`), for as long as the screen is up.
+    @State private var linesShown: Bool
+    /// Print's preview, up for More › Print… (painting-company row 330).
+    @State private var printPreview: PrintPreviewRequest?
     @State private var canvasUnavailable = false
     @State private var completionShare = CompletionShare()
     /// Bumped once the completion bar is up after the painting was finished on this screen (not
@@ -109,11 +114,12 @@ struct PaintView: View {
         paper.usesDarkPaper(interfaceIsDark: system == .dark) ? .dark : system
     }
 
-    /// `showsPhoto` opens with the photo shown (demo scenarios).
+    /// `showsPhoto` opens with the photo shown, `showsLines` with More › Show Lines on (demo
+    /// scenarios).
     init(
         session: PaintingSession, title: String = "", onClose: (() -> Void)? = nil,
         initialCamera: CanvasCamera? = nil, fillDurationScale: Float = 1, showsPhoto: Bool = false,
-        onTemplateFrame: ((CGRect) -> Void)? = nil, hidesStatusBar: Bool = true
+        showsLines: Bool = false, onTemplateFrame: ((CGRect) -> Void)? = nil, hidesStatusBar: Bool = true
     ) {
         self.session = session
         self.title = title
@@ -123,6 +129,7 @@ struct PaintView: View {
         self.onTemplateFrame = onTemplateFrame
         self.hidesStatusBar = hidesStatusBar
         _peek = State(initialValue: PhotoPeek(latched: showsPhoto))
+        _linesShown = State(initialValue: showsLines)
     }
 
     var body: some View {
@@ -196,6 +203,10 @@ struct PaintView: View {
         .sheet(item: $aboutSample) { sample in
             SampleAboutView(sample: sample)
         }
+        .sheet(item: $printPreview) { request in
+            PrintPreviewSheet(request: request)
+                .pageSizedOnPad()
+        }
         .fullScreenCover(isPresented: $showsMakingOf, onDismiss: {
             makingOf = nil
             chrome.isShowingMakingOf = false
@@ -243,7 +254,7 @@ struct PaintView: View {
             PaintCanvas(
                 session: session, controller: controller,
                 chromeInsets: canvasInsets(safe: geo.safeAreaInsets, palette: palette),
-                showsNumbers: showsNumbers, paperAppearance: paperAppearance,
+                showsNumbers: showsNumbers, showsLines: linesShown, paperAppearance: paperAppearance,
                 lineWeight: lineWeight,
                 initialCamera: initialCamera, fillDurationScale: fillDurationScale,
                 onPencilAction: { handlePencil($0) }, onUnavailable: { canvasUnavailable = true },
@@ -668,10 +679,20 @@ struct PaintView: View {
         .glassEffect(.regular, in: .capsule)
     }
 
-    /// In three groups: how the page looks, the palette (or Replay) and Give Feedback, then Restart.
+    /// In three groups: how the page looks, the palette (or Replay), Print and Give Feedback, then
+    /// Restart.
     private var moreMenu: some View {
         Menu {
             Toggle(isOn: $showsNumbers) { Label("Show Numbers", systemImage: "number") }
+            #if UNRELEASED
+            // Paint by Moonlight's Show Lines, for tiles: a finished mosaic has no ink to take
+            // away (its joints are grout, the mosaic itself), so here it brings back the lines
+            // the tiles were set by, the sheet's drawing over them. A replay shows the mosaic
+            // being set, without.
+            if session.isComplete, !session.isReplaying {
+                Toggle(isOn: $linesShown) { Label("Show Lines", systemImage: "scribble") }
+            }
+            #endif
             Toggle(isOn: $zenMode) { Label("Zen Mode", systemImage: "leaf") }
             Button { controller.zoomToFit() } label: { Label("Fit to Screen", systemImage: "arrow.down.right.and.arrow.up.left") }
             Divider()
@@ -682,6 +703,12 @@ struct PaintView: View {
             } else {
                 paletteMenu
             }
+            #if UNRELEASED
+            if PrintSheet.isAvailable {
+                Button(action: printTemplate) { Label("Print…", systemImage: "printer") }
+                    .accessibilityIdentifier("print-template")
+            }
+            #endif
             Button(action: startFeedback) { Label("Give Feedback…", systemImage: "exclamationmark.bubble") }
             workItems
             Divider()
@@ -818,6 +845,14 @@ struct PaintView: View {
     private func shareTimelapse() {
         let name = title.isEmpty ? String(localized: "Mosaic", bundle: .ravenna) : title
         timelapse = TimelapseRequest(title: name, source: .live(template: session.template, progress: session.progress, mosaic: session.wall?.mosaic))
+    }
+
+    /// More › Print… (SideStore and Debug builds): Print's preview on the mosaic's sheet (its
+    /// tiles as areas to paint, the numbers and the color key), whatever is set, from the live
+    /// session.
+    private func printTemplate() {
+        let name = title.isEmpty ? String(localized: "Mosaic", bundle: .ravenna) : title
+        printPreview = PrintPreviewRequest(template: session.template, title: name, nicknames: session.colorNicknames)
     }
 
     private func handlePencil(_ action: PencilAction) {

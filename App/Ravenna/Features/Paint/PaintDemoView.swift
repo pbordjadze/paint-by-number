@@ -16,6 +16,8 @@ import simd
 /// Ravenna's own:
 /// - `paint-setting`: ~40 % set, zoomed 4× onto the paint in hand, then a row of its tiles laid in
 ///   one stroke and slowed thirtyfold, so the shot catches the first raised over their places
+/// - `paint-complete-lines`: the finished mosaic with More › Show Lines on, zoomed 2.5× onto the
+///   middle, the sheet's lines drawn over its tiles (SideStore and Debug builds)
 /// - `paint-mosaic-measure`: a mosaic of about 9,500 tiles (the Pieces slider's top; a jittered
 ///   grid, `measureMosaic`), fitted; once ready, rows are laid for eight seconds while
 ///   `FrameMeter` measures the frames, and its report goes to the log and to
@@ -85,7 +87,8 @@ struct PaintDemoView: View {
             if let demo {
                 PaintView(
                     session: demo.session, title: demo.title, onClose: {},
-                    initialCamera: demo.camera, fillDurationScale: demo.fillDurationScale, showsPhoto: demo.showsPhoto)
+                    initialCamera: demo.camera, fillDurationScale: demo.fillDurationScale, showsPhoto: demo.showsPhoto,
+                    showsLines: demo.showsLines)
                     .environment(\.sourcePhotoLoader, demo.photo.map { name in
                         SourcePhotoLoader(load: { size in await Self.photo(name, maxPixelSize: size) })
                     })
@@ -212,6 +215,8 @@ private final class Demo {
     var camera: CanvasCamera?
     var fillDurationScale: Float = 1
     var showsPhoto = false
+    /// `paint-complete-lines`: More › Show Lines on.
+    var showsLines = false
     /// Overrides the system text size (accessibility scenarios).
     var dynamicTypeSize: DynamicTypeSize?
     /// Feedback scenarios: what feedback starts with, and where the painting came from.
@@ -278,6 +283,10 @@ private final class Demo {
             camera = CanvasCamera(zoom: 4, center: target.map { Self.center(t, $0) } ?? middle)
         case "paint-complete", "paint-complete-long-text":
             paint(fraction: 1)
+        case "paint-complete-lines":
+            paint(fraction: 1)
+            showsLines = true
+            camera = CanvasCamera(zoom: 2.5, center: SIMD2(Float(t.width), Float(t.height)) * 0.5)
         case "paint-finish", "paint-nightfall", "paint-nightfall-dark":
             if scenario.hasPrefix("paint-nightfall") {
                 UserDefaults.ravenna.register(defaults: [SettingsKey.sky: SkySetting.moon.rawValue])

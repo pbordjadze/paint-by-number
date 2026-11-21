@@ -1328,10 +1328,20 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
   `ShellDemo`, `PaintDemoView`, `MakingOfDemoView`); `ci/scenarios.txt` takes a few. No tests of
   its own in the app's targets: its engine's are the package's (Linux), the rest is screenshots.
 - **Set in Stone** (painting-company row 367; SideStore and Debug builds): a mosaic's Share ›
-  Set in Stone… (in Print Template…'s place, which a mosaic without its tiles on disk keeps) opens
+  Set in Stone… (in Print Template…'s place; a mosaic without its tiles on disk has none) opens
   `SetInStoneSheet` (`Export/SetInStone.swift`): the book `MosaicCore`'s `StoneBook` lays out, drawn
   by `StoneBookRenderer` to the preview's pages and the PDF that prints and shares; `-demo
   ravenna-gallery-set-in-stone` screenshots it.
+- **Print… and Show Lines** (painting-company row 330; SideStore and Debug builds, the release
+  keeping Share › Print Template…): Print… sits where the app has it, beside Share in a card's
+  menu and in More, and opens the app's own Print's preview (`App/Shared`'s
+  `Export/PrintPreview.swift` and `Export/TemplatePrint.swift`) on the mosaic's sheet, its tiles as
+  areas to paint, as `PDFExporter` lays any template. More › Show Lines on a finished mosaic is the
+  app's turned round: a finished mosaic has no ink to take away (its joints are grout, the mosaic
+  itself), so it brings back the sheet's lines over the tiles (`CanvasView.showsLines`,
+  `CanvasUniforms.keepLinesWhole`), off at first, for as long as the screen is up. `-demo
+  ravenna-print-preview` (and `-painted`; `MosaicPrintDemo`) and `ravenna-paint-complete-lines`
+  screenshot them.
 - **The App Review note** for the version that ships it (Guideline 2.3.1):
   `docs/ravenna/app-review-note.md`.
 
@@ -1427,7 +1437,7 @@ and at the top of a gallery card's menu, beside Share, in every build: it makes 
 the session on screen, whatever is painted) and hands it, as data, with no file to delete, to the
 system's print dialog (`PrintSheet`, `UIPrintInteractionController`), which hangs from the card
 or the More button on an iPad. Share's Print Template… left on November 17, 2026 (one way to print
-per menu: painting-company `process/design-budget.md`); Paint by Mosaic's card keeps its own. In SideStore and Debug builds (`#if UNRELEASED`, until 1.3;
+per menu: painting-company `process/design-budget.md`); Paint by Mosaic's release card keeps its own. In SideStore and Debug builds (`#if UNRELEASED`, until 1.3;
 painting-company row 357) Print… opens Print's preview first (`PrintPreviewSheet`,
 `Export/PrintPreview.swift`): the pages as they will print, drawn from the PDF itself
 (`PrintPages`), a Blank / Painted switch (`PDFExporter.Layout.painted`: the template's pages
