@@ -50,6 +50,9 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     /// metadata means v1; keep unknown future versions as written, even if this build uses
     /// its newest known vocabulary to display them.
     var nicknameVersion: Int
+    /// What the paints' names are seeded by (`ColorNameText.nicknames`): the id, as Paint by
+    /// Moonlight's own paintings are, so the shared code (Print's preview) asks the same of both.
+    var nicknameSeed: UInt64 { ColorNickname.seed(for: id) }
     /// What Ravenna's engine made the mosaic with (`MosaicEngine.Recipe`): what regeneration
     /// makes it with again. Nil for an artwork without one (none is written by this app), which
     /// regenerates with the recipe's defaults. Ravenna's seam: Paint by Moonlight's `settings` stay

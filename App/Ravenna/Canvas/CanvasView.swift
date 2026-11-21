@@ -101,6 +101,14 @@ final class CanvasView: UIView, PaintingCanvas {
     var lineWeight = LineWeight.default {
         didSet { if lineWeight != oldValue, scene?.isColoringBook == true { requestRender() } }
     }
+    /// More › Show Lines on a finished mosaic (SideStore and Debug builds; painting-company row
+    /// 330): the sheet's lines, which dissolve as the tiles are set, drawn whole over the tiles
+    /// again (`CanvasUniforms.keepLinesWhole`), only while the mosaic is finished and not being
+    /// replayed or marked up. Chosen, they ease in and out over `linesFadeDuration`; under Reduce
+    /// Motion they cut.
+    var showsLines = false {
+        didSet { if showsLines != oldValue { linesChanged() } }
+    }
     /// Feedback mode (`MarkupCanvas`): the drawing canvas over this one takes every touch and
     /// moves the camera (`follow`). VoiceOver isn't offered areas to paint meanwhile.
     var isAnnotating = false {
@@ -132,6 +140,9 @@ final class CanvasView: UIView, PaintingCanvas {
     private var hoverRegion = -1
     private var brushPoint: CGPoint?
     private var numbersFade = Fade(from: 1, to: 1, duration: 0.25)
+    /// How far the finished mosaic's lines are shown (`showsLines`, `linesChanged`).
+    private var linesFade = Fade(from: 0, to: 0, duration: CanvasView.linesFadeDuration)
+    static let linesFadeDuration: Float = 0.4
     /// When the finishing shine starts (renderer clock; tests read it).
     private(set) var shineStart = CanvasClock.never
     private var replayTask: Task<Void, Never>?
@@ -926,7 +937,7 @@ final class CanvasView: UIView, PaintingCanvas {
             let radius = min(Self.brushRadius, CGFloat(PaintingSession.maxBrushRadius) * camera.zoom)
             return (center: SIMD2(Float(point.x), Float(point.y)) * s, radius: Float(radius) * s)
         }
-        return CanvasUniforms(CanvasFrame(
+        var uniforms = CanvasUniforms(CanvasFrame(
             origin: SIMD2(Float(camera.origin.x), Float(camera.origin.y)) * s, scale: Float(camera.zoom) * s, pointScale: s,
             targetSize: SIMD2(Float(metalLayer.drawableSize.width), Float(metalLayer.drawableSize.height)),
             canvasSize: SIMD2(Float(template.width), Float(template.height)),
@@ -941,6 +952,23 @@ final class CanvasView: UIView, PaintingCanvas {
             hovered: isReplaying ? -1 : hoverRegion, pulsing: pulseRegion, bumped: bumpRegion,
             brush: brush, shine: (start: shineStart, color: shineColor),
             photoOpacity: photoFade.value(at: time), tiles: tiles))
+        let linesShown = showsLines && session.isComplete && !isReplaying && !isAnnotating ? linesFade.value(at: time) : 0
+        if linesShown > 0 { uniforms.keepLinesWhole(opacity: linesShown) }
+        return uniforms
+    }
+
+    /// Eases the finished mosaic's lines in or out as the painter chooses; cuts under Reduce
+    /// Motion and before the canvas is on screen.
+    private func linesChanged() {
+        let target: Float = showsLines ? 1 : 0
+        let t = now()
+        if reduceMotion || window == nil {
+            linesFade = Fade(from: target, to: target, duration: Self.linesFadeDuration)
+        } else {
+            linesFade.retarget(to: target, at: t)
+            activeUntil = max(activeUntil, t + Self.linesFadeDuration + 0.05)
+        }
+        requestRender()
     }
 
     private func numbersChanged() {
