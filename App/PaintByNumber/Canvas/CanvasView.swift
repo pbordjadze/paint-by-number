@@ -97,6 +97,14 @@ final class CanvasView: UIView, PaintingCanvas {
     }
     /// The photo couldn't be loaded (no loader, no Metal, or no readable file).
     var onPhotoUnavailable: (() -> Void)?
+    /// A mode drawing the painting in place of its own look (`CanvasMode`); nil, the painting's.
+    var mode: (any CanvasMode)? {
+        didSet { requestRender() }
+    }
+    /// A mode that takes the canvas's touches in place of the painting session (`CanvasTouches`;
+    /// Stained Glass's free glazing); nil, the session's rules. Pan, pinch and the double tap's
+    /// zoom stay the canvas's.
+    weak var touches: (any CanvasTouches)?
     /// A canvas touch asked to hide the photo.
     var onDismissPhoto: (() -> Void)?
     /// Whether the first frame is watched for (`hasShownFirstFrame`): the start of a painting is
@@ -920,7 +928,7 @@ final class CanvasView: UIView, PaintingCanvas {
         let moving = scrollView.isTracking || scrollView.isDecelerating || scrollView.isZooming
             || scrollView.isZoomBouncing || cameraAnimation != nil
             || !(zoomView.layer.animationKeys()?.isEmpty ?? true) || !(scrollView.layer.animationKeys()?.isEmpty ?? true)
-        guard needsRender || moving || time < activeUntil || camera != lastCamera else {
+        guard needsRender || moving || time < activeUntil || camera != lastCamera || mode?.isAnimating(at: time) == true else {
             idleTicks += 1
             if idleTicks > 3 { link.isPaused = true }
             return
@@ -932,10 +940,9 @@ final class CanvasView: UIView, PaintingCanvas {
         let content = RenderContext.Content(
             outlines: true, numbers: true, brush: brushPoint != nil,
             shadowMargin: Float(44 * contentScaleFactor),
-            clear: MTLClearColor(
-                red: Double(palette.background.x), green: Double(palette.background.y),
-                blue: Double(palette.background.z), alpha: 1),
-            photo: uniforms.photo.x > 0.001 ? photoTexture : nil)
+            clear: Self.clear(mode?.backdrop ?? palette.background),
+            photo: uniforms.photo.x > 0.001 ? photoTexture : nil,
+            mode: mode)
         // The first frame that shows the fitted painting: the one the start of a painting is
         // handed over to, announced once it is on screen.
         var presented: (@Sendable () -> Void)?
@@ -952,6 +959,41 @@ final class CanvasView: UIView, PaintingCanvas {
             skippedFrames += 1
             if skippedFrames == 120 { Log.canvas.error("canvas: no frame produced for 120 ticks") }
         }
+    }
+
+    private static func clear(_ c: SIMD3<Float>) -> MTLClearColor {
+        MTLClearColor(red: Double(c.x), green: Double(c.y), blue: Double(c.z), alpha: 1)
+    }
+
+    /// The renderer's clock now: what a region state's `start` is measured on.
+    var canvasTime: Float { now() }
+
+    /// Sets region `region`'s state for a mode (`CanvasMode`, `RegionState.mode`): painted
+    /// or not, with the mode's own `value`; painted and `animated`, the paint spreads from
+    /// `origin` (the region's anchor when nil) as a fill does, and unpainted it lifts.
+    func showMode(_ region: Int, value: Float, painted: Bool, from origin: SIMD2<Float>?, animated: Bool) {
+        guard let renderer, region >= 0, region < template.regions.count else { return }
+        let time = now()
+        var state: RegionState
+        if animated && !reduceMotion {
+            if painted {
+                let start = paintOrigin(for: region, near: origin ?? anchors[region])
+                let radius = template.regions[region].bounds.farthestCorner(from: start)
+                let zoom = Float(scrollView.zoomScale)
+                let duration = min(0.6, max(0.25, 0.2 + radius * zoom / 700)) * fillDurationScale
+                state = RegionState(origin: start, start: time, duration: duration, radius: radius, painted: 1,
+                                    seed: RegionState.frontSeed(forRegion: region))
+                activeUntil = max(activeUntil, time + duration + 0.75)
+            } else {
+                state = .unpainting(start: time, duration: 0.25)
+                activeUntil = max(activeUntil, time + 0.3)
+            }
+        } else {
+            state = .settled(painted: painted)
+        }
+        state.mode = value
+        renderer.update(region, state)
+        requestRender()
     }
 
     /// Frames presented so far (diagnostics and tests).
@@ -1601,6 +1643,11 @@ final class CanvasView: UIView, PaintingCanvas {
             lastTap = (t, view, false)
             return
         }
+        if let touches {
+            touches.canvas(self, touched: p, phase: .tap)
+            lastTap = (t, view, true)
+            return
+        }
         #if UNRELEASED
         if session.together.holdsHand {
             // With the hand, a tap shows the friend a place. Counted as painted, so a second tap
@@ -1626,6 +1673,18 @@ final class CanvasView: UIView, PaintingCanvas {
         guard !prefersPencilOnlyDrawing() else { return }
         let p = canvasPoint(g.location(in: zoomView))
         let radius = Float(Self.brushRadius / scrollView.zoomScale)
+        if let touches {
+            guard !showsPhoto else {
+                if g.state == .began { onDismissPhoto?() }
+                return
+            }
+            switch g.state {
+            case .began: touches.canvas(self, touched: p, phase: .began)
+            case .changed: touches.canvas(self, touched: p, phase: .moved)
+            default: touches.canvas(self, touched: p, phase: .ended)
+            }
+            return
+        }
         switch g.state {
         case .began:
             // A long press returns to painting exactly like a tap.
@@ -1670,6 +1729,18 @@ final class CanvasView: UIView, PaintingCanvas {
 
     @objc private func handlePencil(_ g: UILongPressGestureRecognizer) {
         let p = canvasPoint(g.location(in: zoomView))
+        if let touches {
+            guard !showsPhoto else {
+                if g.state == .began { onDismissPhoto?() }
+                return
+            }
+            switch g.state {
+            case .began: touches.canvas(self, touched: p, phase: .began)
+            case .changed: touches.canvas(self, touched: p, phase: .moved)
+            default: touches.canvas(self, touched: p, phase: .ended)
+            }
+            return
+        }
         switch g.state {
         case .began:
             if showsPhoto {

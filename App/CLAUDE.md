@@ -586,6 +586,17 @@ colors are linear Display P3 into sRGB-curved targets; fills animate on the GPU 
 Render tests compare pixels (`CanvasRenderTests`). Canvas units are the template's (root
 Conventions).
 
+A mode (painting-company row 366: the canvas hosts every mode) draws the painting its own way
+through `CanvasMode` (`Canvas/CanvasMode.swift`, its doc comment the contract): `CanvasView.mode`
+and `RenderContext.Content.mode`, nil for the painting itself, which then draws exactly as
+before. A mode may prepare (a compute pass), draw the paint in place of the fills (from the
+region states, whose `RegionState.mode` carries its own value per region, set with
+`CanvasView.showMode`, which pours as a fill does; or a layer of its own), leave out the outlines
+and numbers, draw light over the picture and keep frames coming (`isAnimating`); its pipelines
+come from `RenderContext.makePipeline`. A mode that paints by its own rules takes the canvas's
+taps and strokes (`CanvasView.touches`, `CanvasTouches`) while pinch, pan and zoom stay the
+canvas's. Stained Glass is the first (`GlassMode`, `GlassModeTests`).
+
 ## Line art rendering
 
 - A template with line art draws as a coloring book, alike everywhere (`ColoringBookLook`;
@@ -1332,12 +1343,14 @@ Settings with the Year row), `GlassShelf` (an `ArtworkStore` of its own,
 PaintCore's `Glazing`), `GlassLead` (the Lead screen: the photo dimmed, the finger's lines laid
 one by one through PaintCore's `GlassWindow.Leading`, ends joined as the Pen joins, the pieces a
 line closes flashing; lead that closes nothing stays as drawn, Paul's choice), `GlassGlaze`
-(free glazing: any bead's glass in any piece, a pour from the finger, unlit pieces keeping a
-faint tint of the suggested glass, light spilling past the frame, the sun passing once when it is
-whole; VoiceOver has a piece element each; saves queued in order, `GlassShelf.enqueue`), `GlassPicture`
-(pieces, lead and glass colors, and the shelf's pictures). How glass looks is PaintCore's
-`GlassTexture` (lit glass bright deep in a piece and streaked, unlit flat and matte, one RGBA
-buffer a piece repaints), and the glasses a window suggests are `GlassPalette`'s jewel glasses
+(free glazing on the painting screen's own `CanvasView` in `GlassMode`, Canvas above: any bead's
+glass in any piece, poured from the finger over the glass before it, unlit pieces keeping a
+faint tint of the suggested glass, the sun passing once when it is whole, drawn by
+`glassFillFragment` and `glassLightFragment`; VoiceOver has a piece element each; saves queued
+in order, `GlassShelf.enqueue`), `GlassPicture` (lead and glass colors, and the shelf's
+pictures). How glass looks is PaintCore's `GlassTexture` (lit glass bright deep in a piece and
+streaked, unlit flat and matte: one RGBA buffer a piece repaints for the shelf's pictures, and
+`fields()`, the lead's distance, shade, depth and grain, which the canvas's shader paints from), and the glasses a window suggests are `GlassPalette`'s jewel glasses
 (never olive, khaki or brown; never near unlit's dark). A window with a taken title gets a number
 (`GlassShelf.title(on:)`). The door: the year wheel (`EraClock`) reaches back to 0001 in these
 builds, lights the eras' years (`EraYear.modes`) and draws a wheel resting beside one on to it

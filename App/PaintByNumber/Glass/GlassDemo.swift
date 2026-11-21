@@ -16,7 +16,7 @@ import os
 enum GlassDemo {
     static var scenario: String? { DemoMode.scenario.flatMap { $0.hasPrefix("glass-") ? $0 : nil } }
 
-    static var sunHold: TimeInterval? { scenario == "glass-finished" ? GlassGlazeModel.sunDuration * 0.45 : nil }
+    static var sunHold: TimeInterval? { scenario == "glass-finished" ? Double(GlassMode.sunDuration) * 0.45 : nil }
 
     /// The monarch, its middle 3:4, as the mockup drew on it.
     nonisolated static func photo() throws -> RGBAImage {

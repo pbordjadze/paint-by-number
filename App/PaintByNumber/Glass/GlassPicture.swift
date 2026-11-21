@@ -14,12 +14,6 @@ nonisolated enum GlassPicture {
     /// Lead: near black, a little cool.
     static let lead = SIMD3<Float>(0.045, 0.043, 0.05)
 
-    /// A piece not yet glazed, its suggested glass `suggested` (the template's paint), as one
-    /// color (the glow, a pour's start): `GlassTexture`'s unlit glass without its grain.
-    static func unlit(_ suggested: PaletteColor) -> SIMD3<Float> {
-        GlassTexture.unlitBase + (suggested.rgb - GlassTexture.unlitBase) * GlassTexture.unlitTint
-    }
-
     /// Each piece's glass for `GlassTexture`, and whether it is lit: its glass where glazed, else
     /// the glass suggested for it, unlit.
     static func glass(of t: Template, glazing: Glazing, offered: [PaletteColor]) -> (colors: [SIMD3<Float>], lit: [Bool]) {
@@ -36,20 +30,7 @@ nonisolated enum GlassPicture {
         PhotoLoader.cgImage(from: RGBAImage(width: t.width, height: t.height, pixels: pixels, colorSpace: t.colorSpace))
     }
 
-    /// The color of each piece: its glass where glazed, else unlit.
-    static func colors(of t: Template, glazing: Glazing, offered: [PaletteColor]) -> [SIMD3<Float>] {
-        t.regions.indices.map { r in
-            let g = r < glazing.glass.count ? Int(glazing.glass[r]) : -1
-            if g >= 0 && g < offered.count { return offered[g].rgb }
-            return unlit(t.palette[Int(t.regions[r].colorIndex)])
-        }
-    }
-
-    /// Each piece's outline, in canvas units (its rings, filled even-odd).
-    static func piecePaths(of t: Template) -> [CGPath] {
-        t.regions.indices.map { piecePath(of: t, region: $0) }
-    }
-
+    /// A piece's outline, in canvas units (its rings, filled even-odd).
     static func piecePath(of t: Template, region r: Int) -> CGPath {
         let path = CGMutablePath()
         for polygon in t.polygons(ofRegion: r) where polygon.count >= 3 {

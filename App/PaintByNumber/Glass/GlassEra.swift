@@ -239,11 +239,15 @@ struct GlassWindowScreen: View {
     let id: UUID
     @State private var model: GlassGlazeModel?
     @State private var failed = false
+    /// The device can't draw the canvas.
+    @State private var unavailable = false
 
     var body: some View {
         Group {
             if let model {
-                GlassGlazeView(model: model, sunHold: GlassWindowScreen.demoSunHold)
+                GlassGlazeView(model: model)
+            } else if unavailable {
+                CanvasUnavailableView()
             } else if failed {
                 ContentUnavailableView("Can’t Open Window", systemImage: "exclamationmark.triangle")
             } else {
@@ -256,8 +260,16 @@ struct GlassWindowScreen: View {
             guard model == nil, let artwork = shelf.window(id) else { return }
             do {
                 let opened = try await shelf.open(artwork)
+                guard let context = await RenderContext.ready(),
+                      let mode = await Background.run({
+                          GlassMode(template: opened.template, texture: opened.texture, offered: opened.offered, context: context)
+                      })
+                else {
+                    unavailable = true
+                    return
+                }
                 let made = GlassGlazeModel(id: id, template: opened.template, glazing: opened.glazing, offered: opened.offered,
-                                           texture: opened.texture)
+                                           mode: mode)
                 made.onChange = { [shelf] glazing in
                     shelf.enqueue(glazing, of: id, template: opened.template, offered: opened.offered, texture: opened.texture)
                 }
@@ -274,14 +286,6 @@ struct GlassWindowScreen: View {
         }
     }
 
-    /// Where a demo holds the sun's pass (Debug builds), else nil.
-    static var demoSunHold: TimeInterval? {
-        #if DEBUG
-        return GlassDemo.sunHold
-        #else
-        return nil
-        #endif
-    }
 }
 
 /// The era's Settings: About's Year, whose wheel leaves the era.

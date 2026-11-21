@@ -161,6 +161,34 @@ struct GlassTests {
         #expect(again == lit)
     }
 
+    /// The fields the canvas paints the glass from: the lead's distance 1 on a piece's edge and
+    /// growing inside it, and the same shade, depth and grain `paint` uses (a lit pixel's red is
+    /// its glass by the shade plus the warm light by the depth).
+    @Test func fieldsAreWhatPaintUses() throws {
+        let t = try Self.window().template
+        let texture = GlassTexture(template: t)
+        let fields = texture.fields()
+        #expect(fields.count == t.width * t.height * 4)
+        let r = t.regions.indices.max { t.regions[$0].area < t.regions[$1].area }!
+        let glass = SIMD3<Float>(0.8, 0.3, 0.2)
+        var lit = [UInt8](repeating: 0, count: t.width * t.height * 4)
+        texture.paint(r, rgb: glass, lit: true, into: &lit)
+        var deepest: Float = 0
+        for y in 1..<(t.height - 1) {
+            for x in 1..<(t.width - 1) where Self.region(at: x, y, in: t) == r {
+                let i = y * t.width + x
+                let k = Int(t.regionMap[x, y])
+                if Int(t.regionMap[x - 1, y]) != k || Int(t.regionMap[x + 1, y]) != k {
+                    #expect(fields[i * 4] <= 1.5, "a piece's edge is next to its lead")
+                }
+                deepest = max(deepest, fields[i * 4])
+                let red = glass.x * fields[i * 4 + 1] + GlassTexture.warm.x * fields[i * 4 + 2]
+                #expect(abs(Float(lit[i * 4]) - min(255, max(0, red * 255))) <= 1.5)
+            }
+        }
+        #expect(deepest > 3, "the lead's distance grows inside a piece")
+    }
+
     // MARK: Glazing
 
     static func glasses(_ n: Int) -> [PaletteColor] {
