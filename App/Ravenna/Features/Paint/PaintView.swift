@@ -28,7 +28,7 @@ struct PaintView: View {
     var initialCamera: CanvasCamera?
     /// Scales fill animation durations (demo scenarios).
     var fillDurationScale: Float = 1
-    /// Told where the template is (global coordinates) once the canvas's first frame is on screen,
+    /// Told where the template is (the window's coordinates) once the canvas's first frame is on screen,
     /// and again when a layout moves it: the create flow's picture moves there (`StartHandoff`).
     /// Read when the canvas is made.
     var onTemplateFrame: ((CGRect) -> Void)?
@@ -36,9 +36,6 @@ struct PaintView: View {
     var hidesStatusBar = true
 
     @State private var controller = CanvasController()
-    /// Where the canvas is in global coordinates, read when its first frame is on screen. A
-    /// reference, so that measuring it never invalidates the screen.
-    @State private var canvasOrigin = CanvasOrigin()
     @Environment(\.startHandoff) private var startHandoff
     @State private var chrome = PaintChromeState()
     @State private var showsNumbers = true
@@ -126,11 +123,6 @@ struct PaintView: View {
         self.onTemplateFrame = onTemplateFrame
         self.hidesStatusBar = hidesStatusBar
         _peek = State(initialValue: PhotoPeek(latched: showsPhoto))
-    }
-
-    /// Where the canvas view is in global coordinates (`onTemplateFrame` reports in them).
-    private final class CanvasOrigin {
-        var point = CGPoint.zero
     }
 
     var body: some View {
@@ -262,7 +254,6 @@ struct PaintView: View {
                 watchesFirstFrame: onTemplateFrame != nil)
                 .id(ObjectIdentifier(session))
                 .ignoresSafeArea()
-                .onGeometryChange(for: CGPoint.self) { $0.frame(in: .global).origin } action: { canvasOrigin.point = $0 }
 
             if let feedback {
                 MarkupCanvas(
@@ -341,7 +332,8 @@ struct PaintView: View {
 
     /// While the painting is handed over to (`StartHandoff`): once the canvas has its first frame on
     /// screen and its template has stayed where it is for a moment, tells `report` where the
-    /// template is (global coordinates), and again whenever it moves. A painting's first layout is
+    /// template is (the window's coordinates, as UIKit has the canvas: SwiftUI's global frame of the
+    /// pushed canvas put it a safe area's height too low in Paint by Moonlight), and again whenever it moves. A painting's first layout is
     /// not its last: its size class, palette and status bar settle after it (the status bar goes
     /// with the create flow's cover), and polling sees whichever of them moved it.
     private func reportTemplate(to report: (CGRect) -> Void) async {
@@ -354,8 +346,7 @@ struct PaintView: View {
         while ContinuousClock.now < deadline {
             try? await Task.sleep(for: .milliseconds(announced == nil ? 16 : 100))
             guard !Task.isCancelled, startHandoff?.isRunning == true else { return }
-            guard controller.isShowingFirstFrame, let local = controller.templateFrame else { continue }
-            let frame = local.offsetBy(dx: canvasOrigin.point.x, dy: canvasOrigin.point.y)
+            guard controller.isShowingFirstFrame, let frame = controller.templateFrameInWindow else { continue }
             steady = frame == previous ? steady + 1 : 0
             defer { previous = frame }
             guard frame != announced else { continue }
