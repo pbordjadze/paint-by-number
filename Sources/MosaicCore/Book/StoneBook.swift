@@ -77,8 +77,9 @@ public struct StoneBook: Sendable {
         /// The nearest smalto in `Smalti.orsoni`, and how far it is (ΔE, OKLab).
         public var smalto: Smalti.Entry?
         public var distance: Double
-        /// A gold's shade among the book's golds, lightest 0: gold leaf smalti have no codes, so the
-        /// list names them by shade (`BookStrings.goldShades`) beside a swatch of each.
+        /// A gold's name among the book's golds: gold leaf smalti have no codes, so the list names
+        /// them by shade beside a swatch of each, 0 to 3 `BookStrings.goldShades` (lightest first);
+        /// a book with more than four golds numbers them instead, 4 being the lightest's 1.
         public var goldShade: Int? = nil
     }
 
@@ -355,9 +356,11 @@ public struct StoneBook: Sendable {
         }
         // golds named lightest to darkest, so no two on a list share a name
         let golds = out.indices.filter { out[$0].kind == .gold }
-            .sorted { StoneBook.oklab(palette[out[$0].paint]).x > StoneBook.oklab(palette[out[$1].paint]).x }
-        let shades = golds.count <= 1 ? [1] : golds.count == 2 ? [1, 2] : golds.count == 3 ? [0, 1, 2] : [0, 1, 2, 3]
-        for (rank, i) in golds.enumerated() { out[i].goldShade = shades[min(rank, shades.count - 1)] }
+            .map { ($0, StoneBook.oklab(palette[out[$0].paint]).x) }
+            .sorted { $0.1 != $1.1 ? $0.1 > $1.1 : $0.0 < $1.0 }.map(\.0)
+        let shades = golds.count <= 1 ? [1] : golds.count == 2 ? [1, 2] : golds.count == 3 ? [0, 1, 2] : golds.count == 4 ? [0, 1, 2, 3]
+            : Array(4..<(4 + golds.count))
+        for (rank, i) in golds.enumerated() { out[i].goldShade = shades[rank] }
         return out
     }
 

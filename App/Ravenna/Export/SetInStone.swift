@@ -399,6 +399,10 @@ extension BookStrings {
             String(localized: "stone.gold.dark", defaultValue: "Dark gold", bundle: .ravenna,
                    comment: "Set in Stone's stone list: the name to order a gold by, the darkest gold leaf smalti, gold on dark glass"),
         ]
+        s.goldNumber = { n in
+            String(localized: "stone.gold.numbered", defaultValue: "Gold \(n)", bundle: .ravenna,
+                   comment: "Set in Stone's stone list: a gold leaf smalto's name when a mosaic has more than four golds; the argument numbers them, lightest 1")
+        }
         s.tools = [
             "tiles": String(localized: "stone.tools.tiles", defaultValue: "Smalti, by the stone list", bundle: .ravenna,
                           comment: "Set in Stone's tools list: the glass tiles themselves, as many as the stone list says to buy"),
