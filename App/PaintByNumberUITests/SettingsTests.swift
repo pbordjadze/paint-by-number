@@ -254,7 +254,7 @@ final class SettingsTests: XCTestCase {
         presentYear.tap()
         let clock = app.descendants(matching: .any)["era-clock"]
         XCTAssertTrue(clock.waitForExistence(timeout: 5), "The Year row brought out no year setter")
-        roll(app.pickerWheels, to: 547)
+        roll(app, to: 547)
         attachScreenshot(of: app, named: "clock-at-547")
         XCTAssertTrue(app.buttons["New Mosaic"].waitForExistence(timeout: 30), "547 didn't open Ravenna")
         attachScreenshot(of: app, named: "ravenna-through-the-door")
@@ -268,31 +268,89 @@ final class SettingsTests: XCTestCase {
         XCTAssertTrue(year.exists, "Ravenna's Settings has no Year row")
         year.tap()
         XCTAssertTrue(clock.waitForExistence(timeout: 5), "The Year row brought out no clock")
-        roll(app.pickerWheels, to: Calendar(identifier: .gregorian).component(.year, from: .now))
+        roll(app, to: Calendar(identifier: .gregorian).component(.year, from: .now))
         XCTAssertTrue(app.buttons["Paint"].waitForExistence(timeout: 30), "The present didn't bring Paint by Moonlight back")
         attachScreenshot(of: app, named: "back-in-the-present")
     }
 
-    /// Flicks the year setter's one wheel to a year at either end of it (0547, the present), as a
-    /// painter does: `adjust(toPickerWheelValue:)` left the wheel reading the present on the way
-    /// back with no selection made, so the era never changed (CI, November 6).
+    /// Flicks the year setter's one wheel to `year`, as a painter does:
+    /// `adjust(toPickerWheelValue:)` left the wheel reading the present on the way back with no
+    /// selection made, so the era never changed (CI, November 6). The present is the wheel's end,
+    /// so flicks toward it can't pass it. In the release 0547 is the other end; in SideStore and
+    /// Debug builds the wheel reaches back to 0001, and an era's year is found as a painter finds
+    /// it: flicked near, and the wheel draws itself on to it (`EraClock.pulled`). Once there the
+    /// era changes and the wheel goes, so it is read only while it is there; the caller checks
+    /// the era it opened.
     @MainActor
-    private func roll(_ wheels: XCUIElementQuery, to year: Int) {
+    private func roll(_ app: XCUIApplication, to year: Int) {
+        let wheels = app.pickerWheels
         // The setter's row can be in the tree a moment before its wheel is.
         XCTAssertTrue(wheels.firstMatch.waitForExistence(timeout: 10), "The year setter has no wheel")
         XCTAssertEqual(wheels.count, 1, "The year setter has \(wheels.count) wheels")
-        // Both years are the wheel's ends, so flicks toward one can't pass it. Once there the era
-        // changes and the wheel goes, so it is only counted (a count of nothing fails nothing),
-        // never read; the caller checks the era it opened.
-        let reached = wheels.matching(NSPredicate(format: "value == %@", String(format: "%04d", year)))
-        let back = year == 547
+        // Wholly in the list: a swipe that starts below the sheet's edge turns nothing.
+        scroll(app, to: wheels.firstMatch)
+        let present = Calendar(identifier: .gregorian).component(.year, from: .now)
         // A flick returns while the wheel still turns, and the year counts once it has rested
         // (`EraClock.rest`, 0.7 s): each flick waits for the wheel to go before the next.
-        for _ in 0..<6 where wheels.count > 0 && reached.count == 0 {
-            if back { wheels.firstMatch.swipeDown(velocity: .fast) } else { wheels.firstMatch.swipeUp(velocity: .fast) }
-            _ = wheels.firstMatch.waitForNonExistence(timeout: 2.5)
+        var stepped: Int?
+        for _ in 0..<40 where wheels.count > 0 {
+            let wheel = wheels.firstMatch
+            guard let shown = (wheel.value as? String).flatMap({ Int($0.prefix(4)) }) else { break }
+            if shown == year {
+                _ = wheel.waitForNonExistence(timeout: 3)
+                continue
+            }
+            if year == 547, shown < year {
+                // Up from the long reach's far end to 0547, one row at a time: a flick of a few
+                // rows went from 0001 to 0400 and back over 0500, 0547 and 0600 without resting
+                // beside it (CI, November 20). A tap on the row below the one read turns the wheel
+                // a row; if one left it where it was, a short drag of a row does instead.
+                let center = wheel.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                if stepped == shown {
+                    center.press(forDuration: 0.1, thenDragTo: center.withOffset(CGVector(dx: 0, dy: -Self.row)),
+                                 withVelocity: .slow, thenHoldForDuration: 0.3)
+                } else {
+                    center.withOffset(CGVector(dx: 0, dy: Self.row)).tap()
+                }
+                stepped = shown
+                _ = wheel.waitForNonExistence(timeout: 2.5)
+                continue
+            }
+            // To an end, or down to 0547, flicks: rested on the way, a wheel that reaches past
+            // 0547 would open the era it stopped beside (1248's), and a flick down past 0547
+            // lands at the far end, where the rows above take it the rest of the way. To any other
+            // year inside the wheel, a few rows at a time.
+            let far = year == present || year == 547
+            let velocity: XCUIGestureVelocity = far ? .fast : .slow
+            if shown > year { wheel.swipeDown(velocity: velocity) } else { wheel.swipeUp(velocity: velocity) }
+            _ = wheel.waitForNonExistence(timeout: 2.5)
         }
     }
+
+    /// About one row of the year setter's wheel, in points (`EraClock`'s rails are 36 apart).
+    private static let row: CGFloat = 38
+
+    #if UNRELEASED
+    /// Stained Glass (painting-company row 366): 1248 on the wheel opens it, with no windows yet,
+    /// and its own Year row rolled to the present brings Paint by Moonlight back.
+    @MainActor
+    func testTheClockAt1248OpensStainedGlass() throws {
+        let app = openSettings()
+        let presentYear = app.descendants(matching: .any)["about-year"]
+        scroll(app, to: presentYear)
+        presentYear.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["era-clock"].waitForExistence(timeout: 5), "The Year row brought out no year setter")
+        roll(app, to: 1248)
+        XCTAssertTrue(app.buttons["glass-choose-photo"].waitForExistence(timeout: 30), "1248 didn't open Stained Glass")
+        attachScreenshot(of: app, named: "stained-glass-through-the-door")
+        app.buttons["glass-settings"].tap()
+        let year = app.descendants(matching: .any)["about-year"]
+        XCTAssertTrue(year.waitForExistence(timeout: 10), "Stained Glass's Settings has no Year row")
+        year.tap()
+        roll(app, to: Calendar(identifier: .gregorian).component(.year, from: .now))
+        XCTAssertTrue(app.buttons["Paint"].waitForExistence(timeout: 30), "The present didn't bring Paint by Moonlight back")
+    }
+    #endif
 
     /// The form is a lazy list: rows below the fold exist once they are scrolled into view. Each
     /// drag moves the list by four fifths of its frame, less than what shows below the navigation
