@@ -101,24 +101,32 @@ func watercolorRaster(_ sim: WatercolorSim, template t: Template) -> RGBAImage {
     let w = sheet.width, h = sheet.height, W2 = w * 2, H2 = h * 2
     var targets: [(gain: SIMD3<Float>, aim: SIMD3<Float>)] = []
     for r in 0..<sheet.regionCount { targets.append(sim.target(of: r)) }
+    let glazes = (0..<sheet.regionCount).map { sim.glaze(of: $0) }
     let fine = WatercolorSheet.paperHeight(width: W2, height: H2, seed: sheet.seed &+ 11)
     var image = RGBAImage(width: W2, height: H2, fill: SIMD4(0, 0, 0, 255))
     func cell(_ x: Int, _ y: Int) -> Int { min(max(y, 0), h - 1) * w + min(max(x, 0), w - 1) }
     let graphite = SIMD3<Float>(0.30, 0.30, 0.33)
     for y in 0..<H2 {
         for x in 0..<W2 {
-            // Bilinear on the grid, the target solve by the region under the pixel.
+            // Bilinear on the grid, from the cells of the pixel's own region alone where it has
+            // any (so a wash ends on the pencil line, not on the grid's staircase), and the
+            // target solve by the region under the pixel.
             let gx = (Float(x) + 0.5) / 2 - 0.5, gy = (Float(y) + 0.5) / 2 - 0.5
             let x0 = Int(gx.rounded(.down)), y0 = Int(gy.rounded(.down))
             let fx = gx - Float(x0), fy = gy - Float(y0)
-            func dens(_ i: Int) -> SIMD4<Float> { sim.D[i] + 0.9 * sim.S[i] }
-            let a = dens(cell(x0, y0)) * (1 - fx) + dens(cell(x0 + 1, y0)) * fx
-            let b = dens(cell(x0, y0 + 1)) * (1 - fx) + dens(cell(x0 + 1, y0 + 1)) * fx
-            let d4 = a * (1 - fy) + b * fy
-            let gr = sim.G[cell(x0, y0)] * (1 - fx) * (1 - fy) + sim.G[cell(x0 + 1, y0)] * fx * (1 - fy)
-                + sim.G[cell(x0, y0 + 1)] * (1 - fx) * fy + sim.G[cell(x0 + 1, y0 + 1)] * fx * fy
             let canvas = SIMD2(Float(x) + 0.5, Float(y) + 0.5) / (2 * sheet.scale)
             let r = t.region(at: canvas) ?? 0
+            func dens(_ i: Int) -> SIMD4<Float> { sim.D[i] + 0.9 * sim.S[i] }
+            let corners = [(cell(x0, y0), (1 - fx) * (1 - fy)), (cell(x0 + 1, y0), fx * (1 - fy)),
+                           (cell(x0, y0 + 1), (1 - fx) * fy), (cell(x0 + 1, y0 + 1), fx * fy)]
+            var d4 = SIMD4<Float>(repeating: 0), mine = SIMD4<Float>(repeating: 0)
+            var mineWeight: Float = 0
+            for (i, wgt) in corners {
+                d4 += dens(i) * wgt
+                if Int(sheet.labels[i]) == r { mine += dens(i) * wgt; mineWeight += wgt }
+            }
+            if mineWeight > 1e-3 { d4 = mine / mineWeight }
+            let gr = corners.reduce(Float(0)) { $0 + sim.G[$1.0] * $1.1 }
             let target = targets[r]
             var d = SIMD3(max(d4.x, 0), max(d4.y, 0), max(d4.z, 0)) * target.gain
             // One factor for all three channels (the shader's reason).
@@ -128,6 +136,8 @@ func watercolorRaster(_ sim: WatercolorSim, template t: Template) -> RGBAImage {
                 ratio = min(ratio, cap * tanh(d[c] / cap) / d[c])
             }
             d *= ratio
+            // A thin area's paint, a glaze over what its neighbours' water left.
+            d += target.aim * glazes[r]
             let p2 = fine[y * W2 + x]
             d *= 1 + gr * 0.6 * (0.5 - p2)
             var refl = WatercolorSheet.paperColor * SIMD3(exp(-d.x), exp(-d.y), exp(-d.z))

@@ -153,6 +153,23 @@ import Testing
         #expect(Self.digest(wet) != Self.digest(dry))
     }
 
+    @Test func aThinAreaIsAGlazeNotAWash() {
+        // A 12 x 12 sheet: area 0 a broad block, area 1 a stripe two cells wide, area 2 a block.
+        let w = 12, h = 12
+        let labels = (0..<(w * h)).map { i -> Int32 in i % w < 5 ? 0 : (i % w < 7 ? 1 : 2) }
+        #expect(WatercolorSheet.thinRegions(labels: labels, width: w, height: h, count: 3) == [false, true, false])
+        // On a template, a thin area's tap lays nothing on the sheet; its paint is a glaze.
+        let t = Self.template
+        let sheet = WatercolorSheet(template: t, seed: 1)
+        guard let r = sheet.thin.indices.first(where: { sheet.thin[$0] && sheet.bounds[$0].x < sheet.bounds[$0].z }) else { return }
+        let sim = WatercolorSim(sheet: sheet)
+        #expect(sim.glaze(of: r) == 0)
+        sim.tap(region: r, at: Self.center(of: r, in: t), paint: true)
+        sim.finish()
+        #expect(sim.laid[r] && sim.glaze(of: r) == 1 && sim.target(of: r).gain == SIMD3(repeating: 1))
+        #expect(Self.digest(sim).allSatisfy { $0 == .zero })
+    }
+
     @Test func aLogReplaysToTheSamePainting() throws {
         let t = Self.template
         let regions = t.regions.indices.sorted { t.regions[$0].area > t.regions[$1].area }.prefix(6)

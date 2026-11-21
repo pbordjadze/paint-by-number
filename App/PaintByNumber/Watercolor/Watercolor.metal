@@ -23,7 +23,8 @@ struct WatercolorUniforms {
 };
 
 // Mirrored by `WatercolorRegion`: per area, the target solve's gain (w: when it was painted,
-// seconds, or a far future) and the density its rims cap toward.
+// seconds, or a far future) and the density its rims cap toward (w: how much of it to lay as a
+// glaze, a thin area's paint: `WatercolorSim.glaze(of:)`).
 struct WatercolorRegion {
     float4 gain;
     float4 aim;
@@ -63,6 +64,29 @@ fragment float4 watercolor_fragment(
     WatercolorRegion r = regions[region];
 
     float4 d4 = float4(density.sample(smooth, uv));
+    // The pigment from the cells of this pixel's own area alone where it has any, so a wash ends
+    // on the pencil line and not on the grid's staircase (a cell's area is the label under its
+    // centre, as `WatercolorSheet` reads it).
+    {
+        float2 simSize = float2(density.get_width(), density.get_height());
+        float2 g = uv * simSize - 0.5;
+        float2 g0 = floor(g);
+        float2 fr = g - g0;
+        float3 mine = float3(0);
+        float mineWeight = 0;
+        for (int k = 0; k < 4; k++) {
+            float2 o = float2(float(k & 1), float(k >> 1));
+            float2 c = clamp(g0 + o, float2(0), simSize - 1);
+            uint lab = labels.read(min(uint2((c + 0.5) / simSize * float2(labelSize)), labelSize - 1)).r;
+            float wx = o.x > 0.5 ? fr.x : 1 - fr.x;
+            float wy = o.y > 0.5 ? fr.y : 1 - fr.y;
+            if (lab == region) {
+                mine += float3(density.read(uint2(c)).rgb) * (wx * wy);
+                mineWeight += wx * wy;
+            }
+        }
+        if (mineWeight > 1e-3) { d4.rgb = mine / mineWeight; }
+    }
     // The target solve: the area's pigment brought to its paint, rims capped toward its own hue.
     float3 d = max(d4.rgb * r.gain.rgb, 0.0);
     // One factor for all three channels, the most any channel's cap asks for: capped one by one,
@@ -72,6 +96,8 @@ fragment float4 watercolor_fragment(
     float3 capped = cap * tanh(d / cap);
     float3 ratio = select(capped / max(d, 1e-5), float3(1.0), d < 1e-5);
     d *= min(ratio.r, min(ratio.g, ratio.b));
+    // A thin area's paint, a glaze over what its neighbours' water left, coming in as a wash does.
+    d += r.aim.rgb * r.aim.w * clamp((u.time - r.gain.w) / 0.6, 0.0, 1.0);
     float g = float(granulation.sample(smooth, uv).r);
     float p2 = float(paper.sample(smooth, uv).r);
     d *= 1 + g * 0.6 * (0.5 - p2);

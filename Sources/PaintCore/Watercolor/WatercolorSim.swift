@@ -67,6 +67,8 @@ public final class WatercolorSim {
     public private(set) var laidCount = 0
 
     private var floods: [Flood] = []
+    /// How dark each cell's area's paint is (its channels summed), per cell.
+    private let cellDark: UnsafeMutablePointer<Float>
     /// The wet cells' box after the last step, `x0, y0, x1, y1`; nil when the sheet is dry.
     private var wetBox: Box?
     /// What changed since the drawing last asked (`takeChanges`).
@@ -111,6 +113,11 @@ public final class WatercolorSim {
         laid = Array(repeating: false, count: sheet.regionCount)
         laidDensity = Array(repeating: .zero, count: sheet.regionCount)
         paintedAt = Array(repeating: .infinity, count: sheet.regionCount)
+        cellDark = Self.zeros(count)
+        for (i, r) in sheet.labels.enumerated() {
+            let p = sheet.want[Int(r)]
+            cellDark[i] = p.x + p.y + p.z
+        }
     }
 
     private static func zeros<T: SIMD>(_ n: Int) -> UnsafeMutablePointer<T> where T.Scalar == Float {
@@ -126,7 +133,7 @@ public final class WatercolorSim {
     }
 
     deinit {
-        for p in [W, G, E, L, soft, fx, fy] { p.deallocate() }
+        for p in [W, G, E, L, soft, fx, fy, cellDark] { p.deallocate() }
         for p in [S, D, px, py] { p.deallocate() }
         wasWet.deallocate()
     }
@@ -159,9 +166,18 @@ public final class WatercolorSim {
         let bw = box.x1 - box.x0, bh = box.y1 - box.y0, n = bw * bh
         @inline(__always) func global(_ j: Int) -> Int { (box.y0 + j / bw) * w + box.x0 + j % bw }
 
+        // A thin area holds no wash of its own: its paint is a glaze where it is drawn.
+        if sheet.thin[r] { return }
         var own = [Bool](repeating: false, count: n)
         for j in 0..<n where sheet.labels[global(j)] == Int32(r) { own[j] = true }
-        let out = Self.chamfer(seeds: own, width: bw, height: bh)
+        var out = Self.chamfer(seeds: own, width: bw, height: bh)
+        // The wash runs on through a thin neighbour as if the pencil weren't there.
+        var through = false
+        for j in 0..<n where !own[j] && out[j] <= 3.5 && sheet.thin[Int(sheet.labels[global(j)])] {
+            own[j] = true
+            through = true
+        }
+        if through { out = Self.chamfer(seeds: own, width: bw, height: bh) }
         var creep = [Bool](repeating: false, count: n)
         var dryPainted = [Bool](repeating: false, count: n)
         // A neighbour still wet: the wash runs on into it (wet-in-wet), further, feathering.
@@ -183,9 +199,9 @@ public final class WatercolorSim {
                 // Into a wet neighbour as dark or darker, a little further; into a lighter one,
                 // less pigment the lighter it is, so a dark paint never swallows a small light one.
                 let o = sheet.want[Int(sheet.labels[g])]
-                let ratio = min(max((o.x + o.y + o.z) / max(ownDark, 1e-3), 0.15), 1)
+                let ratio = min(max((o.x + o.y + o.z) / max(ownDark, 1e-3), 0), 1)
                 further = 1 + 0.25 * ratio
-                bleedLoad[j] = 0.6 * ratio
+                bleedLoad[j] = 0.6 * ratio * ratio * ratio
             }
             reachHere[j] = Self.reach * further * min(max(0.5 + 0.6 * lf + 0.5 * (p - 0.5), 0.15), 1.3)
             creep[j] = out[j] <= reachHere[j]
@@ -327,7 +343,7 @@ public final class WatercolorSim {
             let wetIn = toWet.map { exp(-$0[j] / 2.5) } ?? 0
             let crisp = exp(-max(toHard[j] - 1, 0) / 0.8) * (1 - wetIn)
             var load = soften[j] ? 0 : min(max(1 + 0.15 * sheet.pigmentNoise[g], 0.4), 1.8)
-            load *= (own[j] ? 1 : 0.45 * taper) * (1 + 0.5 * accent * crisp)
+            load *= (own[j] ? 1 : 0.3 * taper * taper) * (1 + 0.5 * accent * crisp)
             if creep[j], wetNear[j] { load *= bleedLoad[j] }
             // Over a neighbour's wash already dry (where it crept past the pencil), a thin glaze:
             // laid full, every such overlap read as a dark outline round every shape.
@@ -412,6 +428,7 @@ public final class WatercolorSim {
         let dt = Self.dt
         let W = W, S = S, D = D, G = G, E = E, L = L, soft = soft, fx = fx, fy = fy, px = px, py = py, wasWet = wasWet
         let paper = sheet.paper, evapNoise = sheet.evaporationNoise
+        let dark = cellDark
         let rows = b.y1 - b.y0
 
         // 1. What is wet, and a soft version of it: the patch's interior pushes toward its rim.
@@ -431,6 +448,15 @@ public final class WatercolorSim {
         // ragged where the paper's tooth makes some paths easier; pigment rides it, upwind, and
         // diffuses a little within wet paint.
         let kw: Float = 0.22, ks: Float = 0.06
+        // Pigment crossing from one area's wash into a lighter one's is held back, as the square
+        // of how much lighter: a dark wash feathers into a light neighbour but never fills it.
+        @inline(__always) func across(_ p: SIMD4<Float>, _ i: Int, _ j: Int) -> SIMD4<Float> {
+            let di = dark[i], dj = dark[j]
+            guard di != dj else { return p }
+            let (from, to) = p.x + p.y + p.z > 0 ? (di, dj) : (dj, di)
+            let k = min(to / max(from, 1e-3), 1)
+            return p * (k * k)
+        }
         Parallel.forEachBand(rows, minimumBandSize: 8) { band in
             for y in (band.lowerBound + b.y0)..<(band.upperBound + b.y0) {
                 for x in b.x0..<b.x1 {
@@ -444,7 +470,7 @@ public final class WatercolorSim {
                         fx[i] = f
                         var p = (f > 0 ? conc : S[j] / max(W[j], 0.15)) * f + ks * (S[i] - S[j])
                         p = simd_clamp4(p, -0.24 * S[j], 0.24 * S[i])
-                        px[i] = p
+                        px[i] = across(p, i, j)
                     } else {
                         fx[i] = 0
                         px[i] = .zero
@@ -456,7 +482,7 @@ public final class WatercolorSim {
                         fy[i] = f
                         var p = (f > 0 ? conc : S[j] / max(W[j], 0.15)) * f + ks * (S[i] - S[j])
                         p = simd_clamp4(p, -0.24 * S[j], 0.24 * S[i])
-                        py[i] = p
+                        py[i] = across(p, i, j)
                     } else {
                         fy[i] = 0
                         py[i] = .zero
@@ -675,7 +701,7 @@ public final class WatercolorSim {
     /// rims are capped toward (pigment piled at a rim darkens its own hue, never toward black).
     public func target(of region: Int) -> (gain: SIMD3<Float>, aim: SIMD3<Float>) {
         let aim = laid[region] ? laidDensity[region] : sheet.want[region]
-        guard laid[region] else { return (SIMD3(repeating: 1), aim) }
+        guard laid[region], !sheet.thin[region] else { return (SIMD3(repeating: 1), aim) }
         var sum = SIMD3<Float>(repeating: 0)
         var reached = 0
         for k in Int(sheet.regionStart[region])..<Int(sheet.regionStart[region + 1]) {
@@ -693,6 +719,15 @@ public final class WatercolorSim {
             gain[c] = min(max(aim[c] / mean[c], 0.7), 1.4)
         }
         return (gain, aim)
+    }
+}
+
+extension WatercolorSim {
+    /// How much of a thin area's paint (`WatercolorSheet.thin`) to lay as a glaze where it is
+    /// drawn, over whatever its neighbours' water left there: 1 once it is painted, else 0.
+    /// The renderers add `aim × glaze` to the density after the target solve's cap.
+    public func glaze(of region: Int) -> Float {
+        sheet.thin[region] && laid[region] ? 1 : 0
     }
 }
 
