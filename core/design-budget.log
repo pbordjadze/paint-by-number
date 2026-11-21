@@ -1,0 +1,21 @@
+budget self-test: ok
+::warning title=Design budget::Settings' switches and pickers: 9, its limit 8 (settings.rows)
+settings.rows      Settings' switches and pickers        9 / 8  OVER
+::warning title=Design budget::the painting's More menu: 10, its limit 7 (menu.items)
+menu.items         the painting's More menu             10 / 7  OVER
+menu.items         a gallery card's hold menu            6 / 7
+menu.items         a gallery card's Share submenu        4 / 7
+::warning title=Design budget::Palette › Rows: 8, its limit 4 (choice.options)
+choice.options     Palette › Rows                        8 / 4  OVER
+::warning title=Design budget::Palette › Order: 6, its limit 4 (choice.options)
+choice.options     Palette › Order                       6 / 4  OVER
+choice.options     Settings › Paper                      3 / 4
+choice.options     Settings › Line Weight                3 / 4
+choice.options     Settings › Music                      3 / 4
+choice.options     Painting Length                       3 / 4
+::warning title=Design budget::Edit's tool rail: 17, its limit 7 (screen.controls)
+screen.controls    Edit's tool rail                     17 / 7  OVER
+screen.controls    the Finished panel (SideStore)        7 / 7
+::warning title=Design budget::#if UNRELEASED in App/: 120, its limit 100 (gates.unreleased)
+gates.unreleased   #if UNRELEASED in App/              120 / 100  OVER
+design budget: 6 over (a warning, not a failure): Settings' switches and pickers 9/8, the painting's More menu 10/7, Palette › Rows 8/4, Palette › Order 6/4, Edit's tool rail 17/7, #if UNRELEASED in App/ 120/100
