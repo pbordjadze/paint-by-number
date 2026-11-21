@@ -1334,8 +1334,12 @@ one by one through PaintCore's `GlassWindow.Leading`, ends joined as the Pen joi
 line closes flashing; lead that closes nothing stays as drawn, Paul's choice), `GlassGlaze`
 (free glazing: any bead's glass in any piece, a pour from the finger, unlit pieces keeping a
 faint tint of the suggested glass, light spilling past the frame, the sun passing once when it is
-whole; VoiceOver has a piece element each), `GlassPicture` (pieces, lead and glass colors, and
-the shelf's pictures). The door: the year wheel (`EraClock`) reaches back to 0001 in these
+whole; VoiceOver has a piece element each; saves queued in order, `GlassShelf.enqueue`), `GlassPicture`
+(pieces, lead and glass colors, and the shelf's pictures). How glass looks is PaintCore's
+`GlassTexture` (lit glass bright deep in a piece and streaked, unlit flat and matte, one RGBA
+buffer a piece repaints), and the glasses a window suggests are `GlassPalette`'s jewel glasses
+(never olive, khaki or brown; never near unlit's dark). A window with a taken title gets a number
+(`GlassShelf.title(on:)`). The door: the year wheel (`EraClock`) reaches back to 0001 in these
 builds, lights the eras' years (`EraYear.modes`) and draws a wheel resting beside one on to it
 (`EraClock.pulled`); 1248 opens `Era.glass` (`Era.opened(by:)`), whose passage is a nave's dark
 with a rose window's light (`EraPassage.drawNave`); Paint by Mosaic's wheel reaches it too
