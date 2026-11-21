@@ -307,7 +307,7 @@ final class SettingsTests: XCTestCase {
                 // over 0500, 0547 and 0600 without resting beside it (CI, November 20), and slow
                 // flicks from the present toward 1502 went past it, rested beside 1248 and opened
                 // Stained Glass (three runs, November 21). From an era's own year a row away glides
-                // back to it, so that one flicks. A tap on
+                // back to it, so that one goes two rows at once (below). A tap on
                 // the row beyond the one read turns the wheel a row; if one left it where it was,
                 // a short drag of a row does instead.
                 let center = wheel.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
@@ -319,6 +319,18 @@ final class SettingsTests: XCTestCase {
                     center.withOffset(CGVector(dx: 0, dy: toward * Self.row)).tap()
                 }
                 stepped = shown
+                _ = wheel.waitForNonExistence(timeout: 2.5)
+                continue
+            }
+            if year != present && year != 547 && Self.eras.contains(shown) {
+                // Away from an era's own year toward another's, two rows in one drag: a row away
+                // glides back to it (`EraClock.pulled`), and a slow flick from 1502 went past
+                // 1248 to 0400 (CI, November 21). The rows one at a time do the rest.
+                let center = wheel.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                let toward: CGFloat = shown < year ? 1 : -1
+                center.press(forDuration: 0.1, thenDragTo: center.withOffset(CGVector(dx: 0, dy: -toward * 2 * Self.row)),
+                             withVelocity: .slow, thenHoldForDuration: 0.3)
+                stepped = nil
                 _ = wheel.waitForNonExistence(timeout: 2.5)
                 continue
             }
