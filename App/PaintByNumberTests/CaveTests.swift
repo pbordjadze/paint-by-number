@@ -2,6 +2,7 @@
 import Foundation
 import PaintCore
 import Testing
+import simd
 @testable import PaintByNumber
 
 /// The cave (painting-company row 371): its shader compiles on the device's Metal, a painting

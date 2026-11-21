@@ -1,9 +1,12 @@
 #if UNRELEASED
+import CoreGraphics
 import Foundation
+import Metal
 import PaintCore
 import QuartzCore
 import UIKit
 import os
+import simd
 
 /// The cave's whole screen (painting-company row 371): a `CAMetalLayer` drawn every frame by a
 /// display link, the touches handed to its `CaveScene`. Each bay's maps are made off the main

@@ -1,7 +1,10 @@
 #if DEBUG && UNRELEASED
+import CoreGraphics
 import Foundation
 import PaintCore
+import UIKit
 import os
+import simd
 
 /// The cave's demo scenarios (Debug builds; `-demo cave-<name>`), on `CaveSample`'s horse (a
 /// simulator's Vision finds no subjects) and the stick figure:
