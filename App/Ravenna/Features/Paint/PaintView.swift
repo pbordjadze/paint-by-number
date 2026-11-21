@@ -376,41 +376,79 @@ struct PaintView: View {
         var thickness: CGFloat { metrics.thickness(lines: lines, caption: caption) }
     }
 
-    private var paletteMetrics: PaletteMetrics {
-        PaletteMetrics(dynamicTypeSize: dynamicTypeSize).scaled(by: chromeScale)
-    }
-
     private var sidePaletteTop: CGFloat { Self.topGap + barHeight + 12 }
 
+    /// The palette as laid out in a view of `size`. It counts the painting's colors, not those
+    /// left (`PaletteBar.visibleColorCount`): counting those left, finishing one could re-lay the
+    /// whole palette, and the picture with it, as Paint by Moonlight's did until November 10.
     private func paletteLayout(in size: CGSize) -> PaletteLayout {
-        let count = PaletteBar.visibleColors(session).count
-        let metrics = paletteMetrics
-        if sizeClass == .regular && size.width > size.height {
-            let length = size.height - sidePaletteTop - Self.edge
+        Self.paletteLayout(
+            in: size, colors: PaletteBar.visibleColorCount(session.template), regularWidth: sizeClass == .regular,
+            dynamicTypeSize: dynamicTypeSize, rows: paletteRows)
+    }
+
+    private static func paletteLayout(
+        in size: CGSize, colors count: Int, regularWidth: Bool, dynamicTypeSize: DynamicTypeSize, rows: PaletteRows
+    ) -> PaletteLayout {
+        let scale = QuietPainting.scale(regularWidth: regularWidth)
+        let metrics = PaletteMetrics(dynamicTypeSize: dynamicTypeSize).scaled(by: scale)
+        if regularWidth && size.width > size.height {
+            let length = size.height - (topGap + 44 * scale + 12) - edge
             return PaletteLayout(
                 side: true,
-                lines: paletteLines(count: count, length: length, automatic: 2, room: size.width * 0.4, metrics: metrics),
+                lines: paletteLines(
+                    count: count, length: length, automatic: 2, room: size.width * 0.4, metrics: metrics, rows: rows),
                 caption: false, metrics: metrics)
         }
-        let length = size.width - 2 * Self.edge
-        let caption = sizeClass != .regular
+        let length = size.width - 2 * edge
+        let caption = !regularWidth
         return PaletteLayout(
             side: false,
             lines: paletteLines(
-                count: count, length: length, automatic: sizeClass == .regular ? 3 : 1,
-                room: size.height * 0.45 - (caption ? metrics.captionHeight : 0), metrics: metrics),
+                count: count, length: length, automatic: regularWidth ? 3 : 1,
+                room: size.height * 0.45 - (caption ? metrics.captionHeight : 0), metrics: metrics, rows: rows),
             caption: caption, metrics: metrics)
     }
 
     /// The palette's lines for `count` swatches `length` points long, under the Rows setting:
     /// Auto allows `automatic` lines, and no choice makes the bar thicker than `room` points.
-    private func paletteLines(count: Int, length: CGFloat, automatic: Int, room: CGFloat, metrics: PaletteMetrics) -> Int {
+    private static func paletteLines(
+        count: Int, length: CGFloat, automatic: Int, room: CGFloat, metrics: PaletteMetrics, rows: PaletteRows
+    ) -> Int {
         let lines = (room - 2 * PaletteMetrics.padding + PaletteMetrics.spacing) / metrics.pitch
         // `Int(_:)` traps on a non-finite size (a zero-sized layout pass).
         let fit = lines.isFinite ? Int(max(lines, 0)) : 1
-        let most = max(1, min(paletteRows.maxLines(automatic: automatic), fit))
-        if paletteRows.isFixed { return max(1, min(most, count)) }
+        let most = max(1, min(rows.maxLines(automatic: automatic), fit))
+        if rows.isFixed { return max(1, min(most, count)) }
         return metrics.lines(count: count, length: length, maxLines: most)
+    }
+
+    /// Where the canvas first shows the page of a template `templateSize` big (canvas units), with
+    /// `colors` paints, in a painting screen of `size` inside the safe area `safe` (its
+    /// `GeometryProxy`'s, leading and trailing in the painting's direction): the whole screen's
+    /// coordinates, x from the leading edge. One recipe for this screen's layout and for the
+    /// thumbnail a mosaic opens on (`ArtworkPaintingView`), so the thumbnail lands where the canvas
+    /// puts the page and nothing moves as the mosaic takes its place (painting-company row 364).
+    static func openingPage(
+        of templateSize: CGSize, colors: Int, isComplete: Bool, size: CGSize, safe: EdgeInsets, regularWidth: Bool,
+        dynamicTypeSize: DynamicTypeSize, rows: PaletteRows
+    ) -> CGRect {
+        let palette = paletteLayout(
+            in: size, colors: colors, regularWidth: regularWidth, dynamicTypeSize: dynamicTypeSize, rows: rows)
+        let insets = canvasInsets(
+            safe: safe, palette: palette, isComplete: isComplete,
+            barHeight: 44 * QuietPainting.scale(regularWidth: regularWidth))
+        // As `CanvasView` fits the template at its least zoom and centres it.
+        let screen = CGSize(width: size.width + safe.leading + safe.trailing, height: size.height + safe.top + safe.bottom)
+        let room = CGRect(
+            x: insets.leading + CanvasView.margin, y: insets.top + CanvasView.margin,
+            width: screen.width - insets.leading - insets.trailing - 2 * CanvasView.margin,
+            height: screen.height - insets.top - insets.bottom - 2 * CanvasView.margin)
+        guard templateSize.width > 0, templateSize.height > 0, room.width > 0, room.height > 0 else { return room }
+        let fit = min(room.width / templateSize.width, room.height / templateSize.height)
+        let page = CGSize(width: templateSize.width * fit, height: templateSize.height * fit)
+        return CGRect(
+            x: room.midX - page.width / 2, y: room.midY - page.height / 2, width: page.width, height: page.height)
     }
 
     /// Every color of the palette in its order on screen (finished ones too).
@@ -421,19 +459,25 @@ struct PaintView: View {
 
     /// Canvas insets in full-screen coordinates: safe area plus the floating bars.
     private func canvasInsets(safe: EdgeInsets, palette: PaletteLayout) -> EdgeInsets {
-        let top = safe.top + Self.topGap + barHeight + Self.canvasGap
-        if session.isComplete {
+        Self.canvasInsets(safe: safe, palette: palette, isComplete: session.isComplete, barHeight: barHeight)
+    }
+
+    private static func canvasInsets(
+        safe: EdgeInsets, palette: PaletteLayout, isComplete: Bool, barHeight: CGFloat
+    ) -> EdgeInsets {
+        let top = safe.top + topGap + barHeight + canvasGap
+        if isComplete {
             return EdgeInsets(
                 top: top, leading: safe.leading,
-                bottom: safe.bottom + Self.bottomGap + CompletionBar.height + Self.canvasGap, trailing: safe.trailing)
+                bottom: safe.bottom + bottomGap + CompletionBar.height + canvasGap, trailing: safe.trailing)
         }
         if palette.side {
             return EdgeInsets(top: top, leading: safe.leading, bottom: safe.bottom + 8,
-                              trailing: safe.trailing + Self.edge + palette.thickness + 4)
+                              trailing: safe.trailing + edge + palette.thickness + 4)
         }
         return EdgeInsets(
             top: top, leading: safe.leading,
-            bottom: safe.bottom + Self.bottomGap + palette.thickness + Self.canvasGap, trailing: safe.trailing)
+            bottom: safe.bottom + bottomGap + palette.thickness + canvasGap, trailing: safe.trailing)
     }
 
     /// How far below the top of the visible canvas the page tips lie: just inside the top of the page

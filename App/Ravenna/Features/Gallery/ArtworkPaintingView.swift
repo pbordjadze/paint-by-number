@@ -20,7 +20,11 @@ struct ArtworkPaintingView: View {
     /// cover, which dissolves into it once the canvas has drawn (`StartHandoff`).
     @Environment(\.startHandoff) private var handoff
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
+    @AppStorage(SettingsKey.paletteRows) private var paletteRows = PaletteRows.default
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.layoutDirection) private var layoutDirection
     @State private var autosaver: PaintingAutosaver?
     /// Made once when the painting is presented, not in `body`: each autosave replaces the
     /// artwork in the library, and values made afresh would reach `PaintView` as changed
@@ -34,6 +38,12 @@ struct ArtworkPaintingView: View {
     /// each of them kept CI's simulator from answering for up to half a minute (hundreds of
     /// renders in one push), where the thumbnail costs next to nothing.
     @State private var hasLanded = false
+    /// The safe area is as the mosaic has it, the status bar gone (or never in the way):
+    /// `waitingPage` sees it, or `land` stops waiting for it (`statusBarWait`).
+    @State private var statusBarGone = false
+    /// The status bar as the waiting page first found it (`StatusBarAtOpen`), read once.
+    @State private var barAtOpen: StatusBarAtOpen?
+    @State private var barMeasured = false
     /// Back was tapped: the status bar is back before the pop starts (`close`).
     @State private var leaving = false
     @State private var failure: Library.OpenError?
@@ -107,10 +117,155 @@ struct ArtworkPaintingView: View {
         return PaintingWork(sample: sample, makingOf: makingOf)
     }
 
+    /// The mosaic screen takes the thumbnail's place once the push has landed and the status bar
+    /// has gone (built before the safe area followed, the canvas's first frames put the page lower
+    /// on an iPad, and it moved up). Under the create flow's cover, nothing waits for the bar.
+    private var isBuilt: Bool { hasLanded && (statusBarGone || isUnderCover) }
+
+    /// What the zoom transition shows, and where it lands while the mosaic loads: the thumbnail
+    /// just where the canvas will open the page, laid out by `PaintView`'s own recipe
+    /// (`PaintView.openingPage`) in the safe area the mosaic will have once its status bar has
+    /// gone (`StatusBarAtOpen`). Centered on the whole screen, it jumped up and grew as the mosaic
+    /// took its place (Paint by Moonlight's painting-company row 364). The status bar stays while
+    /// it shows: hidden as the zoom began, an iPad's gallery behind it would move up under the card.
+    @ViewBuilder
+    private func waitingPage(_ artwork: Artwork) -> some View {
+        if let opening = waitingTemplate(artwork) {
+            GeometryReader { geo in
+                let raw = geo.safeAreaInsets
+                // Read before the first frame too, so the thumbnail starts where it stays.
+                let bar = barMeasured ? barAtOpen : Self.statusBarAtOpen(raw)
+                let frame = Self.waitingFrame(
+                    of: opening, readerSize: geo.size, insets: raw, bar: bar, regularWidth: sizeClass == .regular,
+                    dynamicTypeSize: dynamicTypeSize, rows: paletteRows, rightToLeft: layoutDirection == .rightToLeft)
+                ArtworkThumbnail(artwork: artwork, contentMode: .fit)
+                    .frame(width: frame.width, height: frame.height)
+                    .overlay {
+                        if autosaver == nil { ProgressView().controlSize(.large) }
+                    }
+                    .position(x: frame.midX, y: frame.midY)
+                    .onChange(of: raw, initial: true) { _, insets in
+                        if !barMeasured {
+                            barMeasured = true
+                            barAtOpen = Self.statusBarAtOpen(insets)
+                        }
+                        if StatusBarAtOpen.isGone(barAtOpen, insets: insets) { barWentAway() }
+                    }
+            }
+            // The status bar goes once the zoom has landed (the gallery behind it would move up
+            // under the card as it came), and the mosaic is built in the safe area that follows.
+            .statusBarHidden(hasLanded && !leaving)
+            // Left to right, so positions are UIKit's whatever the language (the page is mirrored
+            // already) and the safe area's leading edge is its left.
+            .environment(\.layoutDirection, .leftToRight)
+        } else {
+            // A record with no size or paints: as it always lay.
+            ArtworkThumbnail(artwork: artwork, contentMode: .fit)
+                .aspectRatio(artwork.aspectRatio, contentMode: .fit)
+                .padding(20)
+                .overlay {
+                    if autosaver == nil { ProgressView().controlSize(.large) }
+                }
+                .onAppear { barWentAway() }
+        }
+    }
+
+    /// The status bar as the waiting page found it, and the safe area once the mosaic has hidden
+    /// it (read in a left-to-right view: leading is left). Paint by Moonlight's, as it is there.
+    nonisolated struct StatusBarAtOpen: Equatable, Sendable {
+        /// The safe area with the bar showing, as first read.
+        var with: EdgeInsets
+        /// The same without it.
+        var without: EdgeInsets
+
+        /// The safe area the mosaic will have: `without` while the insets are still `with`
+        /// (UIKit says the bar is hidden a moment before the safe area follows, so whether it is
+        /// hidden is never read), and the insets as they are once they have changed.
+        static func predicted(_ bar: StatusBarAtOpen?, insets: EdgeInsets) -> EdgeInsets {
+            guard let bar, insets == bar.with else { return insets }
+            return bar.without
+        }
+
+        /// The safe area has followed the bar (or there was no bar in the way).
+        static func isGone(_ bar: StatusBarAtOpen?, insets: EdgeInsets) -> Bool {
+            guard let bar else { return true }
+            return insets != bar.with
+        }
+
+        /// What hiding a bar of `barFrame` (UIKit's, in a screen `screenWidth` wide) takes from
+        /// `insets`: across the top, the top where the bar alone keeps it clear (an iPad, a phone
+        /// with no sensor housing); down a side, that side. Nil when the bar is hidden already, the
+        /// window isn't the whole screen (Stage Manager, Split View: it keeps its bar) or nothing
+        /// would change.
+        static func measured(
+            _ insets: EdgeInsets, barFrame: CGRect, barHidden: Bool, fullScreen: Bool, idiom: UIUserInterfaceIdiom,
+            screenWidth: CGFloat
+        ) -> StatusBarAtOpen? {
+            guard !barHidden, fullScreen, barFrame.width > 0, barFrame.height > 0 else { return nil }
+            var without = insets
+            if barFrame.height > barFrame.width {
+                if barFrame.midX > screenWidth / 2 {
+                    without.trailing = max(0, insets.trailing - barFrame.width)
+                } else {
+                    without.leading = max(0, insets.leading - barFrame.width)
+                }
+            } else if idiom == .pad || insets.bottom == 0 {
+                without.top = max(0, insets.top - barFrame.height)
+            }
+            return without == insets ? nil : StatusBarAtOpen(with: insets, without: without)
+        }
+    }
+
+    /// The bar of the app's scene as it stands, for `insets` read now.
+    private static func statusBarAtOpen(_ insets: EdgeInsets) -> StatusBarAtOpen? {
+        guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first,
+            let bar = scene.statusBarManager
+        else { return nil }
+        return StatusBarAtOpen.measured(
+            insets, barFrame: bar.statusBarFrame, barHidden: bar.isStatusBarHidden, fullScreen: scene.isFullScreen,
+            idiom: scene.traitCollection.userInterfaceIdiom, screenWidth: scene.effectiveGeometry.coordinateSpace.bounds.width)
+    }
+
+    /// The size, colors and state the page is laid out by: the loaded template's once there is one,
+    /// the artwork's record until then.
+    private func waitingTemplate(_ artwork: Artwork) -> (size: CGSize, colors: Int, isComplete: Bool)? {
+        if let session = autosaver?.session {
+            return (CGSize(width: session.template.width, height: session.template.height),
+                    PaletteBar.visibleColorCount(session.template), session.isComplete)
+        }
+        guard artwork.width > 0, artwork.height > 0, artwork.colorCount > 0 else { return nil }
+        return (CGSize(width: artwork.width, height: artwork.height), artwork.colorCount, artwork.isComplete)
+    }
+
+    /// Where the waiting thumbnail lies in its reader (a view inside the safe area `insets`, read
+    /// left to right, `readerSize` big): the page as the canvas will open it, in the safe area the
+    /// mosaic will have (`StatusBarAtOpen.predicted`), moved into the reader's coordinates.
+    private static func waitingFrame(
+        of opening: (size: CGSize, colors: Int, isComplete: Bool), readerSize: CGSize, insets: EdgeInsets,
+        bar: StatusBarAtOpen?, regularWidth: Bool, dynamicTypeSize: DynamicTypeSize, rows: PaletteRows,
+        rightToLeft: Bool
+    ) -> CGRect {
+        let predicted = StatusBarAtOpen.predicted(bar, insets: insets)
+        let screenWidth = readerSize.width + insets.leading + insets.trailing
+        let size = CGSize(
+            width: screenWidth - predicted.leading - predicted.trailing,
+            height: readerSize.height + insets.top + insets.bottom - predicted.top - predicted.bottom)
+        // The painting's leading edge is the screen's right in a right-to-left language.
+        let safe = rightToLeft
+            ? EdgeInsets(top: predicted.top, leading: predicted.trailing, bottom: predicted.bottom, trailing: predicted.leading)
+            : predicted
+        var page = PaintView.openingPage(
+            of: opening.size, colors: opening.colors, isComplete: opening.isComplete, size: size, safe: safe,
+            regularWidth: regularWidth, dynamicTypeSize: dynamicTypeSize, rows: rows)
+        if rightToLeft { page.origin.x = screenWidth - page.maxX }
+        // `page` is in the whole screen's coordinates, UIKit's left and right.
+        return page.offsetBy(dx: -insets.leading, dy: -insets.top)
+    }
+
     var body: some View {
         ZStack {
             Theme.paper.ignoresSafeArea()
-            if let autosaver, hasLanded {
+            if let autosaver, isBuilt {
                 PaintView(
                     session: autosaver.session, title: artwork?.title ?? "", onClose: close,
                     onTemplateFrame: canvasReport, hidesStatusBar: !leaving)
@@ -132,13 +287,7 @@ struct ArtworkPaintingView: View {
                     }
                     #endif
             } else if let artwork {
-                // What the zoom transition shows, and where it lands while the template loads.
-                ArtworkThumbnail(artwork: artwork, contentMode: .fit)
-                    .aspectRatio(artwork.aspectRatio, contentMode: .fit)
-                    .padding(20)
-                    .overlay {
-                        if autosaver == nil { ProgressView().controlSize(.large) }
-                    }
+                waitingPage(artwork)
             }
         }
         // Below PaintView's top bar (6 pt inset + 44 pt buttons).
@@ -236,6 +385,24 @@ struct ArtworkPaintingView: View {
     private func land() {
         guard !hasLanded else { return }
         withAnimation(isUnderCover ? nil : .easeOut(duration: 0.25)) { hasLanded = true }
+        // Should the safe area never be seen to follow (a window laid out otherwise), the mosaic
+        // comes all the same.
+        Task {
+            try? await Task.sleep(for: Self.statusBarWait)
+            barWentAway()
+        }
+        #if DEBUG
+        markDemoReady()
+        #endif
+    }
+
+    /// The most the mosaic waits, once landed, for the safe area to follow the status bar.
+    private static let statusBarWait: Duration = .milliseconds(400)
+
+    /// The status bar is out of the way: the mosaic may be built (`isBuilt`).
+    private func barWentAway() {
+        guard !statusBarGone else { return }
+        withAnimation(isUnderCover ? nil : .easeOut(duration: 0.25)) { statusBarGone = true }
         #if DEBUG
         markDemoReady()
         #endif
@@ -244,7 +411,7 @@ struct ArtworkPaintingView: View {
     #if DEBUG
     /// `gallery-open` and `gallery-received` are ready once the painting is on screen.
     private func markDemoReady() {
-        guard autosaver != nil, hasLanded, ShellDemo.current == .galleryOpen || ShellDemo.current == .galleryReceived else { return }
+        guard autosaver != nil, isBuilt, ShellDemo.current == .galleryOpen || ShellDemo.current == .galleryReceived else { return }
         DemoMode.markReady()
     }
     #endif
