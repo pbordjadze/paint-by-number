@@ -36,7 +36,7 @@ nonisolated enum CaveShader {
         float4 view;    // drawable width, height (px), px per wall point, camera x (wall points)
         float4 torch;   // x, y, z, flicker
         float4 lamp;    // x, y, z, on (0 or 1)
-        float4 mouth;   // x, y, flare (0 to 1), leaving (0 to 1, the daylight taking the screen)
+        float4 mouth;   // x, y, flare (0 to 1), unused
         float4 misc;    // time (s), end of the cave (wall x), relief depth, steady (Reduce Motion)
         int4 slotsA;    // the bay held in slots 0 to 3, -1 for none
         int4 slotsB;    // in slots 4 to 7
@@ -325,8 +325,6 @@ nonisolated enum CaveShader {
         col = pow(max(col, 0.0), float3(1.0 / 1.08));
         float vig = smoothstep(1.25, 0.35, length((screen - 0.5) * float2(1.0, 1.25)));
         col *= vig;
-        // Walking out: the daylight takes the screen.
-        col = mix(col, float3(1.0, 1.0, 0.99), u.mouth.w);
         return float4(col, 1.0);
     }
 
@@ -376,8 +374,7 @@ nonisolated enum CaveShader {
             float3 rgb = in.inner.rgb * (0.85 + 0.15 * (1.0 - abs(in.local.x) / halfWidth));
             c = float4(rgb * a, a);
         }
-        // The daylight takes the air too, as the screen goes white.
-        return c * (1.0 - u.mouth.w);
+        return c;
     }
     """
 }

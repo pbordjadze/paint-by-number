@@ -2,6 +2,7 @@
 import CoreGraphics
 import PaintCore
 import PhotosUI
+import Ravenna
 import SwiftUI
 import os
 
@@ -10,9 +11,10 @@ import os
 /// torch (`CaveWallView`, `CaveScene`). The paintings are the cave itself, one long wall walked
 /// with the torch (`CaveShelf`); the lump of charcoal on bare rock chooses the next photo, which
 /// is drawn on the rock as an animal, or as a stick figure if it is anything else (`CaveVision`,
-/// `CavePlan`). The way out is the daylight at the mouth: put the torch down in it.
+/// `CavePlan`). The way out is the one thing of the app left: a Liquid Glass Settings button,
+/// whose Year wheel leaves the cave as every era's does (`CaveSettingsView`).
 struct CaveEra: View {
-    let leave: () -> Void
+    let leave: (Int) -> Void
 
     /// The year on the wheel that opens the cave: Lascaux's paintings are about 17,000 years old.
     static let year = -15000
@@ -22,17 +24,31 @@ struct CaveEra: View {
     @State private var picked: PhotosPickerItem?
     @State private var isDrawing = false
     @State private var isReady = false
+    @State private var showsSettings = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        ZStack {
-            Color.black
+        ZStack(alignment: .topLeading) {
+            Color.black.ignoresSafeArea()
             if isReady {
                 CaveWallSurface(paintings: shelf.paintings, shelf: shelf, reduceMotion: reduceMotion,
-                         onChoosePhoto: { if !isDrawing { picking = true } }, onLeave: leave)
+                                onChoosePhoto: { if !isDrawing { picking = true } })
+                    .ignoresSafeArea()
             }
+            Button("Settings", systemImage: "gearshape") { showsSettings = true }
+                .labelStyle(.iconOnly)
+                .buttonStyle(.glass)
+                .controlSize(.large)
+                .padding(16)
+                .accessibilityIdentifier("cave-settings")
         }
-        .ignoresSafeArea()
+        .sheet(isPresented: $showsSettings) {
+            CaveSettingsView(leave: { year in
+                // The next visit starts at the mouth again.
+                UserDefaults.standard.removeObject(forKey: CaveScene.cameraKey)
+                leave(year)
+            })
+        }
         .statusBarHidden()
         .persistentSystemOverlays(.hidden)
         // A hand of four or five fingers is laid on the rock, not taken by the system.
@@ -89,7 +105,6 @@ struct CaveWallSurface: UIViewRepresentable {
     let shelf: CaveShelf
     let reduceMotion: Bool
     let onChoosePhoto: () -> Void
-    let onLeave: () -> Void
 
     func makeUIView(context: Context) -> CaveWallView {
         let scene = CaveScene(paintings: paintings, sound: CaveSound.fromSettings())
@@ -110,7 +125,50 @@ struct CaveWallSurface: UIViewRepresentable {
     private func update(_ scene: CaveScene) {
         scene.reduceMotion = reduceMotion
         scene.onChoosePhoto = onChoosePhoto
-        scene.onLeave = onLeave
+    }
+}
+/// The cave's Settings: About's Year, whose wheel leaves the cave for the present or another era.
+struct CaveSettingsView: View {
+    let leave: (Int) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var showsClock = false
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("About") {
+                    Button {
+                        withAnimation { showsClock.toggle() }
+                    } label: {
+                        LabeledContent {
+                            Text(verbatim: CaveFossils.year(-CaveEra.year)).foregroundStyle(.tint)
+                        } label: {
+                            SwiftUI.Label {
+                                Text("Year").foregroundStyle(Color.primary)
+                            } icon: {
+                                Image(systemName: "clock")
+                            }
+                        }
+                    }
+                    .accessibilityIdentifier("about-year")
+                    if showsClock {
+                        EraClock(year: CaveEra.year) { year in
+                            guard EraYear.returnsToThePresent(year) || EraYear.opensByzantium(year) || EraYear.opensStainedGlass(year) else { return }
+                            dismiss()
+                            leave(year)
+                        }
+                        .accessibilityIdentifier("era-clock")
+                    }
+                }
+            }
+            .navigationTitle(Text("Settings"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
     }
 }
 #endif

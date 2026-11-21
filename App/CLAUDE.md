@@ -1369,12 +1369,12 @@ only a rock wall in the dark lit by the painter's torch. `Cave/`: `CaveEra` (the
 loaded, the photo picker, a photo drawn through `CaveVision` and PaintCore's `CavePlan`),
 `CaveWallView` (a `CAMetalLayer` on a display link; each bay's maps made off the main thread as
 the camera nears it; VoiceOver's one element with its custom actions), `CaveScene` (the torch,
-the blow, the hand of four or five fingers, the walk at the screen's edges, the way out at the
-mouth's daylight), `CaveRenderer` and `CaveShader` (compiled at runtime from source, so nothing
+the blow, the hand of four or five fingers, the walk at the screen's edges), `CaveRenderer` and `CaveShader` (compiled at runtime from source, so nothing
 reaches the app's metallib; a soft shadow marched toward the torch through the relief),
 `CaveSound` (synthesized fire, breath and drips in an `AVAudioEnvironmentNode`'s hall; Core
 Haptics; Settings' Sounds and Haptics) and `CaveShelf` (`Application Support/Cave/Wall/`, the
-paintings oldest first). Demos: `cave-mouth`, `cave-blowing`, `cave-hand`, `cave-wall`
+paintings oldest first). The way out is the app's one thing left on screen, a Liquid Glass
+Settings button whose Year wheel leaves as every era's does (`CaveSettingsView`). Demos: `cave-mouth`, `cave-blowing`, `cave-hand`, `cave-wall`
 (`CaveDemo`); `CaveAppTests`. `CaveFossils`: Liquid Glass misused on purpose, the system's
 controls found as glass in the rock (a cracked "more" pill, the mouth as a back button, the year
 wheel carved under the mouth), drawn by the shader and lit only by the torch and the daylight;

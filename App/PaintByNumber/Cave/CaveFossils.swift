@@ -59,7 +59,7 @@ enum CaveFossils {
     }
 
     /// A year before Christ as the wheel would read it.
-    private static func year(_ years: Int) -> String {
+    static func year(_ years: Int) -> String {
         String(localized: "cave.carvedYear", defaultValue: "\(years.formatted()) BC",
                comment: "A year carved into the cave's rock under its mouth, as the year wheel shows it; the argument is the year, e.g. 15,000")
     }

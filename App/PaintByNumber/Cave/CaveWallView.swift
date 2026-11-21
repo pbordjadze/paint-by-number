@@ -16,7 +16,8 @@ import simd
 /// VoiceOver finds one element, the wall, which allows direct interaction (a finger on it blows
 /// and carries the torch as for anyone), says what is in hand and how far the painting has come,
 /// and offers what a hand can do there as custom actions: take up a pigment, blow the next area,
-/// leave your hand, draw a new painting, walk deeper or toward the daylight, leave the cave.
+/// leave your hand, draw a new painting, walk deeper or toward the daylight. The way out is the
+/// era's Settings button, its own element (`CaveEra`).
 final class CaveWallView: UIView {
     override class var layerClass: AnyClass { CAMetalLayer.self }
 
@@ -239,11 +240,6 @@ final class CaveWallView: UIView {
                     return true
                 })
             }
-            actions.append(UIAccessibilityCustomAction(name: String(localized: "cave.action.leave", defaultValue: "Leave the cave",
-                                                                    comment: "VoiceOver action in the cave: walk out into the daylight, back to the app")) { [weak self] _ in
-                self?.scene.leave()
-                return true
-            })
             return actions
         }
         set { _ = newValue }

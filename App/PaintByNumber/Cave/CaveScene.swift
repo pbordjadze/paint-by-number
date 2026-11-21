@@ -9,7 +9,7 @@ import simd
 /// holds the painter's things on its ledge. The camera is the wall point at the screen's left.
 ///
 /// - The torch, wedged in a crack, is carried by a finger; held near either side of the screen it
-///   walks you along the wall. Put down in the mouth's daylight, it takes you out of the cave.
+///   walks you along the wall. The way out is the era's Settings (`CaveEra`), as in every era.
 /// - A tap on a hollow takes up its pigment; a finger held on the rock blows it there, the spray
 ///   widening the longer it is held. Pigment lands where it belongs (`CavePigmentLayer`).
 /// - Once every area is done the torch flares, and a few grains of ochre gather above the
@@ -62,9 +62,6 @@ final class CaveScene {
     private var finishedAt: Float?
     private var drawnAt: Float?
     private var hand: (hand: CaveHand, amount: Float)?
-    /// 0 to 1 once the torch has been put down in the daylight; at 1 the cave is left.
-    private(set) var leaving: Float?
-    private var hasLeft = false
 
     private enum Grip {
         /// The torch, held this far from the finger (wall points), the finger where it is on screen.
@@ -99,8 +96,6 @@ final class CaveScene {
     var onSave: ((UUID, CaveProgress, [UInt8]) -> Void)?
     /// The lump of charcoal was tapped: choose the next photo.
     var onChoosePhoto: (() -> Void)?
-    /// The daylight has taken the screen: leave the cave.
-    var onLeave: (() -> Void)?
     let sound: CaveSound
     private let defaults: UserDefaults
 
@@ -201,7 +196,6 @@ final class CaveScene {
     func screenToWall(_ p: SIMD2<Float>) -> SIMD2<Float> { SIMD2(p.x / scale + camera, p.y / scale) }
 
     func touchBegan(_ id: ObjectIdentifier, at screen: SIMD2<Float>, width: Float) {
-        guard leaving == nil else { return }
         touches[id] = (screen, width / scale, time)
         let p = screenToWall(screen)
         if startHandIfLaid() { return }
@@ -239,7 +233,6 @@ final class CaveScene {
         let grip = grips.removeValue(forKey: id)
         if case .some(.torch) = grip {
             defaults.set(Double(cameraTarget), forKey: Self.cameraKey)
-            if isInDaylight(torchRest) { leave() }
         }
         if !grips.values.contains(where: { if case .blow = $0 { true } else { false } }) { sound.blow(false) }
     }
@@ -302,16 +295,6 @@ final class CaveScene {
         clampCamera()
         torchRest.x = cameraTarget + visibleWidth * 0.5
         defaults.set(Double(cameraTarget), forKey: Self.cameraKey)
-    }
-
-    /// Goes out into the daylight.
-    func leave() {
-        guard leaving == nil else { return }
-        save()
-        leaving = 0
-        sound.leave()
-        // The next visit starts at the mouth again.
-        defaults.removeObject(forKey: Self.cameraKey)
     }
 
     var isAtMouth: Bool { camera < Float(CaveWall.bayWidth) * 0.5 }
@@ -391,13 +374,6 @@ final class CaveScene {
         }
         sparks.removeAll { $0.life <= 0 }
         if (unsaved && time - lastSave > 1) || (pigmentLanded && time - lastSave > 4) { save() }
-        if let l = leaving {
-            leaving = min(1, l + dt / 1.4)
-            if leaving == 1 && !hasLeft {
-                hasLeft = true
-                onLeave?()
-            }
-        }
     }
 
     private func blow(_ dt: Float) {
@@ -483,11 +459,6 @@ final class CaveScene {
         if first { placeTorch() }
     }
 
-    func isInDaylight(_ p: SIMD2<Float>) -> Bool {
-        let d = (p - CaveWall.mouth) / CaveWall.mouthRadii
-        return d.caveLengthSquared < 0.7
-    }
-
     // MARK: - What the renderer draws
 
     var flare: Float {
@@ -505,7 +476,7 @@ final class CaveScene {
             view: SIMD4(drawable.x, drawable.y, pxPerPoint, camera),
             torch: SIMD4(torch.x, torch.y + 10, 64, flicker),
             lamp: SIMD4(lamp.x, lamp.y, 30, lampOn),
-            mouth: SIMD4(CaveWall.mouth.x, CaveWall.mouth.y, flare, leaving ?? 0),
+            mouth: SIMD4(CaveWall.mouth.x, CaveWall.mouth.y, flare, 0),
             misc: SIMD4(time, end, CaveBay.reliefDepth, reduceMotion ? 1 : 0),
             slotsA: SIMD4(repeating: -1), slotsB: SIMD4(repeating: -1))
     }

@@ -64,10 +64,10 @@ struct RootView: View {
         #endif
     }
 
-    /// The Cave (SideStore and Debug builds; `CaveEra`): its way out is the daylight, home.
+    /// The Cave (SideStore and Debug builds; `CaveEra`).
     @ViewBuilder private var cave: some View {
         #if UNRELEASED
-        CaveEra(leave: { door.go(to: .moonlight) })
+        CaveEra(leave: { year in door.go(to: Era.opened(by: year) ?? .moonlight) })
         #endif
     }
 

@@ -123,10 +123,6 @@ nonisolated final class CaveSound: @unchecked Sendable {
         play("rush", on: taps, volume: 0.6)
     }
 
-    func leave() {
-        play("rush", on: taps, volume: 0.4)
-    }
-
     // MARK: - On the queue
 
     private static func position(_ p: SIMD2<Float>, from listener: SIMD2<Float>) -> AVAudio3DPoint {
