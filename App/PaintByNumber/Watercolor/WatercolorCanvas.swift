@@ -43,6 +43,8 @@ final class WatercolorCanvasView: UIView, UIScrollViewDelegate {
         let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
         scroll.addGestureRecognizer(tap)
         renderer.onActivity = { [weak self] active in self?.setRunning(active) }
+        // A wash laid any other way (VoiceOver's action, a demo) wakes the sheet too.
+        renderer.painting.onTap = { [weak self] in self?.setRunning(true) }
         isAccessibilityElement = false
     }
 

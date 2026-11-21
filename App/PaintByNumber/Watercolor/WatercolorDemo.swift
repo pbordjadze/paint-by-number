@@ -5,7 +5,9 @@ import os
 
 /// Watercolor's demo scenarios (Debug builds; `-demo watercolor-<name>`): `watercolor-empty`, the
 /// gallery with nothing in it; `watercolor-paint`, a library picture opened with a few washes
-/// still wet; `watercolor-painted`, the same picture with every area painted and dried.
+/// still wet; `watercolor-painted`, the same picture with every area painted and dried;
+/// `watercolor-tour`, the picture painted on screen a wash every 0.4 s, for the frame report
+/// (`WatercolorRenderer.report`, in the log; never screenshotted).
 @MainActor
 enum WatercolorDemo {
     static let picture = "great-wave"
@@ -43,6 +45,8 @@ enum WatercolorDemo {
                 for _ in 0..<4 { painting.sim.advance() }
             }
             painting.sim.finish()
+        case "watercolor-tour":
+            break
         default:
             // A few of the largest areas: two dried, the last three still wet.
             for (n, label) in firsts.prefix(5).enumerated() {
@@ -54,6 +58,11 @@ enum WatercolorDemo {
         Task {
             try? await Task.sleep(for: .seconds(1))
             DemoMode.markReady()
+            guard scenario == "watercolor-tour" else { return }
+            while !painting.isComplete, let point = painting.nextArea() {
+                painting.tap(at: point)
+                try? await Task.sleep(for: .seconds(0.4))
+            }
         }
     }
 }

@@ -117,7 +117,9 @@ final class WatercolorRenderer: NSObject, MTKViewDelegate {
     private let inFlight = DispatchSemaphore(value: 1)
     private var lastFrame: CFTimeInterval?
     private var halfBuffer: [Float16] = []
-    private var frameTimes: [Double] = []
+    private var stepTimes: [Double] = []
+    /// The time between frames drawn while the sheet runs, for the report.
+    private var frameIntervals: [Double] = []
 
     /// Canvas units at the view's top-left pixel, and per pixel (the canvas view's scroll).
     var offset = SIMD2<Float>(0, 0)
@@ -214,6 +216,7 @@ final class WatercolorRenderer: NSObject, MTKViewDelegate {
 
     private func frame(in view: MTKView) {
         let now = CACurrentMediaTime()
+        if let lastFrame { frameIntervals.append(now - lastFrame) }
         let elapsed = lastFrame.map { min(now - $0, 0.1) } ?? Double(WatercolorSim.dt)
         lastFrame = now
         let wasActive = needsFrames
@@ -309,16 +312,21 @@ final class WatercolorRenderer: NSObject, MTKViewDelegate {
         }
     }
 
-    /// A frame report to the log every few seconds of frames: how long the steps and frames took.
+    /// A frame report to the log every few seconds of running: how long the simulation's steps
+    /// took, and how far apart the frames came (`tools/perf-tour` reads such lines).
     private func report() {
-        let steps = painting.takeStepTimes()
-        frameTimes.append(contentsOf: steps)
-        guard frameTimes.count >= 240 else { return }
-        let sorted = frameTimes.sorted()
-        func ms(_ q: Double) -> Double { sorted[min(sorted.count - 1, Int(Double(sorted.count) * q))] * 1000 }
+        stepTimes.append(contentsOf: painting.takeStepTimes())
+        guard stepTimes.count >= 240 else { return }
+        func ms(_ values: [Double], _ q: Double) -> Double {
+            guard !values.isEmpty else { return 0 }
+            return values[min(values.count - 1, Int(Double(values.count) * q))] * 1000
+        }
+        let steps = stepTimes.sorted(), frames = frameIntervals.sorted()
+        let late = frames.filter { $0 > 1.5 / 60 }.count
         Log.canvas.notice(
-            "watercolor steps: median \(ms(0.5), format: .fixed(precision: 2)) ms, p95 \(ms(0.95), format: .fixed(precision: 2)) ms, max \(ms(1), format: .fixed(precision: 2)) ms over \(sorted.count) steps")
-        frameTimes.removeAll(keepingCapacity: true)
+            "watercolor steps: median \(ms(steps, 0.5), format: .fixed(precision: 2)) ms, p95 \(ms(steps, 0.95), format: .fixed(precision: 2)) ms, max \(ms(steps, 1), format: .fixed(precision: 2)) ms over \(steps.count) steps; frames: median \(ms(frames, 0.5), format: .fixed(precision: 1)) ms, p95 \(ms(frames, 0.95), format: .fixed(precision: 1)) ms, max \(ms(frames, 1), format: .fixed(precision: 1)) ms, \(late) late of \(frames.count)")
+        stepTimes.removeAll(keepingCapacity: true)
+        frameIntervals.removeAll(keepingCapacity: true)
     }
 
     // MARK: Pictures

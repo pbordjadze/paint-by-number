@@ -4,6 +4,7 @@ import Foundation
 import Observation
 import PaintCore
 import QuartzCore
+import os
 
 /// A watercolor painting open on screen (painting-company row 373): its template, the water and
 /// pigment moving over it (PaintCore's `WatercolorSim`), the tap log that is the painting's record,
@@ -75,7 +76,12 @@ final class WatercolorPainting {
         let paint = selected == Int(template.regions[r].colorIndex)
         let wasLaid = sim.laid[r]
         log.taps.append(.init(step: sim.step, region: r, x: canvas.x, y: canvas.y, paint: paint))
+        let start = CACurrentMediaTime()
         sim.tap(region: r, at: canvas, paint: paint)
+        let took = CACurrentMediaTime() - start
+        if took > 0.008 {
+            Log.canvas.notice("watercolor tap: \(took * 1000, format: .fixed(precision: 1)) ms for an area of \(self.template.regions[r].area, format: .fixed(precision: 0))")
+        }
         if settlesAtOnce { sim.finish() }
         unsavedTaps += 1
         if paint && !wasLaid {
