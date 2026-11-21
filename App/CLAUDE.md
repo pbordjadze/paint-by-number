@@ -153,7 +153,7 @@ below name both alike.
   itself once a launch in SideStore and Debug builds: `SelfPaintingSketch`), `DraftRow`, `ArtworkPaintingView`
   the painting host, `PaintingRecoveryView`, `ImageCaches.swift`, `Toast`); `Paint/` (`PaintView`,
   `PaletteBar`, `PaintChromeState`, `PaintCommands`, `PaintTips`, `PaintSpeech`, `PhotoPeek`,
-  `CompletionBar`, `FinishedDoors` and `AboutPainting` (SideStore and Debug builds), DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
+  `CompletionBar`, `FinishedDoors` (its `DoorMetrics` shared with Paint by Mosaic) and `AboutPainting` (SideStore and Debug builds), DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
   Giving feedback); `Settings/`; `Share/`; `Tips/`
   (the gentle tips, see Tips); `Unlock/` (`UnlockSheet`, see Unlimited Paintings).
   The Marginarium, the storybook that was `Features/Marginarium/`, is in no build: Paul's decision
@@ -1332,6 +1332,17 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
   `SetInStoneSheet` (`Export/SetInStone.swift`): the book `MosaicCore`'s `StoneBook` lays out, drawn
   by `StoneBookRenderer` to the preview's pages and the PDF that prints and shares; `-demo
   ravenna-gallery-set-in-stone` screenshots it.
+- **The doors after Finished** (painting-company row 330; SideStore and Debug builds,
+  `FinishedDoor.isOffered`): the Finished bar grows into Paint by Moonlight's panel
+  (`Features/Paint/FinishedDoors.swift`, laid by the shared `DoorMetrics` and counted, never
+  measured: `CompletionBar.panelHeight`, `PaintView.doorMetrics`, which `openingPage` counts too).
+  Another One opens the create flow on the library's first work the gallery doesn't hold (on its
+  photos once it holds every one; `\.paintAnother`, `AppShellView.paintAnother`); In Stone, for a
+  mosaic with its tiles, opens Set in Stone (a mosaic's On Paper); Send It shares the time-lapse;
+  The Original, for a library work, opens `SampleAboutView`. A mosaic still under the name the app
+  gave it (a photo's date: `Artwork.titled`, Paint by Moonlight's key) has that name with a pencil
+  on the bar, which names it (`ArtworkPaintingView`'s Name Your Mosaic); named, it renames.
+  `-demo ravenna-paint-complete-doors` screenshots it.
 - **The App Review note** for the version that ships it (Guideline 2.3.1):
   `docs/ravenna/app-review-note.md`.
 
