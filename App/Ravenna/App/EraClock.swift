@@ -12,6 +12,9 @@ import SwiftUI
 /// them is drawn on to it (`pull`), so the eras are found without being shown.
 public struct EraClock: View {
     private let onSettle: (Int) -> Void
+    /// The wheel's rows, made once, not at each turn (the wheel's body runs again at every year
+    /// it rests on, and a row's ink reads the calendar).
+    private let rows: [Row]
     @State private var year: Int
     @State private var settling: Task<Void, Never>?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -29,17 +32,34 @@ public struct EraClock: View {
 
     public init(year: Int, onSettle: @escaping (Int) -> Void) {
         self.onSettle = onSettle
+        rows = Self.rows()
         _year = State(initialValue: Self.nearest(to: year))
+    }
+
+    /// One year of the wheel as it is drawn.
+    private struct Row: Identifiable {
+        let year: Int
+        let text: String
+        let isLit: Bool
+        let ink: Color
+        var id: Int { year }
+    }
+
+    private static func rows() -> [Row] {
+        let present = EraYear.present
+        return years.map { year in
+            Row(year: year, text: text(of: year), isLit: isLit(year), ink: ink(of: year, present: present))
+        }
     }
 
     public var body: some View {
         Picker(selection: $year) {
-            ForEach(Self.years, id: \.self) { year in
-                Text(verbatim: Self.text(of: year))
-                    .font(.system(.title2, design: .serif, weight: Self.isLit(year) ? .bold : .semibold))
+            ForEach(rows) { row in
+                Text(verbatim: row.text)
+                    .font(.system(.title2, design: .serif, weight: row.isLit ? .bold : .semibold))
                     .monospacedDigit()
-                    .foregroundStyle(Self.ink(of: year))
-                    .tag(year)
+                    .foregroundStyle(row.ink)
+                    .tag(row.year)
             }
         } label: {
             Text(String(localized: "eraClock.label", defaultValue: "Year", bundle: .ravenna,
@@ -129,9 +149,9 @@ public struct EraClock: View {
 
     /// The numerals' color: warmer the further back; an era's year in full gold, and in
     /// SideStore and Debug builds every other year quieter, so the lit ones stand out.
-    static func ink(of year: Int) -> Color {
+    static func ink(of year: Int, present: Int = EraYear.present) -> Color {
         if isLit(year) { return gold }
-        let warm = Color.primary.mix(with: gold, by: age(of: year))
+        let warm = Color.primary.mix(with: gold, by: age(of: year, present: present))
         #if UNRELEASED
         return warm.opacity(0.6)
         #else
@@ -160,8 +180,7 @@ public struct EraClock: View {
 
     /// How far back a year is, from 0 at the present (and after) to 1 at 0547 and before it.
     /// (The long reach's older years are as warm as 0547's.)
-    static func age(of year: Int) -> Double {
-        let present = EraYear.present
+    static func age(of year: Int, present: Int = EraYear.present) -> Double {
         guard year < present else { return 0 }
         return min(1, Double(present - year) / Double(present - EraYear.byzantium))
     }
