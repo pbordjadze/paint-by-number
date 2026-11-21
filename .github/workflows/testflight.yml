@@ -21,9 +21,10 @@ name: TestFlight
 # build number App Store Connect hasn't seen.
 # The nightly: the SideStore build (`UNRELEASED`, as ci.yml's `ipa` job archives it) uploaded as
 # the same app under version 99.0, a train of its own that no release takes, for the internal
-# group Team alone: no Beta App Review, never Friends & Family, never submitted. Every night at
-# 08:00 UTC (3 AM ET in winter) it uploads `main` if `main` moved since the last nightly; Run
-# workflow with "Nightly" ticked does the same on request, and a push to a
+# group Team alone: no Beta App Review, never Friends & Family, never submitted (ci/testflight_testers.py
+# refuses a 99.0 build to them however it is run). Every night at 08:00 UTC (3 AM ET in winter)
+# it uploads `main` if `main` moved since the last nightly; Run workflow with "Nightly" and
+# "Upload" ticked does the same on request, and a push to a
 # `claude/testflight-dryrun*nightly*` branch is its dry run. Installing it replaces the App Store
 # or TestFlight copy on that device, with the same paintings.
 
@@ -31,7 +32,7 @@ on:
   workflow_dispatch:
     inputs:
       upload:
-        description: 'Upload to TestFlight and give it to Friends & Family (otherwise sign and validate only)'
+        description: 'Upload to TestFlight and give it to its testers (otherwise sign and validate only)'
         type: boolean
         default: false
       what_to_test:
@@ -112,7 +113,8 @@ jobs:
     # One upload at a time, and one dry run. An upload never waits in the dry runs' queue, where
     # a newer run would replace it.
     concurrency:
-      group: testflight-${{ (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.upload)) && 'upload' || 'dry-run' }}
+      # The nightly has a queue of its own, so it never replaces a release upload waiting here.
+      group: testflight-${{ (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.upload && inputs.nightly)) && 'nightly' || ((github.event_name == 'workflow_dispatch' && inputs.upload) && 'upload' || 'dry-run') }}
       cancel-in-progress: false
     outputs:
       # The uploaded build, for `testers` (kept when a failed `testers` alone is re-run).
@@ -167,9 +169,8 @@ jobs:
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" "${FLAVOR[@]}" \
             2>&1 | tee out/archive.log | tail -80
           APP="$ARCHIVE/Products/Applications/PaintByNumber.app"
-          /usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" -c "Print CFBundleShortVersionString" -c "Print CFBundleVersion" "$APP/Info.plist"
-          # The release's own check; the nightly is the SideStore build, which it would refuse.
-          if [ "$NIGHTLY" != true ]; then ci/check_release.sh "$APP" 2>&1 | tee out/release-check.log; fi
+          /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" -c "Print CFBundleVersion" "$APP/Info.plist"
+          ci/check_release.sh "$APP" 2>&1 | tee out/release-check.log
       - name: Entitlements
         # The archive is unsigned, and the export signs with what each bundle's own signature
         # asks for: the widgets and the stickers share the app's group (Outside.entitlements), and
@@ -242,7 +243,7 @@ jobs:
     if: needs.upload.outputs.build != ''
     # In the uploads' queue, so the next upload waits for this one's testers.
     concurrency:
-      group: testflight-upload
+      group: testflight-${{ (github.event_name == 'schedule' || inputs.nightly) && 'nightly' || 'upload' }}
       cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 60
