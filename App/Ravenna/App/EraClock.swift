@@ -20,10 +20,6 @@ public struct EraClock: View {
     @State private var settling: Task<Void, Never>?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
-    /// The wheel grows with the numerals' text size.
-    /// Tall enough for two years above and below the one read, fading as a system wheel does.
-    @ScaledMetric(relativeTo: .title2) private var wheelWidth: CGFloat = 120
-    @ScaledMetric(relativeTo: .title2) private var wheelHeight: CGFloat = 176
 
     /// How long the wheel must rest on a year before it counts: a wheel spun past 0547 isn't a
     /// visit to it.
@@ -71,9 +67,11 @@ public struct EraClock: View {
                         comment: "VoiceOver name of the year setter behind the secret door: one wheel of years"))
         }
         .pickerStyle(.wheel)
-        .frame(width: wheelWidth, height: wheelHeight)
-        .clipped()
+        .modifier(WheelFrame())
         .frame(maxWidth: .infinity)
+        // As the painting screen's bars do: past xxLarge a year's numerals outgrow the wheel's
+        // rows, and the wheel would outgrow a phone's screen.
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         .sensoryFeedback(trigger: year) { old, new in
             // An era's year clicks into place, from either side; a step back otherwise weighs
             // what its age does. A step forward has the wheel's own tick alone.
@@ -95,6 +93,18 @@ public struct EraClock: View {
             }
         }
         .onDisappear { settling?.cancel() }
+    }
+
+    /// The wheel's size, growing with the numerals' text size up to the clock's cap (read here,
+    /// inside the cap, and not on the clock, which sees the painter's own size). Tall enough for
+    /// two years above and below the one read, fading as a system wheel does.
+    private struct WheelFrame: ViewModifier {
+        @ScaledMetric(relativeTo: .title2) private var width: CGFloat = 120
+        @ScaledMetric(relativeTo: .title2) private var height: CGFloat = 176
+
+        func body(content: Content) -> some View {
+            content.frame(width: width, height: height).clipped()
+        }
     }
 
     /// Smalti gold, as Ravenna's theme has it.
