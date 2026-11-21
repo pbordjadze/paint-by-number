@@ -158,19 +158,27 @@ struct CreateFlowView: View {
     /// Making-of on (as it is unless switched off), the saved painting's show plays first, and the
     /// painting opens when it ends.
     private func start() async throws {
-        let draft = try await model.makeDraft()
-        let artwork = try await library.create(draft)
-        PaintTips.pageMade()
-        let place = previewPicture.picture
-        let from = StartHandoffPlan.entry(reduceMotion: reduceMotion, from: place)
-        if Preferences().playsMakingOf, let source = model.makingOfSource(for: draft) {
-            makingOf = MakingOfRequest(artwork: artwork, source: source, entry: from)
-        } else {
-            // The preview's picture is what moves to the painting, from where it is.
-            if let from, let picture = model.preview?.picture {
-                departure = PictureDeparture(picture: picture, rect: from, radius: Theme.cardRadius, opacity: 0)
+        // The shelf gets the mosaic's card as it is saved, under this flow: out of sight from here
+        // until the mosaic has taken over (`StartHandoff.shelfIsOutOfSight`).
+        let starting = handoff?.willStart()
+        do {
+            let draft = try await model.makeDraft()
+            let artwork = try await library.create(draft)
+            PaintTips.pageMade()
+            let place = previewPicture.picture
+            let from = StartHandoffPlan.entry(reduceMotion: reduceMotion, from: place)
+            if Preferences().playsMakingOf, let source = model.makingOfSource(for: draft) {
+                makingOf = MakingOfRequest(artwork: artwork, source: source, entry: from)
+            } else {
+                // The preview's picture is what moves to the painting, from where it is.
+                if let from, let picture = model.preview?.picture {
+                    departure = PictureDeparture(picture: picture, rect: from, radius: Theme.cardRadius, opacity: 0)
+                }
+                onStart(artwork)
             }
-            onStart(artwork)
+        } catch {
+            if let starting { handoff?.startFailed(starting) }
+            throw error
         }
     }
 
