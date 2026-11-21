@@ -113,8 +113,9 @@ jobs:
     # One upload at a time, and one dry run. An upload never waits in the dry runs' queue, where
     # a newer run would replace it.
     concurrency:
-      # The nightly has a queue of its own, so it never replaces a release upload waiting here.
-      group: testflight-${{ (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.upload && inputs.nightly)) && 'nightly' || ((github.event_name == 'workflow_dispatch' && inputs.upload) && 'upload' || 'dry-run') }}
+      # The nightly (its dry runs too) has a queue of its own, so it never replaces a release
+      # upload waiting here, and main's dry runs never replace it.
+      group: testflight-${{ (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.nightly) || (github.event_name == 'push' && contains(github.ref_name, 'nightly'))) && 'nightly' || ((github.event_name == 'workflow_dispatch' && inputs.upload) && 'upload' || 'dry-run') }}
       cancel-in-progress: false
     outputs:
       # The uploaded build, for `testers` (kept when a failed `testers` alone is re-run).
