@@ -50,7 +50,7 @@ try emit(scaled(ToneSynth.celesta(frequency: EraSynth.moonScale[4], sampleRate: 
 try emit(scaled(ToneSynth.twinkle(frequency: 2 * EraSynth.moonScale[4], sampleRate: sr), 0.24), "ref-glass-note")
 
 let voices: [(EraVoice, String, Float)] = [
-    (.tick(step: 0), "wheel-tick-0547", 0.09), (.tick(step: 6), "wheel-tick-1500", 0.09), (.tick(step: 11), "wheel-tick-2026", 0.09),
+    (.tick(step: 0), "wheel-tick-0547", 0.11), (.tick(step: 6), "wheel-tick-1500", 0.11), (.tick(step: 11), "wheel-tick-2026", 0.11),
     (.lit(step: 5), "wheel-lit-1248", 1),
     (.passage(.tiles(.moon)), "door-tiles-moon", 1), (.passage(.tiles(.sun)), "door-tiles-sun", 1),
     (.passage(.nave), "door-nave", 1), (.passage(.wash(.moon)), "door-wash-moon", 1), (.passage(.wash(.sun)), "door-wash-sun", 1),
@@ -68,8 +68,8 @@ var t = 0.3
 let rows = 40
 for row in stride(from: rows - 1, through: 8, by: -1) {
     let step = Int((Double(row) / Double(rows - 1) * 11).rounded())
-    reel.add(EraSynth.samples(of: .tick(step: step)), at: t, gain: row > 20 ? 0.055 : 0.09)
-    t += row > 20 ? 0.045 : 0.07 + 0.01 * Double(20 - row)
+    reel.add(EraSynth.samples(of: .tick(step: step)), at: t, gain: row > 20 ? 0.06 : 0.11)
+    t += row > 20 ? 0.05 : 0.07 + 0.01 * Double(20 - row)
 }
 reel.add(EraSynth.samples(of: .lit(step: 2)), at: t + 0.3, gain: 1)
 t += 1.4

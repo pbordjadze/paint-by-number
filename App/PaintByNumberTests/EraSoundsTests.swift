@@ -87,13 +87,13 @@ struct EraSoundsTests {
         rig.sounds.wheelTurned(row: 39, of: 40, lit: false)
         rig.wait(.milliseconds(10))
         rig.sounds.wheelTurned(row: 38, of: 40, lit: false) // too close: one sound
-        rig.wait(.milliseconds(40))
+        rig.wait(.milliseconds(50))
         rig.sounds.wheelTurned(row: 37, of: 40, lit: false)
         rig.wait(.milliseconds(5))
         rig.sounds.wheelTurned(row: 20, of: 40, lit: true) // an era's year is never swallowed
         #expect(rig.played == [.tick(step: 11), .tick(step: 10), .lit(step: 6)])
         let volumes = rig.player.played().map(\.volume)
-        #expect(volumes == [0.09, 0.055, 1])
+        #expect(volumes == [0.11, 0.06, 1])
     }
 
     @Test func watercolorTapsSoundAsWhatTheyDo() {
@@ -102,16 +102,23 @@ struct EraSoundsTests {
         rig.sounds.watercolor(.wash(finishes: false))
         rig.sounds.watercolor(.water)
         rig.sounds.watercolor(.bloom)
-        rig.sounds.watercolor(.rewash)
         rig.sounds.watercolor(.wash(finishes: true))
         let tune = PaintingMelody.tune
         #expect(rig.played == [
             .wash(.moon, index: tune[0]), .wash(.moon, index: tune[1]),
-            .drop(variant: 3), .bloom(index: tune[1], variant: 0), .wash(.moon, index: tune[1]),
+            .drop(variant: 3), .bloom(index: tune[1], variant: 0),
             .wash(.moon, index: tune[2]), .finale(.moon),
         ])
-        #expect(rig.player.played()[4].volume == 0.6)
-        #expect(rig.player.played()[6].delay == 0.7)
+        #expect(rig.player.played()[5].delay == 0.7)
+    }
+
+    @Test func aLaidAreaBloomsWhateverIsInHand() {
+        typealias Tap = EraSounds.WatercolorTap
+        #expect(Tap(paint: true, wasLaid: false, finishes: false) == .wash(finishes: false))
+        #expect(Tap(paint: true, wasLaid: false, finishes: true) == .wash(finishes: true))
+        #expect(Tap(paint: true, wasLaid: true, finishes: true) == .bloom)
+        #expect(Tap(paint: false, wasLaid: true, finishes: false) == .bloom)
+        #expect(Tap(paint: false, wasLaid: false, finishes: false) == .water)
     }
 
     @Test func soundsOffWatercolorIsSilentButTheTuneGoesOn() {
@@ -134,6 +141,10 @@ struct EraSoundsTests {
         rig.wait(.seconds(3))
         rig.sounds.sheetDried()
         rig.sounds.sheetDried() // still: once
+        rig.sounds.watercolor(.water)
+        rig.wait(.seconds(3))
+        rig.sounds.sheetOpened() // left wet; another sheet opens dry
+        rig.sounds.sheetDried()
         #expect(rig.played.filter { if case .dried = $0 { true } else { false } } == [.dried(index: PaintingMelody.tune[0])])
     }
 
@@ -141,13 +152,13 @@ struct EraSoundsTests {
         EraVoice.tick(step: 0), .tick(step: 11), .lit(step: 5),
         .passage(.tiles(.sun)), .passage(.tiles(.moon)), .passage(.nave), .passage(.wash(.moon)),
         .passage(.wayBack), .passage(.still(.sun)),
-        .wash(.sun, index: 11), .wash(.moon, index: 0), .drop(variant: 3), .bloom(index: 11, variant: 2),
+        .wash(.sun, index: 11), .wash(.moon, index: 0), .drop(variant: 3), .bloom(index: 11, variant: 1),
         .dried(index: 4), .finale(.sun), .finale(.moon),
     ])
     func everySoundIsWholeAndUnderFullScale(_ voice: EraVoice) {
         let samples = EraSynth.samples(of: voice)
         #expect(!samples.isEmpty)
-        #expect(samples.allSatisfy(\.isFinite))
+        #expect(samples.allSatisfy { $0.isFinite })
         #expect((samples.map(abs).max() ?? 0) < 0.6)
         // Each ends in silence: no click as its buffer stops.
         #expect(samples.suffix(64).allSatisfy { abs($0) < 0.002 })

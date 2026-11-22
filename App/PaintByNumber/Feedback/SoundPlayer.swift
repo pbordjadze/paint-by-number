@@ -30,6 +30,9 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
     #if UNRELEASED
     /// The hidden modes' sounds (`EraVoice`), each synthesized the first time it plays.
     private var eraMade: [EraVoice: AVAudioPCMBuffer] = [:]
+    /// The voice of the hidden modes' long sounds (a passage, an era's bell, a finish), so the
+    /// short ones going round `voices` never cut one off.
+    private let longVoice = AVAudioPlayerNode()
     #endif
     private var isBuilt = false
     private var isSetUp = false
@@ -40,6 +43,8 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
     /// the app at about 1% CPU on the gallery after any painting (Mac's sweep, painting-company
     /// row 263); `setUpIfNeeded` starts it again for the next sound.
     private static let restAfter: Duration = .seconds(8)
+    /// The voices sounds take in turn.
+    private static let roundVoices = 10
     private let playsAloud: Bool
 
     /// `playsAloud` false keeps the audio engine off: a test sees what would play (`played()`) and
@@ -234,7 +239,7 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
                 #if DEBUG
                 TourLog.trace("sound", "frames=%d\tvolume=%.3f\tdelay=%.3f", buffer.frameLength, cue.volume, cue.delay)
                 #endif
-                play(buffer, volume: cue.volume, delay: cue.delay)
+                play(buffer, volume: cue.volume, delay: cue.delay, on: node(for: cue.voice))
             }
         }
     }
@@ -260,12 +265,17 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
         // The graph is built once: a start that fails (a call holding the audio session) is retried
         // by the next sound without attaching another ten nodes.
         if !isBuilt {
-            for _ in 0..<10 {
+            for _ in 0..<Self.roundVoices {
                 let voice = AVAudioPlayerNode()
                 engine.attach(voice)
                 engine.connect(voice, to: engine.mainMixerNode, format: format)
                 voices.append(voice)
             }
+            #if UNRELEASED
+            engine.attach(longVoice)
+            engine.connect(longVoice, to: engine.mainMixerNode, format: format)
+            voices.append(longVoice)
+            #endif
             engine.mainMixerNode.outputVolume = 0.8
             thud = buffer(ToneSynth.thud(sampleRate: format.sampleRate))
             isBuilt = true
@@ -305,9 +315,27 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
         return twinkles[index]
     }
 
-    private func play(_ buffer: AVAudioPCMBuffer, volume: Float, delay: TimeInterval = 0) {
-        let voice = voices[nextVoice]
-        nextVoice = (nextVoice + 1) % voices.count
+    /// The voice a cue plays on: the next of `voices` going round, or the long sounds' own.
+    private func node(for voice: Cue.Voice) -> AVAudioPlayerNode? {
+        #if UNRELEASED
+        switch voice {
+        case .era(.passage), .era(.lit), .era(.finale): return longVoice
+        default: return nil
+        }
+        #else
+        return nil
+        #endif
+    }
+
+    private func play(_ buffer: AVAudioPCMBuffer, volume: Float, delay: TimeInterval = 0, on node: AVAudioPlayerNode? = nil) {
+        let voice: AVAudioPlayerNode
+        if let node {
+            voice = node
+        } else {
+            // The long sounds' voice is last in `voices` and never taken going round.
+            voice = voices[nextVoice]
+            nextVoice = (nextVoice + 1) % Self.roundVoices
+        }
         voice.volume = volume
         if delay > 0, let nodeTime = voice.lastRenderTime, let playerTime = voice.playerTime(forNodeTime: nodeTime) {
             let start = AVAudioTime(
@@ -319,7 +347,7 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
             // the queue instead, so a flourish keeps its rhythm rather than sounding as one chord.
             let held = Held(buffer: buffer)
             queue.asyncAfter(deadline: .now() + delay) { [self] in
-                play(held.buffer, volume: volume)
+                play(held.buffer, volume: volume, on: node)
             }
             return
         } else {

@@ -6,8 +6,8 @@ import PaintCore
 /// `SoundPlayer` plays as one buffer. Foundation alone, so `tools/sounds/render.sh` makes the same
 /// samples off the device.
 nonisolated enum EraVoice: Hashable, Sendable {
-    /// A step of the year wheel: a music box's tine, `step` 0…11 up the Moon's scale an octave
-    /// above it, lower the further back the year.
+    /// A step of the year wheel: a music box's tine, `step` 0…11 up the Moon's scale, lower the
+    /// further back the year.
     case tick(step: Int)
     /// An era's year clicking into place on the wheel: the Moon's bell with a star over it.
     case lit(step: Int)
@@ -27,6 +27,15 @@ nonisolated enum EraVoice: Hashable, Sendable {
 
 /// The passages' sounds, one for each way `EraPassage` draws one.
 nonisolated enum EraPassageSound: Hashable, Sendable {
+    /// Its own draws, so a sky's water is its own.
+    var hashSeed: Int {
+        switch self {
+        case let .tiles(sky), let .wash(sky), let .still(sky): sky == .sun ? 1 : 2
+        case .nave: 3
+        case .wayBack: 4
+        }
+    }
+
     /// Tiles set over the screen and lifted: the way to Paint by Mosaic, and The Frame's both ways.
     case tiles(Sky)
     /// The nave's dark and the rose window's light: Stained Glass's, both ways.
@@ -86,16 +95,16 @@ nonisolated enum EraSynth {
     // MARK: The wheel
 
     private static func tick(step: Int, sr: Double) -> [Float] {
-        var mix = Mix(seconds: 0.5, sr: sr)
-        mix.add(tine(frequency: 2 * moonScale[step], sr: sr, seed: UInt64(step)), at: 0, gain: 1)
+        var mix = Mix(seconds: 0.3, sr: sr)
+        mix.add(tine(frequency: moonScale[step], sr: sr, seed: UInt64(step)), at: 0, gain: 1)
         return mix.samples
     }
 
     private static func lit(step: Int, sr: Double) -> [Float] {
         var mix = Mix(seconds: 1.8, sr: sr)
         let third = min(step + 2, moonScale.count - 1)
-        mix.add(ToneSynth.celesta(frequency: moonScale[step], sampleRate: sr), at: 0, gain: 0.26)
-        mix.add(ToneSynth.celesta(frequency: moonScale[third], sampleRate: sr), at: 0.03, gain: 0.14)
+        mix.add(ToneSynth.celesta(frequency: moonScale[step], sampleRate: sr), at: 0, gain: 0.22)
+        mix.add(ToneSynth.celesta(frequency: moonScale[third], sampleRate: sr), at: 0.03, gain: 0.12)
         mix.add(ToneSynth.twinkle(frequency: 2 * moonScale[step], sampleRate: sr), at: 0.06, gain: 0.12)
         return mix.samples
     }
@@ -105,7 +114,7 @@ nonisolated enum EraSynth {
     private static func passage(_ sound: EraPassageSound, sr: Double) -> [Float] {
         typealias T = Times
         var mix = Mix(seconds: T.total + 1.6, sr: sr)
-        var random = SplitMix64(seed: 0x7061_7373)
+        var random = SplitMix64(seed: 0x7061_7373 &+ UInt64(sound.hashSeed))
         switch sound {
         case let .tiles(sky):
             let scale = scale(of: sky)
@@ -160,9 +169,8 @@ nonisolated enum EraSynth {
                 if x < T.cover + T.hold { return 1 }
                 return max(0, 1 - ease((x - T.cover - T.hold) / (T.lift * 0.8)))
             }
-            stream(into: &mix, from: T.wait, to: T.total, rate: { 260 * flood($0) },
-                   radii: 0.7...3.2, gain: 0.016, random: &random)
-            bed(into: &mix, from: T.wait, to: T.total, level: { 0.022 * flood($0) }, random: &random)
+            water(into: &mix, from: T.wait, to: T.total, level: flood, plinks: 40, gain: 1, random: &random)
+            bed(into: &mix, from: T.wait, to: T.total, level: { 0.008 * flood($0) }, random: &random)
             for (k, at) in [0.08, 0.42, 0.85].enumerated() {
                 mix.add(bubble(radius: 3.2 + 0.4 * Double(k), rise: 0.5, sr: sr), at: T.wait + at, gain: 0.1)
             }
@@ -212,8 +220,8 @@ nonisolated enum EraSynth {
         // The brush's water spreading over the area: a short swell of small bubbles, the
         // paper's hush under them.
         let swell = { (t: Double) -> Double in t < 0.1 ? t / 0.1 : max(0, 1 - (t - 0.1) / 0.4) }
-        stream(into: &mix, from: 0, to: 0.55, rate: { 300 * swell($0) }, radii: 0.5...1.8, gain: 0.014, random: &random)
-        bed(into: &mix, from: 0, to: 0.55, level: { 0.03 * swell($0) }, random: &random)
+        water(into: &mix, from: 0, to: 0.55, level: swell, plinks: 55, gain: 0.9, random: &random)
+        bed(into: &mix, from: 0, to: 0.55, level: { 0.008 * swell($0) }, random: &random)
         mix.add(note(sky, scale(of: sky)[index], sr: sr), at: 0.03, gain: sky == .sun ? 0.2 : 0.17)
         return mix.samples
     }
@@ -238,7 +246,7 @@ nonisolated enum EraSynth {
 
     private static func dried(index: Int, sr: Double) -> [Float] {
         var mix = Mix(seconds: 0.9, sr: sr)
-        mix.add(ToneSynth.twinkle(frequency: 2 * moonScale[index], sampleRate: sr), at: 0, gain: 0.06)
+        mix.add(ToneSynth.twinkle(frequency: 2 * moonScale[index], sampleRate: sr), at: 0, gain: 0.2)
         return mix.samples
     }
 
@@ -246,19 +254,20 @@ nonisolated enum EraSynth {
         var mix = Mix(seconds: 3.4, sr: sr)
         var random = SplitMix64(seed: 0x6669_6E65)
         let swell = { (t: Double) -> Double in t < 0.3 ? t / 0.3 : max(0, 1 - (t - 0.3) / 1.3) }
-        stream(into: &mix, from: 0, to: 1.6, rate: { 180 * swell($0) }, radii: 0.6...2.4, gain: 0.012, random: &random)
+        water(into: &mix, from: 0, to: 1.6, level: swell, plinks: 30, gain: 0.8, random: &random)
+        bed(into: &mix, from: 0, to: 1.6, level: { 0.006 * swell($0) }, random: &random)
         let scale = scale(of: sky)
         switch sky {
         case .sun:
             for (k, i) in [4, 5, 7, 9, 11].enumerated() {
-                mix.add(note(.sun, scale[i], sr: sr), at: 0.15 + 0.1 * Double(k), gain: 0.16)
+                mix.add(note(.sun, scale[i], sr: sr), at: 0.15 + 0.1 * Double(k), gain: 0.14)
             }
-            for i in [5, 7, 9] { mix.add(note(.sun, scale[i], sr: sr), at: 0.8, gain: 0.15) }
+            for i in [5, 7, 9] { mix.add(note(.sun, scale[i], sr: sr), at: 0.8, gain: 0.12) }
         case .moon:
             for (k, i) in [7, 5, 4, 2, 0].enumerated() {
-                mix.add(note(.moon, scale[i], sr: sr), at: 0.15 + 0.14 * Double(k), gain: 0.15)
+                mix.add(note(.moon, scale[i], sr: sr), at: 0.15 + 0.14 * Double(k), gain: 0.13)
             }
-            for i in [0, 1, 3, 4] { mix.add(note(.moon, scale[i], sr: sr), at: 1.0, gain: 0.13) }
+            for i in [0, 1, 3, 4] { mix.add(note(.moon, scale[i], sr: sr), at: 1.0, gain: 0.085) }
             mix.add(ToneSynth.twinkle(frequency: 2 * scale[5], sampleRate: sr), at: 1.35, gain: 0.09)
         }
         return mix.samples
@@ -271,21 +280,22 @@ nonisolated enum EraSynth {
                     : ToneSynth.celesta(frequency: frequency, sampleRate: sr)
     }
 
-    /// A music box's tine: a pure, quickly fading pitch with a bright inharmonic glint and the
-    /// pin's click.
+    /// A music box's tine: a short pluck, its octave and inharmonic glints over it, and the pin's
+    /// click; gone in a tenth of a second, so a flick of the wheel ripples and never hums.
     static func tine(frequency f: Double, sr: Double, seed: UInt64) -> [Float] {
-        let length = 0.45, n = Int(sr * length)
+        let length = 0.25, n = Int(sr * length)
         var out = [Float](repeating: 0, count: n)
         var noise = SplitMix64(seed: seed ^ 0x7469_6E65)
         var lowpassed = 0.0
         for i in 0..<n {
             let t = Double(i) / sr
             let attack = min(1, t / 0.0015)
-            let body = sin(2 * .pi * f * t) * exp(-t * 9)
-            let glint = 0.12 * sin(2 * .pi * 5.93 * f * t) * exp(-t * 60)
-            lowpassed += 0.5 * (noise.unit() - lowpassed)
-            let pin = 0.05 * lowpassed * exp(-t * 400)
-            let tail = min(1, (length - t) / 0.08)
+            let body = sin(2 * .pi * f * t) * exp(-t * 30) + 0.3 * sin(2 * .pi * 2 * f * t) * exp(-t * 45)
+            let glint = 0.14 * sin(2 * .pi * 5.4 * f * t) * exp(-t * 70)
+                + 0.18 * sin(2 * .pi * 2.76 * f * t) * exp(-t * 45)
+            lowpassed += 0.5 * (noise.signed() - lowpassed)
+            let pin = 0.22 * lowpassed * exp(-t * 300)
+            let tail = min(1, (length - t) / 0.06)
             out[i] = Float((attack * (body + glint) + pin) * tail)
         }
         return out
@@ -305,7 +315,7 @@ nonisolated enum EraSynth {
             let ring = sin(2 * .pi * f * detune * t) * exp(-t * 26)
                 + 0.45 * sin(2 * .pi * 2.32 * f * t) * exp(-t * 42)
                 + 0.2 * sin(2 * .pi * 4.25 * f * t) * exp(-t * 75)
-            lowpassed += 0.35 * (noise.unit() - lowpassed)
+            lowpassed += 0.35 * (noise.signed() - lowpassed)
             let tick = 0.35 * lowpassed * exp(-t * 900)
             let tail = min(1, (length - t) / 0.05)
             out[i] = Float((attack * ring + tick) * tail * 0.5)
@@ -342,7 +352,8 @@ nonisolated enum EraSynth {
     }
 
     /// Running water: bubbles at random, `rate(t)` a second, their radii spread log-evenly over
-    /// `radii` (more small than large), each as loud as it is large.
+    /// `radii` (more small than large), the larger a little louder, each chirping up as it nears
+    /// the surface: water is heard as its bubbles, not as a hiss.
     private static func stream(into mix: inout Mix, from start: Double, to end: Double, rate: (Double) -> Double,
                                radii: ClosedRange<Double>, gain: Float, random: inout SplitMix64) {
         let peak = stride(from: start, to: end, by: 0.01).map(rate).max() ?? 0
@@ -354,21 +365,41 @@ nonisolated enum EraSynth {
             guard t < end else { break }
             guard random.unit() < rate(t) / peak else { continue }
             let r = exp(low + (high - low) * random.unit() * random.unit())
-            mix.add(bubble(radius: r, rise: 0.1 * random.unit(), sr: mix.sr), at: t,
-                    gain: gain * Float(r / radii.upperBound).squareRoot() * Float(0.6 + 0.4 * random.unit()))
+            mix.add(bubble(radius: r, rise: 0.15 + 0.35 * random.unit(), sr: mix.sr), at: t,
+                    gain: gain * Float(pow(r / radii.upperBound, 0.25)) * Float(0.6 + 0.4 * random.unit()))
         }
     }
 
-    /// The hush of water moving over paper: soft noise, low-passed twice, at `level(t)`.
+    /// Water moving: a few dozen separate bubbles a second at `level(t)` 1, each chirping up as
+    /// a falling drop's does, over a soft, dense run of small ones, so it is heard as water and
+    /// not as a hiss.
+    private static func water(into mix: inout Mix, from start: Double, to end: Double, level: @escaping (Double) -> Double,
+                              plinks: Double, gain: Float, random: inout SplitMix64) {
+        var t = start
+        while true {
+            t += -log(max(1e-9, random.unit())) / plinks
+            guard t < end else { break }
+            guard random.unit() < level(t) else { continue }
+            mix.add(bubble(radius: 1.3 + 2.4 * random.unit(), rise: 0.35 + 0.45 * random.unit(), sr: mix.sr), at: t,
+                    gain: gain * Float(0.05 + 0.05 * random.unit()))
+        }
+        stream(into: &mix, from: start, to: end, rate: { 220 * level($0) }, radii: 0.7...1.8, gain: gain * 0.012, random: &random)
+    }
+
+    /// The hush of water moving over paper: noise between about 400 Hz and 4 kHz, fluttering as
+    /// moving water does, at `level(t)`.
     private static func bed(into mix: inout Mix, from start: Double, to end: Double, level: (Double) -> Double,
                             random: inout SplitMix64) {
-        var a = 0.0, b = 0.0
+        var bright = 0.0, dull = 0.0, flutter = 0.0, drift = 0.0
         let first = Int(start * mix.sr), last = min(mix.samples.count, Int(end * mix.sr))
         guard first < last else { return }
         for i in first..<last {
-            a += 0.08 * (random.unit() - a)
-            b += 0.08 * (a - b)
-            mix.samples[i] += Float(b * 3 * level(Double(i) / mix.sr))
+            bright += 0.45 * (random.signed() - bright)
+            dull += 0.055 * (bright - dull)
+            drift += 0.002 * (random.signed() - drift)
+            flutter += 0.01 * (drift * 40 - flutter)
+            let swell = 0.65 + 0.35 * max(-1, min(1, flutter))
+            mix.samples[i] += Float((bright - dull) * 1.6 * swell * level(Double(i) / mix.sr))
         }
     }
 
@@ -417,5 +448,9 @@ nonisolated enum EraSynth {
 private extension SplitMix64 {
     /// A uniform draw in [0, 1).
     nonisolated mutating func unit() -> Double { Double(next() >> 11) / Double(1 << 53) }
+
+    /// A uniform draw in [-1, 1): noise with no offset, which a low-pass would turn into a swell
+    /// below hearing.
+    nonisolated mutating func signed() -> Double { 2 * unit() - 1 }
 }
 #endif

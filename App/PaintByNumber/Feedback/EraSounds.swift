@@ -43,22 +43,23 @@ final class EraSounds {
 
     /// Steps closer than this sound as one, and steps faster than `brisk` softer: a flick through
     /// a century is a ripple, not a rattle.
-    static let tickGap: Duration = .milliseconds(30)
+    static let tickGap: Duration = .milliseconds(45)
     static let brisk: Duration = .milliseconds(90)
 
     /// The wheel came to row `row` of `rows` (0 the oldest year), lit when it opens an era.
     func wheelTurned(row: Int, of rows: Int, lit: Bool) {
         let now = self.now()
-        if !preparedWheel {
-            preparedWheel = true
-            // The passages it may open are made while the painter turns it.
-            player.prepare(Self.wheelVoices + [.passage(.tiles(sky)), .passage(.nave), .passage(.wash(sky)), .passage(.wayBack)])
-        }
         let since = lastTick.map { now - $0 }
         if !lit, let since, since < Self.tickGap { return }
         lastTick = now
         let cue = Self.wheelCue(row: row, of: rows, lit: lit, since: since)
         player.play(cue.voice, volume: cue.volume)
+        if !preparedWheel {
+            preparedWheel = true
+            // The rest of the wheel, and the passages it may open, are made while the painter
+            // turns it, after this first step has sounded.
+            player.prepare(Self.wheelVoices + [.passage(.tiles(sky)), .passage(.nave), .passage(.wash(sky)), .passage(.wayBack)])
+        }
     }
 
     static let wheelVoices: [EraVoice] = (0..<12).map { .tick(step: $0) }
@@ -73,7 +74,7 @@ final class EraSounds {
         let step = step(row: row, of: rows)
         if lit { return (.lit(step: step), 1) }
         let quick = since.map { $0 < brisk } ?? false
-        return (.tick(step: step), quick ? 0.055 : 0.09)
+        return (.tick(step: step), quick ? 0.06 : 0.11)
     }
 
     // MARK: Passages
@@ -99,12 +100,15 @@ final class EraSounds {
     enum WatercolorTap: Equatable {
         /// The paint in hand laid on its area; `finishes` when it was the last.
         case wash(finishes: Bool)
-        /// The paint in hand on its area laid already: more of the same wash.
-        case rewash
         /// Water on paper no wash has reached.
         case water
-        /// Water on a laid wash: a bloom.
+        /// Water on a laid wash, whatever was in hand (PaintCore's `WatercolorSim.tap`: a laid area
+        /// takes water alone): a bloom.
         case bloom
+
+        init(paint: Bool, wasLaid: Bool, finishes: Bool) {
+            self = wasLaid ? .bloom : paint ? .wash(finishes: finishes) : .water
+        }
     }
 
     /// A tap's sound. The tune moves on with each wash, as painting's does with each fill.
@@ -129,18 +133,19 @@ final class EraSounds {
             var cues: [(voice: EraVoice, volume: Float, delay: TimeInterval)] = [(.wash(note.sky, index: note.index), 1, 0)]
             if finishes { cues.append((.finale(note.sky), 1, 0.7)) }
             return cues
-        case .rewash:
-            return [(.wash(melody.sky ?? sky, index: melody.latest), 0.6, 0)]
         case .water:
             return [(.drop(variant: variant % 4), 1, 0)]
         case .bloom:
-            return [(.bloom(index: melody.latest, variant: variant % 4), 1, 0)]
+            return [(.bloom(index: melody.latest, variant: variant % 2), 1, 0)]
         }
     }
 
     /// How long after the last tap a sheet that has stopped moving is heard drying: a sheet still
     /// with a wash that sank in at once says nothing.
     static let dryAfter: Duration = .milliseconds(1200)
+
+    /// A sheet opened: whatever the last was doing when it closed, this one hasn't been tapped.
+    func sheetOpened() { wetSince = nil }
 
     /// The sheet has stopped moving (`WatercolorRenderer.onActivity`): the first time since a
     /// tap, and long enough after it, a star sounds over the tune's last note.

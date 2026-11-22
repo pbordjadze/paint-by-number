@@ -61,6 +61,7 @@ final class WatercolorCanvasView: UIView, UIScrollViewDelegate {
         addSubview(scroll)
         let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
         scroll.addGestureRecognizer(tap)
+        EraSounds.shared.sheetOpened()
         renderer.onActivity = { [weak self] active in
             self?.setRunning(active)
             // Still again: the water has dried (`EraSounds` says it once a tap).
