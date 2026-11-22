@@ -99,7 +99,7 @@ extension PaletteRows {
         switch self {
         case .auto:
             String(localized: "palette.rows.auto", defaultValue: "Auto", bundle: .era,
-                   comment: "Palette Rows choice: as many rows as fit the screen (three on iPad, one on iPhone)")
+                   comment: "Palette Rows choice: the default, one row (or column) of swatches that scrolls")
         case .all:
             String(localized: "palette.rows.all", defaultValue: "All at Once", bundle: .era,
                    comment: "Palette Rows choice: as many rows as it takes to show every color without scrolling")

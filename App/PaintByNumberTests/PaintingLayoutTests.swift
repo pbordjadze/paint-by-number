@@ -29,11 +29,10 @@ struct PaintingLayoutTests {
         #expect(abs(onPad.minX - 16) < 0.01 && abs(onPad.width - 1000) < 0.01)
         #if UNRELEASED
         #expect(abs(onPad.minY - 327.5) < 1)
-        #expect(PaintingLayout(pad).palette.lines == 1)
         #else
         #expect(abs(onPad.minY - 327.2) < 1)
-        #expect(PaintingLayout(pad).palette.lines == 1)
         #endif
+        #expect(PaintingLayout(pad).palette.lines == 1)
     }
 
     /// The canvas, laid out with the layout's insets, fits its page exactly where the layout says,
