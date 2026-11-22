@@ -158,8 +158,13 @@ struct LivePhotoSaveSheet: View {
 }
 /// Save as Live Photo in a time-lapse's share sheet (`TimelapseRequest.shareActivities`): it
 /// makes its own few seconds of replay, so the time-lapse being shared is only what led here.
-final class LivePhotoActivity: UIActivity {
+/// UIKit's `UIActivity` is not main-actor isolated, so neither is this; UIKit asks it everything
+/// on the main thread, where its few mutable properties are used.
+nonisolated final class LivePhotoActivity: UIActivity, @unchecked Sendable {
     private let request: TimelapseRequest
+    private var host: UIViewController?
+    private var watcher: LivePhotoSheetWatcher?
+    private var finished = false
 
     init(request: TimelapseRequest) {
         self.request = request
@@ -175,23 +180,25 @@ final class LivePhotoActivity: UIActivity {
     override var activityImage: UIImage? { UIImage(systemName: "livephoto") }
     override func canPerform(withActivityItems activityItems: [Any]) -> Bool { true }
 
-    override var activityViewController: UIViewController? { host }
-
     /// Made once: UIKit may ask for the controller more than once.
-    private lazy var host: UIViewController = {
-        let host = UIHostingController(rootView: LivePhotoSaveSheet(request: request) { [weak self] saved in
-            self?.finish(saved)
-        })
-        if let sheet = host.sheetPresentationController {
-            sheet.detents = [.medium()]
+    override var activityViewController: UIViewController? {
+        MainActor.assumeIsolated { () -> UIViewController in
+            if let host { return host }
+            let made = UIHostingController(rootView: LivePhotoSaveSheet(request: request) { [weak self] saved in
+                self?.finish(saved)
+            })
+            if let sheet = made.sheetPresentationController {
+                sheet.detents = [.medium()]
+            }
+            // Swiped away, it is finished too, or the time-lapse's sheet waits for a share sheet
+            // that never closes.
+            let watcher = LivePhotoSheetWatcher { [weak self] in self?.finish(false) }
+            made.presentationController?.delegate = watcher
+            self.watcher = watcher
+            host = made
+            return made
         }
-        // Swiped away, it is finished too, or the time-lapse's sheet waits for a share sheet
-        // that never closes.
-        host.presentationController?.delegate = self
-        return host
-    }()
-
-    private var finished = false
+    }
 
     private func finish(_ completed: Bool) {
         guard !finished else { return }
@@ -200,9 +207,16 @@ final class LivePhotoActivity: UIActivity {
     }
 }
 
-extension LivePhotoActivity: UIAdaptivePresentationControllerDelegate {
+/// Tells `LivePhotoActivity` its sheet was swiped away.
+final class LivePhotoSheetWatcher: NSObject, UIAdaptivePresentationControllerDelegate {
+    private let onDismiss: () -> Void
+
+    init(onDismiss: @escaping () -> Void) {
+        self.onDismiss = onDismiss
+    }
+
     func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
-        finish(false)
+        onDismiss()
     }
 }
 #endif
