@@ -26,7 +26,8 @@ nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
     let drawsOutlines = false
     let drawsNumbers = true
     /// The finished window glows past white where the screen can (`ExtendedRange`): the moon
-    /// comes up behind it as the sun passes.
+    /// comes up behind it as the sun passes. The poured glass takes the headroom; the light
+    /// pass's sun band, added over it, may lift bright clear glass a little past white too.
     let wantsExtendedRange = true
     let ink: SIMD3<Float>? = CanvasColor.linearP3(sRGB: SIMD3(0.97, 0.92, 0.80))
     let backdrop: SIMD3<Float>? = CanvasColor.linearP3(sRGB: GlassPicture.nave)
