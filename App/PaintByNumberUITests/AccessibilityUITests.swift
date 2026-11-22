@@ -136,11 +136,8 @@ final class AccessibilityUITests: XCTestCase {
         let window = app.windows.firstMatch.frame
         let swatches = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-'")).allElementsBoundByIndex
         let visible = swatches.filter { window.contains($0.frame) }
+        // One row by default on every screen: the rest scroll into view.
         XCTAssertFalse(visible.isEmpty, "No swatch is on screen")
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            // Regular widths wrap the palette so every color stays on screen.
-            XCTAssertEqual(visible.count, swatches.count)
-        }
         for swatch in visible { XCTAssertTrue(swatch.isHittable, "\(swatch.identifier) can't be tapped") }
         // A phone's bar has no room for Hint at this size; the selected swatch still offers it.
         let controls = UIDevice.current.userInterfaceIdiom == .pad ? ["Back", "Hint", "Undo"] : ["Back", "Undo"]

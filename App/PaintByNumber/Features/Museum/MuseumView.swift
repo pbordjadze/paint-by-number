@@ -14,9 +14,13 @@ import UIKit
 struct MuseumView: View {
     /// The full image's bytes and the work's title, once the painter chose Paint This.
     var onPaint: (Data, String) -> Void
+    /// A painting of the work under way, chosen with Resume.
+    var onResume: (UUID) -> Void
     var onClose: () -> Void
 
     @State private var library = MuseumLibrary.shared
+    /// The painter's paintings, whose names frame the works painted (`MuseumPainted`).
+    @Environment(Library.self) private var paintings: Library?
     @State private var query = MuseumQuery()
     @State private var shown: [MuseumCatalog.Work] = []
     @State private var counts: [String: Int] = [:]
@@ -26,8 +30,10 @@ struct MuseumView: View {
     @State private var demoIsReady = false
     #endif
 
-    init(onPaint: @escaping (Data, String) -> Void, onClose: @escaping () -> Void) {
+    init(onPaint: @escaping (Data, String) -> Void, onResume: @escaping (UUID) -> Void,
+         onClose: @escaping () -> Void) {
         self.onPaint = onPaint
+        self.onResume = onResume
         self.onClose = onClose
         #if DEBUG
         _query = State(initialValue: MuseumQuery(movement: Self.demoMovement))
@@ -50,7 +56,8 @@ struct MuseumView: View {
                     }
                 }
                 .navigationDestination(for: MuseumCatalog.Work.self) { work in
-                    MuseumWorkView(work: work, museum: museumName(of: work), onPaint: onPaint)
+                    MuseumWorkView(work: work, museum: museumName(of: work), resuming: underWay(work),
+                                   onPaint: onPaint, onResume: onResume)
                 }
         }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
@@ -129,7 +136,7 @@ struct MuseumView: View {
                             ContentUnavailableView.search(text: query.search)
                                 .padding(.top, 40)
                         } else {
-                            wall
+                            wall(catalog)
                                 .padding(.horizontal, horizontalPadding)
                         }
                     } header: {
@@ -154,12 +161,37 @@ struct MuseumView: View {
 
     private static let top = "museum-top"
 
-    private var wall: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: tileWidth), spacing: isWide ? 20 : 10, alignment: .bottom)],
+    /// The painter's paintings by name: the finished, and the newest under way of each name. A
+    /// painting of a library picture is the library's, whatever its name.
+    private var shelf: (finished: Set<String>, underWay: [String: UUID]) {
+        var finished: Set<String> = []
+        var underWay: [String: UUID] = [:]
+        let made = (paintings?.artworks ?? []).filter { $0.sampleName == nil }
+        for artwork in made.sorted(by: { $0.modifiedAt < $1.modifiedAt }) {
+            let name = MuseumPainted.key(artwork.title)
+            if artwork.isComplete { finished.insert(name) } else { underWay[name] = artwork.id }
+        }
+        return (finished, underWay)
+    }
+
+    /// The painting of `work` under way, if there is one: its page offers Resume.
+    private func underWay(_ work: MuseumCatalog.Work) -> UUID? {
+        guard case .ready(let catalog) = library.state else { return nil }
+        let underWay = shelf.underWay
+        guard MuseumPainted.matches(work, names: Set(underWay.keys), recorded: MuseumPainted.recorded(),
+                                    shared: catalog.sharedNames) else { return nil }
+        return underWay[MuseumPainted.key(work.paintingTitle)]
+    }
+
+    private func wall(_ catalog: MuseumCatalog) -> some View {
+        let names = shelf.finished
+        let recorded = MuseumPainted.recorded()
+        return LazyVGrid(columns: [GridItem(.adaptive(minimum: tileWidth), spacing: isWide ? 20 : 10, alignment: .bottom)],
                   alignment: .leading, spacing: isWide ? 24 : 12) {
             ForEach(shown) { work in
                 NavigationLink(value: work) {
-                    MuseumTile(work: work)
+                    MuseumTile(work: work, isPainted: MuseumPainted.matches(
+                        work, names: names, recorded: recorded, shared: catalog.sharedNames))
                 }
                 .buttonStyle(PressableCardStyle())
                 .accessibilityIdentifier("museum-work")
@@ -277,9 +309,11 @@ private struct MovementRow: View {
 }
 
 /// A work on the wall: the picture whole at its own shape, standing on a shared line at the
-/// foot of a square. Its title, artist and date are its VoiceOver label and its page's.
+/// foot of a square. Its title, artist and date are its VoiceOver label and its page's. A work
+/// the painter has painted hangs in a little frame, a mat inside a dark wood moulding.
 struct MuseumTile: View {
     let work: MuseumCatalog.Work
+    var isPainted = false
     @State private var image: CGImage?
     @Environment(\.displayScale) private var displayScale
 
@@ -290,12 +324,22 @@ struct MuseumTile: View {
             .contentShape(.rect)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: [work.title, work.artist, work.year].filter { !$0.isEmpty }.joined(separator: ", ")))
+        .accessibilityValue(isPainted ? Text("Painted") : Text(verbatim: ""))
+    }
+
+    /// The moulding's and the mat's widths for a box this wide: about 3.5% and 2.5% of it.
+    private func frameWidths(for box: CGSize) -> (moulding: CGFloat, mat: CGFloat) {
+        guard isPainted else { return (0, 0) }
+        let moulding = min(max((box.width * 0.035).rounded(), 3), 7)
+        return (moulding, max(2, (moulding * 0.7).rounded()))
     }
 
     /// The picture, or its average color at its shape while it comes.
     private var picture: some View {
         GeometryReader { box in
-            let size = fitted(in: box.size)
+            let border = frameWidths(for: box.size)
+            let inset = 2 * (border.moulding + border.mat)
+            let size = fitted(in: CGSize(width: max(1, box.size.width - inset), height: max(1, box.size.height - inset)))
             ZStack {
                 if let image {
                     Image(decorative: image, scale: 1)
@@ -306,8 +350,22 @@ struct MuseumTile: View {
                 }
             }
             .frame(width: size.width, height: size.height)
-            .clipShape(.rect(cornerRadius: 2))
-            .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
+            .clipShape(.rect(cornerRadius: isPainted ? 0 : 2))
+            .padding(border.mat)
+            .background(isPainted ? Self.mat : .clear)
+            .padding(border.moulding)
+            .background {
+                if isPainted {
+                    Rectangle()
+                        .fill(Self.moulding)
+                        .overlay { Rectangle().strokeBorder(.white.opacity(0.22), lineWidth: 0.75) }
+                        .overlay {
+                            Rectangle().strokeBorder(.black.opacity(0.35), lineWidth: 0.75)
+                                .padding(border.moulding - 0.75)
+                        }
+                }
+            }
+            .shadow(color: .black.opacity(isPainted ? 0.28 : 0.18), radius: 6, y: 3)
             .frame(width: box.size.width, height: box.size.height, alignment: .bottom)
             .task(id: work.id) {
                 let pixels = Int(max(size.width, size.height) * displayScale)
@@ -318,12 +376,30 @@ struct MuseumTile: View {
         }
     }
 
+    private static let mat = Color(red: 0.97, green: 0.95, blue: 0.91)
+    private static let moulding = LinearGradient(
+        colors: [Color(red: 0.42, green: 0.29, blue: 0.18), Color(red: 0.25, green: 0.16, blue: 0.10)],
+        startPoint: .topLeading, endPoint: .bottomTrailing)
+
     private func fitted(in box: CGSize) -> CGSize {
         let ratio = work.aspectRatio
         if box.width / max(box.height, 1) > ratio {
             return CGSize(width: box.height * ratio, height: box.height)
         }
         return CGSize(width: box.width, height: box.width / ratio)
+    }
+}
+
+private nonisolated struct ResumePaintingKey: EnvironmentKey {
+    static let defaultValue: (@MainActor (UUID) -> Void)? = nil
+}
+
+extension EnvironmentValues {
+    /// Opens a painting of the library from inside the create flow (the Museum's Resume); nil
+    /// outside the app shell. A key of its own, as `paintPicture`'s: `@Entry` warns of a closure.
+    var resumePainting: (@MainActor (UUID) -> Void)? {
+        get { self[ResumePaintingKey.self] }
+        set { self[ResumePaintingKey.self] = newValue }
     }
 }
 

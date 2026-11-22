@@ -148,6 +148,9 @@ struct AppShellView: View {
             .environment(library)
             .environment(paintings)
             .environment(\.startHandoff, handoff)
+            #if UNRELEASED
+            .environment(\.resumePainting, resume)
+            #endif
             // The flow draws its own background and leaves the cover clear, so that it can fade to
             // the painting opened beneath it.
             .presentationBackground(.clear)
@@ -258,6 +261,15 @@ struct AppShellView: View {
             namespace: zoom, query: query, timelapse: $timelapse, sending: $sending, onCreate: { isCreating = true },
             onContinueDraft: continueDraft, onPaint: paint, isAsking: $galleryAsks)
     }
+
+    #if UNRELEASED
+    /// The Museum's Resume: the create flow closes and the painting opens.
+    private func resume(_ id: UUID) {
+        guard library.artwork(with: id) != nil else { return }
+        isCreating = false
+        path = [id]
+    }
+    #endif
 
     /// Another One, a door after Finished: the create flow paints the library picture as the
     /// shelf's do, over the finished painting, which Start replaces (`startPainting`); with none,

@@ -214,27 +214,14 @@ nonisolated final class WatercolorFilmPlayer: @unchecked Sendable {
             frame.granulation = [Float16](repeating: 0, count: bw * bh)
             frame.density.withUnsafeMutableBufferPointer { out in
                 frame.granulation.withUnsafeMutableBufferPointer { g in
-                    for y in 0..<bh {
-                        for x in 0..<bw {
-                            let i = (box.y0 + y) * w + box.x0 + x
-                            let d = sim.D[i] + 0.9 * sim.S[i]
-                            let o = (y * bw + x) * 4
-                            out[o] = Float16(d.x)
-                            out[o + 1] = Float16(d.y)
-                            out[o + 2] = Float16(d.z)
-                            out[o + 3] = Float16(sim.W[i])
-                            g[y * bw + x] = Float16(sim.G[i])
-                        }
-                    }
+                    WatercolorRenderer.pack(sim, box: box, width: w, density: out.baseAddress!, grain: g.baseAddress!)
                 }
             }
         }
         frame.regions = regions.filter { Int($0) < sheet.regionCount }
-        for r in frame.regions {
-            let target = sim.target(of: Int(r))
-            let at = sim.paintedAt[Int(r)]
-            frame.gains.append(SIMD4(target.gain, at.isFinite ? at : 1e9))
-            frame.aims.append(SIMD4(target.aim, sim.glaze(of: Int(r))))
+        for (_, t) in WatercolorRenderer.targets(sim, of: frame.regions) {
+            frame.gains.append(t.gain)
+            frame.aims.append(t.aim)
         }
         return frame
     }

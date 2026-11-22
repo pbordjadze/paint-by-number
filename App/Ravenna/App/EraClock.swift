@@ -257,10 +257,14 @@ public enum EraYear {
     /// (SideStore and Debug builds; painting-company row 373).
     public static let watercolor = 1502
 
+    /// 1000, a round year for the modes still to come: The Frame's (SideStore and Debug builds;
+    /// painting-company row 379), a mode that is only the frame every mode shares.
+    public static let frame = 1000
+
     /// The years that open an era, oldest first: the ones the wheel lights.
     public static var modes: [Int] {
         #if UNRELEASED
-        return [byzantium, stainedGlass, watercolor]
+        return [byzantium, frame, stainedGlass, watercolor]
         #else
         return [byzantium]
         #endif
@@ -269,6 +273,8 @@ public enum EraYear {
     public static func opensStainedGlass(_ year: Int) -> Bool { year == stainedGlass && modes.contains(year) }
 
     public static func opensWatercolor(_ year: Int) -> Bool { year == watercolor && modes.contains(year) }
+
+    public static func opensTheFrame(_ year: Int) -> Bool { year == frame && modes.contains(year) }
 
     public static func returnsToThePresent(_ year: Int) -> Bool { year >= present }
 

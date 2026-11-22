@@ -7,11 +7,14 @@ import UIKit
 /// A work of the Museum, large, with its wall label: title, artist, date, medium, movement and
 /// the museum that holds it, a link to its page there, and Paint This. The full image is fetched
 /// as the page opens (it replaces the tile's picture once it comes), so Paint This usually has it
-/// at once; tapped before, the button waits for it, and a failure says so in an alert.
+/// at once; tapped before, the button waits for it, and a failure says so in an alert. A work
+/// whose painting is under way (`resuming`) offers Resume instead, which opens that painting.
 struct MuseumWorkView: View {
     let work: MuseumCatalog.Work
     let museum: String
+    var resuming: UUID?
     var onPaint: (Data, String) -> Void
+    var onResume: (UUID) -> Void
 
     @State private var picture: CGImage?
     @State private var full: Data?
@@ -125,9 +128,13 @@ struct MuseumWorkView: View {
     // MARK: Painting it
 
     private var paintButton: some View {
-        Button(action: paint) {
+        Button {
+            if let resuming { onResume(resuming) } else { paint() }
+        } label: {
             HStack(spacing: 10) {
-                if wantsToPaint {
+                if resuming != nil {
+                    Label("Resume", systemImage: "paintbrush.pointed")
+                } else if wantsToPaint {
                     ProgressView()
                         .tint(.white)
                     Text("Getting the Picture…")
@@ -150,6 +157,7 @@ struct MuseumWorkView: View {
 
     private func paint() {
         if let full {
+            MuseumPainted.record(work.id)
             onPaint(full, work.paintingTitle)
         } else if fetchFailed {
             fetchFailed = false
@@ -185,6 +193,7 @@ struct MuseumWorkView: View {
             #endif
             if wantsToPaint {
                 wantsToPaint = false
+                MuseumPainted.record(work.id)
                 onPaint(data, work.paintingTitle)
             }
         } catch {
