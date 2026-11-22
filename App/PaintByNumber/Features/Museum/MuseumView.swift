@@ -60,7 +60,7 @@ struct MuseumView: View {
                 }
                 .navigationDestination(for: MuseumCatalog.Work.self) { work in
                     MuseumWorkView(work: work, museum: museumName(of: work), resuming: underWay(work),
-                                   onPaint: onPaint, onResume: { onResume?($0) })
+                                   records: onResume != nil, onPaint: onPaint, onResume: { onResume?($0) })
                 }
         }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }

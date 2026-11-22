@@ -13,6 +13,9 @@ struct MuseumWorkView: View {
     let work: MuseumCatalog.Work
     let museum: String
     var resuming: UUID?
+    /// Whether Paint This marks the work as the painter's (`MuseumPainted`): not in a mode, whose
+    /// paintings are its own.
+    var records = true
     var onPaint: (Data, String) -> Void
     var onResume: (UUID) -> Void
 
@@ -157,7 +160,7 @@ struct MuseumWorkView: View {
 
     private func paint() {
         if let full {
-            MuseumPainted.record(work.id)
+            if records { MuseumPainted.record(work.id) }
             onPaint(full, work.paintingTitle)
         } else if fetchFailed {
             fetchFailed = false
@@ -191,9 +194,10 @@ struct MuseumWorkView: View {
             #if DEBUG
             if UserDefaults.standard.bool(forKey: "demoMuseumPaint") { wantsToPaint = true }
             #endif
+            guard !Task.isCancelled else { return }
             if wantsToPaint {
                 wantsToPaint = false
-                MuseumPainted.record(work.id)
+                if records { MuseumPainted.record(work.id) }
                 onPaint(data, work.paintingTitle)
             }
         } catch {
