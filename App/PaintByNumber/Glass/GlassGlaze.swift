@@ -407,8 +407,10 @@ final class GlassGlazeModel: CanvasTouches {
 
     func canvas(_ canvas: CanvasView, speak region: Int) -> (label: String, value: String) {
         let glass = region < glazing.glass.count ? Int(glazing.glass[region]) : -1
-        return (String(localized: "glass.piece", defaultValue: "Piece \(region + 1)",
-                       comment: "VoiceOver name of one piece of a stained glass window, by its number"),
+        // A piece is named by the number of its glass, the one its bead carries, as the window shows.
+        let number = region < template.regions.count ? Int(template.regions[region].colorIndex) + 1 : 0
+        return (String(localized: "glass.piece.number", defaultValue: "Number \(number)",
+                       comment: "VoiceOver name of one piece of a stained glass window: the number of the glass it takes"),
                 glass >= 0 && glass < offered.count ? name(of: glass) : String(
                     localized: "glass.unglazed", defaultValue: "Unglazed",
                     comment: "VoiceOver value of a piece of stained glass with no glass in it yet"))

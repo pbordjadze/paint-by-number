@@ -58189,74 +58189,74 @@
         }
       }
     },
-    "glass.piece" : {
-      "comment" : "VoiceOver name of one piece of a stained glass window, by its number",
+    "glass.piece.number" : {
+      "comment" : "VoiceOver name of one piece of a stained glass window: the number of the glass it takes",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Stück %lld"
+            "value" : "Nummer %lld"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Piece %lld"
+            "value" : "Number %lld"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pieza %lld"
+            "value" : "Número %lld"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pièce %lld"
+            "value" : "Numéro %lld"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pezzo %lld"
+            "value" : "Numero %lld"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld番目のピース"
+            "value" : "%lld番"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld번 조각"
+            "value" : "%lld번"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Stuk %lld"
+            "value" : "Nummer %lld"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pedaço %lld"
+            "value" : "Número %lld"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "第 %lld 块"
+            "value" : "%lld 号"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "第 %lld 塊"
+            "value" : "%lld 號"
           }
         }
       }
