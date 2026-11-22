@@ -1207,7 +1207,8 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   (`CreateModel.load(imageData:title:)`, `paintsNow`). A work with a finished painting of it
   hangs in a little frame on the wall, and one with a painting under way says Resume on its
   page, which closes the flow and opens that painting (`MuseumPainted`: by the painting's name,
-  and the ids Paint This records; the shell's `resumePainting`). Pictures go through `MuseumImages`, a
+  and the ids Paint This records; the shell's `resumePainting`). Every mode's + menu opens it
+  too (`ModeShell`, The frame every mode shares). Pictures go through `MuseumImages`, a
   URL cache of their own on disk. Its scenarios are `museum` (with `-dark`), `museum-art-nouveau`
   and `museum-work` (with `-dark`), which need the network; `-demoMuseumPaint YES` paints the
   opened work once it is fetched.
@@ -1365,8 +1366,10 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
 SideStore and Debug builds (`#if UNRELEASED`; painting-company row 379). Every mode behind the
 year wheel is a `ModeShell` around what is its own; `ModeShell`'s doc comment is the rules, with no
 exceptions: a year (opened from the wheel, left from its Settings' Year row, `ModeSettingsView`);
-a gallery under the mode's name on its backdrop; Settings top left; New top right, with A Photo
-and The Library and nothing else (`ModeLibraryPicker`); one accent and the dark; the painting
+a gallery under the mode's name on its backdrop; Settings top left; New top right, with A Photo,
+The Library (`ModeLibraryPicker`) and The Museum (`MuseumView` with no `onResume`: no frames or
+Resume there, a mode's paintings being its own; a work painted names the painting,
+`ModePicture.title`) and nothing else; one accent and the dark; the painting
 screen pushed on the gallery, its name inline, the same words while it opens or can't
 (`ModePaintingFrame`, `ModeOpening`). Every mode also guarantees, inside the frame: it starts from the painter's
 picture and makes the painting from it; the picture is divided into numbered regions, each number

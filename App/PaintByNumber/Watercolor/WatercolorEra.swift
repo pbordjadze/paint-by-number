@@ -70,7 +70,7 @@ struct WatercolorEra: View {
     }
 
     private func paint(_ picked: ModePicture) async {
-        await make(from: picked.photo, title: picked.sample?.title ?? shelf.title(), sampleName: picked.sample?.id)
+        await make(from: picked.photo, title: picked.title ?? shelf.title(), sampleName: picked.sample?.id)
     }
 
     private func make(from photo: RGBAImage, title: String, sampleName: String?) async {

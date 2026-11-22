@@ -9,13 +9,16 @@ import UIKit
 /// `MuseumWorkView`, its wall label and Paint This, which hands the full image to the create
 /// flow (`onPaint`) as a photo picked would be.
 ///
-/// The Paint page's Museum tile presents it (`PhotoSourceView`). The page is about the works:
+/// The Paint page's Museum tile presents it (`PhotoSourceView`), and so does every mode's + menu
+/// (`ModeShell`), which hands no `onResume`: a mode's paintings are its own, so there the works
+/// hang unframed and offer no Resume. The page is about the works:
 /// the app's own chrome is the navigation bar, the movements' row and one menu.
 struct MuseumView: View {
     /// The full image's bytes and the work's title, once the painter chose Paint This.
     var onPaint: (Data, String) -> Void
-    /// A painting of the work under way, chosen with Resume.
-    var onResume: (UUID) -> Void
+    /// A painting of the work under way, chosen with Resume; nil where the Museum doesn't hold the
+    /// painter's paintings (a mode's), so no work is framed or resumed.
+    var onResume: ((UUID) -> Void)?
     var onClose: () -> Void
 
     @State private var library = MuseumLibrary.shared
@@ -30,7 +33,7 @@ struct MuseumView: View {
     @State private var demoIsReady = false
     #endif
 
-    init(onPaint: @escaping (Data, String) -> Void, onResume: @escaping (UUID) -> Void,
+    init(onPaint: @escaping (Data, String) -> Void, onResume: ((UUID) -> Void)? = nil,
          onClose: @escaping () -> Void) {
         self.onPaint = onPaint
         self.onResume = onResume
@@ -57,7 +60,7 @@ struct MuseumView: View {
                 }
                 .navigationDestination(for: MuseumCatalog.Work.self) { work in
                     MuseumWorkView(work: work, museum: museumName(of: work), resuming: underWay(work),
-                                   onPaint: onPaint, onResume: onResume)
+                                   onPaint: onPaint, onResume: { onResume?($0) })
                 }
         }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
@@ -166,7 +169,7 @@ struct MuseumView: View {
     private var shelf: (finished: Set<String>, underWay: [String: UUID]) {
         var finished: Set<String> = []
         var underWay: [String: UUID] = [:]
-        let made = (paintings?.artworks ?? []).filter { $0.sampleName == nil }
+        let made = onResume == nil ? [] : (paintings?.artworks ?? []).filter { $0.sampleName == nil }
         for artwork in made.sorted(by: { $0.modifiedAt < $1.modifiedAt }) {
             let name = MuseumPainted.key(artwork.title)
             if artwork.isComplete { finished.insert(name) } else { underWay[name] = artwork.id }
