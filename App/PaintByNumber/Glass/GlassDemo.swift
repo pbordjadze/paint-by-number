@@ -106,7 +106,7 @@ enum GlassDemo {
         let t = opened.template
         let order = t.regions.indices.sorted { t.regions[$0].area > t.regions[$1].area }
         // Framed a little ahead of the glass, as a painter leads a chunk and then pours it.
-        model.frame(Array(order.prefix(Int((Double(order.count) * min(1, share + 0.2)).rounded()))))
+        for r in order.prefix(Int((Double(order.count) * min(1, share + 0.2)).rounded())) { glazing.framed[r] = true }
         for r in order.prefix(Int((Double(order.count) * share).rounded())) {
             glazing.glass[r] = Int16(t.regions[r].colorIndex)
         }
