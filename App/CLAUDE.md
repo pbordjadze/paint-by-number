@@ -1366,10 +1366,11 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
 SideStore and Debug builds (`#if UNRELEASED`; painting-company row 379). Every mode behind the
 year wheel is a `ModeShell` around what is its own; `ModeShell`'s doc comment is the rules, with no
 exceptions: a year (opened from the wheel, left from its Settings' Year row, `ModeSettingsView`);
-a gallery under the mode's name on its backdrop; Settings top left; New top right, with A Photo,
-The Library (`ModeLibraryPicker`) and The Museum (`MuseumView` with no `onResume`: no frames or
-Resume there, a mode's paintings being its own; a work painted names the painting,
-`ModePicture.title`) and nothing else; one accent and the dark; the painting
+a gallery under the mode's name on its backdrop; Settings top left; New top right, with the frame's
+three ways in, which every mode offers and none replaces: A Photo, The Library
+(`ModeLibraryPicker`) and The Museum (`MuseumView` with no `onResume`: no frames or Resume there,
+a mode's paintings being its own; a work painted names the painting, `ModePicture.title`; part
+of the frame, not a mode: no year, era or gallery of its own) and nothing else; one accent and the dark; the painting
 screen pushed on the gallery, its name inline, the same words while it opens or can't
 (`ModePaintingFrame`, `ModeOpening`). Every mode also guarantees, inside the frame: it starts from the painter's
 picture and makes the painting from it; the picture is divided into numbered regions, each number

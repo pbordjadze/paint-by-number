@@ -15,10 +15,12 @@ import os
 /// 2. **A gallery** under the mode's name, a large navigation title, on the mode's backdrop. What
 ///    a card looks like, and the gallery empty, are the mode's.
 /// 3. **Settings top left**, the gear (`<mode>-settings`).
-/// 4. **New top right**, the + menu, with three ways in and only these: A Photo (the system photo
-///    picker), The Library (the app's pictures, `ModeLibraryPicker`) and The Museum (the works of
-///    `MuseumView`, Paint This handing the work's full image back as a picture). Every mode
-///    starts from a picture: "Your photos, ___ by numbers".
+/// 4. **New top right**, the + menu, with the frame's three ways in and only these: A Photo (the
+///    system photo picker), The Library (the app's pictures, `ModeLibraryPicker`) and The Museum
+///    (the works of `MuseumView`, Paint This handing the work's full image back as a picture).
+///    They are the frame's, so every mode offers all three: none leaves one out or keeps a
+///    Library or a Museum of its own. The Museum is part of the frame, not a mode: no year, no
+///    era, no gallery. Every mode starts from a picture: "Your photos, ___ by numbers".
 /// 5. **One accent and the dark.** The mode tints every control with its one accent and is dark.
 /// 6. **The painting screen** is pushed on the gallery: the system's back button, the painting's
 ///    name inline, and the same words while it opens or can't (`ModePaintingFrame`). Its canvas
