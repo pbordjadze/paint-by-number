@@ -168,30 +168,19 @@ final class GlassPanes {
 
     var melting: Bool { !arrivals.isEmpty }
 
-    /// How far inside its outline a pane's edge sits, as a share of the lead's width: past the
-    /// came's widest (`glassFillFragment` casts it 0.4 to 0.6 of the width each side), so no glass
-    /// lies over the lead, where it would bend it.
-    nonisolated static let insetShare: CGFloat = 0.62
-
-    /// The panes of `template`'s pieces: each piece's rings less a band along them (`lead`, the
-    /// lead's width in canvas units; `insetShare`), so a pane sits inside its came.
-    nonisolated static func outlines(of template: Template, lead: CGFloat) -> Outlines {
-        var paths: [CGPath?] = []
-        paths.reserveCapacity(template.regions.count)
-        for r in template.regions.indices {
-            let piece = CGMutablePath()
-            for polygon in template.polygons(ofRegion: r) where polygon.count >= 3 {
-                piece.addLines(between: polygon.map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) })
-                piece.closeSubpath()
+    /// The panes of `template`'s pieces (`GlassPaneOutlines`, from the field the canvas casts its
+    /// lead from), `lead` the lead's width in canvas units.
+    nonisolated static func outlines(of template: Template, texture: GlassTexture, lead: CGFloat) -> Outlines {
+        let rings = GlassPaneOutlines.outlines(
+            of: template, texture: texture, inset: Float(lead) * GlassPaneOutlines.insetShare, minimumArea: Float(lead * lead) / 4)
+        let paths: [CGPath?] = rings.map { piece in
+            guard !piece.isEmpty else { return nil }
+            let path = CGMutablePath()
+            for ring in piece {
+                path.addLines(between: ring.map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) })
+                path.closeSubpath()
             }
-            let band = piece.copy(strokingWithWidth: lead * insetShare * 2, lineCap: .round, lineJoin: .round, miterLimit: 10)
-            // Shards the band leaves at a sharp joint or in a sliver would poke through the lead.
-            let pane = CGMutablePath()
-            for part in piece.subtracting(band, using: .evenOdd).componentsSeparated(using: .evenOdd) {
-                let box = part.boundingBoxOfPath
-                if min(box.width, box.height) >= lead * 0.5 { pane.addPath(part) }
-            }
-            paths.append(pane.isEmpty ? nil : pane)
+            return path
         }
         var neighbours = Array(repeating: Set<Int>(), count: template.regions.count)
         for edge in template.edges where edge.right != BoundaryEdge.outside {

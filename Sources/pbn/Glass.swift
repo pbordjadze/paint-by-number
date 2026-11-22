@@ -55,6 +55,7 @@ func runGlass(_ options: Options) throws {
     try writePPM(glassRaster(t, glazing: glazing, offered: GlassPalette.offered(for: t)), "lit.ppm", in: outDir)
     try writePPM(glassRaster(t, glazing: Array(repeating: Glazing.none, count: t.regions.count), offered: GlassPalette.offered(for: t)),
                  "unlit.ppm", in: outDir)
+    try writePPM(paneRaster(t), "panes.ppm", in: outDir)
     let summary = GlassReport(
         pieces: t.regions.count, glasses: t.palette.map { [$0.oklab.x, $0.oklab.y, $0.oklab.z] },
         offered: GlassPalette.offered(for: t).count, background: window.suggestion.isBackground.filter { $0 }.count,
@@ -110,4 +111,53 @@ func glassRaster(_ t: Template, glazing: [Int16], offered: [PaletteColor]) -> RG
         px[i * 4] = b.x; px[i * 4 + 1] = b.y; px[i * 4 + 2] = b.z
     }
     return RGBAImage(width: w, height: h, pixels: px, colorSpace: t.colorSpace)
+}
+
+/// Where the app's real glass panes lie (`GlassPaneOutlines`, at the app's lead width, 1.8% of the
+/// long side): the lead as the canvas casts it in black, each pane in its suggested glass with a
+/// white edge, and what lies between them grey, for a look at joints and slivers.
+func paneRaster(_ t: Template) -> RGBAImage {
+    let w = t.width, h = t.height
+    let texture = GlassTexture(template: t)
+    let lead = Float(max(w, h)) * 0.018
+    let panes = GlassPaneOutlines.outlines(of: t, texture: texture, inset: lead * GlassPaneOutlines.insetShare,
+                                           minimumArea: lead * lead / 4)
+    var image = RGBAImage(width: w, height: h, fill: SIMD4(150, 150, 150, 255))
+    for y in 0..<h {
+        for x in 0..<w where texture.lead[y * w + x] - 0.5 < lead * 0.5 { image[x, y] = SIMD4(0, 0, 0, 255) }
+    }
+    for (r, rings) in panes.enumerated() {
+        let c = t.palette[Int(t.regions[r].colorIndex)].rgb
+        let glass = SIMD4<UInt8>(UInt8(min(255, c.x * 255)), UInt8(min(255, c.y * 255)), UInt8(min(255, c.z * 255)), 255)
+        // Even-odd scanlines through pixel middles.
+        for y in 0..<h {
+            let py = Float(y) + 0.5
+            var xs: [Float] = []
+            for ring in rings {
+                for i in ring.indices {
+                    let a = ring[i], b = ring[(i + 1) % ring.count]
+                    if (a.y > py) != (b.y > py) { xs.append(a.x + (py - a.y) / (b.y - a.y) * (b.x - a.x)) }
+                }
+            }
+            xs.sort()
+            var k = 0
+            while k + 1 < xs.count {
+                let from = max(0, Int((xs[k] - 0.5).rounded(.up))), to = min(w - 1, Int((xs[k + 1] - 0.5).rounded(.down)))
+                if from <= to { for x in from...to { image[x, y] = glass } }
+                k += 2
+            }
+        }
+        for ring in rings {
+            for i in ring.indices {
+                let a = ring[i], b = ring[(i + 1) % ring.count]
+                let steps = Int(max(abs(b.x - a.x), abs(b.y - a.y)).rounded(.up)) + 1
+                for s in 0...steps {
+                    let p = a + (b - a) * (Float(s) / Float(steps))
+                    let x = Int(p.x), y = Int(p.y)
+                    if x >= 0, y >= 0, x < w, y < h { image[x, y] = SIMD4(255, 255, 255, 255) }
+                }
+            }
+        }
+    }
+    return image
 }

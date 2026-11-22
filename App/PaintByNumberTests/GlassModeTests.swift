@@ -199,7 +199,7 @@ struct GlassModeTests {
         let mode = try #require(GlassMode(template: t, texture: GlassTexture(template: t), offered: t.palette, photo: nil,
                                           context: context))
         let lead = GlassPicture.leadWidth(width: t.width, height: t.height)
-        let outlines = GlassPanes.outlines(of: t, lead: lead)
+        let outlines = GlassPanes.outlines(of: t, texture: GlassTexture(template: t), lead: lead)
         #expect(outlines.paths.count == t.regions.count)
         for (a, list) in outlines.neighbours.enumerated() {
             #expect(list.allSatisfy { outlines.neighbours[$0].contains(a) }, "neighbours both ways")

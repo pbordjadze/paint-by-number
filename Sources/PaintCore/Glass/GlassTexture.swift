@@ -17,7 +17,7 @@ public struct GlassTexture: Sendable {
     /// Per pixel, the grain of unlit glass.
     private let grain: [Float]
     /// Per pixel, how far it lies from its piece's lead, in pixels (1 on the piece's edge).
-    private let lead: [Float]
+    public let lead: [Float]
     /// The pixels of each piece, piece by piece (`order[start[r]..<start[r + 1]]`).
     private let order: [Int32]
     private let start: [Int]

@@ -309,6 +309,47 @@ struct GlassTests {
         (0..<n).map { i in PaletteColor(oklab: SIMD3(0.3 + 0.1 * Float(i), 0.05, -0.02), space: .sRGB) }
     }
 
+    /// Each piece's real glass pane (`GlassPaneOutlines`) lies off the lead the canvas casts from
+    /// the same field, and the lead round an island piece is a hole in the pane round it.
+    @Test func panesStayOffTheLeadAndRoundIslands() throws {
+        // The two lines, and a closed loop in the left half: an island piece.
+        var loop: [SIMD2<Float>] = []
+        for k in 0...24 {
+            let a = Float(k) / 24 * 2 * .pi
+            loop.append(SIMD2(60 + 22 * cos(a), 90 + 22 * sin(a)))
+        }
+        let t = try Self.window(Self.lines + [loop], joining: 4).template
+        let texture = GlassTexture(template: t)
+        let inset: Float = 3
+        let panes = GlassPaneOutlines.outlines(of: t, texture: texture, inset: inset, minimumArea: 4)
+        #expect(panes.count == t.regions.count)
+        func inside(_ p: SIMD2<Float>, _ rings: [[SIMD2<Float>]]) -> Bool {
+            var crossings = 0
+            for ring in rings {
+                for i in ring.indices {
+                    let a = ring[i], b = ring[(i + 1) % ring.count]
+                    if (a.y > p.y) != (b.y > p.y), p.x < a.x + (p.y - a.y) / (b.y - a.y) * (b.x - a.x) { crossings += 1 }
+                }
+            }
+            return crossings % 2 == 1
+        }
+        for r in t.regions.indices {
+            #expect(!panes[r].isEmpty, "piece \(r) has a pane")
+            for y in 0..<t.height {
+                for x in 0..<t.width where inside(SIMD2(Float(x) + 0.5, Float(y) + 0.5), panes[r]) {
+                    #expect(Int(t.regionMap[x, y]) == r)
+                    // Within the half pixel tracing and rounding may round off.
+                    #expect(texture.lead[y * t.width + x] - 0.5 > inset - 1.5)
+                }
+            }
+        }
+        let island = Self.region(at: 60, 90, in: t), around = Self.region(at: 20, 20, in: t)
+        #expect(island != around)
+        #expect(panes[around].count == 2, "the pane round the island has a hole")
+        #expect(inside(SIMD2(60.5, 90.5), panes[island]) && !inside(SIMD2(60.5, 90.5), panes[around]))
+        #expect(inside(SIMD2(20.5, 20.5), panes[around]))
+    }
+
     @Test func glazingRoundTrips() throws {
         var g = Glazing(pieces: 4, offered: Self.glasses(5))
         #expect(g.glazedCount == 0)

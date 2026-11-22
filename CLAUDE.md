@@ -79,7 +79,8 @@ before planning app work).
   - `Glass/`: Stained Glass (painting-company row 366): `GlassWindow` (a photo cut into
     numbered pieces as it suggests, each line a Pen draw on `TemplateEditor.blank`), `GlassPalette`
     (the glasses a window suggests, its background found by focus, and the classics offered after
-    them), `GlassFraming` (the pieces a painter's stroke of lead frames) and `Glazing`
+    them), `GlassFraming` (the pieces a painter's stroke of lead frames), `GlassPaneOutlines` (each piece's
+    real glass pane inside its lead, traced from `GlassTexture`'s lead field; `pbn glass`'s `panes.ppm`) and `Glazing`
     (`glazing.bin`: each piece's glass and whether it is framed, read as hostile input); `pbn glass` previews a window lit and unlit.
   - `Watercolor/`: Watercolor (painting-company row 373): `WatercolorSheet` (a template as a
     sheet of paper, the watercolor key), `WatercolorSim` (water and pigment after Curtis et al.

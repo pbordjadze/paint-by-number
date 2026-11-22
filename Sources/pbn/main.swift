@@ -41,8 +41,9 @@
 //       height), each closed piece a region with the glass the photo suggests (GlassPalette);
 //       `suggest` in place of lines.json leads it with the lead the photo suggests
 //       (GlassLeadSuggestion), as the Lead screen starts. Writes window.pbnt, glass.json (pieces, glasses, offered, background pieces, valid and
-//       validation), lit.ppm (every piece in its suggested glass, lead along every boundary) and
-//       unlit.ppm (the window before glazing).
+//       validation), lit.ppm (every piece in its suggested glass, lead along every boundary),
+//       unlit.ppm (the window before glazing) and panes.ppm (where the app's real glass panes lie
+//       in their lead, GlassPaneOutlines).
 //   pbn watercolor <photo | template.pbnt> --out <dir> [--seed N] [--spacing S] [--order paint|sweep]
 //       [--frames t1,t2,…] [generate options]
 //       a Watercolor painting (painting-company row 373; WatercolorSim): every area tapped once,
