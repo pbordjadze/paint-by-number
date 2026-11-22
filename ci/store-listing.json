@@ -758,7 +758,7 @@
   },
   "inAppPurchases": {
     "com.pbordjadze.paintbynumber.unlimited": {
-      "reviewNote": "Open Settings > Unlimited Paintings, or start a sixth new painting on the same day, or tap the pencil button (Change) in a painting (the drawing tools come with it). The sheet has the purchase and Restore Purchases."
+      "reviewNote": "Open Settings > Unlimited Paintings, or start a sixth new painting on the same day, or tap the pencil button (Edit) in a painting (the drawing tools come with it). The sheet has the purchase and Restore Purchases."
     }
   },
   "nomination": {
@@ -787,6 +787,6 @@
     "hasInAppEvents": false,
     "launchInSelectMarketsFirst": false,
     "preOrderEnabled": false,
-    "submit": false
+    "submit": true
   }
 }
