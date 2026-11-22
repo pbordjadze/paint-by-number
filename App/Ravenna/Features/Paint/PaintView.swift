@@ -437,7 +437,7 @@ struct PaintView: View {
             return PaletteLayout(
                 side: true,
                 lines: paletteLines(
-                    count: count, length: length, automatic: 2, room: size.width * 0.4, metrics: metrics, rows: rows),
+                    count: count, length: length, automatic: 1, room: size.width * 0.4, metrics: metrics, rows: rows),
                 caption: false, metrics: metrics)
         }
         let length = size.width - 2 * edge
@@ -445,7 +445,7 @@ struct PaintView: View {
         return PaletteLayout(
             side: false,
             lines: paletteLines(
-                count: count, length: length, automatic: regularWidth ? 3 : 1,
+                count: count, length: length, automatic: 1,
                 room: size.height * 0.45 - (caption ? metrics.captionHeight : 0), metrics: metrics, rows: rows),
             caption: caption, metrics: metrics)
     }

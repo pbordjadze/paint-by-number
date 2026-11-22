@@ -545,27 +545,49 @@ public final class WatercolorSim {
     }
 
     private static func blur(_ a: UnsafeMutablePointer<Float>, width w: Int, box b: Box) {
-        // Three boxes of radius 2: a Gaussian of about 2.5 cells, as the spike's.
-        var line = [Float](repeating: 0, count: max(b.x1 - b.x0, b.y1 - b.y0))
+        // Three boxes of radius 2: a Gaussian of about 2.5 cells, as the spike's. Each row, then
+        // each column, is summed whole by one task in the same order on any core count, so the
+        // bands change nothing but the time (half of a step's, serial, on an iPad Air).
+        let bw = b.x1 - b.x0, bh = b.y1 - b.y0
+        guard bw > 0, bh > 0 else { return }
         let r = 2, norm: Float = 1 / 5
         for _ in 0..<3 {
-            let bw = b.x1 - b.x0, bh = b.y1 - b.y0
-            for y in b.y0..<b.y1 {
-                for i in 0..<bw { line[i] = a[y * w + b.x0 + i] }
-                var sum: Float = 0
-                for k in -r...r { sum += line[min(max(k, 0), bw - 1)] }
-                for i in 0..<bw {
-                    a[y * w + b.x0 + i] = sum * norm
-                    sum += line[min(i + r + 1, bw - 1)] - line[max(i - r, 0)]
+            Parallel.forEachBand(bh, minimumBandSize: 16) { band in
+                withUnsafeTemporaryAllocation(of: Float.self, capacity: bw) { line in
+                    for y in (band.lowerBound + b.y0)..<(band.upperBound + b.y0) {
+                        let row = a + y * w + b.x0
+                        line.baseAddress!.update(from: row, count: bw)
+                        var sum: Float = 0
+                        for k in -r...r { sum += line[min(max(k, 0), bw - 1)] }
+                        for i in 0..<bw {
+                            row[i] = sum * norm
+                            sum += line[min(i + r + 1, bw - 1)] - line[max(i - r, 0)]
+                        }
+                    }
                 }
             }
-            for x in b.x0..<b.x1 {
-                for i in 0..<bh { line[i] = a[(b.y0 + i) * w + x] }
-                var sum: Float = 0
-                for k in -r...r { sum += line[min(max(k, 0), bh - 1)] }
-                for i in 0..<bh {
-                    a[(b.y0 + i) * w + x] = sum * norm
-                    sum += line[min(i + r + 1, bh - 1)] - line[max(i - r, 0)]
+            // The columns a band at a time, read a row at a time: a column's running sum takes
+            // the same values in the same order as one walked down alone.
+            Parallel.forEachBand(bw, minimumBandSize: 16) { band in
+                let cw = band.count, x0 = b.x0 + band.lowerBound
+                withUnsafeTemporaryAllocation(of: Float.self, capacity: cw * bh) { block in
+                    withUnsafeTemporaryAllocation(of: Float.self, capacity: cw) { sums in
+                        let t = block.baseAddress!, s = sums.baseAddress!
+                        for i in 0..<bh { (t + i * cw).update(from: a + (b.y0 + i) * w + x0, count: cw) }
+                        s.initialize(repeating: 0, count: cw)
+                        for k in -r...r {
+                            let src = t + min(max(k, 0), bh - 1) * cw
+                            for c in 0..<cw { s[c] += src[c] }
+                        }
+                        for i in 0..<bh {
+                            let out = a + (b.y0 + i) * w + x0
+                            let add = t + min(i + r + 1, bh - 1) * cw, sub = t + max(i - r, 0) * cw
+                            for c in 0..<cw {
+                                out[c] = s[c] * norm
+                                s[c] += add[c] - sub[c]
+                            }
+                        }
+                    }
                 }
             }
         }
