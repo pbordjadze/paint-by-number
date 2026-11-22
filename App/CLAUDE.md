@@ -420,6 +420,17 @@ below name both alike.
   their own (starting either engine blocks its caller). Settings' Sounds, Haptics and Music are read
   live (`SettingsKey.sounds`, `SettingsKey.haptics`, `SettingsKey.sky`); Haptics shows only on
   hardware with haptics (not iPad, not the simulator).
+- The hidden modes' sounds (SideStore and Debug builds, `#if UNRELEASED`; painting-company row
+  381): `EraSounds` (when each plays) and `EraSynth` (what it is: the same kalimba and celesta on
+  the same scales, a music box's tine, a glass tessera, and water made of bubbles after van den
+  Doel's liquid sounds), played by `SoundPlayer` as `Cue.Voice.era`, each passage one buffer timed
+  to its drawing (`EraSynth.Times`, which `EraSoundsTests` holds to `EraPassage` and
+  `EraWayBack`). The year wheel steps and clicks into place (`EraClock.Sound`, the environment's
+  `eraClockSound`, set at `RootView` and taken away by each Settings' own Sounds switch), every
+  passage sounds (`EraPassage`'s appearing), and Watercolor's taps, drying and finish sound
+  (`WatercolorPainting.tap`, `WatercolorCanvas`'s `onActivity`). `tools/sounds/render.sh` renders
+  them on Linux with this synthesis, `tools/sounds/sheet.py` draws them; main painting and Paint by
+  Mosaic's sounds are untouched.
 - Color names: each paint goes by a nickname from `ColorNickname.assign`, seeded by the artwork id
   (`ColorNickname.seed(for:)`; a received painting by its sender's: `Artwork.nicknameSeed`), using the vocabulary version recorded in `Artwork.nicknameVersion`,
   so a painting's names are the same on every open (derived, never

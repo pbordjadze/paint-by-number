@@ -34,6 +34,12 @@ struct RootView: View {
             }
         }
         .overlay { EraPassage(door: door) }
+        #if UNRELEASED
+        // The year wheel's sound, in every era's Settings (each gates it by its own Sounds).
+        .environment(\.eraClockSound, EraClock.Sound { row, rows, lit in
+            EraSounds.shared.wheelTurned(row: row, of: rows, lit: lit)
+        })
+        #endif
         #if DEBUG
         // `era-passage`: the gallery as the clock is set back, the passage held half laid.
         .task {

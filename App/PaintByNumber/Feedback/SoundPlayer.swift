@@ -27,6 +27,10 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
     /// The Moon's twinkles: each of its notes an octave up.
     private var twinkles: [AVAudioPCMBuffer] = []
     private var thud: AVAudioPCMBuffer?
+    #if UNRELEASED
+    /// The hidden modes' sounds (`EraVoice`), each synthesized the first time it plays.
+    private var eraMade: [EraVoice: AVAudioPCMBuffer] = [:]
+    #endif
     private var isBuilt = false
     private var isSetUp = false
     private let clock = ContinuousClock()
@@ -82,6 +86,10 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
             /// The twinkle an octave above the Moon's note at `index`.
             case twinkle(index: Int)
             case thud
+            #if UNRELEASED
+            /// One of the hidden modes' sounds (`EraSounds`), whole in one buffer.
+            case era(EraVoice)
+            #endif
         }
         var voice: Voice
         var volume: Float
@@ -171,6 +179,29 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
         return cues
     }
 
+    #if UNRELEASED
+    /// Plays one of the hidden modes' sounds (`EraSounds`).
+    func play(_ voice: EraVoice, volume: Float, delay: TimeInterval = 0) {
+        perform([Cue(voice: .era(voice), volume: volume, delay: delay)])
+    }
+
+    /// Starts the engine and synthesizes `voices` ahead, so the first of them isn't late.
+    func prepare(_ voices: [EraVoice]) {
+        queue.async { [self] in
+            guard setUpIfNeeded() else { return }
+            for voice in voices { _ = eraBuffer(voice) }
+            restWhenQuiet()
+        }
+    }
+
+    private func eraBuffer(_ voice: EraVoice) -> AVAudioPCMBuffer {
+        if let made = eraMade[voice] { return made }
+        let made = buffer(EraSynth.samples(of: voice, sampleRate: format.sampleRate))
+        eraMade[voice] = made
+        return made
+    }
+    #endif
+
     #if DEBUG
     /// The cues asked to play, in order, whether or not the engine could start (on `queue`): `played()`.
     private var asked: [Cue] = []
@@ -213,6 +244,9 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
         case let .note(sky, index): notes(of: sky)[index]
         case let .twinkle(index): twinkle(index)
         case .thud: thud
+        #if UNRELEASED
+        case let .era(voice): eraBuffer(voice)
+        #endif
         }
     }
 

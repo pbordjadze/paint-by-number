@@ -228,6 +228,7 @@ struct SettingsView: View {
                                 EraDoor.shared.go(to: era)
                             }
                             .reporting(to: clockYear)
+                            .transformEnvironment(\.eraClockSound) { if !sounds { $0 = nil } }
                             .accessibilityIdentifier("era-clock")
                             .id("era-clock")
                         }

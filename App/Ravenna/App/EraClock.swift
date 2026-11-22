@@ -23,6 +23,7 @@ public struct EraClock: View {
     @State private var settling: Task<Void, Never>?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
+    @Environment(\.eraClockSound) private var sound
 
     /// How long the wheel must rest on a year before it counts: a wheel spun past 0547 isn't a
     /// visit to it.
@@ -86,6 +87,9 @@ public struct EraClock: View {
             return new < old ? .impact(weight: .heavy, intensity: 0.25 + 0.75 * Self.age(of: new)) : nil
         }
         .onChange(of: year) { _, year in
+            if let sound, let row = rows.firstIndex(where: { $0.year == year }) {
+                sound.turned(row, rows.count, rows[row].isLit)
+            }
             settling?.cancel()
             settling = Task {
                 if !voiceOver, let era = Self.pulled(from: year) {
@@ -102,6 +106,18 @@ public struct EraClock: View {
             }
         }
         .onDisappear { settling?.cancel() }
+    }
+
+    /// What the wheel sounds as it turns (SideStore and Debug builds; painting-company row 381):
+    /// Paint by Moonlight's to give, at its root (`EraSounds`), and each Settings' Sounds switch's
+    /// to take away. Nil, the wheel is silent, as the release's is.
+    public struct Sound {
+        /// The wheel came to `row` of `rows` (0 the oldest year), lit when it opens an era.
+        public let turned: (_ row: Int, _ rows: Int, _ lit: Bool) -> Void
+
+        public init(turned: @escaping (_ row: Int, _ rows: Int, _ lit: Bool) -> Void) {
+            self.turned = turned
+        }
     }
 
     /// The wheel, telling `reading` each year it comes to rest on.
@@ -280,4 +296,9 @@ public enum EraYear {
 
     /// Whether a wheel left on `year` takes the painter somewhere: an era's year, or the present.
     public static func opensAnEra(_ year: Int) -> Bool { returnsToThePresent(year) || modes.contains(year) }
+}
+
+extension EnvironmentValues {
+    /// The year wheel's sound (`EraClock.Sound`), nil for none.
+    @Entry public var eraClockSound: EraClock.Sound? = nil
 }

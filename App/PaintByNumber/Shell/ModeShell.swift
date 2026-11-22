@@ -202,6 +202,7 @@ struct ModeSettingsView: View {
     let year: Int
     let leave: (Int) -> Void
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(SettingsKey.sounds) private var sounds = SettingsDefault.sounds
     @State private var showsClock = false
     /// The year the Year row's wheel rests on (`EraClock.Reading`).
     @State private var clockYear = EraClock.Reading()
@@ -234,6 +235,7 @@ struct ModeSettingsView: View {
                             leave(chosen)
                         }
                         .reporting(to: clockYear)
+                        .transformEnvironment(\.eraClockSound) { if !sounds { $0 = nil } }
                         .accessibilityIdentifier("era-clock")
                     }
                 }
