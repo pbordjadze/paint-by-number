@@ -8462,7 +8462,7 @@
       }
     },
     "Layers" : {
-      "comment" : "Refine screen: the button in the top bar that opens the Layers panel (what shows: the numbers, the ink, the paint, the photo), and the panel's title; also the Tool Guide's page about that panel",
+      "comment" : "Refine screen: the button in the top bar that opens the Layers panel (what shows: the numbers, the ink, the paint, the photo), and the panel's title; also the Tool Guide's page about that panel; and Print's preview's row (a menu) of what prints: numbers, color hints, the color key",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -8990,7 +8990,7 @@
       }
     },
     "Numbers" : {
-      "comment" : "Refine screen: the group of tools about the areas' numbers (Move Number), a section of the tool rail on iPad and a tab above the tools on iPhone; and the Layers panel's layer of the numbers",
+      "comment" : "Refine screen: the group of tools about the areas' numbers (Move Number), a section of the tool rail on iPad and a tab above the tools on iPhone; and the Layers panel's layer of the numbers; and Print's preview's Layers menu: the areas' printed numbers",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -18248,7 +18248,7 @@
       }
     },
     "Color Key" : {
-      "comment" : "Title of the last page of a printed template: the list of colors with their numbers and names",
+      "comment" : "Title of the last page of a printed template: the list of colors with their numbers and names; and Print's preview's Layers menu: whether that page prints",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -59143,13 +59143,19 @@
         }
       }
     },
+<<<<<<< HEAD
     "cave.carvedYear" : {
       "comment" : "A year carved into the cave's rock under its mouth, as the year wheel shows it; the argument is the year, e.g. 15,000",
+=======
+    "Color Hints" : {
+      "comment" : "Print's preview, Layers menu: the layer that washes each area of the printed template in a pale tint of its paint",
+>>>>>>> origin/main
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "%@ v. Chr."
           }
         },
@@ -59157,71 +59163,116 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ BC"
+=======
+            "value" : "Farbhauch"
+>>>>>>> origin/main
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "%@ a. C."
+=======
+            "value" : "Toques de color"
+>>>>>>> origin/main
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "%@ av. J.-C."
+=======
+            "value" : "Touches de couleur"
+>>>>>>> origin/main
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "%@ a.C."
+=======
+            "value" : "Tocchi di colore"
+>>>>>>> origin/main
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "紀元前%@年"
+=======
+            "value" : "色のヒント"
+>>>>>>> origin/main
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "기원전 %@년"
+=======
+            "value" : "색 힌트"
+>>>>>>> origin/main
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "%@ v.Chr."
+=======
+            "value" : "Kleurtinten"
+>>>>>>> origin/main
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "%@ a.C."
+=======
+            "value" : "Toques de cor"
+>>>>>>> origin/main
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "公元前%@年"
+=======
+            "value" : "颜色提示"
+>>>>>>> origin/main
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "西元前%@年"
+=======
+            "value" : "顏色提示"
+>>>>>>> origin/main
           }
         }
       }
     },
+<<<<<<< HEAD
     "cave.wall" : {
       "comment" : "VoiceOver label of the cave mode's whole screen: a rock wall lit by a torch",
+=======
+    "Each area a pale wash of its paint" : {
+      "comment" : "Print's preview, Layers menu, under Color Hints: what that layer prints",
+>>>>>>> origin/main
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Höhlenwand"
           }
         },
@@ -59229,143 +59280,237 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cave wall"
+=======
+            "value" : "Jede Fläche in einem zarten Hauch ihrer Farbe"
+>>>>>>> origin/main
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Pared de la cueva"
+=======
+            "value" : "Cada zona con un tono suave de su pintura"
+>>>>>>> origin/main
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Paroi de la grotte"
+=======
+            "value" : "Chaque zone teintée de sa peinture, en pâle"
+>>>>>>> origin/main
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Parete della grotta"
+=======
+            "value" : "Ogni area in una tinta tenue del suo colore"
+>>>>>>> origin/main
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "洞窟の壁"
+=======
+            "value" : "各エリアを絵の具の色でうっすら塗ります"
+>>>>>>> origin/main
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "동굴 벽"
+=======
+            "value" : "각 영역을 물감 색으로 옅게 칠해요"
+>>>>>>> origin/main
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Grotwand"
+=======
+            "value" : "Elk vlak in een zachte tint van zijn verf"
+>>>>>>> origin/main
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Parede da caverna"
+=======
+            "value" : "Cada área num tom suave da sua tinta"
+>>>>>>> origin/main
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "洞壁"
+=======
+            "value" : "每块区域淡淡涂上它的颜料色"
+>>>>>>> origin/main
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "洞壁"
+=======
+            "value" : "每塊區域淡淡塗上它的顏料色"
+>>>>>>> origin/main
           }
         }
       }
     },
+<<<<<<< HEAD
     "cave.pigment.charcoal" : {
       "comment" : "A cave painting pigment: charcoal, black",
+=======
+    "print.layers.linesOnly" : {
+      "comment" : "Print's preview, the Layers row with numbers, color hints and the color key all off: the template prints as its lines alone",
+>>>>>>> origin/main
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Holzkohle"
+=======
+            "value" : "Nur Linien"
+>>>>>>> origin/main
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Charcoal"
+=======
+            "value" : "Lines Only"
+>>>>>>> origin/main
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Carbón"
+=======
+            "value" : "Solo líneas"
+>>>>>>> origin/main
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Charbon de bois"
+=======
+            "value" : "Traits seuls"
+>>>>>>> origin/main
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Carbone"
+=======
+            "value" : "Solo linee"
+>>>>>>> origin/main
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "木炭"
+=======
+            "value" : "線のみ"
+>>>>>>> origin/main
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "숯"
+=======
+            "value" : "선만"
+>>>>>>> origin/main
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Houtskool"
+=======
+            "value" : "Alleen lijnen"
+>>>>>>> origin/main
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Carvão"
+=======
+            "value" : "Só linhas"
+>>>>>>> origin/main
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "木炭"
+=======
+            "value" : "仅线条"
+>>>>>>> origin/main
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "木炭"
+=======
+            "value" : "僅線條"
+>>>>>>> origin/main
           }
         }
       }
     },
+<<<<<<< HEAD
     "cave.pigment.manganese" : {
       "comment" : "A cave painting pigment: manganese, a dark brown earth",
+=======
+    "Watercolor" : {
+      "comment" : "Watercolor: the era's gallery title (behind 1502 on the year wheel), paint by number where every tap is real water",
+>>>>>>> origin/main
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Mangan"
           }
         },
@@ -59373,71 +59518,116 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Manganese"
+=======
+            "value" : "Aquarell"
+>>>>>>> origin/main
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Manganeso"
+=======
+            "value" : "Acuarela"
+>>>>>>> origin/main
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Manganèse"
+=======
+            "value" : "Aquarelle"
+>>>>>>> origin/main
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Manganese"
+=======
+            "value" : "Acquerello"
+>>>>>>> origin/main
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "マンガン"
+=======
+            "value" : "水彩"
+>>>>>>> origin/main
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "망간"
+=======
+            "value" : "수채화"
+>>>>>>> origin/main
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Mangaan"
+=======
+            "value" : "Aquarel"
+>>>>>>> origin/main
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Manganês"
+=======
+            "value" : "Aquarela"
+>>>>>>> origin/main
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "锰"
+=======
+            "value" : "水彩"
+>>>>>>> origin/main
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "錳"
+=======
+            "value" : "水彩"
+>>>>>>> origin/main
           }
         }
       }
     },
+<<<<<<< HEAD
     "cave.pigment.redOchre" : {
       "comment" : "A cave painting pigment: red ochre, a red earth",
+=======
+    "New Painting" : {
+      "comment" : "Watercolor: the gallery's add button, a menu of where a new painting comes from (A Photo, The Library)",
+>>>>>>> origin/main
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Roter Ocker"
           }
         },
@@ -59445,71 +59635,116 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Red ochre"
+=======
+            "value" : "Neues Bild"
+>>>>>>> origin/main
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Ocre rojo"
+=======
+            "value" : "Nueva pintura"
+>>>>>>> origin/main
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Ocre rouge"
+=======
+            "value" : "Nouvelle peinture"
+>>>>>>> origin/main
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Ocra rossa"
+=======
+            "value" : "Nuovo dipinto"
+>>>>>>> origin/main
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "赤土"
+=======
+            "value" : "新しい絵"
+>>>>>>> origin/main
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "붉은 황토"
+=======
+            "value" : "새 그림"
+>>>>>>> origin/main
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Rode oker"
+=======
+            "value" : "Nieuw schilderij"
+>>>>>>> origin/main
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Ocre vermelho"
+=======
+            "value" : "Nova pintura"
+>>>>>>> origin/main
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "红赭石"
+=======
+            "value" : "新画作"
+>>>>>>> origin/main
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "紅赭石"
+=======
+            "value" : "新畫作"
+>>>>>>> origin/main
           }
         }
       }
     },
+<<<<<<< HEAD
     "cave.pigment.yellowOchre" : {
       "comment" : "A cave painting pigment: yellow ochre, a yellow earth",
+=======
+    "No paintings yet" : {
+      "comment" : "Watercolor gallery, empty: title",
+>>>>>>> origin/main
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Gelber Ocker"
           }
         },
@@ -59517,71 +59752,116 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yellow ochre"
+=======
+            "value" : "Noch keine Bilder"
+>>>>>>> origin/main
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Ocre amarillo"
+=======
+            "value" : "Aún no hay pinturas"
+>>>>>>> origin/main
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Ocre jaune"
+=======
+            "value" : "Pas encore de peinture"
+>>>>>>> origin/main
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Ocra gialla"
+=======
+            "value" : "Ancora nessun dipinto"
+>>>>>>> origin/main
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "黄土"
+=======
+            "value" : "まだ絵はありません"
+>>>>>>> origin/main
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "노란 황토"
+=======
+            "value" : "아직 그림이 없어요"
+>>>>>>> origin/main
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Gele oker"
+=======
+            "value" : "Nog geen schilderijen"
+>>>>>>> origin/main
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Ocre amarelo"
+=======
+            "value" : "Ainda não há pinturas"
+>>>>>>> origin/main
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "黄赭石"
+=======
+            "value" : "还没有画作"
+>>>>>>> origin/main
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "黃赭石"
+=======
+            "value" : "還沒有畫作"
+>>>>>>> origin/main
           }
         }
       }
     },
+<<<<<<< HEAD
     "cave.value.hand" : {
       "comment" : "VoiceOver value of the cave wall once a painting is finished: lay four or five fingers on the rock to leave a hand stencil",
+=======
+    "Watercolor sheet" : {
+      "comment" : "VoiceOver label of a watercolor painting's sheet, where a tap lays a wash of paint",
+>>>>>>> origin/main
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Fertig. Der Fels darüber wartet auf deine Hand."
           }
         },
@@ -59589,71 +59869,116 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Finished. The rock above it waits for your hand."
+=======
+            "value" : "Aquarellblatt"
+>>>>>>> origin/main
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Terminado. La roca de encima espera tu mano."
+=======
+            "value" : "Hoja de acuarela"
+>>>>>>> origin/main
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Terminée. La roche au-dessus attend votre main."
+=======
+            "value" : "Feuille d’aquarelle"
+>>>>>>> origin/main
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Finito. La roccia sopra aspetta la tua mano."
+=======
+            "value" : "Foglio da acquerello"
+>>>>>>> origin/main
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "完成しました。上の岩があなたの手を待っています。"
+=======
+            "value" : "水彩紙"
+>>>>>>> origin/main
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "완성했어요. 위쪽 바위가 당신의 손을 기다려요."
+=======
+            "value" : "수채화 종이"
+>>>>>>> origin/main
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Klaar. De rots erboven wacht op je hand."
+=======
+            "value" : "Aquarelvel"
+>>>>>>> origin/main
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Pronto. A rocha acima espera a sua mão."
+=======
+            "value" : "Folha de aquarela"
+>>>>>>> origin/main
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "完成了。上方的岩石在等你的手。"
+=======
+            "value" : "水彩纸"
+>>>>>>> origin/main
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "完成了。上方的岩石在等你的手。"
+=======
+            "value" : "水彩紙"
+>>>>>>> origin/main
           }
         }
       }
     },
+<<<<<<< HEAD
     "cave.value.painting" : {
       "comment" : "VoiceOver value of the cave wall while a painting is blown: the pigment in hand, then the areas done of all its areas",
+=======
+    "Lay the Next Wash" : {
+      "comment" : "VoiceOver action on a watercolor painting's sheet: paints the next area of the paint in hand",
+>>>>>>> origin/main
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "%1$@ in der Hand. Geblasene Flächen: %2$lld von %3$lld"
           }
         },
@@ -59661,419 +59986,700 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ in hand. Areas blown: %2$lld of %3$lld"
+=======
+            "value" : "Nächste Lasur auftragen"
+>>>>>>> origin/main
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "%1$@ en la mano. Zonas sopladas: %2$lld de %3$lld"
+=======
+            "value" : "Dar la siguiente aguada"
+>>>>>>> origin/main
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "%1$@ en main. Zones soufflées : %2$lld sur %3$lld"
+=======
+            "value" : "Poser le lavis suivant"
+>>>>>>> origin/main
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "%1$@ in mano. Aree soffiate: %2$lld di %3$lld"
+=======
+            "value" : "Stendi la prossima velatura"
+>>>>>>> origin/main
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "手には%1$@。吹き付けたエリア：%2$lld/%3$lld"
+=======
+            "value" : "次のにじみを塗る"
+>>>>>>> origin/main
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "손에 든 안료: %1$@. 불어 넣은 영역: %2$lld/%3$lld"
+=======
+            "value" : "다음 물감 칠하기"
+>>>>>>> origin/main
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "%1$@ in de hand. Geblazen vlakken: %2$lld van %3$lld"
+=======
+            "value" : "Volgende was aanbrengen"
+>>>>>>> origin/main
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "%1$@ na mão. Áreas sopradas: %2$lld de %3$lld"
+=======
+            "value" : "Passar a próxima aguada"
+>>>>>>> origin/main
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "手里是%1$@。已吹好的区域：%2$lld/%3$lld"
+=======
+            "value" : "铺下一层水彩"
+>>>>>>> origin/main
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "手裡是%1$@。已吹好的區塊：%2$lld/%3$lld"
+=======
+            "value" : "鋪下一層水彩"
+>>>>>>> origin/main
           }
         }
       }
     },
+<<<<<<< HEAD
     "cave.value.bare" : {
       "comment" : "VoiceOver value of the cave wall at bare rock, where a new painting is drawn",
+=======
+    "watercolor.progress" : {
+      "comment" : "VoiceOver value and caption of a watercolor painting: areas painted so far; the arguments are the areas painted and all its areas",
+>>>>>>> origin/main
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Blanker Fels und ein Stück Holzkohle zum Zeichnen"
+=======
+            "value" : "Gemalt: %1$lld von %2$lld"
+>>>>>>> origin/main
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Bare rock, and a lump of charcoal to draw with"
+=======
+            "value" : "Painted: %1$lld of %2$lld"
+>>>>>>> origin/main
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Roca desnuda y un trozo de carbón para dibujar"
+=======
+            "value" : "Pintadas: %1$lld de %2$lld"
+>>>>>>> origin/main
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Roche nue, et un morceau de charbon pour dessiner"
+=======
+            "value" : "Peintes : %1$lld sur %2$lld"
+>>>>>>> origin/main
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Roccia nuda e un pezzo di carbone per disegnare"
+=======
+            "value" : "Dipinte: %1$lld di %2$lld"
+>>>>>>> origin/main
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "むき出しの岩と、描くための木炭のかけら"
+=======
+            "value" : "塗った部分：%1$lld/%2$lld"
+>>>>>>> origin/main
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "맨 바위, 그리고 그림을 그릴 숯 한 덩이"
+=======
+            "value" : "칠함: %1$lld/%2$lld"
+>>>>>>> origin/main
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Kale rots en een stuk houtskool om mee te tekenen"
+=======
+            "value" : "Geschilderd: %1$lld van %2$lld"
+>>>>>>> origin/main
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Rocha nua e um pedaço de carvão para desenhar"
+=======
+            "value" : "Pintadas: %1$lld de %2$lld"
+>>>>>>> origin/main
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "光秃的岩石，还有一块用来作画的木炭"
+=======
+            "value" : "已画：%1$lld/%2$lld"
+>>>>>>> origin/main
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "光禿的岩石，還有一塊用來作畫的木炭"
+=======
+            "value" : "已畫：%1$lld/%2$lld"
+>>>>>>> origin/main
           }
         }
       }
     },
+<<<<<<< HEAD
     "cave.action.take" : {
       "comment" : "VoiceOver action in the cave: take up a pigment from its hollow on the ledge; the pigment's name",
+=======
+    "watercolor.paint" : {
+      "comment" : "VoiceOver label of a paint in a watercolor painting's paint box: its number",
+>>>>>>> origin/main
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "%@ aufnehmen"
+=======
+            "value" : "Farbe %lld"
+>>>>>>> origin/main
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Take up %@"
+=======
+            "value" : "Paint %lld"
+>>>>>>> origin/main
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Tomar %@"
+=======
+            "value" : "Color %lld"
+>>>>>>> origin/main
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Prendre : %@"
+=======
+            "value" : "Couleur %lld"
+>>>>>>> origin/main
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Prendi %@"
+=======
+            "value" : "Colore %lld"
+>>>>>>> origin/main
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "%@を取る"
+=======
+            "value" : "絵の具 %lld"
+>>>>>>> origin/main
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "%@ 집기"
+=======
+            "value" : "물감 %lld"
+>>>>>>> origin/main
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "%@ oppakken"
+=======
+            "value" : "Verf %lld"
+>>>>>>> origin/main
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Pegar %@"
+=======
+            "value" : "Cor %lld"
+>>>>>>> origin/main
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "拿起%@"
+=======
+            "value" : "颜料 %lld"
+>>>>>>> origin/main
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "拿起%@"
+=======
+            "value" : "顏料 %lld"
+>>>>>>> origin/main
           }
         }
       }
     },
+<<<<<<< HEAD
     "cave.action.blow" : {
       "comment" : "VoiceOver action in the cave: blow pigment over the next area of the painting",
+=======
+    "watercolor.title" : {
+      "comment" : "Name of a new watercolor painting: the word Watercolor and the day it was made, e.g. “Watercolor, November 21”",
+>>>>>>> origin/main
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Farbe blasen"
+=======
+            "value" : "Aquarell, %@"
+>>>>>>> origin/main
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Blow pigment"
+=======
+            "value" : "Watercolor, %@"
+>>>>>>> origin/main
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Soplar pigmento"
+=======
+            "value" : "Acuarela, %@"
+>>>>>>> origin/main
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Souffler le pigment"
+=======
+            "value" : "Aquarelle, %@"
+>>>>>>> origin/main
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Soffia il pigmento"
+=======
+            "value" : "Acquerello, %@"
+>>>>>>> origin/main
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "顔料を吹き付ける"
+=======
+            "value" : "水彩、%@"
+>>>>>>> origin/main
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "안료 불기"
+=======
+            "value" : "수채화, %@"
+>>>>>>> origin/main
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Pigment blazen"
+=======
+            "value" : "Aquarel, %@"
+>>>>>>> origin/main
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Soprar pigmento"
+=======
+            "value" : "Aquarela, %@"
+>>>>>>> origin/main
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "吹颜料"
+=======
+            "value" : "水彩，%@"
+>>>>>>> origin/main
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "吹顏料"
+=======
+            "value" : "水彩，%@"
+>>>>>>> origin/main
           }
         }
       }
     },
+<<<<<<< HEAD
     "cave.action.hand" : {
       "comment" : "VoiceOver action in the cave: leave a hand stencil beside the finished painting",
+=======
+    "watercolor.titleNumbered" : {
+      "comment" : "Name of a watercolor painting made on a day that already has one: the word Watercolor, its number that day and the day, e.g. “Watercolor 2, November 21”",
+>>>>>>> origin/main
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Deine Hand hinterlassen"
+=======
+            "value" : "Aquarell %1$lld, %2$@"
+>>>>>>> origin/main
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Leave your hand"
+=======
+            "value" : "Watercolor %1$lld, %2$@"
+>>>>>>> origin/main
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Dejar tu mano"
+=======
+            "value" : "Acuarela %1$lld, %2$@"
+>>>>>>> origin/main
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Laisser votre main"
+=======
+            "value" : "Aquarelle %1$lld, %2$@"
+>>>>>>> origin/main
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Lascia la tua mano"
+=======
+            "value" : "Acquerello %1$lld, %2$@"
+>>>>>>> origin/main
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "手形を残す"
+=======
+            "value" : "水彩 %1$lld、%2$@"
+>>>>>>> origin/main
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "손자국 남기기"
+=======
+            "value" : "수채화 %1$lld, %2$@"
+>>>>>>> origin/main
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Laat je hand achter"
+=======
+            "value" : "Aquarel %1$lld, %2$@"
+>>>>>>> origin/main
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Deixar a sua mão"
+=======
+            "value" : "Aquarela %1$lld, %2$@"
+>>>>>>> origin/main
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "留下你的手印"
+=======
+            "value" : "水彩 %1$lld，%2$@"
+>>>>>>> origin/main
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "留下你的手印"
+=======
+            "value" : "水彩 %1$lld，%2$@"
+>>>>>>> origin/main
           }
         }
       }
     },
+<<<<<<< HEAD
     "cave.action.draw" : {
       "comment" : "VoiceOver action in the cave: choose a photo to draw on the bare rock",
+=======
+    "watercolor.count" : {
+      "comment" : "Written in pencil under a watercolor painting not yet finished, on its sheet in the gallery: the areas painted, and all its areas",
+>>>>>>> origin/main
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Neues Bild zeichnen"
+=======
+            "value" : "%1$lld von %2$lld"
+>>>>>>> origin/main
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Draw a new painting"
+=======
+            "value" : "%1$lld of %2$lld"
+>>>>>>> origin/main
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Dibujar una pintura nueva"
+=======
+            "value" : "%1$lld de %2$lld"
+>>>>>>> origin/main
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Dessiner une nouvelle peinture"
+=======
+            "value" : "%1$lld sur %2$lld"
+>>>>>>> origin/main
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Disegna un nuovo dipinto"
+=======
+            "value" : "%1$lld di %2$lld"
+>>>>>>> origin/main
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "新しい絵を描く"
+=======
+            "value" : "%1$lld/%2$lld"
+>>>>>>> origin/main
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "새 그림 그리기"
+=======
+            "value" : "%1$lld/%2$lld"
+>>>>>>> origin/main
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Nieuw schilderij tekenen"
+=======
+            "value" : "%1$lld van %2$lld"
+>>>>>>> origin/main
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "Desenhar uma nova pintura"
+=======
+            "value" : "%1$lld de %2$lld"
+>>>>>>> origin/main
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "画一幅新画"
+=======
+            "value" : "%1$lld/%2$lld"
+>>>>>>> origin/main
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
+<<<<<<< HEAD
             "value" : "畫一幅新畫"
           }
         }
@@ -60219,6 +60825,9 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "朝日光走去"
+=======
+            "value" : "%1$lld/%2$lld"
+>>>>>>> origin/main
           }
         }
       }

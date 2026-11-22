@@ -26,7 +26,7 @@ enum CaveFossils {
     nonisolated static let carvingSize = SIMD2<Float>(280, 190)
     /// Carving pixels per wall point.
     nonisolated static let carvingScale = 2
-    /// The wheel's rows: a century apart, the selected one (15,000 BC) in the middle.
+    /// The wheel's rows: a century apart, oldest at the top as on the wheel, 15,000 BC in the middle.
     nonisolated static let rowSpacing: Float = 36
     nonisolated static let selectedRow: Float = 650
 
@@ -48,7 +48,7 @@ enum CaveFossils {
             for k in -2...2 {
                 let fade: CGFloat = k == 0 ? 1 : abs(k) == 1 ? 0.8 : 0.45
                 let font = UIFont.systemFont(ofSize: (abs(k) == 2 ? 22 : 26) * s, weight: .semibold)
-                let text = year(15_000 + 100 * k) as NSString
+                let text = year(15_000 - 100 * k) as NSString
                 let attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: UIColor(white: fade, alpha: 1)]
                 let size = text.size(withAttributes: attributes)
                 let y = (CGFloat(selectedRow + Float(k) * rowSpacing - carvingOrigin.y)) * s

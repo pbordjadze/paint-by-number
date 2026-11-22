@@ -73,9 +73,10 @@ nonisolated enum PDFExporter {
     }
 
     /// How the pages are laid out: the paper, which way it is turned, how big the picture
-    /// prints and whether the color key follows. `Layout(paper:)` is the document Print Template…
-    /// has always made; Print's preview (`PrintPreviewSheet`) changes only the size (`across`)
-    /// and the color key, with the paper the region's and the page turned the picture's way.
+    /// prints, which of the template's layers print and whether the color key follows.
+    /// `Layout(paper:)` is the document Print Template… has always made; Print's preview
+    /// (`PrintPreviewSheet`) changes the size (`across`), the layers and the color key, with the
+    /// paper the region's and the page turned the picture's way.
     struct Layout: Equatable, Sendable {
         enum Orientation: String, Sendable, CaseIterable { case portrait, landscape }
 
@@ -85,6 +86,13 @@ nonisolated enum PDFExporter {
         /// Sheets along the picture's longer printed side (`sizes(for:layout:)`); nil, or fewer
         /// than its numbers need, is the fewest whose smallest number is legible.
         var across: Int?
+        /// The areas' numbers, and with them a coloring book's dotted guides, which part areas of
+        /// different numbers the drawing doesn't (without numbers they part nothing). Without
+        /// numbers no size needs more sheets than the painter asks for (`sheets(for:layout:)`).
+        var numbers = true
+        /// Each area washed in its paint, lifted toward the paper (`TemplateRasterizer.sketchColor`,
+        /// as a painting not begun shows in the gallery): the picture to paint over, or by.
+        var colorHints = false
         /// The color key page (with the finished picture for reference) after the template.
         var colorKey = true
         /// The template's pages as they look painted (every area in its paint, the lines a
@@ -97,6 +105,17 @@ nonisolated enum PDFExporter {
             self.across = across
             self.colorKey = colorKey
             self.painted = painted
+        }
+
+        /// How the template's pages draw it: painted in (`painted`), or the printable template
+        /// with the layers chosen.
+        var templateStyle: TemplateRasterizer.Style {
+            if painted { return .finished }
+            var style = TemplateRasterizer.Style.printable
+            style.numbers = numbers
+            if !numbers { style.lines = .screen }
+            if colorHints { style.unpainted = .sketch }
+            return style
         }
 
         /// The orientation the page is turned to for `t`.
@@ -116,7 +135,7 @@ nonisolated enum PDFExporter {
             Sheets(scale: scale, columns: columns, rows: rows, body: body, printed: CGSize(width: width * scale, height: height * scale))
         }
         let fitted = min(body.width / width, body.height / height)
-        let legible = legibleScale(t) ?? 0
+        let legible = layout.numbers ? legibleScale(t) ?? 0 : 0
         let asked = layout.across.map { across(t, body: body, sheets: $0) } ?? 0
         let needed = max(legible, asked)
         guard fitted < needed else {
@@ -210,13 +229,15 @@ nonisolated enum PDFExporter {
                            comment: "Header of the printable template's pages; the arguments are the number of colors and the number of areas")
         let rasterResolution = CGSize(width: t.width * 2, height: t.height * 2)
         let sheets = Self.sheets(for: t, layout: layout)
-        let templateStyle = layout.painted ? TemplateRasterizer.Style.finished : .printable
+        let templateStyle = layout.templateStyle
         if sheets.isTiled {
             page(ctx, box) { content in
                 let sheetsText = String(localized: "pdf.sheets", defaultValue: "\(sheets.count) sheets", bundle: .era,
                                         comment: "How many sheets the template is printed on; the argument is the count")
-                let overviewDetail = String(localized: "pdf.stats.withSheets", defaultValue: "\(stats) · \(sheetsText)", bundle: .era,
-                                            comment: "Header of the overview page of a template printed on several sheets; the arguments are the colors and areas text and the number of sheets")
+                let overviewDetail = layout.numbers
+                    ? String(localized: "pdf.stats.withSheets", defaultValue: "\(stats) · \(sheetsText)", bundle: .era,
+                             comment: "Header of the overview page of a template printed on several sheets; the arguments are the colors and areas text and the number of sheets")
+                    : sheetsText
                 let body = header(ctx, in: content, title: title, detail: overviewDetail)
                 let rect = fit(aspect: CGFloat(t.width) / CGFloat(t.height), in: body)
                 // A map for putting the sheets together; the numbers are on the sheets.
@@ -255,7 +276,8 @@ nonisolated enum PDFExporter {
             }
         } else {
             page(ctx, box) { content in
-                let body = header(ctx, in: content, title: title, detail: stats)
+                // A coloring page doesn't count its paints: they aren't on it.
+                let body = header(ctx, in: content, title: title, detail: layout.numbers ? stats : "")
                 let rect = fit(aspect: CGFloat(t.width) / CGFloat(t.height), in: body)
                 TemplateRasterizer.draw(t, painted: nil, style: templateStyle, in: ctx, rect: rect, rasterResolution: rasterResolution)
                 ctx.setStrokeColor(gray(0.75))
