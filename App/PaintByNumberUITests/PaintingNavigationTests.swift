@@ -216,11 +216,10 @@ final class PaintingNavigationTests: XCTestCase {
 
     /// A tap on another color's area shakes that color's swatch, and a palette scrolled away from
     /// it brings the swatch into view: out of view, it shook unseen and the tap seemed to do
-    /// nothing (QA, October 21). A phone's palette: an iPad's shows every color at once. The play
-    /// harness names every area with its paint.
+    /// nothing (QA, October 21). An iPad's palette too, one row by default since painting-company
+    /// row 378. The play harness names every area with its paint.
     @MainActor
     func testATapOnAnotherColorBringsItsSwatchIntoView() throws {
-        try XCTSkipIf(UIDevice.current.userInterfaceIdiom == .pad, "An iPad's palette shows every color at once")
         let app = openSeededPainting(playHarness: true)
         let settled = app.descendants(matching: .any)["play-settled"]
         XCTAssertTrue(waitUntil(timeout: 20) { (settled.value as? String) == "1" }, "The canvas never settled")

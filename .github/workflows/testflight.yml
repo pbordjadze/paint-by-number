@@ -242,9 +242,11 @@ jobs:
     name: Give the build to its testers
     needs: upload
     if: needs.upload.outputs.build != ''
-    # In the uploads' queue, so the next upload waits for this one's testers.
+    # In the uploads' queue, so the next upload waits for this one's testers. The nightly's testers
+    # have a queue of their own: Team gets every build anyway, and a next nightly already waiting
+    # for a runner in the nightly's queue would otherwise hold them back until it uploads.
     concurrency:
-      group: testflight-${{ (github.event_name == 'schedule' || inputs.nightly) && 'nightly' || 'upload' }}
+      group: testflight-${{ (github.event_name == 'schedule' || inputs.nightly) && 'nightly-testers' || 'upload' }}
       cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 60

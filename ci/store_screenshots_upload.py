@@ -58,6 +58,10 @@ SIZES = {
     "APP_IPHONE_61": {(1179, 2556), (1206, 2622)},
     "APP_IPHONE_67": {(1260, 2736), (1290, 2796), (1320, 2868)},
     "APP_IPAD_PRO_3GEN_129": {(2048, 2732), (2064, 2752)},
+    # The sticker pack in Messages (from 1.3), which App Store Connect requires before a version
+    # with it goes to review: the iPhone's largest and the 13-inch iPad's.
+    "IMESSAGE_APP_IPHONE_67": {(1260, 2736), (1290, 2796), (1320, 2868)},
+    "IMESSAGE_APP_IPAD_PRO_3GEN_129": {(2048, 2732), (2064, 2752)},
 }
 # The creative assets (the product page header and the search results card, iOS 27 and later),
 # each one image a folder, landscape only: the sizes of Apple's creative assets specifications.
