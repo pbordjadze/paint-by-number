@@ -596,7 +596,8 @@ region states, whose `RegionState.mode` carries its own value per region, set wi
 and numbers, draw light over the picture and keep frames coming (`isAnimating`); its pipelines
 come from `RenderContext.makePipeline`. A mode that paints by its own rules takes the canvas's
 taps and strokes (`CanvasView.touches`, `CanvasTouches`) while pinch, pan and zoom stay the
-canvas's. Stained Glass is the first (`GlassMode`, `GlassModeTests`).
+canvas's; one that draws with the finger (`strokesWithOneFinger`, Stained Glass's lead) gets a
+stroke at once, a flick too, and the picture moves with two fingers. Stained Glass is the first (`GlassMode`, `GlassModeTests`).
 
 ## Line art rendering
 

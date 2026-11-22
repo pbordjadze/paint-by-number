@@ -68,6 +68,14 @@ protocol CanvasTouches: AnyObject {
     func canvas(_ canvas: CanvasView, speak region: Int) -> (label: String, value: String)
     /// The canvas's own VoiceOver label and value while a mode has its touches.
     func canvasSummary(_ canvas: CanvasView) -> (label: String, value: String)
+    /// Whether one finger draws a stroke at once, a flick too, and two move the picture: a mode
+    /// that draws with the finger (Stained Glass's lead). False, one finger moves the picture and
+    /// a stroke begins only after the finger rests (the painting's drag paint).
+    var strokesWithOneFinger: Bool { get }
+}
+
+extension CanvasTouches {
+    var strokesWithOneFinger: Bool { false }
 }
 
 enum CanvasTouchPhase { case tap, began, moved, ended }
