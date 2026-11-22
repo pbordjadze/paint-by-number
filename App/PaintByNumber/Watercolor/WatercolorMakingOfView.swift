@@ -126,6 +126,7 @@ final class WatercolorFilm {
                 let target = player.plan.step(at: shown)
                 // A frame at least every few steps, however far behind a slow device falls.
                 player.play(to: target, most: 8)
+                player.follow(shown: shown)
                 sink.yield(player.frame())
                 if player.sim.step >= target {
                     guard (try? await Task.sleep(for: .milliseconds(12))) != nil else { return }
@@ -170,6 +171,27 @@ nonisolated final class WatercolorFilmPlayer: @unchecked Sendable {
     var sheet: WatercolorSheet { sim.sheet }
     private var cursor = 0
     private var settled = false
+    /// The paced film's clock once the drying began: the seconds shown then, the simulation's
+    /// time then, and the simulation time the clock has reached since (`follow`).
+    private var dryingBegan: (shown: Double, time: Float)?
+    private var clockTime: Float = 0
+
+    /// Lets the drying front and the pencil follow the film's clock rather than the simulation,
+    /// from the moment the last tap is laid: a device that can't step the drying as fast as the
+    /// clock asks (an iPad Air managed about 300 steps a second of the 540 asked) sweeps the
+    /// front in the planned time, the simulation's pigment under it catching up as it can. It
+    /// begins where the simulation stands, so a flood that ran late never jumps the front.
+    func follow(shown: Double) {
+        guard plan.isDrying(sim) else { return }
+        let began = dryingBegan ?? (shown, sim.time)
+        dryingBegan = began
+        let steps = plan.step(at: shown) - plan.step(at: began.shown)
+        clockTime = began.time + Float(max(steps, 0)) * WatercolorSim.dt
+    }
+
+    /// The time the front and the pencil are drawn at: the simulation's, or the film's clock
+    /// where it is ahead.
+    private var filmTime: Float { max(sim.time, clockTime) }
 
     init(template: Template, sheet: WatercolorSheet) {
         plan = WatercolorMakingOf(template: template, sheet: sheet)
@@ -183,7 +205,10 @@ nonisolated final class WatercolorFilmPlayer: @unchecked Sendable {
     }
 
     var isSettled: Bool {
-        if !settled { settled = plan.isSettled(sim, cursor: cursor) }
+        if !settled {
+            settled = plan.isSettled(sim, cursor: cursor)
+                || (cursor >= plan.log.taps.count && plan.dryingFront(at: filmTime) >= 1)
+        }
         return settled
     }
 
@@ -205,7 +230,7 @@ nonisolated final class WatercolorFilmPlayer: @unchecked Sendable {
 
     private func pack(box: WatercolorSim.Box?, regions: [Int32]) -> WatercolorFilmFrame {
         var frame = WatercolorFilmFrame(time: sim.time, settled: isSettled, drying: plan.isDrying(sim),
-                                        pencilFade: plan.pencilFade(at: sim.time), front: plan.dryingFront(at: sim.time))
+                                        pencilFade: plan.pencilFade(at: filmTime), front: plan.dryingFront(at: filmTime))
         let w = sheet.width
         if let box, box.x1 > box.x0, box.y1 > box.y0 {
             let bw = box.x1 - box.x0, bh = box.y1 - box.y0
