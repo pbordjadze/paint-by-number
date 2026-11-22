@@ -13,6 +13,11 @@ nonisolated final class RenderContext: @unchecked Sendable {
     /// Every canvas pass renders into this format; blending happens in linear light and the
     /// stored values are Display P3 with the sRGB curve.
     static let colorFormat: MTLPixelFormat = .bgra8Unorm_srgb
+    /// A canvas drawing past white (`CanvasMode.wantsExtendedRange`, `ExtendedRange`) renders
+    /// into this instead: half floats, linear Display P3 as every pass writes it, its values above
+    /// 1 shown brighter than white where the screen has the headroom. Offscreen pictures never
+    /// use it.
+    static let extendedFormat: MTLPixelFormat = .rgba16Float
     /// The outline coverage target: the ink's opacity (r) and the share of it in the light tone
     /// (g, writing over a dark paint).
     static let outlineFormat: MTLPixelFormat = .rg16Float
@@ -25,13 +30,11 @@ nonisolated final class RenderContext: @unchecked Sendable {
     /// The shaders, for a mode's own pipelines (`makePipeline`).
     let library: any MTLLibrary
 
-    let paperPipeline: any MTLRenderPipelineState
-    let fillPipeline: any MTLRenderPipelineState
     let outlinePipeline: any MTLRenderPipelineState
-    let compositePipeline: any MTLRenderPipelineState
-    let glyphPipeline: any MTLRenderPipelineState
-    let brushPipeline: any MTLRenderPipelineState
-    let photoPipeline: any MTLRenderPipelineState
+    /// The color pass's pipelines in `colorFormat`.
+    private let standard: Pipelines
+    /// The same in `extendedFormat`, made the first time a canvas asks for them.
+    private let extended = OSAllocatedUnfairLock<Pipelines?>(initialState: nil)
 
     /// Warms up the device, pipelines and atlas off the main thread so the first canvas
     /// opens instantly.
@@ -61,67 +64,101 @@ nonisolated final class RenderContext: @unchecked Sendable {
         let samples = device.supportsTextureSampleCount(4) ? 4 : 1
         sampleCount = samples
 
-        func pipeline(_ vertex: String, _ fragment: String, format: MTLPixelFormat, samples: Int, blend: Blend) -> (any MTLRenderPipelineState)? {
-            let d = MTLRenderPipelineDescriptor()
-            d.vertexFunction = library.makeFunction(name: vertex)
-            d.fragmentFunction = library.makeFunction(name: fragment)
-            d.rasterSampleCount = samples
-            let c = d.colorAttachments[0]!
-            c.pixelFormat = format
-            switch blend {
-            case .none:
-                c.isBlendingEnabled = false
-            case .premultiplied:
-                c.isBlendingEnabled = true
-                c.rgbBlendOperation = .add
-                c.alphaBlendOperation = .add
-                c.sourceRGBBlendFactor = .one
-                c.sourceAlphaBlendFactor = .one
-                c.destinationRGBBlendFactor = .oneMinusSourceAlpha
-                c.destinationAlphaBlendFactor = .oneMinusSourceAlpha
-            case .max:
-                c.isBlendingEnabled = true
-                c.rgbBlendOperation = .max
-                c.alphaBlendOperation = .max
-                c.sourceRGBBlendFactor = .one
-                c.sourceAlphaBlendFactor = .one
-                c.destinationRGBBlendFactor = .one
-                c.destinationAlphaBlendFactor = .one
-            }
-            return try? device.makeRenderPipelineState(descriptor: d)
-        }
-        let n = samples, f = RenderContext.colorFormat
-        guard let paper = pipeline("canvasRectVertex", "paperFragment", format: f, samples: n, blend: .premultiplied),
-              let fill = pipeline("fillVertex", "fillFragment", format: f, samples: n, blend: .none),
-              let outline = pipeline("outlineVertex", "outlineFragment", format: RenderContext.outlineFormat, samples: 1, blend: .max),
-              let composite = pipeline("canvasRectVertex", "outlineCompositeFragment", format: f, samples: n, blend: .premultiplied),
-              let glyph = pipeline("glyphVertex", "glyphFragment", format: f, samples: n, blend: .premultiplied),
-              let brush = pipeline("brushVertex", "brushFragment", format: f, samples: n, blend: .premultiplied),
-              let photo = pipeline("canvasRectVertex", "photoFragment", format: f, samples: n, blend: .premultiplied),
+        guard let standard = Pipelines(library: library, device: device, format: RenderContext.colorFormat, samples: samples),
+              let outline = Self.pipeline(
+                library, device, "outlineVertex", "outlineFragment", format: RenderContext.outlineFormat, samples: 1, blend: .max),
               let texture = RenderContext.upload(atlas: atlas, device: device, queue: queue)
         else { return nil }
-        paperPipeline = paper
-        fillPipeline = fill
+        self.standard = standard
         outlinePipeline = outline
-        compositePipeline = composite
-        glyphPipeline = glyph
-        brushPipeline = brush
-        photoPipeline = photo
         atlasTexture = texture
     }
 
-    nonisolated private enum Blend { case none, premultiplied, max }
+    /// The color pass's pipelines for one pixel format.
+    nonisolated struct Pipelines: @unchecked Sendable {
+        let paper, fill, composite, glyph, brush, photo: any MTLRenderPipelineState
+
+        init?(library: any MTLLibrary, device: any MTLDevice, format f: MTLPixelFormat, samples n: Int) {
+            func make(_ vertex: String, _ fragment: String, _ blend: Blend) -> (any MTLRenderPipelineState)? {
+                RenderContext.pipeline(library, device, vertex, fragment, format: f, samples: n, blend: blend)
+            }
+            guard let paper = make("canvasRectVertex", "paperFragment", .premultiplied),
+                  let fill = make("fillVertex", "fillFragment", .none),
+                  let composite = make("canvasRectVertex", "outlineCompositeFragment", .premultiplied),
+                  let glyph = make("glyphVertex", "glyphFragment", .premultiplied),
+                  let brush = make("brushVertex", "brushFragment", .premultiplied),
+                  let photo = make("canvasRectVertex", "photoFragment", .premultiplied)
+            else { return nil }
+            self.paper = paper
+            self.fill = fill
+            self.composite = composite
+            self.glyph = glyph
+            self.brush = brush
+            self.photo = photo
+        }
+    }
+
+    /// The pipelines that draw into `format`: `colorFormat`'s, or `extendedFormat`'s (made once,
+    /// on first use; a mode that wants them makes them off the main actor with
+    /// `prepareExtendedRange`).
+    func pipelines(for format: MTLPixelFormat) -> Pipelines {
+        guard format == Self.extendedFormat else { return standard }
+        return extended.withLock { made in
+            if made == nil { made = Pipelines(library: library, device: device, format: format, samples: sampleCount) }
+            return made ?? standard
+        }
+    }
+
+    /// Makes the extended range's pipelines now, so the first frame that asks has them at hand.
+    func prepareExtendedRange() { _ = pipelines(for: Self.extendedFormat) }
+
+    fileprivate static func pipeline(
+        _ library: any MTLLibrary, _ device: any MTLDevice, _ vertex: String, _ fragment: String,
+        format: MTLPixelFormat, samples: Int, blend: Blend
+    ) -> (any MTLRenderPipelineState)? {
+        let d = MTLRenderPipelineDescriptor()
+        d.vertexFunction = library.makeFunction(name: vertex)
+        d.fragmentFunction = library.makeFunction(name: fragment)
+        d.rasterSampleCount = samples
+        let c = d.colorAttachments[0]!
+        c.pixelFormat = format
+        switch blend {
+        case .none:
+            c.isBlendingEnabled = false
+        case .premultiplied:
+            c.isBlendingEnabled = true
+            c.rgbBlendOperation = .add
+            c.alphaBlendOperation = .add
+            c.sourceRGBBlendFactor = .one
+            c.sourceAlphaBlendFactor = .one
+            c.destinationRGBBlendFactor = .oneMinusSourceAlpha
+            c.destinationAlphaBlendFactor = .oneMinusSourceAlpha
+        case .max:
+            c.isBlendingEnabled = true
+            c.rgbBlendOperation = .max
+            c.alphaBlendOperation = .max
+            c.sourceRGBBlendFactor = .one
+            c.sourceAlphaBlendFactor = .one
+            c.destinationRGBBlendFactor = .one
+            c.destinationAlphaBlendFactor = .one
+        }
+        return try? device.makeRenderPipelineState(descriptor: d)
+    }
+
+    nonisolated fileprivate enum Blend { case none, premultiplied, max }
 
     /// A pipeline drawing into the canvas's color pass, for a mode (`CanvasMode`): `vertex` and
     /// `fragment` name functions of `Shaders.metal`; `blends` premultiplied over what is drawn,
-    /// else it replaces it.
-    func makePipeline(vertex: String, fragment: String, blends: Bool) -> (any MTLRenderPipelineState)? {
+    /// else it replaces it; `format` the target's (`CanvasModeFrame.format`).
+    func makePipeline(
+        vertex: String, fragment: String, blends: Bool, format: MTLPixelFormat = RenderContext.colorFormat
+    ) -> (any MTLRenderPipelineState)? {
         let d = MTLRenderPipelineDescriptor()
         d.vertexFunction = library.makeFunction(name: vertex)
         d.fragmentFunction = library.makeFunction(name: fragment)
         d.rasterSampleCount = sampleCount
         let c = d.colorAttachments[0]!
-        c.pixelFormat = Self.colorFormat
+        c.pixelFormat = format
         c.isBlendingEnabled = blends
         if blends {
             c.rgbBlendOperation = .add
@@ -203,10 +240,11 @@ nonisolated final class RenderContext: @unchecked Sendable {
         return device.makeTexture(descriptor: d)
     }
 
-    /// The multisampled color target; memoryless on device (it never leaves tile memory).
-    func makeMultisampleTarget(width: Int, height: Int) -> (any MTLTexture)? {
+    /// The multisampled color target, in `format` (the color target's); memoryless on device (it
+    /// never leaves tile memory).
+    func makeMultisampleTarget(width: Int, height: Int, format: MTLPixelFormat = RenderContext.colorFormat) -> (any MTLTexture)? {
         guard sampleCount > 1 else { return nil }
-        let d = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: Self.colorFormat, width: width, height: height, mipmapped: false)
+        let d = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: format, width: width, height: height, mipmapped: false)
         d.textureType = .type2DMultisample
         d.sampleCount = sampleCount
         d.usage = .renderTarget
@@ -245,6 +283,9 @@ nonisolated final class RenderContext: @unchecked Sendable {
         var photo: (any MTLTexture)? = nil
         /// A mode drawing the painting in place of its own look (`CanvasMode`); nil draws as ever.
         var mode: (any CanvasMode)? = nil
+        /// How many times brighter than white the screen can show now (`ExtendedRange`), for a
+        /// mode drawing into `extendedFormat`; 1 everywhere else.
+        var headroom: Float = 1
     }
 
     /// The sheet's pixels in the target (`CanvasUniforms`: canvas units times `transform.z` plus
@@ -272,8 +313,13 @@ nonisolated final class RenderContext: @unchecked Sendable {
         var u = uniforms
         let uniformSize = MemoryLayout<CanvasUniforms>.stride
         let mode = content.mode
+        let format = targets.color.pixelFormat
+        let p = pipelines(for: format)
+        func frame() -> CanvasModeFrame {
+            CanvasModeFrame(context: self, scene: scene, states: states, uniforms: u, format: format, headroom: content.headroom)
+        }
         let drawOutlines = content.outlines && scene.segmentCount > 0 && mode?.drawsOutlines != false
-        mode?.prepare(commands, frame: CanvasModeFrame(context: self, scene: scene, states: states, uniforms: u))
+        mode?.prepare(commands, frame: frame())
 
         if drawOutlines {
             let pass = MTLRenderPassDescriptor()
@@ -312,7 +358,7 @@ nonisolated final class RenderContext: @unchecked Sendable {
         enc.label = "Canvas"
 
         var margin = content.shadowMargin
-        enc.setRenderPipelineState(paperPipeline)
+        enc.setRenderPipelineState(p.paper)
         enc.setVertexBytes(&u, length: uniformSize, index: 0)
         enc.setVertexBytes(&margin, length: MemoryLayout<Float>.size, index: 1)
         enc.setFragmentBytes(&u, length: uniformSize, index: 0)
@@ -323,11 +369,11 @@ nonisolated final class RenderContext: @unchecked Sendable {
         let sheet = Self.sheetScissor(u)
         if let mode, let sheet {
             enc.setScissorRect(sheet)
-            mode.drawPaint(enc, frame: CanvasModeFrame(context: self, scene: scene, states: states, uniforms: u))
+            mode.drawPaint(enc, frame: frame())
             enc.setScissorRect(MTLScissorRect(x: 0, y: 0, width: Int(u.viewport.x), height: Int(u.viewport.y)))
         } else if scene.indexCount > 0, let sheet {
             enc.setScissorRect(sheet)
-            enc.setRenderPipelineState(fillPipeline)
+            enc.setRenderPipelineState(p.fill)
             enc.setVertexBuffer(scene.positions, offset: 0, index: 0)
             enc.setVertexBuffer(scene.vertexRegions, offset: 0, index: 1)
             enc.setVertexBytes(&u, length: uniformSize, index: 2)
@@ -343,7 +389,7 @@ nonisolated final class RenderContext: @unchecked Sendable {
         if drawOutlines {
             // Outlines on the sheet's border reach past it.
             var outlineOverhang: Float = 2
-            enc.setRenderPipelineState(compositePipeline)
+            enc.setRenderPipelineState(p.composite)
             enc.setVertexBytes(&u, length: uniformSize, index: 0)
             enc.setVertexBytes(&outlineOverhang, length: MemoryLayout<Float>.size, index: 1)
             enc.setFragmentTexture(targets.outlines, index: 0)
@@ -352,7 +398,7 @@ nonisolated final class RenderContext: @unchecked Sendable {
         }
 
         if content.numbers && scene.glyphCount > 0 && mode?.drawsNumbers != false {
-            enc.setRenderPipelineState(glyphPipeline)
+            enc.setRenderPipelineState(p.glyph)
             enc.setVertexBuffer(scene.glyphs, offset: 0, index: 0)
             enc.setVertexBuffer(scene.digitRects, offset: 0, index: 1)
             enc.setVertexBuffer(scene.digitUVs, offset: 0, index: 2)
@@ -366,7 +412,7 @@ nonisolated final class RenderContext: @unchecked Sendable {
 
         if let photo = content.photo, u.photo.x > 0 {
             var photoMargin: Float = 0
-            enc.setRenderPipelineState(photoPipeline)
+            enc.setRenderPipelineState(p.photo)
             enc.setVertexBytes(&u, length: uniformSize, index: 0)
             enc.setVertexBytes(&photoMargin, length: MemoryLayout<Float>.size, index: 1)
             enc.setFragmentTexture(photo, index: 0)
@@ -374,10 +420,10 @@ nonisolated final class RenderContext: @unchecked Sendable {
             enc.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
         }
 
-        mode?.drawOver(enc, frame: CanvasModeFrame(context: self, scene: scene, states: states, uniforms: u))
+        mode?.drawOver(enc, frame: frame())
 
         if content.brush {
-            enc.setRenderPipelineState(brushPipeline)
+            enc.setRenderPipelineState(p.brush)
             enc.setVertexBytes(&u, length: uniformSize, index: 0)
             enc.setFragmentBytes(&u, length: uniformSize, index: 0)
             enc.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)

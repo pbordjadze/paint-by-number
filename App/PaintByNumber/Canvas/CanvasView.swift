@@ -99,8 +99,13 @@ final class CanvasView: UIView, PaintingCanvas {
     var onPhotoUnavailable: (() -> Void)?
     /// A mode drawing the painting in place of its own look (`CanvasMode`); nil, the painting's.
     var mode: (any CanvasMode)? {
-        didSet { requestRender() }
+        didSet {
+            updateExtendedRange()
+            requestRender()
+        }
     }
+    /// Whether the layer draws past white now (`ExtendedRange`, for a mode that asks).
+    private var drawsExtendedRange = false
     /// A mode that takes the canvas's touches in place of the painting session (`CanvasTouches`;
     /// Stained Glass's free glazing); nil, the session's rules. Pan, pinch and the double tap's
     /// zoom stay the canvas's.
@@ -380,6 +385,20 @@ final class CanvasView: UIView, PaintingCanvas {
         backgroundColor = .systemGroupedBackground
     }
 
+    /// Takes the extended range's format and color space while the mode asks and the screen and
+    /// the painter's settings allow (`ExtendedRange`), and the usual ones otherwise: read again as
+    /// the mode changes, the canvas comes on screen and before each frame.
+    private func updateExtendedRange() {
+        let wants = mode?.wantsExtendedRange == true && ExtendedRange.isOffered(on: window?.windowScene?.screen)
+        guard wants != drawsExtendedRange else { return }
+        drawsExtendedRange = wants
+        let layer = metalLayer
+        layer.pixelFormat = wants ? RenderContext.extendedFormat : RenderContext.colorFormat
+        layer.colorspace = CGColorSpace(name: wants ? CGColorSpace.extendedLinearDisplayP3 : CGColorSpace.displayP3)
+        layer.wantsExtendedDynamicRangeContent = wants
+        requestRender()
+    }
+
     private func configureScrollView() {
         scrollView.delegate = self
         scrollView.backgroundColor = .clear
@@ -532,6 +551,7 @@ final class CanvasView: UIView, PaintingCanvas {
                 displayLink = link
             }
             setNeedsLayout()
+            updateExtendedRange()
             requestRender()
             // First responder so the window's undo manager serves three-finger undo and ⌘Z.
             if !isOutOfSight { Task { self.becomeFirstResponder() } }
@@ -944,6 +964,7 @@ final class CanvasView: UIView, PaintingCanvas {
         }
         idleTicks = 0
         guard let renderer else { return }
+        updateExtendedRange()
         let palette = canvasPalette
         let uniforms = makeUniforms(time: time, camera: camera, palette: palette)
         let content = RenderContext.Content(
@@ -951,7 +972,8 @@ final class CanvasView: UIView, PaintingCanvas {
             shadowMargin: Float(44 * contentScaleFactor),
             clear: Self.clear(mode?.backdrop ?? palette.background),
             photo: uniforms.photo.x > 0.001 ? photoTexture : nil,
-            mode: mode)
+            mode: mode,
+            headroom: drawsExtendedRange ? ExtendedRange.headroom(on: window?.windowScene?.screen) : 1)
         // The first frame that shows the fitted painting: the one the start of a painting is
         // handed over to, announced once it is on screen.
         var presented: (@Sendable () -> Void)?
