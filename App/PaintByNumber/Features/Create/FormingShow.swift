@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import os
 import PaintCore
 import SwiftUI
 
@@ -11,9 +12,10 @@ import SwiftUI
 /// 1. **Graphite** (the wait): once the making has the painting's line drawing (`LineArtInput`,
 ///    long before the template: `CreateModel.linesFound`), thin pencil strokes travel along it from
 ///    the middle (`GraphiteSketch`), a warm point at each stroke's tip, the photo's color draining
-///    only close around the strokes drawn; until then the photo waits as it is. The race nears its
-///    end without reaching it for as long as the template is still being made
-///    (`graphiteProgress`), so it never stands still, and finishes under the fuse: a faster device
+///    only close around the strokes drawn; until then (the models running, before Vision's
+///    finds) the photo stands as it is. Once begun, the race nears its end without reaching it
+///    for as long as the template is still being made (`graphiteProgress`), so it never stands
+///    still, and finishes under the fuse: a faster device
 ///    sees less of it. No status shows over it until the making has taken `patience`.
 /// 2. **Fuse**: once the template is made, its own lines burn in over the same drawing like a fuse,
 ///    a band of gold at the burning front, the paper drying to the page's behind it. It is done
@@ -314,6 +316,34 @@ nonisolated enum FormingShow {
     }
 }
 
+/// The graphite's shader (`FormingGraphite.metal`, `GraphiteSketch.shade`), compiled once for the
+/// app's life as the first show begins (`prepare`), so its first frame doesn't wait for it.
+enum GraphiteShader {
+    private static var compiled = false
+
+    static func shader(_ sheet: FormingPlan.Sheet, progress: Double) -> Shader {
+        let point = sheet.ink * 0.5 + GraphiteSketch.warm * 0.5
+        return ShaderLibrary.formingGraphite(
+            .float(progress), .color(color(sheet.ink)), .color(color(point)), .color(color(sheet.paper)),
+            .float(GraphiteSketch.pencil), .float(GraphiteSketch.edge), .float(GraphiteSketch.fresh), .float(GraphiteSketch.wash))
+    }
+
+    static func prepare() async {
+        guard !compiled else { return }
+        compiled = true
+        let sheet = FormingPlan.Sheet(paper: SIMD3(1, 1, 1), ink: SIMD3(0, 0, 0))
+        do {
+            try await shader(sheet, progress: 0).compile(as: .colorEffect)
+        } catch {
+            Log.create.error("Graphite shader didn't compile: \(String(describing: error), privacy: .public)")
+        }
+    }
+
+    private static func color(_ rgb: SIMD3<Float>) -> Color {
+        Color(.sRGB, red: Double(rgb.x), green: Double(rgb.y), blue: Double(rgb.z))
+    }
+}
+
 /// The front's image (`FormingShow.Front.image`), made once for the app's life, off the main
 /// actor, as the first show begins; until then a front fades instead of spreading.
 enum FrontMasks {
@@ -383,7 +413,9 @@ nonisolated enum GraphiteSketch {
         let w = lines.edges.width, h = lines.edges.height
         guard w >= 2 * coarse, h >= 2 * coarse, let space = CGColorSpace(name: CGColorSpace.sRGB) else { return nil }
         let stroke = strokes(lines)
+        guard !Task.isCancelled else { return nil }
         let near = halo(stroke, width: w, height: h)
+        guard !Task.isCancelled else { return nil }
         let arrival = arrivals(of: stroke, width: w, height: h)
         guard arrival.count == w * h, !Task.isCancelled else { return nil }
         var bytes = [UInt8](repeating: 255, count: w * h * 4)
@@ -741,8 +773,9 @@ struct FormingShowLayers: View {
         ZStack(alignment: .topLeading) {
             // Under paper wherever the fuse has burned: drawn only while some of it shows.
             if let drawing = moments.graphite, graphite > 0, fuse < 1 {
-                placed(drawing.map)
-                    .colorEffect(graphiteShader(drawing, progress: graphite))
+                // A map of values, not a picture: no sharpening filter between its pixels.
+                placed(drawing.map, interpolation: .medium)
+                    .colorEffect(GraphiteShader.shader(drawing.sheet, progress: graphite))
                     .transition(.opacity)
             }
             if let lines {
@@ -770,23 +803,11 @@ struct FormingShowLayers: View {
         }
     }
 
-    /// The graphite at `progress` (`FormingGraphite.metal`, `GraphiteSketch.shade`).
-    private func graphiteShader(_ drawing: GraphiteSketch.Drawing, progress: Double) -> Shader {
-        let sheet = drawing.sheet, point = sheet.ink * 0.5 + GraphiteSketch.warm * 0.5
-        return ShaderLibrary.formingGraphite(
-            .float(progress), .color(Self.color(sheet.ink)), .color(Self.color(point)), .color(Self.color(sheet.paper)),
-            .float(GraphiteSketch.pencil), .float(GraphiteSketch.edge), .float(GraphiteSketch.fresh), .float(GraphiteSketch.wash))
-    }
-
-    private static func color(_ rgb: SIMD3<Float>) -> Color {
-        Color(.sRGB, red: Double(rgb.x), green: Double(rgb.y), blue: Double(rgb.z))
-    }
-
     /// An image filling the picture, in the frame.
-    private func placed(_ image: CGImage) -> some View {
+    private func placed(_ image: CGImage, interpolation: Image.Interpolation = .high) -> some View {
         Image(decorative: image, scale: 1)
             .resizable()
-            .interpolation(.high)
+            .interpolation(interpolation)
             .scaledToFill()
             .frame(width: picture.width, height: picture.height)
             .clipped()

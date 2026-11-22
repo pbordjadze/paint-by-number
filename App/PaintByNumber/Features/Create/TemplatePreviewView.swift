@@ -62,6 +62,8 @@ struct TemplatePreviewView: View {
     @State private var formingTookLong = false
     /// The photo the graphite began over: another paper redraws it without starting it again.
     @State private var graphitePhoto: UUID?
+    /// The graphite's drawing has been tried for these lines, whether or not it could be made.
+    @State private var graphiteTried = false
     @State private var fuseLit: Date?
     @State private var fuseDone: Date?
     @State private var formingSkip: FormingShow.Skip?
@@ -634,10 +636,15 @@ struct TemplatePreviewView: View {
                 graphite = nil
             }
             .task(id: graphiteKey) {
+                graphiteTried = false
                 guard let key = graphiteKey, let lines = model.linesFound else { return }
                 async let drawn = GraphiteSketch.draw(lines, sheet: key.sheet)
                 await FrontMasks.prepare()
-                guard let sketch = await drawn, !Task.isCancelled else { return }
+                await GraphiteShader.prepare()
+                let sketch = await drawn
+                guard !Task.isCancelled else { return }
+                graphiteTried = true
+                guard let sketch else { return }
                 // Made meanwhile: the fuse burns over the photo itself.
                 guard playsTheShow, !forming.lines, fuseLit == nil else { return }
                 graphite = sketch
@@ -682,7 +689,7 @@ struct TemplatePreviewView: View {
     /// drawn over the photo (where the show plays and the photo has lines to draw).
     private var demoGraphiteReady: Bool {
         guard ShellDemo.current?.formingHold?.readyOnGraphite == true else { return false }
-        return model.isFinal && (graphite != nil || !playsTheShow || model.linesFound == nil)
+        return model.isFinal && (graphite != nil || graphiteTried || !playsTheShow || model.linesFound == nil)
     }
     #endif
 

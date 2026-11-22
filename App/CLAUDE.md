@@ -830,14 +830,15 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   as everyone's wait, with no status over it until the making has taken `FormingShow.patience` (4 s;
   VoiceOver hears it at once): once the making has found the painting's own line drawing
   (`CreateModel.linesFound`, the `LineArtInput` the template is traced from, handed over the moment
-  it is found; no filter of the photo, which waits as it is until then), thin pencil strokes travel
+  the models have drawn it, before Vision's eyes, subjects and text: `LineArtInputs.Early`; no
+  filter of the photo, which stands as it is while the models run), thin pencil strokes travel
   along it from the middle, a warm point at their fresh tip, the photo's color draining only close
   around the strokes drawn (`GraphiteSketch`: the drawing map's strokes and the contours' cores, a
   halo around them, the race their shortest ways from a seed, equalized by ink; made once off the
   main actor as one image a shader reads at the progress, `FormingGraphite.metal`;
   `tools/graphite_sim.py` makes and lays out the same off the device from `tools/baseline/lines/`,
   light or dark paper). The race nears its end without reaching it while the template is
-  made (`FormingShow.graphiteProgress`), never a still image, and finishes under the fuse; then its lines burn in behind a gold front (`FormingShow.glow`, stroked once off
+  made (`FormingShow.graphiteProgress`), never still once it has begun, and finishes under the fuse; then its lines burn in behind a gold front (`FormingShow.glow`, stroked once off
   the main actor, its glow in it; `FormingShow.Front`, a wavering blot drawn as one image scaled about
   its centre, `FrontMasks`, which the numbers share) with the page's paper, done `drawIn` after the making as the plain forming's
   lines are (a graphite shown less than `graphiteAtLeast`, 0.15 s, takes that from the fuse); and during

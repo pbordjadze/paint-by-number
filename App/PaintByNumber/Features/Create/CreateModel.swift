@@ -149,7 +149,8 @@ final class CreateModel {
     private var paintingLineArt: LineArtSettings?
     /// What the coloring book draws from, computed once per photo; nil for classic line art.
     @ObservationIgnored private(set) var lineArtInput: LineArtInput?
-    /// The same line art as soon as it is found, for the short Making-of's graphite, which draws
+    /// The same line art as soon as the models have drawn it (before Vision's eyes, subjects and
+    /// text, which the graphite has no use for), for the short Making-of's graphite, which draws
     /// the painting's own lines while the rest is still being made (`GraphiteSketch`); nil while
     /// the show is off.
     private(set) var linesFound: LineArtInput?
@@ -1170,9 +1171,10 @@ final class CreateModel {
         withAnimation(.easeInOut(duration: 0.18)) { preview = draft }
     }
 
-    /// The line art, found while the photo is still being analyzed: kept unless the photo changed.
+    /// The line art, found while the photo is still being analyzed (its drawing first, before
+    /// the eyes, subjects and text): kept unless the photo changed.
     private func showLinesFound(_ lines: LineArtInput, load: Int) {
-        guard load == loadID, loadTask?.isCancelled == false else { return }
+        guard load == loadID, loadTask?.isCancelled == false, linesFound == nil else { return }
         linesFound = lines
     }
 
@@ -1867,7 +1869,8 @@ final class CreateModel {
     private static func findLineArt(
         of decoded: Decoded, settings: LineArtSettings, found: (@Sendable (LineArtInput) -> Void)?
     ) async throws -> LineArtInput? {
-        let input = try await LineArtInputs.forGeneration(of: decoded.preview, settings: settings, cached: true)
+        // The models' drawing goes to `found` before Vision's finds are in, the whole input after.
+        let input = try await LineArtInputs.forGeneration(of: decoded.preview, settings: settings, cached: true, early: found)
         if let input { found?(input) }
         return input
     }
