@@ -249,6 +249,13 @@ final class WoodblockBenchModel: CanvasTouches {
 
     // MARK: Words
 
+    /// Where the print stands while a block is worked, over the step's line.
+    var progress: String? {
+        guard !isDone, !showsPrint else { return nil }
+        return String(localized: "woodblock.blockOf", defaultValue: "Block \(block + 1) of \(blocks)",
+                      comment: "Over the woodblock bench's line while a block is worked: its place among the print's blocks, and how many there are")
+    }
+
     /// The one line the step shows.
     var instruction: String {
         if isDone {
@@ -346,8 +353,7 @@ struct WoodblockCanvas: UIViewRepresentable {
         view.touches = model
         // Room past the picture for the block's margin, its kentō.
         view.chromeInsets = UIEdgeInsets(top: 30, left: 30, bottom: 30, right: 30)
-        let b = WoodblockMode.bench
-        view.backgroundColor = UIColor(displayP3Red: CGFloat(b.x), green: CGFloat(b.y), blue: CGFloat(b.z), alpha: 1)
+        view.backgroundColor = UIColor(WoodblockEra.bench)
         model.reduceMotion = context.environment.accessibilityReduceMotion
         model.canvas = view
         return view
@@ -381,7 +387,7 @@ struct WoodblockBenchView: View {
             WoodblockCanvas(model: model)
             footer
         }
-        .background(Self.benchColor.ignoresSafeArea())
+        .background(WoodblockEra.bench.ignoresSafeArea())
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Share", systemImage: "square.and.arrow.up", action: share)
@@ -407,6 +413,12 @@ struct WoodblockBenchView: View {
 
     private var footer: some View {
         VStack(spacing: 10) {
+            if let progress = model.progress {
+                Text(progress)
+                    .font(.footnote.smallCaps())
+                    .foregroundStyle(Color(red: 0.93, green: 0.86, blue: 0.74).opacity(0.6))
+                    .accessibilityIdentifier("woodblock-progress")
+            }
             HStack(spacing: 10) {
                 if let swatch = model.inkSwatch {
                     Circle()
@@ -427,11 +439,8 @@ struct WoodblockBenchView: View {
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, minHeight: 92)
         // The line sits on the bench itself, not on a bar of its own.
-        .background(Self.benchColor.ignoresSafeArea(edges: .bottom))
+        .background(WoodblockEra.bench.ignoresSafeArea(edges: .bottom))
     }
-
-    private static let benchColor = Color(.displayP3, red: Double(WoodblockMode.bench.x),
-                                          green: Double(WoodblockMode.bench.y), blue: Double(WoodblockMode.bench.z))
 
     @ViewBuilder private var action: some View {
         if model.isDone {

@@ -1,5 +1,6 @@
 #if UNRELEASED
 import CoreGraphics
+import Foundation
 import PaintCore
 import PhotosUI
 import Ravenna
@@ -70,8 +71,15 @@ struct WoodblockEra: View {
 
     /// The lamp's warm light, the era's tint.
     static let lamp = Color(red: 0.95, green: 0.72, blue: 0.42)
-    static let bench = Color(.displayP3, red: Double(WoodblockMode.bench.x), green: Double(WoodblockMode.bench.y),
-                             blue: Double(WoodblockMode.bench.z))
+    /// The bench the canvas draws, for SwiftUI: `WoodblockMode.bench` is linear, a SwiftUI
+    /// colour's components are encoded (read as they are, the bench showed black around it).
+    static let bench: Color = {
+        func encoded(_ c: Float) -> Double {
+            Double(c <= 0.0031308 ? 12.92 * c : 1.055 * pow(c, 1 / 2.4) - 0.055)
+        }
+        let b = WoodblockMode.bench
+        return Color(.displayP3, red: encoded(b.x), green: encoded(b.y), blue: encoded(b.z))
+    }()
 
     /// Whether the launch asked for one of Woodblock's demo scenarios (`-demo woodblock-<name>`),
     /// which open the era whatever the clock says (Debug builds only).
