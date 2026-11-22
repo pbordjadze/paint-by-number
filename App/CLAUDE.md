@@ -828,12 +828,15 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   settings' preview keep what they showed. **The short Making-of** (SideStore and Debug builds only,
   `FormingShow.isOn`; row 361, "graphite and fuse"; the release keeps the forming above) plays over it
   as everyone's wait, with no status over it until the making has taken `FormingShow.patience` (4 s;
-  VoiceOver hears it at once): pencil lines are laid down along the photo's shapes from the middle, a
-  warm glint at their tip, its color draining only behind them (`GraphiteSketch`: a difference of
-  Gaussians on the median-filtered grey, opened, with light hatching in the shadows; its race the lines'
-  shortest ways from a seed, equalized by ink; made once off the main actor as eight cumulative images
-  and their glints, four cross-faded a frame; `tools/graphite_sim.py` makes and lays out the same off
-  the device, light or dark paper). The race nears its end without reaching it while the template is
+  VoiceOver hears it at once): once the making has found the painting's own line drawing
+  (`CreateModel.linesFound`, the `LineArtInput` the template is traced from, handed over the moment
+  it is found; no filter of the photo, which waits as it is until then), thin pencil strokes travel
+  along it from the middle, a warm point at their fresh tip, the photo's color draining only close
+  around the strokes drawn (`GraphiteSketch`: the drawing map's strokes and the contours' cores, a
+  halo around them, the race their shortest ways from a seed, equalized by ink; made once off the
+  main actor as one image a shader reads at the progress, `FormingGraphite.metal`;
+  `tools/graphite_sim.py` makes and lays out the same off the device from `tools/baseline/lines/`,
+  light or dark paper). The race nears its end without reaching it while the template is
   made (`FormingShow.graphiteProgress`), never a still image, and finishes under the fuse; then its lines burn in behind a gold front (`FormingShow.glow`, stroked once off
   the main actor, its glow in it; `FormingShow.Front`, a wavering blot drawn as one image scaled about
   its centre, `FrontMasks`, which the numbers share) with the page's paper, done `drawIn` after the making as the plain forming's

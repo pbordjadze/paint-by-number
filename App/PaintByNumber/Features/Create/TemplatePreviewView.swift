@@ -606,7 +606,8 @@ struct TemplatePreviewView: View {
             heldGraphite: heldGraphite, heldFuse: heldDraw.map { Double($0) })
     }
 
-    /// What the graphite drawing is made for: this photo on this paper, while the show plays.
+    /// What the graphite drawing is made for: this photo's lines on this paper, while the show
+    /// plays. Until its lines are found the photo shows as it is.
     private struct GraphiteKey: Equatable {
         var photo: UUID
         var sheet: FormingPlan.Sheet
@@ -614,7 +615,7 @@ struct TemplatePreviewView: View {
     }
 
     private var graphiteKey: GraphiteKey? {
-        guard playsTheShow, model.source != nil else { return nil }
+        guard playsTheShow, model.linesFound != nil else { return nil }
         return GraphiteKey(
             photo: model.photoID, sheet: FormingPlan.sheet(paperAppearance, interfaceIsDark: colorScheme == .dark), round: graphiteRound)
     }
@@ -633,8 +634,8 @@ struct TemplatePreviewView: View {
                 graphite = nil
             }
             .task(id: graphiteKey) {
-                guard let key = graphiteKey, let photo = model.source?.preview else { return }
-                async let drawn = GraphiteSketch.draw(photo, sheet: key.sheet)
+                guard let key = graphiteKey, let lines = model.linesFound else { return }
+                async let drawn = GraphiteSketch.draw(lines, sheet: key.sheet)
                 await FrontMasks.prepare()
                 guard let sketch = await drawn, !Task.isCancelled else { return }
                 // Made meanwhile: the fuse burns over the photo itself.
@@ -678,10 +679,10 @@ struct TemplatePreviewView: View {
 
     #if DEBUG
     /// The `create-forming` and `-graphite` demos' moment: the template made, and the graphite
-    /// drawn over the photo (where the show plays).
+    /// drawn over the photo (where the show plays and the photo has lines to draw).
     private var demoGraphiteReady: Bool {
         guard ShellDemo.current?.formingHold?.readyOnGraphite == true else { return false }
-        return model.isFinal && (graphite != nil || !playsTheShow)
+        return model.isFinal && (graphite != nil || !playsTheShow || model.linesFound == nil)
     }
     #endif
 
