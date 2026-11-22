@@ -74,6 +74,8 @@ struct FormingTests {
         #expect(FormingPlan.paperOpacity(hasLines: false, dries: false) == 0)
         #expect(FormingPlan.paperOpacity(hasLines: true, dries: true) == 1)
         #expect(FormingPlan.paperOpacity(hasLines: false, dries: true) == 1)
+        // After the short Making-of the photo dried on the preview: all paper from the lift on.
+        #expect(FormingPlan.paperOpacity(hasLines: true, dries: false, showed: true) == 1)
     }
 
     /// The departing picture is one layout carried by one transform: at the start, the middle
@@ -124,12 +126,14 @@ struct FormingTests {
         #expect(FormingPlan.drawIn >= 0.6 && FormingPlan.drawIn / StartHandoffPlan.glide <= 1.6)
         #expect(FormingPlan.wash >= 0.35 && FormingPlan.wash <= 0.5)
         #expect(FormingPlan.feather > 0 && FormingPlan.feather < 0.5)
-        #expect(FormingPlan.liftWait(sinceLines: 0) == FormingPlan.drawIn)
-        #expect(abs(FormingPlan.liftWait(sinceLines: FormingPlan.drawIn / 2) - FormingPlan.drawIn / 2) < 1e-9)
-        // A save that outlasted the drawing waits for nothing; a clock gone backward, no longer than the drawing.
-        #expect(FormingPlan.liftWait(sinceLines: FormingPlan.drawIn) == 0)
-        #expect(FormingPlan.liftWait(sinceLines: 30) == 0)
-        #expect(FormingPlan.liftWait(sinceLines: -5) == FormingPlan.drawIn)
+        #expect(FormingPlan.liftWait(remaining: FormingPlan.drawIn) == FormingPlan.drawIn)
+        #expect(FormingPlan.liftWait(remaining: FormingPlan.drawIn / 2) == FormingPlan.drawIn / 2)
+        // A save that outlasted the drawing waits for nothing, nor does a picture with no lines;
+        // a clock gone backward, no longer than the drawing.
+        #expect(FormingPlan.liftWait(remaining: 0) == 0)
+        #expect(FormingPlan.liftWait(remaining: -25) == 0)
+        #expect(FormingPlan.liftWait(remaining: nil) == 0)
+        #expect(FormingPlan.liftWait(remaining: 1000) == FormingPlan.drawIn)
         #expect(FormingPlan.dries == StartHandoffPlan.settle)
         #expect(FormingPlan.dries <= StartHandoffPlan.glide)
     }

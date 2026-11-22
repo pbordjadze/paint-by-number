@@ -289,33 +289,70 @@ final class WatercolorRenderer: NSObject, MTKViewDelegate {
         let w = sim.sheet.width
         if let box, box.x1 > box.x0, box.y1 > box.y0 {
             let bw = box.x1 - box.x0, bh = box.y1 - box.y0
-            if halfBuffer.count < bw * bh * 4 { halfBuffer = Array(repeating: 0, count: bw * bh * 4) }
+            if halfBuffer.count < bw * bh * 5 { halfBuffer = Array(repeating: 0, count: bw * bh * 5) }
             halfBuffer.withUnsafeMutableBufferPointer { out in
-                for y in 0..<bh {
-                    for x in 0..<bw {
-                        let i = (box.y0 + y) * w + box.x0 + x
-                        let d = sim.D[i] + 0.9 * sim.S[i]
-                        let o = (y * bw + x) * 4
-                        out[o] = Float16(d.x)
-                        out[o + 1] = Float16(d.y)
-                        out[o + 2] = Float16(d.z)
-                        out[o + 3] = Float16(sim.W[i])
-                    }
-                }
-                density.replace(region: MTLRegionMake2D(box.x0, box.y0, bw, bh), mipmapLevel: 0,
-                                withBytes: out.baseAddress!, bytesPerRow: bw * 8)
-                for y in 0..<bh {
-                    for x in 0..<bw { out[y * bw + x] = Float16(sim.G[(box.y0 + y) * w + box.x0 + x]) }
-                }
+                let density = out.baseAddress!, grain = density + bw * bh * 4
+                Self.pack(sim, box: box, width: w, density: density, grain: grain)
+                self.density.replace(region: MTLRegionMake2D(box.x0, box.y0, bw, bh), mipmapLevel: 0,
+                                     withBytes: density, bytesPerRow: bw * 8)
                 granulation.replace(region: MTLRegionMake2D(box.x0, box.y0, bw, bh), mipmapLevel: 0,
-                                    withBytes: out.baseAddress!, bytesPerRow: bw * 2)
+                                    withBytes: grain, bytesPerRow: bw * 2)
             }
         }
         let states = regions.contents().bindMemory(to: WatercolorRegion.self, capacity: painting.regionCount)
-        for r in changed where Int(r) < painting.regionCount {
-            let target = sim.target(of: Int(r))
-            let at = sim.paintedAt[Int(r)]
-            states[Int(r)] = WatercolorRegion(gain: SIMD4(target.gain, at.isFinite ? at : 1e9), aim: SIMD4(target.aim, sim.glaze(of: Int(r))))
+        let solved = Self.targets(sim, of: changed.filter { Int($0) < painting.regionCount })
+        for (r, t) in solved {
+            states[Int(r)] = WatercolorRegion(gain: t.gain, aim: t.aim)
+        }
+    }
+
+    /// The target solve of each of `regions` with its time painted and glaze, as the shader's
+    /// region states take them, an area to a task (each reads only its own cells).
+    nonisolated static func targets(
+        _ sim: WatercolorSim, of regions: [Int32]
+    ) -> [(Int32, (gain: SIMD4<Float>, aim: SIMD4<Float>))] {
+        var out = [(gain: SIMD4<Float>, aim: SIMD4<Float>)](
+            repeating: (SIMD4(repeating: 0), SIMD4(repeating: 0)), count: regions.count)
+        let shared = UncheckedSendable(sim)
+        out.withUnsafeMutableBufferPointer { buffer in
+            let o = UncheckedSendable(buffer.baseAddress!)
+            Parallel.forEachChunk(regions.count, chunk: 4) { chunk in
+                for k in chunk {
+                    let r = Int(regions[k])
+                    let t = shared.value.target(of: r)
+                    let at = shared.value.paintedAt[r]
+                    o.value[k] = (SIMD4(t.gain, at.isFinite ? at : 1e9), SIMD4(t.aim, shared.value.glaze(of: r)))
+                }
+            }
+        }
+        return Array(zip(regions, out))
+    }
+
+    /// The cells of `box` as half floats, a band of rows to a core: the density texture's
+    /// (pigment, most of what still rides the water, and the water) and the granulation's. Packed
+    /// on the main thread alone, this was a fifth of a frame on an iPad Air (November 21).
+    nonisolated static func pack(
+        _ sim: WatercolorSim, box: WatercolorSim.Box, width w: Int,
+        density: UnsafeMutablePointer<Float16>, grain: UnsafeMutablePointer<Float16>
+    ) {
+        let bw = box.x1 - box.x0, bh = box.y1 - box.y0
+        let D = UncheckedSendable(sim.D), S = UncheckedSendable(sim.S), W = UncheckedSendable(sim.W),
+            G = UncheckedSendable(sim.G)
+        let out = UncheckedSendable(density), outGrain = UncheckedSendable(grain)
+        Parallel.forEachBand(bh, minimumBandSize: 16) { rows in
+            for y in rows {
+                let row = (box.y0 + y) * w + box.x0
+                let o = out.value + y * bw * 4, g = outGrain.value + y * bw
+                for x in 0..<bw {
+                    let i = row + x
+                    let d = D.value[i] + 0.9 * S.value[i]
+                    o[x * 4] = Float16(d.x)
+                    o[x * 4 + 1] = Float16(d.y)
+                    o[x * 4 + 2] = Float16(d.z)
+                    o[x * 4 + 3] = Float16(W.value[i])
+                    g[x] = Float16(G.value[i])
+                }
+            }
         }
     }
 

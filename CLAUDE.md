@@ -81,6 +81,12 @@ before planning app work).
     (the glasses a window suggests, its background found by focus, and the classics offered after
     them), `GlassFraming` (the pieces a painter's stroke of lead frames) and `Glazing`
     (`glazing.bin`: each piece's glass and whether it is framed, read as hostile input); `pbn glass` previews a window lit and unlit.
+  - `Woodblock/`: Woodblock (painting-company row 375): `WoodblockPlan` (a template's blocks, in
+    the block's mirrored space: the key block's drawing, a block per paint light to dark,
+    numbered as the canvas numbers its paints, the bokashi), `WoodblockField` (what stays of a
+    block, as a signed distance, and the room the tool has), `WoodblockBench` (carving that
+    never cuts what stays, ink, the baren, the peel, the print; `woodblock.bench`, read as
+    hostile input) and `Template.mirrored`; `pbn woodblock` prints a template off the device.
   - `Watercolor/`: Watercolor (painting-company row 373): `WatercolorSheet` (a template as a
     sheet of paper, the watercolor key), `WatercolorSim` (water and pigment after Curtis et al.
     1997, deterministic on any core count, snapshots), `WatercolorLog` (the taps, read as

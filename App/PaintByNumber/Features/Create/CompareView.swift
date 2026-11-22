@@ -33,6 +33,11 @@ struct CompareView: View {
     var linesHeld: CGFloat?
     /// Told as the lines begin to be drawn in.
     var linesBegan: (() -> Void)?
+    /// The short Making-of over the picture forming (`FormingShow`): the graphite, then the
+    /// lines burning in. Nil: the lines are drawn in plainly.
+    var formingShow: FormingMoments?
+    /// A single tap on the picture (the short Making-of's skip); a double tap still zooms.
+    var tapped: (() -> Void)?
     /// The drawing whose lines are drawn in, or are being: another's start undrawn.
     @State private var drawnLines: UUID?
     /// Fraction of the picture's width showing the photo; purely presentational, so owned here.
@@ -77,7 +82,11 @@ struct CompareView: View {
                                 Rectangle().frame(width: max(0, x))
                             }
 
-                        if let lines {
+                        if let formingShow {
+                            FormingShowLayers(
+                                moments: formingShow, lines: lines, picture: picture, size: size,
+                                scale: canvasScale(of: picture))
+                        } else if let lines {
                             formingLayers(lines, picture: picture, size: size, visible: visible)
                         }
 
@@ -153,6 +162,9 @@ struct CompareView: View {
                         }
                     }
                 }
+                // After the double tap, so a single one waits for it not to be one; off (its mask
+                // leaving the other gestures alone) unless someone listens.
+                .gesture(TapGesture().onEnded { tapped?() }, including: tapped == nil ? .subviews : .all)
             }
         }
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size in
