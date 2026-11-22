@@ -65,9 +65,10 @@ nonisolated enum FormingPlan {
 
     /// How much paper lies over the departing photo, under its lines: the wash the preview
     /// left (none without lines), and all of it once the photo dries under the page, so that
-    /// no photo shows at the page's edge and the ink stays whole.
-    static func paperOpacity(hasLines: Bool, dries: Bool) -> Double {
-        dries ? 1 : hasLines ? wash : 0
+    /// no photo shows at the page's edge and the ink stays whole. After the short Making-of
+    /// (`FormingShow`, `showed`) the photo has dried on the preview already.
+    static func paperOpacity(hasLines: Bool, dries: Bool, showed: Bool = false) -> Double {
+        dries || showed ? 1 : hasLines ? wash : 0
     }
 
     /// How the picture goes from the preview to the painting's page when no show plays.
@@ -105,10 +106,13 @@ nonisolated enum FormingPlan {
     static var drawIn: Double { 1.4 * StartHandoffPlan.glide }
     /// The soft edge of the drawing as it travels, as a share of the picture's width.
     static let feather = 0.18
-    /// How long the hand-off's lift still waits, the lines having begun `elapsed` seconds ago:
-    /// the rest of the drawing, and nothing once it is done.
-    static func liftWait(sinceLines elapsed: Double) -> Double {
-        min(max(drawIn - elapsed, 0), drawIn)
+    /// How long the hand-off's lift still waits, the preview's lines being drawn `remaining`
+    /// seconds from now (`PreviewPictureProbe.formingDone`; nil: none are coming): the rest of
+    /// the drawing (or of the short Making-of's fuse, which ends as soon), nothing once it is
+    /// done, and never longer than the drawing itself.
+    static func liftWait(remaining: Double?) -> Double {
+        guard let remaining else { return 0 }
+        return min(max(remaining, 0), drawIn)
     }
     /// The photo dries away under the lines into the page: the hand-off's own `settle`, during
     /// its `glide`, so the passage is no longer than the release's.
@@ -145,17 +149,23 @@ struct FormingLines: View, Equatable {
     /// Laid as the canvas lays its page (`HandoffPage`): the picture's width is the canvas's,
     /// from its top. Otherwise as the photo is filled: centred, cropped.
     var asThePage = false
+    /// Another color than the page's ink, and a heavier line: the show's burning front
+    /// (`FormingShow`).
+    var ink: Color?
+    var weight: CGFloat = 1
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
     @Environment(\.colorScheme) private var colorScheme
 
     nonisolated static func == (a: FormingLines, b: FormingLines) -> Bool {
         a.drawing.id == b.drawing.id && a.picture == b.picture && a.scale == b.scale && a.asThePage == b.asThePage
+            && a.ink == b.ink && a.weight == b.weight
     }
 
     var body: some View {
         let drawing = drawing, picture = picture, scale = scale, lineWeight = lineWeight, asThePage = asThePage
-        let ink = Color(sheet: FormingPlan.sheet(paperAppearance, interfaceIsDark: colorScheme == .dark).ink)
+        let weight = weight
+        let ink = self.ink ?? Color(sheet: FormingPlan.sheet(paperAppearance, interfaceIsDark: colorScheme == .dark).ink)
         Canvas { context, size in
             let units = drawing.size
             let shown = picture.intersection(CGRect(origin: .zero, size: size))
@@ -165,7 +175,7 @@ struct FormingLines: View, Equatable {
             let origin = asThePage
                 ? picture.origin
                 : CGPoint(x: picture.midX - units.width * s / 2, y: picture.midY - units.height * s / 2)
-            let width = drawing.lineWidth(scale: scale, weight: lineWeight)
+            let width = drawing.lineWidth(scale: scale, weight: lineWeight) * weight
             let inView = CGRect(
                 x: (shown.minX - origin.x) / s, y: (shown.minY - origin.y) / s, width: shown.width / s,
                 height: shown.height / s
