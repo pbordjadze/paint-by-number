@@ -9,6 +9,18 @@ import simd
 /// light on the CPU: the relief's normals lit by the flame and a little of the dark's own, the
 /// pigment soaked into the rock as the shader soaks it, no shadows, flicker or calcite.
 nonisolated enum CavePicture {
+    /// A name for what a picture is drawn from, the same on every launch: FNV-1a over the
+    /// progress and every 61st byte of the pigment.
+    static func fingerprint(of painting: CaveScene.Painting) -> String {
+        var hash: UInt64 = 0xcbf2_9ce4_8422_2325
+        func mix(_ byte: UInt8) { hash = (hash ^ UInt64(byte)) &* 0x100_0000_01b3 }
+        for byte in painting.progress.encoded() { mix(byte) }
+        if let pigment = painting.pigment {
+            for i in stride(from: 0, to: pigment.count, by: 61) { mix(pigment[i]) }
+        }
+        return String(hash, radix: 16)
+    }
+
     static func draw(_ painting: CaveScene.Painting) -> CGImage? {
         let maps = CaveBay.maps(index: 1, content: .painting(painting.plan), tools: .none)
         var layer = CavePigmentLayer(plan: painting.plan)

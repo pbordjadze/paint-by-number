@@ -1453,7 +1453,7 @@ device. Demos: `watercolor-empty`, `watercolor-paint`, `watercolor-painted`, `wa
 SideStore and Debug builds only (`#if UNRELEASED`; painting-company row 371), in the frame every
 mode shares (`ModeShell`, row 379). `Cave/`: `CaveEra` (the root in `ModeShell`: `CaveGalleryView`,
 each painting a card of its bay lit by a torch, `CaveCard`, drawn on the CPU by `CavePicture` and
-kept as its `picture.jpg`; with none, the gallery is the cave's mouth itself, alive, whose
+kept as `picture-<fingerprint>.jpg`; with none, the gallery is the cave's mouth itself, alive, whose
 charcoal on the bare rock asks for the first photo; a picked picture drawn through `CaveVision`
 and PaintCore's `CavePlan`, its areas numbered by dots of their pigment; `CavePaintingScreen`,
 pushed, in `ModePaintingFrame`), `CaveWallView` (a `CAMetalLayer` on a display link; each bay's

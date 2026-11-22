@@ -25,6 +25,8 @@ final class CaveScene {
         var pigment: [UInt8]?
         /// Its name in the gallery and on its screen.
         var title: String = ""
+        /// Bumped by each save of the shelf, for the gallery's card to draw its picture again.
+        var revision = 0
 
         var isComplete: Bool { !progress.done.contains(false) && progress.hand != nil }
     }
@@ -106,6 +108,9 @@ final class CaveScene {
     /// One painting on its own, as the frame's painting screen shows it (painting-company row
     /// 379): its bay between plain rock, the camera still on it, no mouth, no walking.
     let isSingle: Bool
+    /// The one painting's bay: deep enough that the widest screen, centred on it, shows only
+    /// plain rock either side, never the mouth's carving (bay 0) or the wall's start.
+    static let singleBay = 3
 
     init(paintings: [Painting], sound: CaveSound, single: Bool = false, defaults: UserDefaults = .standard) {
         self.paintings = paintings
@@ -124,7 +129,7 @@ final class CaveScene {
 
     /// The bay being worked: the newest painting while it isn't complete, else the bare rock past it.
     var activeBay: Int {
-        if isSingle { return 1 }
+        if isSingle { return Self.singleBay }
         guard let last = paintings.last else { return 1 }
         return last.isComplete ? paintings.count + 1 : paintings.count
     }
@@ -134,12 +139,13 @@ final class CaveScene {
 
     /// The bay at `index`, or nil past the cave's end.
     func bay(_ index: Int) -> Bay? {
-        guard index >= 0, index <= activeBay + 1 else { return nil }
         if isSingle {
-            guard index == 1, let p = paintings.first else { return Bay(content: .bare, tools: .none, key: "rock-\(index)") }
+            guard index >= 0, index <= 2 * Self.singleBay else { return nil }
+            guard index == Self.singleBay, let p = paintings.first else { return Bay(content: .bare, tools: .none, key: "rock-\(index)") }
             let tools: CaveBay.Tools = p.isComplete ? .none : .pigments
             return Bay(content: .painting(p.plan), tools: tools, key: "\(p.id)-\(tools == .pigments)")
         }
+        guard index >= 0, index <= activeBay + 1 else { return nil }
         if index == 0 { return Bay(content: .mouth, tools: .none, key: "mouth") }
         if index <= paintings.count {
             let p = paintings[index - 1]
@@ -156,7 +162,7 @@ final class CaveScene {
         let onScreenFirst = Int((camera / Float(CaveWall.bayWidth)).rounded(.down))
         let onScreenLast = Int(((camera + visibleWidth) / Float(CaveWall.bayWidth)).rounded(.down))
         var first = max(0, onScreenFirst - 1)
-        var last = max(first, min(onScreenLast + 1, isSingle ? 3 : activeBay + 1))
+        var last = max(first, min(onScreenLast + 1, isSingle ? 2 * Self.singleBay : activeBay + 1))
         while last - first + 1 > CaveShader.slots {
             if last > onScreenLast { last -= 1 } else if first < onScreenFirst { first += 1 } else { last -= 1 }
         }
@@ -165,6 +171,10 @@ final class CaveScene {
 
     /// A painting's pigment for its bay, as saved, or the layer's.
     func pigment(of bay: Int) -> [UInt8]? {
+        if isSingle {
+            guard bay == activeBay else { return nil }
+            return layer?.rgba() ?? paintings.first?.pigment
+        }
         guard bay >= 1, bay <= paintings.count else { return nil }
         if bay == activeBay, let layer { return layer.rgba() }
         return paintings[bay - 1].pigment
@@ -459,7 +469,7 @@ final class CaveScene {
     private func clampCamera() {
         if isSingle {
             // The painting's bay in the middle of the screen.
-            cameraTarget = Float(CaveWall.bayWidth) * 1.5 - visibleWidth / 2
+            cameraTarget = Float(CaveWall.bayWidth) * (Float(Self.singleBay) + 0.5) - visibleWidth / 2
             camera = cameraTarget
             return
         }

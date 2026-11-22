@@ -28,13 +28,13 @@ final class CaveUITests: XCTestCase {
         attachScreenshot(of: app, named: "cave-2-drawn")
         var frame = 3
         let start = Date()
-        while wall.value as? String != "Finished" && Date().timeIntervalSince(start) < 240 {
-            sleep(8)
+        while wall.value as? String != "Finished" && Date().timeIntervalSince(start) < 180 {
+            sleep(6)
             attachScreenshot(of: app, named: "cave-\(frame)-blowing")
             frame += 1
         }
         XCTAssertEqual(wall.value as? String, "Finished", "The painting never reached Finished")
-        app.navigationBars.buttons.firstMatch.tap()
+        app.navigationBars.firstMatch.buttons.element(boundBy: 0).tap()
         let card = app.buttons["cave-card"].firstMatch
         XCTAssertTrue(card.waitForExistence(timeout: 20), "The gallery shows no card")
         XCTAssertEqual(card.value as? String, "Finished", "The card doesn't say the painting is finished")

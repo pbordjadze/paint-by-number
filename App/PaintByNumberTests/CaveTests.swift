@@ -39,7 +39,8 @@ struct CaveAppTests {
         // The gallery's picture: drawn, kept, and the painting can go.
         let picture = await again.picture(of: id)
         #expect(picture?.width == CavePigmentLayer.width)
-        #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent(id.uuidString).appendingPathComponent(CaveShelf.pictureFile).path))
+        let kept = try FileManager.default.contentsOfDirectory(atPath: root.appendingPathComponent(id.uuidString).path)
+        #expect(kept.filter { $0.hasPrefix("picture-") }.count == 1)
         again.delete(id)
         await again.flush()
         #expect(again.paintings.isEmpty)
@@ -59,12 +60,16 @@ struct CaveAppTests {
         let painting = CaveScene.Painting(id: UUID(), plan: plan, progress: CaveProgress(done: Array(repeating: false, count: plan.areaCount)))
         let scene = CaveScene(paintings: [painting], sound: CaveSound(sounds: false, haptics: false), single: true, defaults: defaults)
         scene.layOut(size: SIMD2(390, 844))
-        #expect(scene.activeBay == 1)
+        #expect(scene.activeBay == CaveScene.singleBay)
         #expect(scene.hasPigments)
         #expect(!scene.isAtBareRock)
-        if case .painting = scene.bay(1)?.content {} else { Issue.record("Bay 1 isn't the painting") }
+        if case .painting = scene.bay(CaveScene.singleBay)?.content {} else { Issue.record("The painting's bay isn't the painting") }
         #expect(scene.bay(0)?.content == .bare)
-        #expect(scene.bay(2)?.content == .bare)
+        #expect(scene.bay(CaveScene.singleBay + 1)?.content == .bare)
+        // An iPhone on its side: plain rock right across, from the wall's start or later.
+        scene.layOut(size: SIMD2(844, 390))
+        #expect(scene.camera >= 0)
+        #expect(scene.wantedBays.allSatisfy { scene.bay($0) != nil })
         let camera = scene.camera
         scene.walk(1)
         for _ in 0..<60 { scene.step(1 / 60) }

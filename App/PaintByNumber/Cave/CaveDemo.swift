@@ -100,7 +100,7 @@ enum CaveDemo {
             if scenario == "cave-blowing", scene.isSingle {
                 scene.pick(.redOchre)
                 if let layer = scene.layer, let a = layer.nextArea(of: .redOchre), let p = layer.middle(of: a) {
-                    scene.demoHold(at: p + SIMD2(Float(CaveWall.bayWidth), 0))
+                    scene.demoHold(at: p + SIMD2(Float(scene.activeBay * CaveWall.bayWidth), 0))
                 }
             }
             while !view.isShowingWall { try? await Task.sleep(for: .milliseconds(100)) }

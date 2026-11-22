@@ -29,7 +29,10 @@ struct CaveEra: View {
             UserDefaults.standard.removeObject(forKey: CaveScene.cameraKey)
             leave(year)
         }, make: draw) { waysIn in
-            CaveGalleryView(shelf: shelf, isReady: isReady, waysIn: waysIn, onOpen: { path.append($0) })
+            CaveGalleryView(shelf: shelf, isReady: isReady, waysIn: waysIn, onOpen: { id in
+                // A second tap while the first push runs would stack two screens of one painting.
+                if path.last != id { path.append(id) }
+            })
         } destination: { id in
             CavePaintingScreen(shelf: shelf, id: id)
         }
@@ -163,8 +166,9 @@ struct CaveCard: View {
         .confirmationDialog(Text("Delete Painting"), isPresented: $asksToDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) { shelf.delete(painting.id) }
         }
-        .task(id: "\(painting.id)-\(done)-\(painting.progress.hand != nil)") {
-            picture = await shelf.picture(of: painting.id)
+        .task(id: "\(painting.id)-\(painting.revision)") {
+            let drawn = await shelf.picture(of: painting.id)
+            if !Task.isCancelled { picture = drawn }
         }
     }
 }
@@ -182,8 +186,9 @@ struct CavePaintingScreen: View {
             if let painting {
                 CaveWallSurface(paintings: [painting], shelf: shelf, single: true, reduceMotion: reduceMotion, onChoosePhoto: {})
                     .ignoresSafeArea(edges: .bottom)
-                    // A hand of four or five fingers is laid on the rock, not taken by the system.
-                    .defersSystemGestures(on: .all)
+                    // A hand of four or five fingers is laid on the rock, not taken by the system;
+                    // the leading edge stays the system's, whose swipe goes back.
+                    .defersSystemGestures(on: [.top, .bottom, .trailing])
             }
         }
     }

@@ -10,8 +10,8 @@ import os
 /// each has a folder of its own, `<uuid>/`, with its drawing (`cave.plan`, PaintCore's
 /// `CavePlan`), its progress (`progress.bin`, `CaveProgress`: the areas done and the hand) and
 /// its pigment (`pigment.lzfse`, `CavePigmentLayer.rgba()` compressed), its name (`title.txt`)
-/// and the gallery's picture of it (`picture.jpg`, `CavePicture`, drawn again once its progress is
-/// newer). Not a painting's folder of the app's: its numbers are the plan's dots, and it has no
+/// and the gallery's picture of it (`picture-<fingerprint>.jpg`, `CavePicture`, drawn again once its
+/// progress or pigment changes). Not a painting's folder of the app's: its numbers are the plan's dots, and it has no
 /// template or palette to keep.
 ///
 /// Never lose a painting: one whose drawing can't be read (damaged, or from a newer app) is left
@@ -55,7 +55,6 @@ final class CaveShelf {
     nonisolated static let progressFile = "progress.bin"
     nonisolated static let pigmentFile = "pigment.lzfse"
     nonisolated static let titleFile = "title.txt"
-    nonisolated static let pictureFile = "picture.jpg"
 
     nonisolated private struct Wall: Codable {
         var paintings: [UUID]
@@ -135,18 +134,24 @@ final class CaveShelf {
         let painting = CaveScene.Painting(id: id, plan: plan, progress: CaveProgress(done: Array(repeating: false, count: plan.areaCount)),
                                           pigment: nil, title: title)
         let root = root
-        let order = self.order + [id]
-        await saving?.value
-        try await Background.run {
+        // In the queue of writes, so a delete waiting before it can't be written over.
+        let previous = saving
+        let work = Task { () throws -> Void in
+            await previous?.value
+            let order = self.order + [id]
+            try await Background.run {
             let folder = root.appending(path: id.uuidString, directoryHint: .isDirectory)
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             try plan.encoded().write(to: folder.appending(path: CaveShelf.planFile), options: .atomic)
             try painting.progress.encoded().write(to: folder.appending(path: CaveShelf.progressFile), options: .atomic)
             try Data(title.utf8).write(to: folder.appending(path: CaveShelf.titleFile), options: .atomic)
             try JSONEncoder().encode(Wall(paintings: order)).write(to: root.appending(path: CaveShelf.wallFile), options: .atomic)
+            }
+            self.order = order
+            self.paintings.append(painting)
         }
-        self.order = order
-        paintings.append(painting)
+        saving = Task { _ = try? await work.value }
+        try await work.value
         return id
     }
 
@@ -171,17 +176,18 @@ final class CaveShelf {
     /// The gallery's picture of a painting: kept beside it, drawn again (`CavePicture`) when its
     /// progress is newer than the picture.
     func picture(of id: UUID) async -> CGImage? {
-        guard let painting = painting(id) else { return nil }
         await saving?.value
+        guard let painting = painting(id) else { return nil }
         let folder = root.appending(path: id.uuidString, directoryHint: .isDirectory)
         return await Background.run {
-            let pictureURL = folder.appending(path: Self.pictureFile)
-            func modified(_ url: URL) -> Date? { try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate }
-            if let kept = modified(pictureURL), let progress = modified(folder.appending(path: Self.progressFile)), kept >= progress,
-               let image = ImageCodec.image(at: pictureURL) {
-                return image
-            }
+            // The picture is named for what it was drawn from, so one drawn from older progress
+            // or pigment is never taken for the painting as it is now.
+            let name = "picture-\(CavePicture.fingerprint(of: painting)).jpg"
+            let pictureURL = folder.appending(path: name)
+            if let image = ImageCodec.image(at: pictureURL) { return image }
             guard let image = CavePicture.draw(painting) else { return nil }
+            let kept = (try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? []
+            for old in kept where old.hasPrefix("picture-") { try? FileManager.default.removeItem(at: folder.appending(path: old)) }
             if let data = ImageCodec.jpegData(image, quality: 0.85) { try? data.write(to: pictureURL, options: .atomic) }
             return image
         }
@@ -215,6 +221,7 @@ final class CaveShelf {
         guard let i = paintings.firstIndex(where: { $0.id == id }) else { return }
         paintings[i].progress = progress
         paintings[i].pigment = pigment
+        paintings[i].revision += 1
         let folder = root.appending(path: id.uuidString, directoryHint: .isDirectory)
         let previous = saving
         saving = Task {
