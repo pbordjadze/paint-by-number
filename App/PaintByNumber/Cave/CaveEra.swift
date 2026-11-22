@@ -153,7 +153,7 @@ struct CaveSettingsView: View {
                     .accessibilityIdentifier("about-year")
                     if showsClock {
                         EraClock(year: CaveEra.year) { year in
-                            guard EraYear.returnsToThePresent(year) || EraYear.opensByzantium(year) || EraYear.opensStainedGlass(year) else { return }
+                            guard EraYear.opensAnEra(year) else { return }
                             dismiss()
                             leave(year)
                         }

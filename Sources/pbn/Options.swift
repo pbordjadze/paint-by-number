@@ -174,15 +174,12 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--palette": o.drawing.palette = choice(a, value(a, &it))
         case "--paints": o.drawing.paints = number(a, &it)
         case "--cleaned": o.cleaned = true
-<<<<<<< HEAD
         case "--figure": o.caveFigure = true
-=======
         case "--spacing": o.watercolorSpacing = number(a, &it)
         case "--order": o.watercolorOrder = value(a, &it)
         case "--frames": o.watercolorFrames = value(a, &it).split(separator: ",").compactMap { Float($0) }
         case "--making-of": o.watercolorMakingOf = true
         case "--fps": o.watercolorFPS = number(a, &it)
->>>>>>> origin/main
         case "--line-style": o.lineStyle = choice(a, value(a, &it))
         case "--line-art": o.lineArtFields.append(value(a, &it))
         case "--tuning": setTuning(&o.settings.tuning, value(a, &it))

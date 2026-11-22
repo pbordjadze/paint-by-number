@@ -11,15 +11,10 @@ import SwiftUI
 /// `about-photograph` are the page about a library picture's real work (`AboutPaintingDemo`),
 /// `print-preview…` Print's preview (`PrintPreviewDemo`). In SideStore and Debug builds Stained Glass
 /// (`GlassEra`) shows while the clock is at 1248, and for its scenarios, `-demo glass-<name>`
-<<<<<<< HEAD
 /// (`GlassDemo`); `era-passage-glass` holds the way to it at the rose window's light. The Cave
 /// (`CaveEra`) shows while the clock is at 15,000 BC, and for its scenarios, `-demo cave-<name>`
-/// (`CaveDemo`).
-=======
-/// (`GlassDemo`); `era-passage-glass` holds the way to it at the rose window's light. Watercolor
-/// (`WatercolorEra`) shows at 1502 and for `-demo watercolor-<name>` (`WatercolorDemo`);
+/// (`CaveDemo`). Watercolor (`WatercolorEra`) shows at 1502 and for `-demo watercolor-<name>` (`WatercolorDemo`);
 /// `era-passage-watercolor` holds the way to it as its wash floods in.
->>>>>>> origin/main
 struct RootView: View {
     @State private var door = EraDoor.shared
 
@@ -29,13 +24,10 @@ struct RootView: View {
                 RavennaEra(leave: { year in door.go(to: Era.opened(by: year) ?? .moonlight) })
             } else if showsGlass {
                 glass
-<<<<<<< HEAD
             } else if showsCave {
                 cave
-=======
             } else if showsWatercolor {
                 watercolor
->>>>>>> origin/main
             } else {
                 moonlight
             }

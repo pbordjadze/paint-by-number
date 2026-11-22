@@ -14,26 +14,20 @@ enum Era: String {
     /// Stained Glass, at 1248 (SideStore and Debug builds; painting-company row 366): a mode of
     /// the app's own, not a copy of it (`GlassEra`).
     case glass
-<<<<<<< HEAD
     /// The Cave, at 15,000 BC (SideStore and Debug builds; painting-company row 371): no app on
     /// screen, only a torch-lit rock wall (`CaveEra`).
     case cave
-=======
     /// Watercolor, at 1502 (SideStore and Debug builds; painting-company row 373): real water on
     /// the app's own templates (`WatercolorEra`).
     case watercolor
->>>>>>> origin/main
 
     /// The era a year on the clock opens, nil for a year that opens none.
     static func opened(by year: Int) -> Era? {
         if EraYear.opensByzantium(year) { return .byzantium }
         #if UNRELEASED
         if EraYear.opensStainedGlass(year) { return .glass }
-<<<<<<< HEAD
         if year == CaveEra.year { return .cave }
-=======
         if EraYear.opensWatercolor(year) { return .watercolor }
->>>>>>> origin/main
         #endif
         if EraYear.returnsToThePresent(year) { return .moonlight }
         return nil
@@ -67,14 +61,9 @@ final class EraDoor {
         #if UNRELEASED
         shown = era
         #else
-<<<<<<< HEAD
-        // Stained Glass and the Cave are SideStore's and Debug's: a release opening on one opens at home.
-        shown = era == .glass || era == .cave ? .moonlight : era
-=======
-        // Stained Glass and Watercolor are SideStore's and Debug's: a release opening on either
-        // opens at home.
-        shown = era == .glass || era == .watercolor ? .moonlight : era
->>>>>>> origin/main
+        // Stained Glass, the Cave and Watercolor are SideStore's and Debug's: a release opening on
+        // one opens at home.
+        shown = era == .glass || era == .cave || era == .watercolor ? .moonlight : era
         #endif
     }
 
@@ -140,11 +129,7 @@ struct EraPassage: View {
     /// the mosaic era, with motion. Stained Glass's passages are the nave's, either way, and
     /// Watercolor's a wash's (`drawWash`); every other passage is the tiles set and lifted.
     static func isWayBack(to destination: Era, from origin: Era? = nil, reduceMotion: Bool) -> Bool {
-<<<<<<< HEAD
-        return destination == .moonlight && origin != .glass && origin != .cave && !reduceMotion
-=======
-        return destination == .moonlight && origin != .glass && origin != .watercolor && !reduceMotion
->>>>>>> origin/main
+        return destination == .moonlight && origin != .glass && origin != .cave && origin != .watercolor && !reduceMotion
     }
 
     /// When the screen is wholly covered, so the era can go in beneath, and when the passage is
@@ -237,13 +222,12 @@ struct EraPassage: View {
             drawNave(in: &graphics, size: size, elapsed: elapsed)
             return
         }
-<<<<<<< HEAD
         if destination == .cave || origin == .cave {
             drawCave(in: &graphics, size: size, elapsed: elapsed, leaving: origin == .cave)
-=======
+            return
+        }
         if (destination == .watercolor || origin == .watercolor) && !reduceMotion {
             drawWash(in: &graphics, size: size, elapsed: elapsed)
->>>>>>> origin/main
             return
         }
         if reduceMotion {
@@ -295,7 +279,6 @@ struct EraPassage: View {
         }
     }
 
-<<<<<<< HEAD
     /// The passages of the Cave: going in, the screen goes wholly dark and lifts on the cave's
     /// mouth; coming out, the daylight the cave left on the screen fades from white onto the
     /// gallery. Under Reduce Motion the same fades, which are no motion.
@@ -311,7 +294,8 @@ struct EraPassage: View {
         let dark = t < Self.cover ? EraWayBack.ease(min(1, t / (Self.cover * 0.8)))
             : max(0, 1 - EraWayBack.ease((t - Self.cover - Self.hold) / Self.lift))
         graphics.fill(whole, with: .color(Color.black.opacity(dark)))
-=======
+    }
+
     /// Watercolor's passage: water floods the screen from its top-left corner, a ragged front of
     /// paper wash with pigment gathered at its rim, holds a moment, and dries away lighter.
     private func drawWash(in graphics: inout GraphicsContext, size: CGSize, elapsed: TimeInterval) {
@@ -347,7 +331,6 @@ struct EraPassage: View {
                 Gradient(colors: [rim.opacity(0.18 * (1 - flood * 0.6)), .clear]), center: centre,
                 startRadius: 0, endRadius: max(radius * 0.6, 1)))
         }
->>>>>>> origin/main
     }
 
     /// The passage to Stained Glass: the screen goes as dark as a nave, and as it is darkest a
