@@ -49,6 +49,8 @@ struct Options {
     var drawing = DrawingSettings()
     /// `pbn drawing --cleaned`: the photo is a cleaned sheet already (no sheet is looked for).
     var cleaned = false
+    /// `pbn cave --figure`: the subject drawn as the cave's stick figure, whatever it is.
+    var caveFigure = false
 }
 
 /// `--line-art` and `--tuning` fields by name.
@@ -172,6 +174,7 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--palette": o.drawing.palette = choice(a, value(a, &it))
         case "--paints": o.drawing.paints = number(a, &it)
         case "--cleaned": o.cleaned = true
+        case "--figure": o.caveFigure = true
         case "--spacing": o.watercolorSpacing = number(a, &it)
         case "--order": o.watercolorOrder = value(a, &it)
         case "--frames": o.watercolorFrames = value(a, &it).split(separator: ",").compactMap { Float($0) }

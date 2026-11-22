@@ -7,7 +7,7 @@ import SwiftUI
 import os
 
 /// The frame every mode lives in (painting-company row 379; SideStore and Debug builds). A mode
-/// behind the year wheel (Stained Glass, Watercolor, Woodblock, and The Frame, which is this and
+/// behind the year wheel (Stained Glass, Watercolor, Woodblock, the Cave, and The Frame, which is this and
 /// nothing else) is a `ModeShell` around what is its own. The rules, with no exceptions:
 ///
 /// 1. **A year.** The mode opens from its year on the wheel, and its Settings has About's Year
