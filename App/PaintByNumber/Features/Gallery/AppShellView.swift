@@ -260,9 +260,6 @@ struct AppShellView: View {
             onContinueDraft: continueDraft, onPaint: paint, isAsking: $galleryAsks)
     }
 
-    /// Another One, a door after Finished: the create flow paints the library picture as the
-    /// shelf's do, over the finished painting, which Start replaces (`startPainting`); with none,
-    /// it opens on the Paint page.
     #if UNRELEASED
     /// The Museum's Resume: the create flow closes and the painting opens.
     private func resume(_ id: UUID) {
@@ -272,6 +269,9 @@ struct AppShellView: View {
     }
     #endif
 
+    /// Another One, a door after Finished: the create flow paints the library picture as the
+    /// shelf's do, over the finished painting, which Start replaces (`startPainting`); with none,
+    /// it opens on the Paint page.
     private func paintAnother(_ sample: Sample?) {
         guard !isCreating else { return }
         if let sample {

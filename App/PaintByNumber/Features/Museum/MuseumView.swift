@@ -161,11 +161,13 @@ struct MuseumView: View {
 
     private static let top = "museum-top"
 
-    /// The painter's paintings by name: the finished, and the newest under way of each name.
+    /// The painter's paintings by name: the finished, and the newest under way of each name. A
+    /// painting of a library picture is the library's, whatever its name.
     private var shelf: (finished: Set<String>, underWay: [String: UUID]) {
         var finished: Set<String> = []
         var underWay: [String: UUID] = [:]
-        for artwork in (paintings?.artworks ?? []).sorted(by: { $0.modifiedAt < $1.modifiedAt }) {
+        let made = (paintings?.artworks ?? []).filter { $0.sampleName == nil }
+        for artwork in made.sorted(by: { $0.modifiedAt < $1.modifiedAt }) {
             let name = MuseumPainted.key(artwork.title)
             if artwork.isComplete { finished.insert(name) } else { underWay[name] = artwork.id }
         }
