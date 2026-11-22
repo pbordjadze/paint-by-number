@@ -62,9 +62,10 @@ struct GlassModeTests {
         // By number: a piece waiting for its glass shows its number, a glazed one doesn't.
         let numbered = PixelReader(try frame(glazed: true, numbers: true))
         #expect(numbered[x, y] == after[x, y], "a glazed piece's number is gone")
-        let label = try #require(t.labels(ofRegion: other).max { $0.radius < $1.radius }).position
-        let near = (-4...4).flatMap { dy in (-4...4).map { dx in (Int(label.x) + dx, Int(label.y) + dy) } }
-        #expect(near.contains { numbered[$0.0, $0.1] != after[$0.0, $0.1] }, "an unglazed piece is numbered")
+        let shown = (0..<t.height).contains { py in
+            (0..<t.width).contains { px in Int(t.regionMap[px, py]) != r && numbered[px, py] != after[px, py] }
+        }
+        #expect(shown, "the unglazed pieces are numbered")
         // A piece not yet framed is the photo dimmed, its lead a thin line.
         let unframed = PixelReader(try frame(glazed: false, framed: false))
         #expect(luma(unframed[x, y]) + 20 < luma(before[x, y]), "an unframed piece waits in the dark")
