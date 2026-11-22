@@ -374,24 +374,32 @@ final class SettingsTests: XCTestCase {
     }
 
     /// The years that open an era on the wheel (`EraYear.modes` in SideStore and Debug builds).
-    private static let eras = [547, 1000, 1248, 1502]
+    private static let eras = [547, 1000, 1248, 1502, 1765]
 
     /// About one row of the year setter's wheel, in points (`EraClock`'s rails are 36 apart).
     private static let row: CGFloat = 38
 
     #if UNRELEASED
-    /// Watercolor (painting-company row 373) and Stained Glass (row 366): 1502 on the wheel opens
-    /// Watercolor, its own Year row rolled to 1248 opens Stained Glass, each with nothing in it
-    /// yet, and Stained Glass's rolled to the present brings Paint by Moonlight back. In that
-    /// order because a wheel rolled a few rows at a time from the present to 1248 would rest
-    /// beside 1502 on the way and open Watercolor (`EraClock.pulled`).
+    /// Woodblock (painting-company row 375), Watercolor (row 373) and Stained Glass (row 366): 1765
+    /// on the wheel opens Woodblock, its own Year row rolled to 1502 opens Watercolor, Watercolor's
+    /// rolled to 1248 opens Stained Glass, each with nothing in it yet, and Stained Glass's rolled
+    /// to the present brings Paint by Moonlight back. Newest first because a wheel rolled a few
+    /// rows at a time from the present rests beside each era's year it passes and opens that era
+    /// (`EraClock.pulled`).
     @MainActor
-    func testTheClockOpensWatercolorAndStainedGlass() throws {
+    func testTheClockOpensWoodblockWatercolorAndStainedGlass() throws {
         let app = openSettings()
         let presentYear = app.descendants(matching: .any)["about-year"]
         scroll(app, to: presentYear)
         presentYear.tap()
         XCTAssertTrue(app.descendants(matching: .any)["era-clock"].waitForExistence(timeout: 5), "The Year row brought out no year setter")
+        roll(app, to: 1765)
+        XCTAssertTrue(app.buttons["woodblock-choose-photo"].waitForExistence(timeout: 30), "1765 didn't open Woodblock")
+        attachScreenshot(of: app, named: "woodblock-through-the-door")
+        app.buttons["woodblock-settings"].tap()
+        let woodblockYear = app.descendants(matching: .any)["about-year"]
+        XCTAssertTrue(woodblockYear.waitForExistence(timeout: 10), "Woodblock's Settings has no Year row")
+        woodblockYear.tap()
         roll(app, to: 1502)
         XCTAssertTrue(app.buttons["watercolor-choose-photo"].waitForExistence(timeout: 30), "1502 didn't open Watercolor")
         attachScreenshot(of: app, named: "watercolor-through-the-door")
