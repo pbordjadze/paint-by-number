@@ -1410,11 +1410,18 @@ picture and makes the painting from it; the picture is divided into numbered reg
 one paint (how a region gets done is the medium's, never whether it is numbered); every painting
 can reach Finished by doing what the numbers say; and before it reaches a TestFlight or SideStore
 build, one painting is painted from a photo to Finished end to end, its frames attached to the
-branch's report (rules 7 to 10). A mode supplies its `ModeLook`, its gallery's content (its
+branch's report (rules 7 to 10); and a mode's Making Of shows off its medium's process and
+simulation, never the finished painting of the painter's picture, which is the painter's to
+uncover (rule 11; the main app's Making Of and Paint by Mosaic's are settled and keep what they
+show). A mode supplies its `ModeLook`, its gallery's content (its
 cards and its empty page, handed the ways in as `ModeWaysIn`), its painting screen and what a
-picked picture becomes (`make`, a `ModePicture`). Stained Glass and Watercolor are built on it; a
+picked picture becomes (`make`, a `ModePicture`). Stained Glass, Watercolor and Woodblock are built on it; a
 new mode starts from it, and something every mode needs goes into the frame, not into one mode.
-Paint by Mosaic is a copy of the app, not a mode, and keeps its own. **The Frame** (`FrameEra`,
+Paint by Mosaic is the bar for how far a mode may go: a mode may be as different as Mosaic (a
+library of its own look, a build book, its own doors and words) and still be in the frame, which
+widens with optional parts until Mosaic fits; where Mosaic has what every mode should, that becomes
+the frame instead. Until it is moved in, Paint by Mosaic is a copy of the app, not a mode, and
+keeps its own. **The Frame** (`FrameEra`,
 year 1000, `Era.frame`) is the frame with nothing of a mode's in it: its gallery, canvas and paints
 are empty places, named (`ModeSlot`), and a picture picked opens on a painting screen and is kept
 nowhere; its passages are the plain tiles both ways. Demos: `frame-gallery`, `frame-settings`,
@@ -1449,7 +1456,7 @@ builds, lights the eras' years (`EraYear.modes`) and draws a wheel resting besid
 with a rose window's light (`EraPassage.drawNave`); Paint by Mosaic's wheel reaches it too
 (`LeaveRavenna(for:)`). Demos: `glass-empty`, `glass-gallery`, `glass-lead`, `glass-lead-suggested`, `glass-glaze`,
 `glass-finished` (`GlassDemo`, on the mockup's monarch and lines, `GlassDemoLines`) and
-`era-passage-glass`; `EraDoorTests`, `SettingsTests.testTheClockOpensWatercolorAndStainedGlass`.
+`era-passage-glass`; `EraDoorTests`, `SettingsTests.testTheClockOpensWoodblockWatercolorAndStainedGlass`.
 
 ## Watercolor (1502)
 
@@ -1484,6 +1491,32 @@ wash flooding the screen (`EraPassage.drawWash`). `pbn watercolor` paints a temp
 device. Demos: `watercolor-empty`, `watercolor-paint`, `watercolor-painted`, `watercolor-making-of`
 (held mid-flood) (`WatercolorDemo`) and
 `era-passage-watercolor`.
+
+## Woodblock (1765)
+
+SideStore and Debug builds only (`#if UNRELEASED`; painting-company row 375): your photos,
+printed by numbers, a mode built on the canvas's mode hook as Stained Glass is. `Woodblock/`:
+`WoodblockEra` (the era's root, in the shared frame: its gallery of prints, `WoodblockGalleryView`,
+what a picked picture becomes, its blocks cut, and the print screen in `ModePaintingFrame`), `WoodblockShelf` (an `ArtworkStore` of its
+own, `Application Support/Woodblock/Prints/`, each print a painting's folder plus
+`woodblock.bench`, PaintCore's `WoodblockBench`, LZFSE; a print's template is the app's own made
+with `WoodblockPlan.paints` paints), `WoodblockBenchView` (the bench on the painting screen's own
+`CanvasView`: carve, ink, the sheet, rub, peel, the print so far, block after block; one line of
+words a step and one button for what a finger can't do; VoiceOver gets a button to finish each
+step), `WoodblockMode` (the `CanvasMode`: five textures on the bench's grid, the bench's arrays
+staged and only their changed cells blitted each frame; the canvas draws the colour blocks'
+numbers, the regions other blocks print set painted; on the print so far the mode draws them,
+faint and mirrored as the print is, over the areas blocks still to come print, so every area is
+numbered until it is printed, the frame's rule 8, Paul's pick of November 22) and `Woodblock.metal` (`woodblockFragment`:
+the block lit by the lamp, the grooves the tool left, the kyōgō, wet ink, the damp sheet's back,
+the peel's fold, the print the right way round). How a print is cut, carved and printed is
+PaintCore's (`Sources/PaintCore/Woodblock`: `WoodblockPlan`, `WoodblockField`, `WoodblockBench`,
+`Template.mirrored`; `pbn woodblock` prints one off the device). The door: 1765 on the year wheel
+(`EraYear.woodblock`, `Era.woodblock`); the passage is the tiles'. Demos: `woodblock-empty`,
+`-carve`, `-kyogo`, `-ink`, `-rub`, `-peel`, `-print`, `-finished`, `-gallery` (`WoodblockDemo`, on
+the library's wood duck); `EraDoorTests`, `WoodblockTests`, and `WoodblockUITests`, which plays a
+library picture to Finished (the frame's rule 10: the key block by strokes, the rest by the step
+buttons VoiceOver has, which `-woodblock-steps` shows in Debug) and attaches each block's print.
 
 ## Outside the app: widgets and stickers
 
