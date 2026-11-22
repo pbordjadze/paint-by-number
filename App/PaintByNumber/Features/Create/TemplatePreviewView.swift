@@ -54,8 +54,10 @@ struct TemplatePreviewView: View {
     @State private var hasAnnouncedForming = false
     /// The short Making-of over the picture forming (`FormingShow`): the photo's graphite
     /// drawing and when it began to spread, when the lines' fuse is lit, and where a tap sent it.
-    @State private var graphite: CGImage?
+    @State private var graphite: GraphiteSketch.Drawing?
     @State private var graphiteBegan: Date?
+    /// The making has outlasted the show's `patience`: the forming's status shows over it.
+    @State private var formingTookLong = false
     /// The photo the graphite began over: another paper redraws it without starting it again.
     @State private var graphitePhoto: UUID?
     @State private var fuseLit: Date?
@@ -637,6 +639,19 @@ struct TemplatePreviewView: View {
                 graphitePhoto = key.photo
             }
             .onChange(of: forming.lines, initial: true) { _, lines in lightFuse(lines) }
+            // The show stands for the forming's status, which VoiceOver hears all the same, and
+            // brings it back for a making slower than its patience (a demo's held wait never is).
+            .onChange(of: showsTheWait, initial: true) { _, shows in
+                guard shows, !hasAnnouncedForming else { return }
+                hasAnnouncedForming = true
+                Announcer.announce(String(localized: "Making the painting…"))
+            }
+            .task(id: showsTheWait) {
+                formingTookLong = false
+                guard showsTheWait, heldGraphite == nil else { return }
+                guard (try? await Task.sleep(for: .seconds(FormingShow.patience))) != nil else { return }
+                formingTookLong = true
+            }
             #if DEBUG
             // `create-forming` and `-graphite` are ready once the graphite is over the photo.
             .onChange(of: demoGraphiteReady, initial: true) { _, ready in
@@ -653,6 +668,11 @@ struct TemplatePreviewView: View {
         return model.isFinal && (graphite != nil || !playsTheShow)
     }
     #endif
+
+    /// The show plays over a template still being made.
+    private var showsTheWait: Bool {
+        playsTheShow && forming.status && !hasFailed
+    }
 
     /// The template is made (`lines`): its lines' fuse is lit, once the graphite has shown a
     /// moment (`FormingShow.fuseLit`), and the hand-off told when they will have burned in.
@@ -710,7 +730,7 @@ struct TemplatePreviewView: View {
         #endif
     }
 
-    /// How far the graphite has spread in the `create-forming-graphite` demo.
+    /// How far the graphite has raced in the `create-forming-graphite` demo.
     private var heldGraphite: Double? {
         #if DEBUG
         if ShellDemo.current?.formingHold == .graphite { return 0.55 }
@@ -739,7 +759,7 @@ struct TemplatePreviewView: View {
     /// The picture forming's one status: the same words from the photo's opening until the
     /// template is made, whatever stage the making is at, and told to VoiceOver once.
     private var formingStatus: some View {
-        let shows = forming.status
+        let shows = forming.status && (!showsTheWait || formingTookLong)
         return Group {
             if shows {
                 StatusCapsule {

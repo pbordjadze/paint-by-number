@@ -75,9 +75,9 @@ import PaintCore
 ///   across the photo, half washed; all drawn over the washed photo, nothing started; and,
 ///   started, the page it has dried into at the painting's place, before the painting opens.
 ///   With the short Making-of (`FormingShow`, SideStore and Debug builds; row 361) the wait is
-///   the graphite wholly spread over the photo (held there), the lines half burned in with the gold front between
-///   them, and all burned in on the page's paper. `create-forming-graphite` holds the graphite
-///   halfway spread, and `create-forming-stars` the page halfway into the departing picture at
+///   the graphite drawn whole over the photo (held there, no status), the lines half burned in with the gold front between
+///   them, and all burned in on the page's paper. `create-forming-graphite` holds the graphite's
+///   race halfway run, and `create-forming-stars` the page halfway into the departing picture at
 ///   the painting's place, its numbers coming out like stars.
 /// - `create-from-file`: a photo file opened as if shared from another app ("Open in Paint by
 ///   Moonlight"): the create flow on that photo's preview, titled with the file's name. The file
@@ -244,7 +244,7 @@ enum ShellDemo: Equatable {
     enum FormingHold {
         /// The wait: the template is made and never shows.
         case waiting
-        /// The wait with the short Making-of's graphite halfway spread (`FormingShow`).
+        /// The wait with the short Making-of's graphite race halfway run (`FormingShow`).
         case graphite
         /// The lines half drawn across the photo, which has half its wash (the short Making-of:
         /// half burned in, the gold front between): nothing starts.

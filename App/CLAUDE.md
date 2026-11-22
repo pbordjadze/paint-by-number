@@ -826,11 +826,14 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   Making-of on: the wait is the same photo under the one status, no lines, and the show takes the photo as ever. A page from scratch, a drawing and the
   settings' preview keep what they showed. **The short Making-of** (SideStore and Debug builds only,
   `FormingShow.isOn`; row 361, "graphite and fuse"; the release keeps the forming above) plays over it
-  as everyone's wait: the photo's color drains under a graphite drawing of it (`GraphiteSketch`, one Core
-  Image pass off the main actor) spreading from the middle (`FormingShow.Front`, a wavering blot every
-  beat shares, drawn as one image scaled about its centre, `FrontMasks`) and lingering until the template
-  is made; then its lines burn in behind a gold front (`FormingShow.glow`, stroked once off the main
-  actor, its glow in it) with the page's paper, done `drawIn` after the making as the plain forming's
+  as everyone's wait, with no status over it until the making has taken `FormingShow.patience` (4 s;
+  VoiceOver hears it at once): the photo's color drains as pencil strokes race along its shapes from the
+  middle (`GraphiteSketch`: a color-dodge sketch in the sheet's ink, its race the strokes' shortest ways
+  from a seed, made once off the main actor as a base and eight cumulative images cross-faded;
+  `tools/graphite_sim.py` makes the same off the device, light or dark paper) and linger until the
+  template is made; then its lines burn in behind a gold front (`FormingShow.glow`, stroked once off
+  the main actor, its glow in it; `FormingShow.Front`, a wavering blot drawn as one image scaled about
+  its centre, `FrontMasks`, which the numbers share) with the page's paper, done `drawIn` after the making as the plain forming's
   lines are (a graphite shown less than `graphiteAtLeast`, 0.15 s, takes that from the fuse); and during
   the glide the page's numbers come out behind the same front with a twinkle each (`FormingPageStars`,
   in the hand-off's own `settle`). A single tap on the picture skips (`CompareView.tapped`, `FormingShow.skip`;
@@ -838,7 +841,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   it; Reduce Motion and The Making-of on bring none of it (`hasLines`). `FormingTests`, `FormingShowTests`; the scenarios
   `create-forming`, `-drawing`, `-lines` and `-page` hold it at a moment each (`ShellDemo.formingHold`; with
   the short Making-of: the graphite whole, ready once it is drawn, the fuse half burned, the lines burned in), `-graphite` the
-  graphite half spread and `-stars` the numbers half out at the painting's place, and
+  graphite's race half run and `-stars` the numbers half out at the painting's place, and
   `StartHandoffUITests.testSlowedPickedPictureFormsIntoThePainting` attaches its frames.
 - `PhotoSourceView` (the Paint page, above): one scroll view; Tonight's Picture held to about 45%
   of the window's height, Your Own a grid (never a row that scrolls: its last ways in went unseen),

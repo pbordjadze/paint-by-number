@@ -107,8 +107,9 @@ struct FormingShowTests {
     /// moves past their ends.
     @Test func theMomentsFollowTheClock() throws {
         let image = try #require(Self.image())
+        let drawing = GraphiteSketch.Drawing(base: image, stages: [image])
         let began = Date(timeIntervalSinceReferenceDate: 1000)
-        var moments = FormingMoments(graphite: image, graphiteBegan: began)
+        var moments = FormingMoments(graphite: drawing, graphiteBegan: began)
         #expect(moments.graphiteProgress(at: began) == 0)
         #expect(moments.graphiteProgress(at: began.addingTimeInterval(FormingShow.graphiteSweep)) == 1)
         #expect(moments.fuseProgress(at: began.addingTimeInterval(5)) == 0)
@@ -127,7 +128,7 @@ struct FormingShowTests {
         #expect(FormingMoments(graphiteBegan: began).graphiteProgress(at: began.addingTimeInterval(9)) == 0)
         // Held, nothing moves.
         let held = FormingMoments(
-            graphite: image, graphiteBegan: began, fuseLit: lit, fuseDone: done, heldGraphite: 0.55, heldFuse: 0.5)
+            graphite: drawing, graphiteBegan: began, fuseLit: lit, fuseDone: done, heldGraphite: 0.55, heldFuse: 0.5)
         #expect(held.graphiteProgress(at: .distantFuture) == 0.55)
         #expect(held.fuseProgress(at: .distantFuture) == 0.5)
         #expect(held.movesUntil == nil)
@@ -137,34 +138,107 @@ struct FormingShowTests {
     @Test func theFrontCoversThePicture() {
         let rect = CGRect(x: 20, y: 40, width: 300, height: 500)
         let middle = FormingShow.Front.origin(in: rect)
-        #expect(FormingShow.Front.arrival(of: middle, in: rect, edge: .sharp) == 0)
+        #expect(FormingShow.Front.arrival(of: middle, in: rect) == 0)
         for corner in [CGPoint(x: rect.minX, y: rect.minY), CGPoint(x: rect.maxX, y: rect.minY),
                        CGPoint(x: rect.minX, y: rect.maxY), CGPoint(x: rect.maxX, y: rect.maxY)] {
-            for edge in [FormingShow.Front.Edge.soft, .sharp] {
-                let arrival = FormingShow.Front.arrival(of: corner, in: rect, edge: edge)
-                #expect(arrival > 0 && arrival < 1)
-                // Whole at 1, its soft edge past every corner, wherever the outline wavers in.
-                let distance = hypot(Double(corner.x - middle.x), Double(corner.y - middle.y))
-                let ratio = distance / FormingShow.Front.reach(in: rect, edge: edge)
-                #expect(FormingShow.Front.alpha(ratio: ratio / (1 - FormingShow.Front.wobble), edge: edge) > 0.999)
-                // And the image at 1 reaches past it.
-                #expect(FormingShow.Front.side(in: rect, edge: edge) / 2 >= distance)
-            }
+            let arrival = FormingShow.Front.arrival(of: corner, in: rect)
+            #expect(arrival > 0 && arrival < 1)
+            // Whole at 1, its soft edge past every corner, wherever the outline wavers in.
+            let distance = hypot(Double(corner.x - middle.x), Double(corner.y - middle.y))
+            let ratio = distance / FormingShow.Front.reach(in: rect)
+            #expect(FormingShow.Front.alpha(ratio: ratio / (1 - FormingShow.Front.wobble)) > 0.999)
+            // And the image at 1 reaches past it.
+            #expect(FormingShow.Front.side(in: rect) / 2 >= distance)
         }
         for angle in stride(from: 0.0, to: 2 * Double.pi, by: 0.4) {
             var last = 0.0
             for step in 1...10 {
                 let r = Double(step) * 20
                 let point = CGPoint(x: middle.x + CGFloat(r * cos(angle)), y: middle.y + CGFloat(r * sin(angle)))
-                let arrival = FormingShow.Front.arrival(of: point, in: rect, edge: .sharp)
+                let arrival = FormingShow.Front.arrival(of: point, in: rect)
                 #expect(arrival > last)
                 last = arrival
             }
         }
         // The soft edge: whole inside it, nothing past the outline.
-        #expect(FormingShow.Front.alpha(ratio: 0.5, edge: .soft) == 1)
-        #expect(FormingShow.Front.alpha(ratio: 1, edge: .sharp) == 0)
-        #expect(abs(FormingShow.Front.alpha(ratio: 1 - FormingShow.Front.Edge.sharp.share / 2, edge: .sharp) - 0.5) < 1e-6)
+        #expect(FormingShow.Front.alpha(ratio: 0.5) == 1)
+        #expect(FormingShow.Front.alpha(ratio: 1) == 0)
+        #expect(abs(FormingShow.Front.alpha(ratio: 1 - FormingShow.Front.edge / 2) - 0.5) < 1e-6)
+    }
+
+    /// The graphite's race runs along the strokes: from the strongest one near the middle, a
+    /// cell along a stroke is reached before one as near across bare paper, and every cell is
+    /// reached by the end.
+    @Test func theGraphiteRacesAlongTheStrokes() {
+        // A 20 × 9 grid, bare but for a stroke along row 4 and another down column 2.
+        let w = 20, h = 9
+        var strokes = [Float](repeating: 0, count: w * h)
+        for x in 0..<w { strokes[4 * w + x] = 1 }
+        for y in 0..<h { strokes[y * w + 2] = 1 }
+        let seed = GraphiteSketch.seed(strokes, width: w, height: h)
+        #expect(seed == 4 * w + 10)
+        let arrivals = GraphiteSketch.arrivals(strokes, width: w, height: h)
+        #expect(arrivals.count == w * h)
+        #expect(arrivals[seed] == 0)
+        #expect(arrivals.allSatisfy { $0 >= 0 && $0 <= 1 })
+        // Eight cells along the stroke come before four across the paper.
+        #expect(arrivals[4 * w + 18] < arrivals[0 * w + 10])
+        // The stroke down column 2 is reached along row 4, then down it, before the paper beside it.
+        #expect(arrivals[0 * w + 2] < arrivals[0 * w + 5])
+        // Malformed input draws no race.
+        #expect(GraphiteSketch.arrivals([0, 1], width: 3, height: 1).isEmpty)
+    }
+
+    /// The race's images: none before it begins, each stage whole once passed and the next
+    /// fading in, every stroke at the end; the photo drained early in the race.
+    @Test func theGraphiteStagesFollowTheRace() {
+        #expect(GraphiteSketch.shown(at: 0, stages: 8).whole == nil)
+        #expect(GraphiteSketch.shown(at: 0, stages: 8).fading == nil)
+        let early = GraphiteSketch.shown(at: 0.05, stages: 8)
+        #expect(early.whole == nil && early.fading?.stage == 0)
+        #expect(abs((early.fading?.opacity ?? 0) - 0.4) < 1e-9)
+        let held = GraphiteSketch.shown(at: 0.55, stages: 8)
+        #expect(held.whole == 3 && held.fading?.stage == 4)
+        let end = GraphiteSketch.shown(at: 1, stages: 8)
+        #expect(end.whole == 7 && end.fading == nil)
+        #expect(GraphiteSketch.drained(at: 0) == 0)
+        #expect(GraphiteSketch.drained(at: GraphiteSketch.drains) == 1)
+        #expect(GraphiteSketch.drained(at: 1) == 1)
+    }
+
+    /// The graphite is a real pencil drawing: strokes along a photo's edges and bare paper where
+    /// it is flat, in the sheet's ink.
+    @Test func theGraphiteDrawsPencilStrokes() async throws {
+        // A light photo with a dark square in it.
+        let size = 120
+        let context = try #require(CGContext(
+            data: nil, width: size, height: size, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        context.setFillColor(CGColor(srgbRed: 0.9, green: 0.85, blue: 0.8, alpha: 1))
+        context.fill(CGRect(x: 0, y: 0, width: size, height: size))
+        context.setFillColor(CGColor(srgbRed: 0.2, green: 0.25, blue: 0.3, alpha: 1))
+        context.fill(CGRect(x: 40, y: 40, width: 40, height: 40))
+        let photo = try #require(context.makeImage())
+        let sheet = FormingPlan.Sheet(paper: SIMD3(0.95, 0.94, 0.9), ink: SIMD3(0.1, 0.1, 0.12))
+        let drawing = try #require(await GraphiteSketch.draw(photo, sheet: sheet))
+        #expect(drawing.stages.count == GraphiteSketch.stages)
+        #expect(drawing.base.width == size && drawing.base.height == size)
+        let last = try #require(drawing.stages.last)
+        // The square's edge is drawn; the middle of the flat paper and of the square are not.
+        #expect(try Self.alpha(of: last, x: 40, y: 60) > 0.3)
+        #expect(try Self.alpha(of: last, x: 10, y: 10) < 0.05)
+        #expect(try Self.alpha(of: last, x: 60, y: 60) < 0.05)
+    }
+
+    /// A pixel's alpha (0…1) in an image.
+    private static func alpha(of image: CGImage, x: Int, y: Int) throws -> Double {
+        let context = try #require(CGContext(
+            data: nil, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        // The one pixel is the image's (x, y), y from the top.
+        context.draw(image, in: CGRect(x: -x, y: y + 1 - image.height, width: image.width, height: image.height))
+        let data = try #require(context.data)
+        return Double(data.load(fromByteOffset: 3, as: UInt8.self)) / 255
     }
 
     /// The numbers' twinkles: one per label up to the limit, spread over the page, each lit only
