@@ -349,6 +349,8 @@ struct GlassSettingsView: View {
     let leave: (Int) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var showsClock = false
+    /// The year the Year row's wheel rests on (`EraClock.Reading`).
+    @State private var clockYear = EraClock.Reading()
 
     var body: some View {
         NavigationStack {
@@ -356,9 +358,12 @@ struct GlassSettingsView: View {
                 Section("About") {
                     Button {
                         withAnimation { showsClock.toggle() }
+                        // Closed without opening an era: the row reads its own year again.
+                        clockYear.isOpen = showsClock
+                        if !showsClock { clockYear.year = nil }
                     } label: {
                         LabeledContent {
-                            Text(verbatim: EraClock.text(of: EraYear.stainedGlass)).foregroundStyle(.tint)
+                            EraClock.Value(clockYear, home: EraYear.stainedGlass).foregroundStyle(.tint)
                         } label: {
                             SwiftUI.Label {
                                 Text("Year").foregroundStyle(Color.primary)
@@ -374,6 +379,7 @@ struct GlassSettingsView: View {
                             dismiss()
                             leave(year)
                         }
+                        .reporting(to: clockYear)
                         .accessibilityIdentifier("era-clock")
                     }
                 }
