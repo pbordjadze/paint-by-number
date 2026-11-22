@@ -302,6 +302,82 @@ nonisolated enum PDFExporter {
         return data as Data
     }
 
+    /// One Big Sheet (painting-company row 380): the template whole on one page of `size`
+    /// (points, portrait; turned the picture's way), with `layout`'s layers, its header above and
+    /// its color key below it on the same page. It is laid out as a page of letter's width and
+    /// scaled up to the sheet, so the header, the key and the margins keep their proportion to the
+    /// picture; the template itself is drawn at the sheet's size.
+    static func sheet(for t: Template, title: String, layout: Layout, size: CGSize, nicknames: [String?] = []) -> Data {
+        let data = NSMutableData()
+        let short = min(size.width, size.height), long = max(size.width, size.height)
+        var box = CGRect(origin: .zero, size: t.width > t.height ? CGSize(width: long, height: short) : CGSize(width: short, height: long))
+        let info: [CFString: Any] = [kCGPDFContextTitle: title, kCGPDFContextCreator: EraSeam.pdfCreator]
+        guard let consumer = CGDataConsumer(data: data as CFMutableData),
+              let ctx = CGContext(consumer: consumer, mediaBox: &box, info as CFDictionary)
+        else { return Data() }
+        let factor = short / Paper.letter.size.width
+        let laid = CGRect(origin: .zero, size: CGSize(width: box.width / factor, height: box.height / factor))
+
+        ctx.beginPDFPage(nil)
+        ctx.saveGState()
+        ctx.translateBy(x: 0, y: box.height)
+        ctx.scaleBy(x: factor, y: -factor)
+        let content = laid.insetBy(dx: margin, dy: margin)
+        let colorsText = TemplateCounts.colors(t.palette.count), areasText = TemplateCounts.areas(t.regions.count)
+        let stats = String(localized: "pdf.stats", defaultValue: "\(colorsText) · \(areasText)", bundle: .era,
+                           comment: "Header of the printable template's pages; the arguments are the number of colors and the number of areas")
+        var body = header(ctx, in: content, title: title, detail: layout.numbers ? stats : "")
+        if layout.colorKey {
+            // The key at the foot, as tall as its entries need (at most two fifths of the page):
+            // measured once off the page, then drawn where it fits.
+            var room = body
+            room.size.height = body.height * 0.4
+            let used = keyHeight(t, nicknames: nicknames, in: room)
+            if used > 0 {
+                legend(ctx, t, nicknames: nicknames, in: CGRect(x: body.minX, y: body.maxY - used, width: body.width, height: used))
+                body.size.height -= used + keyGap * 2
+            }
+        }
+        let rect = fit(aspect: CGFloat(t.width) / CGFloat(t.height), in: body)
+        // Hints and the fallback drawing as sharp as the paper takes them (about 144 dpi).
+        let pixels = max(rect.width, rect.height) * factor * 2
+        let resolution = CGSize(
+            width: max(CGFloat(t.width) * 2, pixels * CGFloat(t.width) / CGFloat(max(t.width, t.height))),
+            height: max(CGFloat(t.height) * 2, pixels * CGFloat(t.height) / CGFloat(max(t.width, t.height))))
+        TemplateRasterizer.draw(t, painted: nil, style: layout.templateStyle, in: ctx, rect: rect, rasterResolution: resolution)
+        ctx.setStrokeColor(gray(0.75))
+        ctx.setLineWidth(0.5)
+        ctx.stroke(rect)
+        text(ctx, EraSeam.appName, font: font(.system, 7.5), color: gray(0.6), at: CGPoint(x: content.minX, y: content.maxY + 16))
+        ctx.restoreGState()
+        ctx.endPDFPage()
+        ctx.closePDF()
+        return data as Data
+    }
+
+    /// The smallest number `sheet(for:title:layout:size:nicknames:)` prints on `size`, in
+    /// points, or nil without numbers: what One Big Sheet checks against `minimumNumberSize`.
+    static func smallestNumberOnSheet(_ t: Template, layout: Layout, size: CGSize) -> CGFloat? {
+        guard layout.numbers, let smallest = smallestNumberSize(t, detail: false) ?? smallestNumberSize(t, detail: true) else { return nil }
+        let short = min(size.width, size.height), long = max(size.width, size.height)
+        let page = t.width > t.height ? CGSize(width: long, height: short) : CGSize(width: short, height: long)
+        let factor = short / Paper.letter.size.width
+        // The page body, less the key's most, at the sheet's scale: a floor on the picture's size.
+        let body = bodyRect(CGRect(x: 0, y: 0, width: page.width / factor, height: page.height / factor))
+        let height = layout.colorKey ? body.height * 0.6 - keyGap * 2 : body.height
+        let scale = min(body.width / CGFloat(max(t.width, 1)), height / CGFloat(max(t.height, 1))) * factor
+        return smallest * scale
+    }
+
+    /// How tall the color key comes out in `rect` (its entries' rows), measured on a scratch page.
+    private static func keyHeight(_ t: Template, nicknames: [String?], in rect: CGRect) -> CGFloat {
+        guard !t.palette.isEmpty,
+              let scratch = CGContext(data: nil, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue)
+        else { return 0 }
+        return legend(scratch, t, nicknames: nicknames, in: rect).height
+    }
+
     // MARK: Layout
 
     private static let margin: CGFloat = 36
@@ -417,6 +493,7 @@ nonisolated enum PDFExporter {
     /// The color key as a list: number, a dot of the paint and the color's name, with its hex
     /// value and area count below. A color with a nickname is headed by it, and its plain name
     /// follows in secondary type. Returns the rect it used.
+    @discardableResult
     private static func legend(_ ctx: CGContext, _ t: Template, nicknames: [String?], in rect: CGRect) -> CGRect {
         let shades = t.palette.map { ColorNameText.title($0.colorName) }
         let given = t.palette.indices.map { $0 < nicknames.count ? nicknames[$0] : nil }

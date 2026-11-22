@@ -9,7 +9,7 @@ import SwiftUI
 /// the way back over the gallery and hold it with the tiles half fallen, the night showing
 /// through, and at its still night, the crescent and stars out; `about-painting` and
 /// `about-photograph` are the page about a library picture's real work (`AboutPaintingDemo`),
-/// `print-preview…` Print's preview (`PrintPreviewDemo`). In SideStore and Debug builds Stained Glass
+/// `print-preview…` Print's preview and `print-big-sheet…` its One Big Sheet (`PrintPreviewDemo`). In SideStore and Debug builds Stained Glass
 /// (`GlassEra`) shows while the clock is at 1248, and for its scenarios, `-demo glass-<name>`
 /// (`GlassDemo`); `era-passage-glass` holds the way to it at the rose window's light. Watercolor
 /// (`WatercolorEra`) shows at 1502 and for `-demo watercolor-<name>` (`WatercolorDemo`);
@@ -114,7 +114,7 @@ struct RootView: View {
             MakingOfDemoView(scenario: scenario)
         case let scenario? where scenario.hasPrefix("about-"):
             AboutPaintingDemo(scenario: scenario)
-        case let scenario? where scenario.hasPrefix("print-preview"):
+        case let scenario? where scenario.hasPrefix("print-preview") || scenario.hasPrefix("print-big-sheet"):
             PrintPreviewDemo(scenario: scenario)
         default:
             AppShellView()

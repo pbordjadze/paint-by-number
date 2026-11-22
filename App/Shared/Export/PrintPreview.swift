@@ -88,6 +88,9 @@ struct PrintPreviewSheet: View {
                     sizePicker
                     layersMenu
                 }
+                // One Big Sheet (painting-company row 380): Paint by Moonlight's SideStore and
+                // Debug builds; nothing in Paint by Mosaic's (`SharedSeams`).
+                BigSheetSection(request: request, layout: layout)
             }
             .navigationTitle("Print")
             .navigationBarTitleDisplayMode(.inline)
@@ -342,6 +345,11 @@ nonisolated enum PrintPages {
     @concurrent
     static func images(_ request: PrintPreviewRequest, layout: PDFExporter.Layout, longSide: CGFloat) async -> [CGImage] {
         let data = PDFExporter.document(for: request.template, title: request.title, layout: layout, nicknames: request.nicknames)
+        return images(of: data, longSide: longSide)
+    }
+
+    /// Each page of the PDF `data`, drawn white at `longSide` pixels.
+    static func images(of data: Data, longSide: CGFloat) -> [CGImage] {
         guard let provider = CGDataProvider(data: data as CFData), let document = CGPDFDocument(provider) else {
             return []
         }

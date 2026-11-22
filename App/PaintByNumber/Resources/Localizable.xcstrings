@@ -60438,6 +60438,114 @@
           }
         }
       }
+    },
+    "One Big Sheet" : {
+      "comment" : "Print's preview: the row that opens One Big Sheet, the template printed whole on one poster-sized sheet by a print service and mailed; and that screen's title",
+      "extractionState" : "manual"
+    },
+    "Printed full size and mailed to you" : {
+      "comment" : "Print's preview, under the One Big Sheet row: what it does",
+      "extractionState" : "manual"
+    },
+    "Price" : {
+      "comment" : "One Big Sheet: the row with the sheet's price",
+      "extractionState" : "manual"
+    },
+    "Couldn’t Place the Order" : {
+      "comment" : "One Big Sheet: the alert's title when the order to the print service failed",
+      "extractionState" : "manual"
+    },
+    "Check your connection and try again." : {
+      "comment" : "One Big Sheet: the alert's message when the order to the print service failed",
+      "extractionState" : "manual"
+    },
+    "Matte art paper, heavy enough for markers, gouache and a light coat of acrylic." : {
+      "comment" : "One Big Sheet, under its size and price: what the sheet is printed on",
+      "extractionState" : "manual"
+    },
+    "Some numbers print small at this size: the larger sheet reads more easily." : {
+      "comment" : "One Big Sheet, under its size: shown when the template's smallest numbers print below a comfortable size on the sheet chosen",
+      "extractionState" : "manual"
+    },
+    "Email" : {
+      "comment" : "One Big Sheet's address form: the field for the painter's email address, where the print service writes about the order",
+      "extractionState" : "manual"
+    },
+    "Address" : {
+      "comment" : "One Big Sheet's address form: the street address field",
+      "extractionState" : "manual"
+    },
+    "Apartment or Suite (Optional)" : {
+      "comment" : "One Big Sheet's address form: the address's second line, which may be left empty",
+      "extractionState" : "manual"
+    },
+    "City" : {
+      "comment" : "One Big Sheet's address form: the city or town field",
+      "extractionState" : "manual"
+    },
+    "State or Region" : {
+      "comment" : "One Big Sheet's address form: the state, province or region field, which may be left empty",
+      "extractionState" : "manual"
+    },
+    "Postal Code" : {
+      "comment" : "One Big Sheet's address form: the ZIP or postal code field",
+      "extractionState" : "manual"
+    },
+    "Country" : {
+      "comment" : "One Big Sheet's address form: the country picker",
+      "extractionState" : "manual"
+    },
+    "Ship To" : {
+      "comment" : "One Big Sheet: the heading over the address form",
+      "extractionState" : "manual"
+    },
+    "Only this sheet and the address go to the printer, never your photo." : {
+      "comment" : "One Big Sheet, under the address form: what leaves the device with an order",
+      "extractionState" : "manual"
+    },
+    "Place Test Order" : {
+      "comment" : "One Big Sheet's button while orders are only tests: sends the order to the print service's test system, which prints and charges nothing",
+      "extractionState" : "manual"
+    },
+    "Test Order Placed" : {
+      "comment" : "One Big Sheet once a test order has gone through: the confirmation's title",
+      "extractionState" : "manual"
+    },
+    "bigSheet.testPrice" : {
+      "comment" : "One Big Sheet, under the price while orders are only tests: what the print service charges and what the developer keeps; the arguments are amounts of money",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test price: the print costs %1$@, and %2$@ is yours."
+          }
+        }
+      }
+    },
+    "bigSheet.price" : {
+      "comment" : "One Big Sheet's price row: what the sheet costs, mailed; the argument is an amount of money",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, shipping included"
+          }
+        }
+      }
+    },
+    "bigSheet.placed" : {
+      "comment" : "One Big Sheet once a test order is placed; the argument is the print service's order number",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Order %@. A test order prints nothing; a real one would arrive in about a week."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

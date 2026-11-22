@@ -59,3 +59,11 @@ extension View {
     /// wherever the system puts it.
     func besideTheFold() -> some View { self }
 }
+
+/// Print's preview's One Big Sheet (painting-company row 380): Paint by Moonlight's alone, so
+/// nothing here.
+struct BigSheetSection: View {
+    init(request: PrintPreviewRequest, layout: PDFExporter.Layout) {}
+
+    var body: some View { EmptyView() }
+}
