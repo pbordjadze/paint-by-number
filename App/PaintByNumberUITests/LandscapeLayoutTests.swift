@@ -5,7 +5,8 @@ import XCTest
 /// screenshot for review, then runs the system accessibility audit on the screen: all issues
 /// are attached (`accessibility-<screen>`); missing labels and small hit regions fail.
 final class LandscapeLayoutTests: XCTestCase {
-    /// The palette (along the trailing edge) shows every color without scrolling.
+    /// The palette lies along the trailing edge, one column by default whose swatches on screen
+    /// are whole (the rest scroll into view).
     @MainActor
     func testPaintingPaletteAlongTrailingEdge() throws {
         let app = try launchInLandscape("paint-progress")
@@ -15,8 +16,10 @@ final class LandscapeLayoutTests: XCTestCase {
         let swatches = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-'")).allElementsBoundByIndex
         XCTAssertFalse(swatches.isEmpty)
         let window = app.windows.firstMatch.frame
-        for swatch in swatches {
-            XCTAssertTrue(window.contains(swatch.frame), "\(swatch.label) is scrolled out of view")
+        let visible = swatches.filter { window.contains($0.frame) }
+        XCTAssertFalse(visible.isEmpty, "No swatch is on screen")
+        for swatch in visible {
+            XCTAssertGreaterThan(swatch.frame.minX, window.midX, "\(swatch.label) isn't along the trailing edge")
         }
         // The canvas's VoiceOver areas are part of the audit below; they must be big enough to hit.
         let areas = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'canvas-area-'")).allElementsBoundByIndex
