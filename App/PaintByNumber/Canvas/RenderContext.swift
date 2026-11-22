@@ -100,17 +100,22 @@ nonisolated final class RenderContext: @unchecked Sendable {
 
     /// The pipelines that draw into `format`: `colorFormat`'s, or `extendedFormat`'s (made once,
     /// on first use; a mode that wants them makes them off the main actor with
-    /// `prepareExtendedRange`).
-    func pipelines(for format: MTLPixelFormat) -> Pipelines {
-        guard format == Self.extendedFormat else { return standard }
+    /// `prepareExtendedRange`). Nil for a format nothing draws into, or extended pipelines
+    /// Metal wouldn't make: the canvas then stays within white (`hasExtendedRange`).
+    func pipelines(for format: MTLPixelFormat) -> Pipelines? {
+        if format == Self.colorFormat { return standard }
+        guard format == Self.extendedFormat else { return nil }
         return extended.withLock { made in
             if made == nil { made = Pipelines(library: library, device: device, format: format, samples: sampleCount) }
-            return made ?? standard
+            return made
         }
     }
 
     /// Makes the extended range's pipelines now, so the first frame that asks has them at hand.
     func prepareExtendedRange() { _ = pipelines(for: Self.extendedFormat) }
+
+    /// Whether the canvas can draw past white at all (its pipelines made).
+    var hasExtendedRange: Bool { pipelines(for: Self.extendedFormat) != nil }
 
     fileprivate static func pipeline(
         _ library: any MTLLibrary, _ device: any MTLDevice, _ vertex: String, _ fragment: String,
@@ -314,7 +319,7 @@ nonisolated final class RenderContext: @unchecked Sendable {
         let uniformSize = MemoryLayout<CanvasUniforms>.stride
         let mode = content.mode
         let format = targets.color.pixelFormat
-        let p = pipelines(for: format)
+        guard let p = pipelines(for: format) else { return }
         func frame() -> CanvasModeFrame {
             CanvasModeFrame(context: self, scene: scene, states: states, uniforms: u, format: format, headroom: content.headroom)
         }

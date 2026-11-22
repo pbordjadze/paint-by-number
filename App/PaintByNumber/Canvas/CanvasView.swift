@@ -390,6 +390,7 @@ final class CanvasView: UIView, PaintingCanvas {
     /// the mode changes, the canvas comes on screen and before each frame.
     private func updateExtendedRange() {
         let wants = mode?.wantsExtendedRange == true && ExtendedRange.isOffered(on: window?.windowScene?.screen)
+            && RenderContext.shared?.hasExtendedRange == true
         guard wants != drawsExtendedRange else { return }
         drawsExtendedRange = wants
         let layer = metalLayer
