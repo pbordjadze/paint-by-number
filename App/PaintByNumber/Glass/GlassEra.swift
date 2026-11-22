@@ -93,9 +93,13 @@ struct GlassGalleryView: View {
                 empty
             } else {
                 ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 160), spacing: 18)], spacing: 22) {
-                        ForEach(shelf.windows) { artwork in
-                            GlassCard(shelf: shelf, artwork: artwork, onOpen: { onOpen(artwork.id) })
+                    // One container, so the cards' glass is sampled together and never melts
+                    // card into card.
+                    GlassEffectContainer(spacing: 0) {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 160), spacing: 18)], spacing: 22) {
+                            ForEach(shelf.windows) { artwork in
+                                GlassCard(shelf: shelf, artwork: artwork, onOpen: { onOpen(artwork.id) })
+                            }
                         }
                     }
                     .padding(20)
@@ -109,6 +113,9 @@ struct GlassGalleryView: View {
             Image(systemName: "circle.hexagongrid")
                 .font(.system(size: 56))
                 .foregroundStyle(GlassEra.gold)
+                .frame(width: 112, height: 112)
+                .glassEffect(.regular.tint(GlassEra.gold.opacity(0.12)).interactive(), in: .circle)
+                .padding(.bottom, 6)
                 .accessibilityHidden(true)
             Text("No windows yet")
                 .font(.display(.title2))
@@ -151,6 +158,10 @@ struct GlassCard: View {
                 }
                 .aspectRatio(artwork.aspectRatio, contentMode: .fit)
                 .clipShape(.rect(cornerRadius: 6))
+                // Set in a frame of real Liquid Glass, warmer as the window is glazed.
+                .padding(7)
+                .glassEffect(.regular.tint(GlassEra.gold.opacity(artwork.isComplete ? 0.22 : 0.06)).interactive(),
+                             in: .rect(cornerRadius: 13))
                 .shadow(color: GlassEra.gold.opacity(artwork.isComplete ? 0.35 : 0.12), radius: 14)
                 Text(artwork.title)
                     .font(.subheadline)

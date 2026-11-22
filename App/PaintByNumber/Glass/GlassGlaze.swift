@@ -482,6 +482,8 @@ struct GlassGlazeView: View {
             GlassCanvas(model: model)
             if showsBeads || voiceOver {
                 beads.transition(.opacity)
+            } else if model.isComplete {
+                plaque
             }
         }
         .background(GlassPicture.color(GlassPicture.nave, space: .sRGB).ignoresSafeArea())
@@ -560,6 +562,27 @@ struct GlassGlazeView: View {
     }
 
     private var progressText: String { model.progressText }
+
+    /// The finished window's name on a plaque of glass, come out of the glass the beads melted
+    /// into; a touch on the window brings the beads back.
+    private var plaque: some View {
+        GlassEffectContainer {
+            VStack(spacing: 2) {
+                Text(verbatim: title)
+                    .font(.display(.headline))
+                    .lineLimit(1)
+                Text("Finished")
+                    .font(.caption)
+                    .foregroundStyle(GlassEra.gold)
+            }
+            .padding(.horizontal, 22)
+            .padding(.vertical, 10)
+            .glassEffect(.regular.tint(GlassEra.gold.opacity(0.14)), in: .capsule)
+            .glassEffectTransition(reduceMotion ? .identity : .materialize)
+        }
+        .padding(.vertical, 14)
+        .accessibilityElement(children: .combine)
+    }
 
     // MARK: Beads
 
