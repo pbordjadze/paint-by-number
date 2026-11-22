@@ -1,5 +1,6 @@
 #if UNRELEASED
 import CoreGraphics
+import CoreMotion
 import Metal
 import Observation
 import PaintCore
@@ -460,6 +461,8 @@ struct GlassGlazeView: View {
     /// Whether the glasses are out: glazed whole, the window stands alone in the dark until a
     /// touch brings them back.
     @State private var showsBeads: Bool
+    /// Whether the beads have melted into one bar of glass, as the window is glazed whole.
+    @State private var melted = false
     /// The lit picture being shared, while the share sheet is up.
     @State private var sharedFile: URL?
     @State private var isSharing = false
@@ -502,7 +505,7 @@ struct GlassGlazeView: View {
             }
         }
         .onChange(of: model.isComplete) { _, complete in
-            setBeads(shown: !complete, duration: 0.6)
+            melt(complete)
             guard complete else { return }
             AccessibilityNotification.Announcement(String(
                 localized: "glass.finished", defaultValue: "The sun passes behind your window.",
@@ -534,7 +537,24 @@ struct GlassGlazeView: View {
         }
     }
 
+    /// Glazed whole, the beads melt into one bar of glass and then go; an undo brings them back
+    /// apart. Reduce Motion lets them go at once.
+    private func melt(_ complete: Bool) {
+        guard complete, !reduceMotion else {
+            melted = false
+            setBeads(shown: !complete, duration: 0.6)
+            return
+        }
+        withAnimation(.smooth(duration: 0.7)) { melted = true }
+        Task {
+            try? await Task.sleep(for: .seconds(0.9))
+            guard model.isComplete else { return }
+            setBeads(shown: false, duration: 0.6)
+        }
+    }
+
     private func setBeads(shown: Bool, duration: TimeInterval) {
+        if shown { melted = false }
         model.beadsHidden = !shown
         withAnimation(reduceMotion ? nil : .easeInOut(duration: duration)) { showsBeads = shown }
     }
@@ -546,7 +566,7 @@ struct GlassGlazeView: View {
     private var beads: some View {
         VStack(spacing: 6) {
             // Its own view: a pour changes the count below, never the beads.
-            GlassBeads(model: model)
+            GlassBeads(model: model, melted: melted)
             if model.framedByHand == 0 {
                 // How a window is led in, until the painter has framed a first piece.
                 Text(String(localized: "glass.lead.howTo",
@@ -555,11 +575,17 @@ struct GlassGlazeView: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .glassEffect(.regular, in: .capsule)
                     .padding(.horizontal, 20)
             } else {
                 Text(progressText)
                     .font(.footnote.monospacedDigit())
                     .foregroundStyle(.secondary)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
+                    .glassEffect(.regular, in: .capsule)
                     .accessibilityHidden(true)
             }
         }
@@ -567,61 +593,110 @@ struct GlassGlazeView: View {
     }
 }
 
-/// The window's glasses, one numbered bead each. Reads only the bead in hand.
+/// The window's glasses, one numbered bead each, of real Liquid Glass (painting-company row 366):
+/// each bead a drop of its glass in one `GlassEffectContainer`, so the bead in hand swells and
+/// its neighbours lean into it as glass does, a glint inside each that follows the device's tilt
+/// (`GlassTilt`), and, as the window is glazed whole, every bead melting into one bar of glass
+/// before it goes (`melted`). Reads only the bead in hand.
 private struct GlassBeads: View {
     let model: GlassGlazeModel
+    let melted: Bool
+    @Namespace private var drops
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ScrollView(.horizontal) {
-            HStack(spacing: 14) {
-                // The window's own glasses, one a number (by number, the glazier's classics,
-                // which no piece is numbered for, stay in the box).
-                ForEach(0..<min(model.template.palette.count, model.offered.count), id: \.self) { g in
-                    bead(g)
+            GlassEffectContainer(spacing: melted ? 48 : 16) {
+                HStack(spacing: melted ? 2 : 14) {
+                    // The window's own glasses, one a number (by number, the glazier's classics,
+                    // which no piece is numbered for, stay in the box).
+                    ForEach(0..<min(model.template.palette.count, model.offered.count), id: \.self) { g in
+                        bead(g)
+                    }
                 }
+                .frame(height: 60)
             }
             .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+            .padding(.vertical, 6)
         }
         .scrollIndicators(.hidden)
         .defaultScrollAnchor(.center, for: .alignment)
+        .onAppear { GlassTilt.shared.start() }
+        .onDisappear { GlassTilt.shared.stop() }
     }
 
     private func bead(_ g: Int) -> some View {
         let color = GlassPicture.color(model.offered[g].rgb, space: model.template.colorSpace)
         let isSelected = model.selected == g
+        let side: CGFloat = isSelected && !melted ? 54 : 40
         return Button {
             model.selected = g
         } label: {
-            Circle()
-                .fill(color)
-                .overlay {
-                    Circle().fill(RadialGradient(colors: [.white.opacity(0.55), .clear], center: UnitPoint(x: 0.32, y: 0.28),
-                                                 startRadius: 0, endRadius: 16))
-                }
-                .overlay { Circle().strokeBorder(.white.opacity(isSelected ? 0.95 : 0.32), lineWidth: isSelected ? 3 : 1) }
-                .overlay {
-                    // The window's own glasses carry their pieces' number.
-                    if g < model.template.palette.count {
-                        Text(g + 1, format: .number)
-                            .font(.system(.footnote, design: .serif, weight: .bold))
-                            .foregroundStyle(.white)
-                            .shadow(color: .black.opacity(0.7), radius: 1.5)
-                            .dynamicTypeSize(...DynamicTypeSize.xLarge)
-                    }
-                }
-                .shadow(color: color.opacity(0.6), radius: isSelected ? 10 : 4)
-                .frame(width: 40, height: 40)
-                .scaleEffect(isSelected ? 1.15 : 1)
-                .animation(reduceMotion ? nil : .snappy, value: isSelected)
+            Text(g + 1, format: .number)
+                .font(.system(.footnote, design: .serif, weight: .bold))
+                .foregroundStyle(.white)
+                .shadow(color: .black.opacity(0.7), radius: 1.5)
+                .dynamicTypeSize(...DynamicTypeSize.xLarge)
+                .frame(width: side, height: side)
+                .background { GlassGlint(still: reduceMotion) }
+                .clipShape(Circle())
+                .contentShape(Circle())
         }
         .buttonStyle(.plain)
+        .glassEffect(.regular.tint(color.opacity(isSelected ? 0.9 : 0.65)).interactive(), in: .circle)
+        .glassEffectID(g, in: drops)
+        .glassEffectUnion(id: melted ? -1 : g, namespace: drops)
+        .animation(reduceMotion ? nil : .bouncy(duration: 0.35), value: isSelected)
         .accessibilityLabel(Text(model.name(of: g)))
         .accessibilityHint(Text(String(localized: "glass.bead.hint", defaultValue: "Pours this glass into the pieces you touch.",
                                        comment: "VoiceOver hint of a glass bead in the stained glass palette")))
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityIdentifier("glass-bead-\(g)")
+    }
+}
+
+/// The light caught inside a bead of glass: a soft spot of white where the window's light would
+/// strike it, sliding round the bead as the device tilts (still under Reduce Motion, and on a
+/// device without motion).
+private struct GlassGlint: View {
+    let still: Bool
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 30, paused: still)) { _ in
+            let tilt = still ? CGPoint.zero : GlassTilt.shared.tilt
+            RadialGradient(colors: [.white.opacity(0.55), .white.opacity(0.08), .clear],
+                           center: UnitPoint(x: 0.32 + 0.3 * tilt.x, y: 0.28 - 0.3 * tilt.y),
+                           startRadius: 0, endRadius: 22)
+                .blendMode(.plusLighter)
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+/// The device's tilt, for the glass that catches the light (Core Motion's gravity, read when a
+/// glint draws: no handler runs off the main actor). Started while beads are on screen.
+@MainActor
+final class GlassTilt {
+    static let shared = GlassTilt()
+    private let motion = CMMotionManager()
+    private var users = 0
+
+    func start() {
+        users += 1
+        guard users == 1, motion.isDeviceMotionAvailable else { return }
+        motion.deviceMotionUpdateInterval = 1 / 30
+        motion.startDeviceMotionUpdates()
+    }
+
+    func stop() {
+        users = max(0, users - 1)
+        if users == 0 { motion.stopDeviceMotionUpdates() }
+    }
+
+    /// Gravity across the screen, each axis in -1...1: zero lying flat or with no motion.
+    var tilt: CGPoint {
+        guard let gravity = motion.deviceMotion?.gravity else { return .zero }
+        return CGPoint(x: gravity.x, y: gravity.y)
     }
 }
 #endif
