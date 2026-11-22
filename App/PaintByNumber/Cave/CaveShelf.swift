@@ -86,11 +86,19 @@ final class CaveShelf {
                 continue
             }
             var progress = CaveProgress(done: Array(repeating: false, count: plan.areaCount))
-            if let data = try? Data(contentsOf: folder.appending(path: progressFile)) {
+            let progressURL = folder.appending(path: progressFile)
+            if FileManager.default.fileExists(atPath: progressURL.path) {
                 do {
-                    progress = try CaveProgress(encoded: data, areas: plan.areaCount)
+                    progress = try CaveProgress(encoded: Data(contentsOf: progressURL), areas: plan.areaCount)
+                } catch CaveProgress.CodingError.corrupt, CaveProgress.CodingError.otherPainting {
+                    // Damaged for good: the painting starts again rather than being lost.
+                    Log.library.error("Progress of cave painting \(id.uuidString, privacy: .public) is damaged: starting it again")
                 } catch {
-                    Log.library.error("Progress of cave painting \(id.uuidString, privacy: .public) can't be read: \(String(describing: error), privacy: .public)")
+                    // A newer app's progress, or one that can't be read just now (data protection, a
+                    // passing I/O error): the painting is left off the wall this launch, so no save
+                    // writes fresh progress over it. The wall's order keeps it.
+                    Log.library.error("Progress of cave painting \(id.uuidString, privacy: .public) can't be read now: \(String(describing: error), privacy: .public)")
+                    continue
                 }
             }
             var pigment: [UInt8]?
@@ -133,6 +141,9 @@ final class CaveShelf {
         paintings.append(painting)
         return id
     }
+
+    /// Waits for every save queued so far to reach the disk.
+    func flush() async { await saving?.value }
 
     /// Keeps a painting's progress and pigment, after the saves before it.
     func save(_ id: UUID, progress: CaveProgress, pigment: [UInt8]) {

@@ -1414,7 +1414,9 @@ Settings button whose Year wheel leaves as every era's does (`CaveSettingsView`)
 (`CaveDemo`); `CaveAppTests`. `CaveFossils`: Liquid Glass misused on purpose, the system's
 controls found as glass in the rock (a cracked "more" pill, the mouth as a back button, the year
 wheel carved under the mouth), drawn by the shader and lit only by the torch and the daylight;
-none of it is a control.
+none of it is a control. Not on the year wheel yet: 15,000 BC is lit once the wheel reaches back
+before year 1 (`EraClock`, Stained Glass's work); until then only the demos open the Cave, and its
+Settings wheel stands at the wheel's oldest year.
 
 ## Outside the app: widgets and stickers
 

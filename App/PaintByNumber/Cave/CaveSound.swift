@@ -149,6 +149,18 @@ nonisolated final class CaveSound: @unchecked Sendable {
             }
             taps.reverbBlend = 0.6
             for drip in drips { drip.reverbBlend = 0.8 }
+            // A route change (headphones out) or an interruption (a call) stops the engine under
+            // us: start it again once it may play.
+            let center = NotificationCenter.default
+            center.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: nil) { [weak self] _ in
+                guard let self else { return }
+                self.queue.async { self.restartAudio() }
+            }
+            center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: nil) { [weak self] note in
+                let type = (note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt).flatMap(AVAudioSession.InterruptionType.init)
+                guard type == .ended, let self else { return }
+                self.queue.async { self.restartAudio() }
+            }
             isBuilt = true
         }
         do {
@@ -164,6 +176,18 @@ nonisolated final class CaveSound: @unchecked Sendable {
         } catch {
             Log.feedback.error("The cave's sounds are unavailable: \(String(describing: error), privacy: .public)")
         }
+    }
+
+    /// After the engine stopped on its own: everything played again from the start, if it was playing.
+    private func restartAudio() {
+        guard isRunning else { return }
+        isRunning = false
+        for node in [fire, breath, taps] + drips { node.stop() }
+        engine.stop()
+        startAudio()
+        guard isRunning else { return }
+        dripRun += 1
+        scheduleDrip(run: dripRun)
     }
 
     private func startHaptics() {

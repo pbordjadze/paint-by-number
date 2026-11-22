@@ -110,6 +110,7 @@ struct CaveWallSurface: UIViewRepresentable {
         let scene = CaveScene(paintings: paintings, sound: CaveSound.fromSettings())
         let view = CaveWallView(scene: scene)
         scene.onSave = { [shelf] id, progress, pigment in shelf.save(id, progress: progress, pigment: pigment) }
+        view.flush = { [shelf] in await shelf.flush() }
         update(scene)
         #if DEBUG
         CaveDemo.play(on: view)

@@ -54,8 +54,14 @@ final class CaveWallView: UIView {
         Task { await prepare() }
     }
 
-    /// The app may not come back: what was blown is kept now.
-    @objc private func enteredBackground() { scene.save() }
+    /// Waits for the shelf's queued saves to reach the disk.
+    var flush: (@MainActor () async -> Void)?
+
+    /// The app may not come back: what was blown is kept now, the app held awake until it is on disk.
+    @objc private func enteredBackground() {
+        scene.save()
+        if let flush { BackgroundSaving.shared.hold(until: flush) }
+    }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
