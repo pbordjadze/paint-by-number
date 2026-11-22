@@ -14,7 +14,9 @@ struct PaintingLayoutTests {
     /// The Great Wave's page as CI's simulators' canvases put it (October 25), status bar hidden,
     /// 22 paints: at y 300 on an iPhone 17 Pro and 294.5 on a 13-inch iPad Pro, each within the
     /// point its scroll view rounds the camera to. The release's iPad, whose bar and swatches are
-    /// not yet a quarter bigger (`QuietPainting.scale`), has it at 299.2.
+    /// not yet a quarter bigger (`QuietPainting.scale`), had it at 299.2. Since the iPad's palette
+    /// is one row by default (November 22) its bar is a swatch's pitch thinner, so the page lies
+    /// half a pitch lower: 294.5 + 66 / 2 and 299.2 + 56 / 2.
     @Test func thePageIsWhereCIsCanvasesPutIt() {
         let template = CGSize(width: 1000, height: 671.5846994535519)
         let phone = inputs(screen: CGSize(width: 402, height: 874), top: 62, bottom: 34, regular: false)
@@ -26,9 +28,11 @@ struct PaintingLayoutTests {
         let onPad = PaintingLayout(pad).page(of: template, inputs: pad, rightToLeft: false)
         #expect(abs(onPad.minX - 16) < 0.01 && abs(onPad.width - 1000) < 0.01)
         #if UNRELEASED
-        #expect(abs(onPad.minY - 294.5) < 1)
+        #expect(abs(onPad.minY - 327.5) < 1)
+        #expect(PaintingLayout(pad).palette.lines == 1)
         #else
-        #expect(abs(onPad.minY - 299.2) < 1)
+        #expect(abs(onPad.minY - 327.2) < 1)
+        #expect(PaintingLayout(pad).palette.lines == 1)
         #endif
     }
 

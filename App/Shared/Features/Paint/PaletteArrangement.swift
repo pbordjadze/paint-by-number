@@ -4,7 +4,8 @@ import PaintCore
 /// How many lines the palette wraps into (the painting screen's More › Palette): rows at the
 /// bottom, columns along the trailing edge of a landscape iPad.
 nonisolated enum PaletteRows: Int, CaseIterable, Identifiable, Sendable {
-    /// A few lines on roomy screens (three at the bottom, two beside), one on compact ones.
+    /// One line, on every screen: an iPad's too, which wrapped into a few until 1.3
+    /// (painting-company row 378); more rows are the painter's choice.
     case auto = 0
     case one = 1, two, three, four, five, six
     /// As many as every color needs to show at once.

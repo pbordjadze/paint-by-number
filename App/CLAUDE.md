@@ -350,10 +350,11 @@ below name both alike.
   once the Finished panel shows. While it plays (`PaintingSession.isReplaying`) Undo is off (the
   canvas offers no `undoManager`, so ⌘Z and three-finger undo wait too) and Replay's slot, in the
   bar and More, holds Stop (`CanvasView.stopReplay`).
-- Palette (iPad first): `PaintingLayout.Palette` wraps the palette into rows (bottom) or columns
-  (trailing edge of wide windows) so every color shows at once, filling across the bar before
-  along it (`PaletteBar.lanes`: rows read 1 4 7 / 2 5 8); More › Palette chooses its lines
-  (`PaletteRows`) and order (`PaletteOrder`), which the selection follows
+- Palette (iPad first): `PaintingLayout.Palette` lies along the bottom, or the trailing edge of
+  wide windows, in one line by default (Auto, on an iPad too since painting-company row 378;
+  a Duo's controls page shows every color), wrapping into rows or columns when the painter asks,
+  filling across the bar before along it (`PaletteBar.lanes`: rows read 1 4 7 / 2 5 8); More ›
+  Palette chooses its lines (`PaletteRows`) and order (`PaletteOrder`), which the selection follows
   (`PaintingSession.colorOrder`): a painting opens on the paint in hand when it was last saved
   (`PaintProgress.inHand`, a trailing field; `PaintingAutosaver` saves a change of paint alone
   on leaving), else a begun one on the palette's first swatch
