@@ -57,15 +57,15 @@ struct LivePhotoSaveSheet: View {
     @State private var model: LivePhotoSaveModel
     @State private var attempt = 0
     @Environment(\.openURL) private var openURL
-    /// Hands the sheet back to the share sheet that presented it.
-    let onClose: () -> Void
+    /// Hands the sheet back to the share sheet that presented it; true once it is saved.
+    let onClose: (_ saved: Bool) -> Void
 
-    init(request: TimelapseRequest, onClose: @escaping () -> Void) {
+    init(request: TimelapseRequest, onClose: @escaping (_ saved: Bool) -> Void) {
         _model = State(initialValue: LivePhotoSaveModel(request: request))
         self.onClose = onClose
     }
 
-    private func dismiss() { onClose() }
+    private func dismiss() { onClose(model.phase == .saved) }
 
     var body: some View {
         ScrollView {
@@ -175,14 +175,34 @@ final class LivePhotoActivity: UIActivity {
     override var activityImage: UIImage? { UIImage(systemName: "livephoto") }
     override func canPerform(withActivityItems activityItems: [Any]) -> Bool { true }
 
-    override var activityViewController: UIViewController? {
-        let host = UIHostingController(rootView: LivePhotoSaveSheet(request: request) { [weak self] in
-            self?.activityDidFinish(true)
+    override var activityViewController: UIViewController? { host }
+
+    /// Made once: UIKit may ask for the controller more than once.
+    private lazy var host: UIViewController = {
+        let host = UIHostingController(rootView: LivePhotoSaveSheet(request: request) { [weak self] saved in
+            self?.finish(saved)
         })
         if let sheet = host.sheetPresentationController {
             sheet.detents = [.medium()]
         }
+        // Swiped away, it is finished too, or the time-lapse's sheet waits for a share sheet
+        // that never closes.
+        host.presentationController?.delegate = self
         return host
+    }()
+
+    private var finished = false
+
+    private func finish(_ completed: Bool) {
+        guard !finished else { return }
+        finished = true
+        activityDidFinish(completed)
+    }
+}
+
+extension LivePhotoActivity: UIAdaptivePresentationControllerDelegate {
+    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        finish(false)
     }
 }
 #endif

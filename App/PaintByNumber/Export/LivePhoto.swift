@@ -98,7 +98,27 @@ nonisolated enum LivePhoto {
         let adaptor = AVAssetWriterInputMetadataAdaptor(assetWriterInput: marks)
         writer.add(marks)
 
-        guard reader.startReading(), writer.startWriting() else { throw SaveError.movieFailed }
+        guard reader.startReading() else { throw reader.error ?? SaveError.movieFailed }
+        guard writer.startWriting() else {
+            reader.cancelReading()
+            throw writer.error ?? SaveError.movieFailed
+        }
+        do {
+            try await copy(reader: reader, output: output, writer: writer, video: video, marks: marks,
+                           adaptor: adaptor, duration: duration)
+        } catch {
+            // Nothing half written stays open: the folder goes with the export.
+            reader.cancelReading()
+            writer.cancelWriting()
+            throw error
+        }
+    }
+
+    /// The key photo's mark, then every frame of the replay as it was encoded.
+    private static func copy(
+        reader: AVAssetReader, output: AVAssetReaderTrackOutput, writer: AVAssetWriter, video: AVAssetWriterInput,
+        marks: AVAssetWriterInput, adaptor: AVAssetWriterInputMetadataAdaptor, duration: CMTime
+    ) async throws {
         writer.startSession(atSourceTime: .zero)
 
         let keyPhoto = AVMutableMetadataItem()
@@ -113,6 +133,7 @@ nonisolated enum LivePhoto {
         marks.markAsFinished()
 
         while let sample = output.copyNextSampleBuffer() {
+            try Task.checkCancellation()
             while !video.isReadyForMoreMediaData {
                 if writer.status == .failed { throw writer.error ?? SaveError.movieFailed }
                 try await Task.sleep(for: .milliseconds(2))
