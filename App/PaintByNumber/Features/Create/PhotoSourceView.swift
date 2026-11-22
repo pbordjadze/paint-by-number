@@ -28,6 +28,9 @@ struct PhotoSourceView: View {
     @State private var isShowingMuseum = false
     /// The work the Museum handed over, loaded once its cover has gone.
     @State private var museumPick: (data: Data, title: String)?
+    /// A painting under way the Museum's Resume chose, opened once its cover has gone.
+    @State private var museumResume: UUID?
+    @Environment(\.resumePainting) private var resumePainting
     #endif
     @Environment(UnlimitedPaintings.self) private var paintings
     @State private var width: CGFloat = 0
@@ -123,6 +126,9 @@ struct PhotoSourceView: View {
         .fullScreenCover(isPresented: $isShowingMuseum, onDismiss: paintMuseumPick) {
             MuseumView { data, title in
                 museumPick = (data, title)
+                isShowingMuseum = false
+            } onResume: { id in
+                museumResume = id
                 isShowingMuseum = false
             } onClose: {
                 isShowingMuseum = false
@@ -321,6 +327,11 @@ struct PhotoSourceView: View {
 
     /// A work from the Museum, painted as a picked photo is, named after the work.
     private func paintMuseumPick() {
+        if let id = museumResume {
+            museumResume = nil
+            resumePainting?(id)
+            return
+        }
         guard let pick = museumPick else { return }
         museumPick = nil
         PaintTips.photoChosen()
