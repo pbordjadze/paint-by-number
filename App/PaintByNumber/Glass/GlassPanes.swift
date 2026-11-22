@@ -12,22 +12,21 @@ import UIKit
 /// canvas's own lens, so its number reads clearly (real glass bends a number past reading over a
 /// busy photo). The panes are grouped, one glass effect per glass, each a shape of many outlines:
 /// measured on an iPad Air, 120 panes so grouped stayed smooth where 60 effects of one pane each
-/// did not (`GlassRealPanes`). A poured pane materializes, melts into the panes of its glass
-/// beside it and snaps back to the lead; never under Reduce Motion. Under Reduce Transparency
-/// there is no real glass: the canvas's lenses draw whole.
+/// did not (`GlassRealPanes`). A poured pane materializes over the canvas's own lens, which
+/// fades out under it (`glassFillFragment`); never under Reduce Motion. (Melting it into its
+/// glass's neighbours by the container's spacing popped as the spacing crossed the lead between
+/// them.) Under Reduce Transparency there is no real glass: the canvas's lenses draw whole.
 ///
 /// It lives in the canvas's zooming view (`CanvasView.modeOverlay`), in canvas units, so UIKit's
 /// pan and zoom move it with no SwiftUI work.
 @MainActor
 @Observable
 final class GlassPanes {
-    /// Each piece's glass, inset half the lead inside its outline, and its neighbours, made off the
+    /// Each piece's glass, inset half the lead inside its outline, made off the
     /// main actor (`outlines(of:)`).
     nonisolated struct Outlines: @unchecked Sendable {
         /// Canvas units; nil where the lead covers the piece whole.
         let paths: [CGPath?]
-        let neighbours: [[Int]]
-        let lead: CGFloat
         let size: CGSize
     }
 
@@ -41,7 +40,7 @@ final class GlassPanes {
     @ObservationIgnored private var members: [Set<Int>]
     /// One shape per hold, rebuilt only for the holds a change touched.
     private(set) var shapes: [Path]
-    /// Panes arriving: each its own effect for a moment, so it can materialize and melt.
+    /// Panes arriving: each its own effect for a moment, so it can materialize.
     private(set) var arrivals: [Arrival] = []
     @ObservationIgnored private var nextArrival = 0
     /// Real glass is on screen (no Reduce Transparency): the canvas draws its lenses flat under it.
@@ -49,16 +48,13 @@ final class GlassPanes {
 
     /// How much of a glass's color its pane carries; the canvas pours the rest into the photo.
     static let tintOpacity = 0.35
-    /// How long a pane takes to arrive, materializing and melting, before it joins its glass.
+    /// How long a pane takes to arrive, materializing, before it joins its glass.
     static let arrivalDuration = 0.9
 
     struct Arrival: Identifiable {
         let id: Int
         let hold: Hold
-        /// The pieces arriving (each its own pane) and those melting with them (shown as they were).
         var pieces: [Int]
-        let fresh: Set<Int>
-        let start: Date
     }
 
     init(outlines: Outlines, offered: [PaletteColor], colorSpace: RGBColorSpace) {
@@ -76,7 +72,7 @@ final class GlassPanes {
     }
 
     /// Piece `r` now holds `hold` (nil: no glass); `arriving`, poured on screen, it comes as a pane
-    /// of its own and melts into the same glass beside it.
+    /// of its own before it joins its glass.
     func show(_ r: Int, hold: Hold?, arriving: Bool) {
         guard r < holds.count else { return }
         let hold = hold.flatMap { $0 < members.count ? $0 : nil }
@@ -112,10 +108,8 @@ final class GlassPanes {
     }
 
     private func arrive(_ r: Int, hold: Hold, touched: inout Set<Int>) {
-        let arriving = Set(arrivals.flatMap(\.pieces))
-        let beside = outlines.neighbours[r].filter { holds[$0] == hold && !arriving.contains($0) && outlines.paths[$0] != nil }
         nextArrival += 1
-        let arrival = Arrival(id: nextArrival, hold: hold, pieces: [r] + beside, fresh: [r], start: .now)
+        let arrival = Arrival(id: nextArrival, hold: hold, pieces: [r])
         withAnimation(.smooth(duration: 0.5)) { arrivals.append(arrival) }
         touched.insert(hold)
         let id = arrival.id
@@ -152,22 +146,6 @@ final class GlassPanes {
         outlines.paths[r].map { Path($0) } ?? Path()
     }
 
-    /// How far the panes melt `elapsed` seconds into a pour: the container's spacing grows past
-    /// the lead between them, holds, and snaps back before the pane joins its glass.
-    func meltSpacing(at date: Date) -> CGFloat {
-        let gap = outlines.lead
-        var spacing: CGFloat = 0
-        for arrival in arrivals {
-            let t = date.timeIntervalSince(arrival.start)
-            let rise = min(1, max(0, t / 0.3)), fall = min(1, max(0, (t - 0.55) / 0.3))
-            let ease = { (x: Double) in x * x * (3 - 2 * x) }
-            spacing = max(spacing, 2 * gap * CGFloat(ease(rise) * (1 - ease(fall))))
-        }
-        return spacing
-    }
-
-    var melting: Bool { !arrivals.isEmpty }
-
     /// The panes of `template`'s pieces (`GlassPaneOutlines`, from the field the canvas casts its
     /// lead from), `lead` the lead's width in canvas units.
     nonisolated static func outlines(of template: Template, texture: GlassTexture, lead: CGFloat) -> Outlines {
@@ -182,15 +160,7 @@ final class GlassPanes {
             }
             return path
         }
-        var neighbours = Array(repeating: Set<Int>(), count: template.regions.count)
-        for edge in template.edges where edge.right != BoundaryEdge.outside {
-            let a = Int(edge.left), b = Int(edge.right)
-            guard a < neighbours.count, b < neighbours.count, a != b else { continue }
-            neighbours[a].insert(b)
-            neighbours[b].insert(a)
-        }
-        return Outlines(paths: paths, neighbours: neighbours.map { $0.sorted() }, lead: lead,
-                        size: CGSize(width: template.width, height: template.height))
+        return Outlines(paths: paths, size: CGSize(width: template.width, height: template.height))
     }
 }
 
@@ -220,17 +190,14 @@ struct GlassPanesView: View {
         .onChange(of: reduceTransparency, initial: true) { _, reduced in panes.covers(!reduced) }
     }
 
-    /// The panes arriving, each its own effect in a container whose spacing melts them together
-    /// (frames drawn only while one melts).
+    /// The panes arriving, each its own effect, materializing.
     private var arriving: some View {
-        TimelineView(.animation(paused: !panes.melting)) { timeline in
-            GlassEffectContainer(spacing: panes.meltSpacing(at: timeline.date)) {
-                ZStack(alignment: .topLeading) {
-                    ForEach(panes.arrivals) { arrival in
-                        ForEach(arrival.pieces, id: \.self) { r in
-                            pane(panes.path(of: r), hold: arrival.hold)
-                                .glassEffectTransition(arrival.fresh.contains(r) ? .materialize : .identity)
-                        }
+        GlassEffectContainer(spacing: 0) {
+            ZStack(alignment: .topLeading) {
+                ForEach(panes.arrivals) { arrival in
+                    ForEach(arrival.pieces, id: \.self) { r in
+                        pane(panes.path(of: r), hold: arrival.hold)
+                            .glassEffectTransition(.materialize)
                     }
                 }
             }
