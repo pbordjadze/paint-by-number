@@ -53,6 +53,11 @@ final class WoodblockBenchModel: CanvasTouches {
         step = bench.step
         block = bench.block
         session = PaintingSession(template: plan.template)
+        var byRegion = [Int](repeating: .max, count: plan.template.regions.count)
+        for b in plan.blocks.indices {
+            for r in byRegion.indices where byRegion[r] == .max && plan.prints(region: r, block: b) { byRegion[r] = b }
+        }
+        regionBlocks = byRegion
         showsPrint = bench.step == .peeled
     }
 
@@ -186,10 +191,25 @@ final class WoodblockBenchModel: CanvasTouches {
                 stepChanged()
                 changed()
             }
-            mode.show(.print, at: canvas?.canvasTime ?? 0, numbers: false, reduceMotion: reduceMotion)
-            canvas?.requestRender()
+            showPrint()
         }
     }
+
+    /// The print so far, the areas blocks still to come print numbered on it (faint, mirrored as
+    /// the print is: `WoodblockMode.drawOver`), the rest painted, which hides their numbers.
+    private func showPrint() {
+        guard let canvas else { return }
+        let printed = isDone ? plan.blocks.count : bench.block + 1
+        for r in plan.template.regions.indices {
+            let waits = regionBlocks[r] != .max && regionBlocks[r] >= printed
+            canvas.showMode(r, value: 0, painted: !waits, from: nil, animated: false)
+        }
+        mode.show(.print, at: canvas.canvasTime, numbers: !isDone, reduceMotion: reduceMotion)
+        canvas.requestRender()
+    }
+
+    /// The block that prints each region, `Int.max` for one no block prints (the paper's).
+    @ObservationIgnored private let regionBlocks: [Int]
 
     /// Takes the next block to the bench.
     func nextBlock() {
@@ -251,7 +271,11 @@ final class WoodblockBenchModel: CanvasTouches {
             canvas.showMode(r, value: 0, painted: !plan.prints(region: r, block: bench.block), from: nil, animated: false)
         }
         if bench.step == .rub { canPeel = bench.rubbedFraction(field: field) >= WoodblockBench.rubbedAt }
-        mode.show(showsPrint ? .print : view, at: canvas.canvasTime, numbers: showsNumbers && !showsPrint, reduceMotion: reduceMotion)
+        if showsPrint {
+            showPrint()
+            return
+        }
+        mode.show(view, at: canvas.canvasTime, numbers: showsNumbers, reduceMotion: reduceMotion)
         canvas.requestRender()
     }
 

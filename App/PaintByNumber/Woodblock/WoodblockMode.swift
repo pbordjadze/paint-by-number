@@ -10,7 +10,9 @@ import os
 /// arrays change a few cells at a time: the model copies the cells it changed into staging
 /// buffers (`update`), and each frame's `prepare` blits only those into the textures. The canvas
 /// draws its own numbers over the kyōgō (the regions this block prints are left unpainted, the
-/// rest painted, which hides their numbers); no outlines.
+/// rest painted, which hides their numbers); on the print so far the mode draws them itself,
+/// faint and mirrored as the print is, over the areas blocks still to come print (`drawOver`),
+/// so every area is numbered until it is printed (the frame's rule 8). No outlines.
 nonisolated final class WoodblockMode: CanvasMode, @unchecked Sendable {
     /// Must match `WoodblockParameters` (Woodblock.metal).
     nonisolated struct Parameters {
@@ -39,10 +41,13 @@ nonisolated final class WoodblockMode: CanvasMode, @unchecked Sendable {
     private let pipeline: any MTLRenderPipelineState
     private let context: RenderContext
     private let margin: Float
+    /// The canvas's numbers mirrored as the print is (`drawOver`), made from its scene's once.
+    private let mirrored = OSAllocatedUnfairLock<(any MTLBuffer)?>(uncheckedState: nil)
 
     private struct State {
         var parameters: Parameters
         var numbers = false
+        var printNumbers = false
         var shape: (any MTLTexture)?
         var key: (any MTLTexture)?
         var dirty: [Layer: WoodblockBench.Dirty] = [:]
@@ -111,7 +116,8 @@ nonisolated final class WoodblockMode: CanvasMode, @unchecked Sendable {
             let was = $0.parameters.view.x
             $0.parameters.view.x = view.rawValue
             $0.parameters.anim.w = reduceMotion ? 1 : 0
-            $0.numbers = numbers
+            $0.numbers = numbers && view != .print
+            $0.printNumbers = numbers && view == .print
             if view == .sheet && was != View.sheet.rawValue { $0.parameters.anim.z = time }
             if view == .peeling && was != View.peeling.rawValue { $0.parameters.anim.x = time; $0.parameters.anim.y = Self.peelDuration }
         }
@@ -123,6 +129,7 @@ nonisolated final class WoodblockMode: CanvasMode, @unchecked Sendable {
             $0.parameters.view.x = View.peeling.rawValue
             $0.parameters.anim.y = -min(max(fraction, 0.001), 1)
             $0.numbers = false
+            $0.printNumbers = false
         }
     }
 
@@ -194,6 +201,46 @@ nonisolated final class WoodblockMode: CanvasMode, @unchecked Sendable {
         encoder.setFragmentTexture(inked, index: 3)
         encoder.setFragmentTexture(sheet, index: 4)
         encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
+    }
+
+    /// The numbers on the print so far: the canvas's own glyphs, each moved to its mirror (the
+    /// print is the block's mirror: `woodblockFragment`'s print view), drawn by the canvas's
+    /// glyph pipeline over the regions left unpainted, fainter than on the block.
+    func drawOver(_ encoder: any MTLRenderCommandEncoder, frame: CanvasModeFrame) {
+        let s = state.withLockUnchecked { $0 }
+        let scene = frame.scene
+        guard s.printNumbers, scene.glyphCount > 0, let glyphs = mirroredGlyphs(of: scene) else { return }
+        var u = frame.uniforms
+        u.numbers.x *= 0.6
+        u.numbers.y = u.numbers.x
+        u.outline.w = 1
+        u.selected.w = 0
+        let size = MemoryLayout<CanvasUniforms>.stride
+        encoder.setRenderPipelineState(context.glyphPipeline)
+        encoder.setVertexBuffer(glyphs, offset: 0, index: 0)
+        encoder.setVertexBuffer(scene.digitRects, offset: 0, index: 1)
+        encoder.setVertexBuffer(scene.digitUVs, offset: 0, index: 2)
+        encoder.setVertexBuffer(frame.states, offset: 0, index: 3)
+        encoder.setVertexBuffer(scene.regionColors, offset: 0, index: 4)
+        encoder.setVertexBytes(&u, length: size, index: 5)
+        encoder.setFragmentTexture(context.atlasTexture, index: 0)
+        encoder.setFragmentBytes(&u, length: size, index: 0)
+        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4, instanceCount: scene.glyphCount)
+    }
+
+    private func mirroredGlyphs(of scene: CanvasScene) -> (any MTLBuffer)? {
+        mirrored.withLockUnchecked { made in
+            if let made { return made }
+            let count = scene.glyphCount
+            guard scene.glyphs.length >= count * MemoryLayout<GlyphInstance>.stride else { return nil }
+            let source = scene.glyphs.contents().bindMemory(to: GlyphInstance.self, capacity: count)
+            // About the grid's width, as the shader mirrors the print.
+            let across = state.withLockUnchecked { $0.parameters.grid.x * $0.parameters.grid.z }
+            var list = Array(UnsafeBufferPointer(start: source, count: count))
+            for i in list.indices { list[i].center.x = across - list[i].center.x }
+            made = CanvasScene.buffer(list, context.device)
+            return made
+        }
     }
 
     /// A field's shape as a half-float texture, uploaded by blit into private storage.

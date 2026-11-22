@@ -1461,7 +1461,9 @@ with `WoodblockPlan.paints` paints), `WoodblockBenchView` (the bench on the pain
 words a step and one button for what a finger can't do; VoiceOver gets a button to finish each
 step), `WoodblockMode` (the `CanvasMode`: five textures on the bench's grid, the bench's arrays
 staged and only their changed cells blitted each frame; the canvas draws the colour blocks'
-numbers, the regions other blocks print set painted) and `Woodblock.metal` (`woodblockFragment`:
+numbers, the regions other blocks print set painted; on the print so far the mode draws them,
+faint and mirrored as the print is, over the areas blocks still to come print, so every area is
+numbered until it is printed, the frame's rule 8, Paul's pick of November 22) and `Woodblock.metal` (`woodblockFragment`:
 the block lit by the lamp, the grooves the tool left, the kyōgō, wet ink, the damp sheet's back,
 the peel's fold, the print the right way round). How a print is cut, carved and printed is
 PaintCore's (`Sources/PaintCore/Woodblock`: `WoodblockPlan`, `WoodblockField`, `WoodblockBench`,
