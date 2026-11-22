@@ -27,8 +27,10 @@ nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
     let drawsNumbers = true
     /// The finished window glows past white where the screen can (`ExtendedRange`): the moon
     /// comes up behind it as the sun passes. The poured glass takes the headroom; the light
-    /// pass's sun band, added over it, may lift bright clear glass a little past white too.
-    let wantsExtendedRange = true
+    /// pass's sun band, added over it, may lift bright clear glass a little past white too. Only
+    /// where both of its pipelines past white were made: elsewhere the window draws as it always
+    /// has, never lost for want of them.
+    let wantsExtendedRange: Bool
     let ink: SIMD3<Float>? = CanvasColor.linearP3(sRGB: SIMD3(0.97, 0.92, 0.80))
     let backdrop: SIMD3<Float>? = CanvasColor.linearP3(sRGB: GlassPicture.nave)
 
@@ -39,8 +41,8 @@ nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
     private let lightPipeline: any MTLRenderPipelineState
     /// The same two drawing into `RenderContext.extendedFormat`, for the painting screen past
     /// white (the shelf's pictures use the two above).
-    private let extendedPipeline: any MTLRenderPipelineState
-    private let extendedLightPipeline: any MTLRenderPipelineState
+    private let extendedPipeline: (any MTLRenderPipelineState)?
+    private let extendedLightPipeline: (any MTLRenderPipelineState)?
     private let fields: any MTLTexture
     private let photo: any MTLTexture
     private let glasses: any MTLBuffer
@@ -71,10 +73,6 @@ nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
         guard texture.width == template.width, texture.height == template.height,
               let pipeline = context.makePipeline(vertex: "fillVertex", fragment: "glassFillFragment", blends: false),
               let lightPipeline = context.makePipeline(vertex: "canvasRectVertex", fragment: "glassLightFragment", blends: true),
-              let extendedPipeline = context.makePipeline(
-                vertex: "fillVertex", fragment: "glassFillFragment", blends: false, format: RenderContext.extendedFormat),
-              let extendedLightPipeline = context.makePipeline(
-                vertex: "canvasRectVertex", fragment: "glassLightFragment", blends: true, format: RenderContext.extendedFormat),
               let fields = Self.upload(texture, context: context),
               let photo = photo.flatMap({ context.makePhotoTexture($0) }) ?? Self.darkRoom(context: context),
               let glasses = CanvasScene.buffer(
@@ -82,9 +80,14 @@ nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
         else { return nil }
         self.pipeline = pipeline
         self.lightPipeline = lightPipeline
+        let extendedPipeline = context.makePipeline(
+            vertex: "fillVertex", fragment: "glassFillFragment", blends: false, format: RenderContext.extendedFormat)
+        let extendedLightPipeline = context.makePipeline(
+            vertex: "canvasRectVertex", fragment: "glassLightFragment", blends: true, format: RenderContext.extendedFormat)
         self.extendedPipeline = extendedPipeline
         self.extendedLightPipeline = extendedLightPipeline
         context.prepareExtendedRange()
+        wantsExtendedRange = extendedPipeline != nil && extendedLightPipeline != nil && context.hasExtendedRange
         self.fields = fields
         self.photo = photo
         self.glasses = glasses
@@ -109,7 +112,8 @@ nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
         var u = frame.uniforms, p = parameters, l = light.withLock { $0 }
         p.lens.z = Self.glowShare * max(frame.headroom - 1, 0)
         let size = MemoryLayout<CanvasUniforms>.stride
-        encoder.setRenderPipelineState(frame.format == RenderContext.extendedFormat ? extendedPipeline : pipeline)
+        guard let fill = frame.format == RenderContext.extendedFormat ? extendedPipeline : Optional(pipeline) else { return }
+        encoder.setRenderPipelineState(fill)
         encoder.setVertexBuffer(scene.positions, offset: 0, index: 0)
         encoder.setVertexBuffer(scene.vertexRegions, offset: 0, index: 1)
         encoder.setVertexBytes(&u, length: size, index: 2)
@@ -168,7 +172,8 @@ nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
     func drawOver(_ encoder: any MTLRenderCommandEncoder, frame: CanvasModeFrame) {
         var u = frame.uniforms, l = light.withLock { $0 }, margin: Float = 0
         let size = MemoryLayout<CanvasUniforms>.stride
-        encoder.setRenderPipelineState(frame.format == RenderContext.extendedFormat ? extendedLightPipeline : lightPipeline)
+        guard let sun = frame.format == RenderContext.extendedFormat ? extendedLightPipeline : Optional(lightPipeline) else { return }
+        encoder.setRenderPipelineState(sun)
         encoder.setVertexBytes(&u, length: size, index: 0)
         encoder.setVertexBytes(&margin, length: MemoryLayout<Float>.size, index: 1)
         encoder.setFragmentBytes(&u, length: size, index: 0)
