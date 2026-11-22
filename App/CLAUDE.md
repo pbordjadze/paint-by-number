@@ -1410,7 +1410,11 @@ branch's report (rules 7 to 10). A mode supplies its `ModeLook`, its gallery's c
 cards and its empty page, handed the ways in as `ModeWaysIn`), its painting screen and what a
 picked picture becomes (`make`, a `ModePicture`). Stained Glass and Watercolor are built on it; a
 new mode starts from it, and something every mode needs goes into the frame, not into one mode.
-Paint by Mosaic is a copy of the app, not a mode, and keeps its own. **The Frame** (`FrameEra`,
+Paint by Mosaic is the bar for how far a mode may go: a mode may be as different as Mosaic (a
+library of its own look, a build book, its own doors and words) and still be in the frame, which
+widens with optional parts until Mosaic fits; where Mosaic has what every mode should, that becomes
+the frame instead. Until it is moved in, Paint by Mosaic is a copy of the app, not a mode, and
+keeps its own. **The Frame** (`FrameEra`,
 year 1000, `Era.frame`) is the frame with nothing of a mode's in it: its gallery, canvas and paints
 are empty places, named (`ModeSlot`), and a picture picked opens on a painting screen and is kept
 nowhere; its passages are the plain tiles both ways. Demos: `frame-gallery`, `frame-settings`,

@@ -39,7 +39,15 @@ import os
 ///    simulator, its frames attached to the branch's report.
 ///
 /// What a mode supplies: its `ModeLook`, its gallery, its painting screen, and what a picked
-/// picture becomes (`make`). Paint by Mosaic is a copy of the app, not a mode, and keeps its own.
+/// picture becomes (`make`).
+///
+/// **How far a mode may go: Paint by Mosaic is the bar** (Paul, November 22). A mode may be as
+/// different as Mosaic is, with a library of its own look, a book for making it for real, its own
+/// doors and its own words, and still be in this frame; the frame widens, with optional parts a
+/// mode opts into, until Mosaic fits in it. The frame constrains as well as stretches: where
+/// Mosaic has something every mode should have, it becomes the frame and every mode follows it,
+/// not a Mosaic exception. Until Mosaic is moved in, Paint by Mosaic is a copy of the app, not a
+/// mode, and keeps its own.
 struct ModeShell<Gallery: View, Route: Hashable, Destination: View>: View {
     let look: ModeLook
     @Binding var path: [Route]
