@@ -119,6 +119,9 @@ final class CreateModel {
     var title = ""
     /// The sample's name, or the date for a photo.
     private(set) var defaultTitle = ""
+    /// `defaultTitle` is one the app gave (a photo's date), not a name it came with: a mosaic
+    /// created under it isn't named yet (`ArtworkDraft.isNamed`).
+    private(set) var titleIsGiven = false
     /// Identifies the photo the flow is on.
     private(set) var photoID = UUID()
 
@@ -220,7 +223,7 @@ final class CreateModel {
     }
 
     func load(item: PhotosPickerItem) {
-        begin(defaultTitle: Self.photoTitle(), sampleName: nil) { [self] in
+        begin(defaultTitle: Self.photoTitle(), sampleName: nil, titleIsGiven: true) { [self] in
             let data = try await photoData(of: item)
             return try await Self.decode(data: data)
         }
@@ -265,7 +268,9 @@ final class CreateModel {
     /// `title` names the painting when the photo came with a name (an opened file); without
     /// one, the date does.
     func load(imageData: Data, title: String? = nil) {
-        begin(defaultTitle: title ?? Self.photoTitle(), sampleName: nil) { try await Self.decode(data: imageData) }
+        begin(defaultTitle: title ?? Self.photoTitle(), sampleName: nil, titleIsGiven: title == nil) {
+            try await Self.decode(data: imageData)
+        }
     }
 
     /// A photo that never arrived (the camera's shot couldn't be read): shown in place of the
@@ -284,12 +289,15 @@ final class CreateModel {
         phase = .failed(error.localizedDescription)
     }
 
-    private func begin(defaultTitle: String, sampleName: String?, decode: @escaping () async throws -> Decoded) {
+    private func begin(
+        defaultTitle: String, sampleName: String?, titleIsGiven: Bool = false, decode: @escaping () async throws -> Decoded
+    ) {
         cancelAll()
         // A new photo gets a new default name, and anything typed for the last one goes; the
         // painter's recipe stays, but for its panel and what was drawn in Refine, which were of
         // the last photo.
         self.defaultTitle = defaultTitle
+        self.titleIsGiven = titleIsGiven
         title = ""
         photoID = UUID()
         source = nil
@@ -410,7 +418,8 @@ final class CreateModel {
         return ArtworkDraft(
             title: resolvedTitle, template: template, settings: GenerationSettings(),
             photo: MosaicMaker.framed(source.preview, panel: recipe.panel, centre: recipe.centre),
-            sampleName: source.sampleName, mosaic: preview.mosaic, recipe: recipe)
+            sampleName: source.sampleName, mosaic: preview.mosaic, recipe: recipe,
+            isNamed: !titleIsGiven || !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
     }
 
     /// What the making-of show of `draft` (the painting Start saved) is made from: its mosaic, the

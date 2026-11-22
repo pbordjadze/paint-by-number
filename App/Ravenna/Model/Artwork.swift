@@ -50,6 +50,9 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     /// metadata means v1; keep unknown future versions as written, even if this build uses
     /// its newest known vocabulary to display them.
     var nicknameVersion: Int
+    /// What the paints' names are seeded by (`ColorNameText.nicknames`): the id, as Paint by
+    /// Moonlight's own paintings are, so the shared code (Print's preview) asks the same of both.
+    var nicknameSeed: UInt64 { ColorNickname.seed(for: id) }
     /// What Ravenna's engine made the mosaic with (`MosaicEngine.Recipe`): what regeneration
     /// makes it with again. Nil for an artwork without one (none is written by this app), which
     /// regenerates with the recipe's defaults. Ravenna's seam: Paint by Moonlight's `settings` stay
@@ -60,6 +63,12 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     /// damaged, true again when `regenerate` makes a new one. Absent from artworks written before
     /// it, which have one when they have a recipe (`isMosaic`).
     var hasMosaic: Bool?
+    /// False while the mosaic still has the name the app gave it (a photo's date), never typed or
+    /// renamed: its Finished bar offers to name it (SideStore and Debug builds). Absent from every
+    /// `meta.json` before it, which reads as named, so no older mosaic is asked. Paint by
+    /// Moonlight's `titled`, the same key.
+    var titled: Bool?
+    var isNamed: Bool { titled ?? true }
 
     init(
         id: UUID = UUID(), title: String, createdAt: Date = .now, modifiedAt: Date? = nil,
@@ -136,7 +145,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
         case id, title, createdAt, modifiedAt, completedAt, settings, width, height
         case colorCount, regionCount, paintedCount, activeSeconds, thumbnailVersion, sampleName, format
         case pipelineVersion, isFavorite, settingsOrigin, paintingLength, nicknameVersion, recipe
-        case hasMosaic
+        case hasMosaic, titled
     }
 
     /// What an artwork saved without settings was made with: classic lines, the only kind
@@ -173,6 +182,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
             paintingLength = try? c.decodeIfPresent(String.self, forKey: .paintingLength)
             recipe = try? c.decodeIfPresent(MosaicEngine.Recipe.self, forKey: .recipe)
             hasMosaic = try? c.decodeIfPresent(Bool.self, forKey: .hasMosaic)
+            titled = try? c.decodeIfPresent(Bool.self, forKey: .titled)
             return
         }
         id = try c.decode(UUID.self, forKey: .id)
@@ -195,6 +205,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
         paintingLength = try? c.decodeIfPresent(String.self, forKey: .paintingLength)
         recipe = try? c.decodeIfPresent(MosaicEngine.Recipe.self, forKey: .recipe)
         hasMosaic = try? c.decodeIfPresent(Bool.self, forKey: .hasMosaic)
+        titled = try? c.decodeIfPresent(Bool.self, forKey: .titled)
         guard width > 0, height > 0, regionCount >= 0, paintedCount >= 0 else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "invalid artwork dimensions"))
         }
@@ -224,4 +235,7 @@ nonisolated struct ArtworkDraft: Sendable {
     /// The mosaic the template is of, kept beside it (`mosaic.json`), and what made it.
     var mosaic: Mosaic?
     var recipe: MosaicEngine.Recipe?
+    /// False when `title` is only the name the app gave (`Artwork.titled`): the mosaic is offered
+    /// a name when it is finished.
+    var isNamed = true
 }

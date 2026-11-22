@@ -37,6 +37,8 @@ struct SettingsView: View {
     @State private var tipsReset = false
     /// The secret door's year setter is out under the Year row (`EraDoor`): tapped, the row brings it.
     @State private var showsClock = false
+    /// The year the Year row's wheel rests on (`EraClock.Reading`).
+    @State private var clockYear = EraClock.Reading()
 
     init() {
         #if DEBUG
@@ -197,15 +199,18 @@ struct SettingsView: View {
                         }
                         .accessibilityElement(children: .combine)
                         .accessibilityIdentifier("about-version")
-                        // The secret door: a plain Year row at the present; its setter's first
-                        // year, 0547, opens Ravenna (`EraDoor`).
+                        // The secret door: a plain Year row at the present (or the year its wheel
+                        // rests on); its setter's first year, 0547, opens Ravenna (`EraDoor`).
                         Button {
                             withAnimation { showsClock.toggle() }
+                            // Closed without opening an era: the row reads its own year again.
+                            clockYear.isOpen = showsClock
+                            if !showsClock { clockYear.year = nil }
                         } label: {
                             LabeledContent {
                                 // Tinted as the pickers' values beside it are: it, too, is tapped
                                 // to change (painting-company row 281).
-                                Text(verbatim: EraClock.text(of: EraYear.present))
+                                EraClock.Value(clockYear, home: EraYear.present)
                                     .foregroundStyle(.tint)
                             } label: {
                                 SwiftUI.Label {
@@ -222,6 +227,7 @@ struct SettingsView: View {
                                 dismiss()
                                 EraDoor.shared.go(to: era)
                             }
+                            .reporting(to: clockYear)
                             .accessibilityIdentifier("era-clock")
                             .id("era-clock")
                         }

@@ -163,14 +163,14 @@ nonisolated struct PaintingLayout: Equatable, Sendable {
             let length = size.height - sidePaletteTop(regularWidth: true) - edge
             return Palette(
                 side: true,
-                lines: lines(inputs, length: length, automatic: 2, room: size.width * 0.4, metrics: metrics),
+                lines: lines(inputs, length: length, automatic: 1, room: size.width * 0.4, metrics: metrics),
                 caption: false, metrics: metrics)
         }
         let caption = !inputs.regularWidth
         return Palette(
             side: false,
             lines: lines(
-                inputs, length: size.width - 2 * edge, automatic: inputs.regularWidth ? 3 : 1,
+                inputs, length: size.width - 2 * edge, automatic: 1,
                 room: size.height * 0.45 - (caption ? metrics.captionHeight : 0), metrics: metrics),
             caption: caption, metrics: metrics)
     }

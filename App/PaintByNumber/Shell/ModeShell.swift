@@ -190,6 +190,8 @@ struct ModeSettingsView: View {
     let leave: (Int) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var showsClock = false
+    /// The year the Year row's wheel rests on (`EraClock.Reading`).
+    @State private var clockYear = EraClock.Reading()
 
     var body: some View {
         NavigationStack {
@@ -197,9 +199,12 @@ struct ModeSettingsView: View {
                 Section("About") {
                     Button {
                         withAnimation { showsClock.toggle() }
+                        // Closed without opening an era: the row reads its own year again.
+                        clockYear.isOpen = showsClock
+                        if !showsClock { clockYear.year = nil }
                     } label: {
                         LabeledContent {
-                            Text(verbatim: EraClock.text(of: year)).foregroundStyle(.tint)
+                            EraClock.Value(clockYear, home: year).foregroundStyle(.tint)
                         } label: {
                             SwiftUI.Label {
                                 Text("Year").foregroundStyle(Color.primary)
@@ -215,6 +220,7 @@ struct ModeSettingsView: View {
                             dismiss()
                             leave(chosen)
                         }
+                        .reporting(to: clockYear)
                         .accessibilityIdentifier("era-clock")
                     }
                 }

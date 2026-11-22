@@ -26,6 +26,8 @@ struct AppShellView: View {
     #endif
     @State private var droppedPhoto: Data?
     @State private var droppedTitle: String?
+    /// The library work Another One, a door after Finished, opens the create flow on.
+    @State private var pickedSample: Sample?
     /// A file opened from another app (share sheet, Files), waiting for the library and the
     /// screen to be free for the create flow.
     @State private var incomingImage: IncomingImage?
@@ -68,6 +70,7 @@ struct AppShellView: View {
         // old identity).
         let flowPhoto = droppedPhoto
         let flowTitle = droppedTitle
+        let flowSample = pickedSample ?? launchSample
         let flowIdentity = flowID
         NavigationStack(path: $path) {
             GalleryView(
@@ -100,14 +103,16 @@ struct AppShellView: View {
                 }
         }
         .environment(\.startHandoff, handoff)
+        .environment(\.paintAnother, paintAnother)
         .fullScreenCover(isPresented: $isCreating, onDismiss: {
             droppedPhoto = nil
             droppedTitle = nil
+            pickedSample = nil
             handoff.reset()
             presentIncomingImage()
         }) {
             CreateFlowView(
-                openingSample: launchSample, droppedPhoto: flowPhoto, droppedTitle: flowTitle,
+                openingSample: flowSample, droppedPhoto: flowPhoto, droppedTitle: flowTitle,
                 onStart: startPainting
             )
             .id(flowIdentity)
@@ -400,6 +405,15 @@ struct AppShellView: View {
         guard handoff.begin(artwork.id) else { return }
         guard StartHandoffLogic.shouldPush(artwork.id, onto: path) else { return }
         path = [artwork.id]
+    }
+
+    /// Another One, a door after Finished: the create flow, over the finished mosaic (which Start
+    /// replaces, `startPainting`), on the library work's preview, or, given none, on its photos.
+    private func paintAnother(_ sample: Sample?) {
+        guard !isCreating else { return }
+        pickedSample = sample
+        flowID = UUID()
+        isCreating = true
     }
 
     /// The flow has dissolved into the painting: the cover goes without a slide.

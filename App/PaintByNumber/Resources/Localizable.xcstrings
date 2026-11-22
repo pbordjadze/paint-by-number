@@ -5461,6 +5461,72 @@
         }
       }
     },
+    "Resume" : {
+      "comment" : "The Museum: a work's page, in Paint This's place when a painting of that work is under way; opens that painting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weitermalen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguir pintando"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reprendre"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riprendi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "続きを塗る"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이어서 칠하기"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verder schilderen"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuar pintando"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续涂色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "繼續上色"
+          }
+        }
+      }
+    },
     "See the Catalog Entry" : {
       "comment" : "The Original, the page about the real work behind a library picture: button that opens the work’s page at the museum or agency that keeps it, in the browser",
       "extractionState" : "manual",
@@ -41108,7 +41174,7 @@
       }
     },
     "palette.rows.auto" : {
-      "comment" : "Palette Rows choice: as many rows as fit the screen (three on iPad, one on iPhone)",
+      "comment" : "Palette Rows choice: the default, one row (or column) of swatches that scrolls",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {

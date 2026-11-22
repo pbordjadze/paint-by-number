@@ -109,6 +109,12 @@ class Client:
             try:
                 errors = json.loads(error.read()).get("errors", [])
                 detail = "; ".join(f"{e.get('title')}: {e.get('detail')}" for e in errors)
+                # A 409 on a review submission names what blocks it only in meta.associatedErrors.
+                associated = [f"{a.get('code')}: {a.get('detail') or a.get('title')}"
+                              for e in errors for found in (e.get("meta", {}).get("associatedErrors") or {}).values()
+                              for a in found]
+                if associated:
+                    detail += " (" + "; ".join(associated) + ")"
             except ValueError:
                 detail = error.reason
             raise APIError(f"{method} {path}: {error.code} {detail}") from None
