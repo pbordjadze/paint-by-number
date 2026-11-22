@@ -1,5 +1,6 @@
 #if UNRELEASED
 import CoreGraphics
+import Foundation
 import PaintCore
 import Ravenna
 import SwiftUI
@@ -241,7 +242,13 @@ struct GlassWindowScreen: View {
                     made.mode.lensesCovered = covered
                     made.canvas?.requestRender()
                 }
+                #if DEBUG
+                // `-glassPanes NO` leaves the real glass out, so a measurement has its own baseline.
+                let defaults = UserDefaults.standard
+                if defaults.object(forKey: "glassPanes") == nil || defaults.bool(forKey: "glassPanes") { made.panes = panes }
+                #else
                 made.panes = panes
+                #endif
                 made.onChange = { [shelf] glazing in
                     shelf.enqueue(glazing, of: id, template: opened.template, offered: opened.offered, texture: opened.texture,
                                   mode: mode)
