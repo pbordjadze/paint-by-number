@@ -29,8 +29,8 @@ original photo only if you switch it on (photos).
 - **Photos.** You pick photos with Apple's photo picker, which runs separately from the app; the
   app only receives the photo you choose. It doesn't ask to read your photo library.
 - **Camera.** The app uses the camera only when you choose to take a photo for a new painting.
-  The photo stays on your device unless you choose to send it (with Send Template or Give
-  Feedback, below).
+  The photo stays on your device unless you choose to share it (with Send Template) or send it
+  to us (with Give Feedback), both below.
 - **Saving to Photos.** The app adds a painting or its time-lapse to your photo library only when
   you choose Save Image or Save Video while sharing it.
 - **Storage.** Your paintings, their progress and the photos they were made from are kept in the
