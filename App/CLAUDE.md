@@ -1499,7 +1499,9 @@ printed by numbers, a mode built on the canvas's mode hook as Stained Glass is. 
 what a picked picture becomes, its blocks cut, and the print screen in `ModePaintingFrame`), `WoodblockShelf` (an `ArtworkStore` of its
 own, `Application Support/Woodblock/Prints/`, each print a painting's folder plus
 `woodblock.bench`, PaintCore's `WoodblockBench`, LZFSE; a print's template is the app's own made
-with `WoodblockPlan.paints` paints), `WoodblockBenchView` (the bench on the painting screen's own
+with `WoodblockPlan.paints` paints; a Portrait photo's depth, `ModePicture.depth`, kept as
+`depth.bin`, whose sky the bokashi shades, `WoodblockPlan(template:depth:)`; a depth unreadable is
+the plan without it, whose signature refuses the bench), `WoodblockBenchView` (the bench on the painting screen's own
 `CanvasView`: carve, ink, the sheet, rub, peel, the print so far, block after block; one line of
 words a step and one button for what a finger can't do; VoiceOver gets a button to finish each
 step), `WoodblockMode` (the `CanvasMode`: five textures on the bench's grid, the bench's arrays

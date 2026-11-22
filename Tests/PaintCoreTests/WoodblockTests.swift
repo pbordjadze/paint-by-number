@@ -151,4 +151,43 @@ struct WoodblockTests {
         #expect(WoodblockPlan.isPaper(SIMD3(0.92, 0.01, 0.02)))
         #expect(!WoodblockPlan.isPaper(SIMD3(0.92, 0.08, 0.02)))
     }
+
+    /// A Portrait photo's depth without a sky leaves the plan as it was, signature and all.
+    @Test func depthWithoutASkyChangesNothing() throws {
+        let t = try Self.template()
+        let near = Grid<UInt8>(width: 40, height: 30, repeating: 90)
+        let depth = try #require(PhotoDepth(nearness: near))
+        #expect(WoodblockPlan(template: t, depth: depth).signature == WoodblockPlan(template: t).signature)
+        #expect(WoodblockPlan(template: t, depth: depth).blocks == WoodblockPlan(template: t).blocks)
+    }
+
+    /// The camera's sky names the paint the bokashi shades, even a dark one the top of the
+    /// picture alone would never offer.
+    @Test func theCamerasSkyIsWhatTheBokashiShades() throws {
+        let t = try Self.template()
+        let plain = WoodblockPlan(template: t)
+        // The darkest paint printed by a block, as if the camera had found the sky there.
+        let darkest = try #require(plain.blocks.filter { $0.kind == .color }.last?.paint)
+        let lab = plain.template.palette[darkest].oklab
+        #expect(lab.x < 0.6)
+        let source = try #require(t.palette.indices.first { t.palette[$0].oklab == lab })
+        var near = Grid<UInt8>(width: t.width, height: t.height, repeating: 100)
+        var sky = Grid<UInt8>(width: t.width, height: t.height, repeating: 0)
+        for y in 0..<t.height {
+            for x in 0..<t.width where Int(t.regions[Int(t.regionMap[x, y])].colorIndex) == source {
+                sky[x, y] = 255
+                near[x, y] = 0
+            }
+        }
+        let plan = WoodblockPlan(template: t, depth: try #require(PhotoDepth(nearness: near, sky: sky)))
+        let bokashi = try #require(plan.blocks.last)
+        #expect(bokashi.kind == .bokashi)
+        #expect(bokashi.paint == darkest)
+        #expect(plan.signature != plain.signature, "a saved bench of the other plan is refused, never misread")
+        // Too little sky is no sky: the plan reads the top of the picture as before.
+        var speck = Grid<UInt8>(width: t.width, height: t.height, repeating: 0)
+        speck[t.width / 2, t.height / 2] = 255
+        let specked = WoodblockPlan(template: t, depth: try #require(PhotoDepth(nearness: near, sky: speck)))
+        #expect(specked.blocks == plain.blocks)
+    }
 }

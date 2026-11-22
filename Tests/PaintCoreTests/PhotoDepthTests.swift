@@ -80,4 +80,15 @@ struct PhotoDepthTests {
         // Any truncation is refused, never a crash.
         for n in 0..<bytes.count { #expect((try? PhotoDepth(decoding: Array(bytes.prefix(n)))) == nil) }
     }
+
+    /// `depth-v1.bin`, written once by hand to the layout of version 1 (5 × 4, a sky and a skin
+    /// matte, no hair) and never regenerated: a print keeps decoding its depth in every build.
+    @Test func theFirstFormatKeepsDecoding() throws {
+        let depth = try PhotoDepth(decoding: [UInt8](TestFixtures.data("depth-v1.bin")))
+        #expect(depth.nearness.width == 5 && depth.nearness.height == 4)
+        #expect(depth.nearness[3, 2] == 186)
+        #expect(depth.sky?[2, 0] == 255 && depth.sky?[2, 1] == 0)
+        #expect(depth.hair == nil)
+        #expect(depth.skin?[4, 3] == 200 && depth.skin?[0, 0] == 0)
+    }
 }
