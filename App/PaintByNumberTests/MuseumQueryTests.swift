@@ -97,6 +97,38 @@ struct MuseumQueryTests {
         #expect(long.count <= 61 && long.hasSuffix("…"))
     }
 
+    @Test func aPaintingNamedAfterAWorkMatchesIt() throws {
+        let lilies = try #require(catalog.works.first { $0.id == "aic-1" })
+        #expect(MuseumPainted.key("Café Terrace ") == MuseumPainted.key("cafe terrace"))
+        #expect(MuseumPainted.matches(lilies, names: [MuseumPainted.key("water lilies")], recorded: [],
+                                      shared: catalog.sharedNames))
+        #expect(!MuseumPainted.matches(lilies, names: [], recorded: ["aic-1"], shared: catalog.sharedNames))
+    }
+
+    @Test func aNameTwoWorksShareMatchesOnlyTheOnePainted() throws {
+        let json = Self.json.replacingOccurrences(of: "Café Terrace", with: "Water Lilies")
+        let shared = try MuseumCatalog.decode(Data(json.utf8))
+        let name = MuseumPainted.key("Water Lilies")
+        #expect(shared.sharedNames == [name])
+        let first = try #require(shared.works.first { $0.id == "aic-1" })
+        let second = try #require(shared.works.first { $0.id == "cma-4" })
+        #expect(!MuseumPainted.matches(first, names: [name], recorded: [], shared: shared.sharedNames))
+        #expect(MuseumPainted.matches(second, names: [name], recorded: ["cma-4"], shared: shared.sharedNames))
+        #expect(!MuseumPainted.matches(first, names: [name], recorded: ["cma-4"], shared: shared.sharedNames))
+    }
+
+    @Test func paintThisRecordsEachWorkOnce() throws {
+        let suite = "MuseumPaintedTests"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defaults.removePersistentDomain(forName: suite)
+        defer { defaults.removePersistentDomain(forName: suite) }
+        MuseumPainted.record("aic-1", in: defaults)
+        MuseumPainted.record("aic-1", in: defaults)
+        MuseumPainted.record("cma-2", in: defaults)
+        #expect(MuseumPainted.recorded(in: defaults) == ["aic-1", "cma-2"])
+        #expect(defaults.stringArray(forKey: MuseumPainted.defaultsKey) == ["aic-1", "cma-2"])
+    }
+
     @MainActor @Test func aBadAverageColorStillMakesAColor() {
         _ = Color(museumHex: "zz")
         _ = Color(museumHex: "6a8a7c")

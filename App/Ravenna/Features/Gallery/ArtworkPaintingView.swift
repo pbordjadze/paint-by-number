@@ -23,6 +23,7 @@ struct ArtworkPaintingView: View {
     @AppStorage(SettingsKey.paletteRows) private var paletteRows = PaletteRows.default
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.layoutDirection) private var layoutDirection
     @State private var autosaver: PaintingAutosaver?
@@ -64,6 +65,26 @@ struct ArtworkPaintingView: View {
 
     private var artwork: Artwork? { library.artwork(with: artworkID) }
     private var saveFailed: Bool { library.writeFailures[artworkID] != nil }
+
+    /// Name Your Mosaic (Rename Mosaic once it has a name), from the Finished bar's name
+    /// (SideStore and Debug builds): the field starts empty, the name it has as its placeholder,
+    /// and Save with nothing typed keeps that name as the mosaic's own (Paint by Moonlight's).
+    @State private var isNaming = false
+    @State private var nameText = ""
+    @State private var namingTitle = ""
+    @State private var namingUnnamed = false
+
+    private func startNaming() {
+        nameText = ""
+        namingTitle = artwork?.title ?? ""
+        namingUnnamed = artwork?.isNamed == false
+        isNaming = true
+    }
+
+    private func saveName() {
+        let typed = nameText.trimmingCharacters(in: .whitespacesAndNewlines)
+        library.rename(artworkID, to: typed.isEmpty ? namingTitle : typed)
+    }
 
     /// Under the create flow's cover, waiting to be handed the screen: nothing of the painting
     /// fades in, since the cover is what dissolves.
@@ -143,7 +164,8 @@ struct ArtworkPaintingView: View {
                 let bar = barMeasured ? barAtOpen : Self.statusBarAtOpen(raw)
                 let frame = Self.waitingFrame(
                     of: opening, readerSize: geo.size, insets: raw, bar: bar, regularWidth: sizeClass == .regular,
-                    dynamicTypeSize: dynamicTypeSize, rows: paletteRows, rightToLeft: layoutDirection == .rightToLeft)
+                    compactHeight: verticalSizeClass == .compact, dynamicTypeSize: dynamicTypeSize, rows: paletteRows,
+                    rightToLeft: layoutDirection == .rightToLeft)
                 ArtworkThumbnail(artwork: artwork, contentMode: .fit)
                     .frame(width: frame.width, height: frame.height)
                     .overlay {
@@ -233,23 +255,38 @@ struct ArtworkPaintingView: View {
     }
 
     /// The size, colors and state the page is laid out by: the loaded template's once there is one,
-    /// the artwork's record until then.
-    private func waitingTemplate(_ artwork: Artwork) -> (size: CGSize, colors: Int, isComplete: Bool)? {
+    /// the artwork's record until then; and the doors after Finished the painting screen will count
+    /// (`PaintView.finishedDoors`), so the thumbnail waits where a finished mosaic opens.
+    private func waitingTemplate(_ artwork: Artwork) -> Opening? {
+        let original = artwork.sampleName.flatMap(Sample.named) != nil
         if let session = autosaver?.session {
-            return (CGSize(width: session.template.width, height: session.template.height),
-                    PaletteBar.visibleColorCount(session.template), session.isComplete)
+            return Opening(
+                size: CGSize(width: session.template.width, height: session.template.height),
+                colors: PaletteBar.visibleColorCount(session.template), isComplete: session.isComplete,
+                doors: FinishedDoor.shown(original: original, stone: session.wall != nil).count)
         }
         guard artwork.width > 0, artwork.height > 0, artwork.colorCount > 0 else { return nil }
-        return (CGSize(width: artwork.width, height: artwork.height), artwork.colorCount, artwork.isComplete)
+        return Opening(
+            size: CGSize(width: artwork.width, height: artwork.height), colors: artwork.colorCount,
+            isComplete: artwork.isComplete, doors: FinishedDoor.shown(original: original, stone: artwork.isMosaic).count)
+    }
+
+    /// What the waiting page is laid out by (`waitingTemplate`).
+    nonisolated struct Opening: Equatable, Sendable {
+        var size: CGSize
+        var colors: Int
+        var isComplete: Bool
+        /// How many doors after Finished it would show, finished.
+        var doors: Int
     }
 
     /// Where the waiting thumbnail lies in its reader (a view inside the safe area `insets`, read
     /// left to right, `readerSize` big): the page as the canvas will open it, in the safe area the
     /// mosaic will have (`StatusBarAtOpen.predicted`), moved into the reader's coordinates.
     private static func waitingFrame(
-        of opening: (size: CGSize, colors: Int, isComplete: Bool), readerSize: CGSize, insets: EdgeInsets,
-        bar: StatusBarAtOpen?, regularWidth: Bool, dynamicTypeSize: DynamicTypeSize, rows: PaletteRows,
-        rightToLeft: Bool
+        of opening: Opening, readerSize: CGSize, insets: EdgeInsets,
+        bar: StatusBarAtOpen?, regularWidth: Bool, compactHeight: Bool, dynamicTypeSize: DynamicTypeSize,
+        rows: PaletteRows, rightToLeft: Bool
     ) -> CGRect {
         let predicted = StatusBarAtOpen.predicted(bar, insets: insets)
         let screenWidth = readerSize.width + insets.leading + insets.trailing
@@ -261,8 +298,9 @@ struct ArtworkPaintingView: View {
             ? EdgeInsets(top: predicted.top, leading: predicted.trailing, bottom: predicted.bottom, trailing: predicted.leading)
             : predicted
         var page = PaintView.openingPage(
-            of: opening.size, colors: opening.colors, isComplete: opening.isComplete, size: size, safe: safe,
-            regularWidth: regularWidth, dynamicTypeSize: dynamicTypeSize, rows: rows)
+            of: opening.size, colors: opening.colors, isComplete: opening.isComplete, doors: opening.doors,
+            compactHeight: compactHeight, size: size, safe: safe, regularWidth: regularWidth,
+            dynamicTypeSize: dynamicTypeSize, rows: rows)
         if rightToLeft { page.origin.x = screenWidth - page.maxX }
         // `page` is in the whole screen's coordinates, UIKit's left and right.
         return page.offsetBy(dx: -insets.leading, dy: -insets.top)
@@ -274,6 +312,7 @@ struct ArtworkPaintingView: View {
             if let autosaver, isBuilt {
                 PaintView(
                     session: autosaver.session, title: artwork?.title ?? "", onClose: close,
+                    onName: { startNaming() }, isNamed: artwork?.isNamed ?? true,
                     onTemplateFrame: canvasReport, hidesStatusBar: !leaving)
                     .environment(\.sourcePhotoLoader, sourcePhotoLoader)
                     .environment(\.feedbackSource, feedbackSource)
@@ -323,6 +362,14 @@ struct ArtworkPaintingView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .background { CanvasGesturesOverZoomDismissal(onAppear: land).frame(width: 0, height: 0) }
+        .alert(namingUnnamed ? Text("Name Your Mosaic") : Text("Rename Mosaic"), isPresented: $isNaming) {
+            TextField("Title", text: $nameText, prompt: Text(verbatim: namingTitle))
+                .submitLabel(.done)
+            Button("Cancel", role: .cancel) {}
+            Button("Save", action: saveName)
+        } message: {
+            Text("This name shows when you share or print the mosaic.")
+        }
         .task { await open() }
         .onChange(of: isUnderCover, initial: true) { _, under in
             if under { builtUnderCover = true }

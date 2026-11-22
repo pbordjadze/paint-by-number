@@ -1,6 +1,6 @@
 # Paint by Moonlight: Accessibility
 
-*Last updated October 22, 2026*
+*Last updated November 21, 2026*
 
 On iPhone and iPad:
 
@@ -11,7 +11,7 @@ On iPhone and iPad:
 - **VoiceOver:** you can paint with VoiceOver. Each area of the selected paint is a button, and
   there’s an Unpainted Areas rotor and Paint Next Area and Hint actions. The palette reads each
   paint’s number and name.
-- **Refine:** with VoiceOver, the cells in view are buttons while a cell tool is picked; Merge
+- **Edit:** with VoiceOver, the cells in view are buttons while a cell tool is picked; Merge
   and Move Number offer actions in place of their drags.
 - **Also:** Dynamic Type, Dark Mode with an optional dark paper, and keyboard shortcuts on iPad.
 

@@ -125,6 +125,14 @@ nonisolated extension CanvasUniforms {
         lineMode = SIMD4(1, 0, 0, 0)
     }
 
+    /// A finished mosaic's lines shown again over its tiles (More › Show Lines,
+    /// `CanvasView.showsLines`): the classic lines kept whole over the paint, as a coloring book's
+    /// are, at `opacity` of their ink.
+    mutating func keepLinesWhole(opacity: Float) {
+        lineAlpha *= opacity
+        lineMode.x = 1
+    }
+
     /// The constants for `frame`: the one place a frame's uniforms are packed, for the live
     /// canvas (`CanvasView`) and the offscreen frames alike (`CanvasSnapshot`: pictures, the
     /// time-lapse, feedback close-ups).
