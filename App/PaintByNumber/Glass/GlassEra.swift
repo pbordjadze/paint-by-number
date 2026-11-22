@@ -114,7 +114,7 @@ struct GlassGalleryView: View {
                 .font(.system(size: 56))
                 .foregroundStyle(GlassEra.gold)
                 .frame(width: 112, height: 112)
-                .glassEffect(.regular.tint(GlassEra.gold.opacity(0.12)).interactive(), in: .circle)
+                .glassEffect(.regular.tint(GlassEra.gold.opacity(0.12)), in: .circle)
                 .padding(.bottom, 6)
                 .accessibilityHidden(true)
             Text("No windows yet")

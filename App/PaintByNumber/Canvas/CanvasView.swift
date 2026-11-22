@@ -1711,7 +1711,8 @@ final class CanvasView: UIView, PaintingCanvas {
     /// them at once, a flick too, and the picture moves with two fingers; otherwise one finger
     /// moves it and a stroke waits for the press to hold.
     private func updateStrokeGestures() {
-        let strokes = touches?.strokesWithOneFinger ?? false
+        // With Only Draw with Apple Pencil on, the Pencil draws and one finger moves the picture.
+        let strokes = (touches?.strokesWithOneFinger ?? false) && !prefersPencilOnlyDrawing()
         scrollView.panGestureRecognizer.minimumNumberOfTouches = strokes ? 2 : 1
         if strokes, strokeRecognizer == nil {
             let pan = UIPanGestureRecognizer(target: self, action: #selector(handleStroke(_:)))

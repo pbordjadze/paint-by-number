@@ -468,6 +468,8 @@ struct GlassGlazeView: View {
     @State private var showsBeads: Bool
     /// Whether the beads have melted into one bar of glass, as the window is glazed whole.
     @State private var melted = false
+    /// The wait between the melt and the beads going, called off when they come back.
+    @State private var melting: Task<Void, Never>?
     /// The lit picture being shared, while the share sheet is up.
     @State private var sharedFile: URL?
     @State private var isSharing = false
@@ -527,6 +529,7 @@ struct GlassGlazeView: View {
             if phase == .active { model.refreshLight() } else { model.flush() }
         }
         .onDisappear {
+            melting?.cancel()
             model.flush()
             model.soundsReady(false)
         }
@@ -553,15 +556,19 @@ struct GlassGlazeView: View {
             return
         }
         withAnimation(.smooth(duration: 0.7)) { melted = true }
-        Task {
+        melting?.cancel()
+        melting = Task {
             try? await Task.sleep(for: .seconds(0.9))
-            guard model.isComplete else { return }
+            guard !Task.isCancelled, model.isComplete else { return }
             setBeads(shown: false, duration: 0.6)
         }
     }
 
     private func setBeads(shown: Bool, duration: TimeInterval) {
-        if shown { melted = false }
+        if shown {
+            melting?.cancel()
+            melted = false
+        }
         model.beadsHidden = !shown
         withAnimation(reduceMotion ? nil : .easeInOut(duration: duration)) { showsBeads = shown }
     }
@@ -690,8 +697,10 @@ private struct GlassGlint: View {
     let still: Bool
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 30, paused: still)) { _ in
-            let tilt = still ? CGPoint.zero : GlassTilt.shared.tilt
+        // One still frame where nothing tilts: no motion, or Reduce Motion.
+        let moves = !still && GlassTilt.shared.isAvailable
+        TimelineView(.animation(minimumInterval: 1 / 30, paused: !moves)) { _ in
+            let tilt = moves ? GlassTilt.shared.tilt : CGPoint.zero
             RadialGradient(colors: [.white.opacity(0.55), .white.opacity(0.08), .clear],
                            center: UnitPoint(x: 0.32 + 0.3 * tilt.x, y: 0.28 - 0.3 * tilt.y),
                            startRadius: 0, endRadius: 22)
@@ -720,6 +729,9 @@ final class GlassTilt {
         users = max(0, users - 1)
         if users == 0 { motion.stopDeviceMotionUpdates() }
     }
+
+    /// Whether the device reports its motion at all (no simulator does).
+    var isAvailable: Bool { motion.isDeviceMotionAvailable }
 
     /// Gravity across the screen, each axis in -1...1: zero lying flat or with no motion.
     var tilt: CGPoint {
