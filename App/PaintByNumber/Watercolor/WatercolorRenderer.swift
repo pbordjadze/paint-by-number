@@ -327,7 +327,6 @@ final class WatercolorRenderer: NSObject, MTKViewDelegate {
         }
         return Array(zip(regions, out))
     }
-    }
 
     /// The cells of `box` as half floats, a band of rows to a core: the density texture's
     /// (pigment, most of what still rides the water, and the water) and the granulation's. Packed
