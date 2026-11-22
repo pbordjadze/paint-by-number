@@ -153,7 +153,7 @@ below name both alike.
   itself once a launch in SideStore and Debug builds: `SelfPaintingSketch`), `DraftRow`, `ArtworkPaintingView`
   the painting host, `PaintingRecoveryView`, `ImageCaches.swift`, `Toast`); `Paint/` (`PaintView`,
   `PaletteBar`, `PaintChromeState`, `PaintCommands`, `PaintTips`, `PaintSpeech`, `PhotoPeek`,
-  `CompletionBar`, `FinishedDoors` and `AboutPainting` (SideStore and Debug builds), DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
+  `CompletionBar`, `FinishedDoors` (its `DoorMetrics` shared with Paint by Mosaic) and `AboutPainting` (SideStore and Debug builds), DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
   Giving feedback); `Settings/`; `Share/`; `Tips/`
   (the gentle tips, see Tips); `Unlock/` (`UnlockSheet`, see Unlimited Paintings).
   The Marginarium, the storybook that was `Features/Marginarium/`, is in no build: Paul's decision
@@ -1284,7 +1284,7 @@ footer, Settings, Feedback, its credits); code, module, target, files and the na
 in its texts (the Ground and Sinopia captions) stay Ravenna.
 
 - **The door** (`App/EraDoor.swift`, in every build from 1.1): Settings › About has a plain Year row
-  (the present year); tapped, Ravenna's `EraClock` comes out under it, one wheel of years whose
+  (the present year, or the year its wheel rests on, `EraClock.Reading`, until the row closes it); tapped, Ravenna's `EraClock` comes out under it, one wheel of years whose
   first is 0547 (then the centuries, the decades and the last seven years: `EraClock.years`; 0001 in
   SideStore and Debug builds, Stained Glass below); its
   numerals warm toward gold and its steps back weigh more the further back the year. Rolled to
@@ -1323,16 +1323,37 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
   `.moonlight` file type (a mosaic sent opens as a painting of tiles).
 - **Release:** the door ships (painting-company row 236): Release leaves out no source (the
   extensions ship from 1.3), and `ci/check_release.sh` requires
-  `RavennaResources.bundle`, `RavennaEra` and `EraClock` in the Release app. The `Ravenna` target defines `UNRELEASED` in every
-  configuration, as Ravenna's own app did.
+  `RavennaResources.bundle`, `RavennaEra` and `EraClock` in the Release app. The `Ravenna` target defines `UNRELEASED` in
+  Debug alone, as the app does (above).
 - **Demos:** `-demo ravenna-<name>` opens the era on Ravenna's own scenario `<name>` (its
   `ShellDemo`, `PaintDemoView`, `MakingOfDemoView`); `ci/scenarios.txt` takes a few. No tests of
   its own in the app's targets: its engine's are the package's (Linux), the rest is screenshots.
 - **Set in Stone** (painting-company row 367; SideStore and Debug builds): a mosaic's Share ›
-  Set in Stone… (in Print Template…'s place, which a mosaic without its tiles on disk keeps) opens
+  Set in Stone… (in Print Template…'s place; a mosaic without its tiles on disk has none) opens
   `SetInStoneSheet` (`Export/SetInStone.swift`): the book `MosaicCore`'s `StoneBook` lays out, drawn
   by `StoneBookRenderer` to the preview's pages and the PDF that prints and shares; `-demo
   ravenna-gallery-set-in-stone` screenshots it.
+- **The doors after Finished** (painting-company row 330; SideStore and Debug builds,
+  `FinishedDoor.isOffered`): the Finished bar grows into Paint by Moonlight's panel
+  (`Features/Paint/FinishedDoors.swift`, laid by the shared `DoorMetrics` and counted, never
+  measured: `CompletionBar.panelHeight`, `PaintView.doorMetrics`, which `openingPage` counts too).
+  Another One opens the create flow on the library's first work the gallery doesn't hold (on its
+  photos once it holds every one; `\.paintAnother`, `AppShellView.paintAnother`); In Stone, for a
+  mosaic with its tiles, opens Set in Stone (a mosaic's On Paper); Send It shares the time-lapse;
+  The Original, for a library work, opens `SampleAboutView`. A mosaic still under the name the app
+  gave it (a photo's date: `Artwork.titled`, Paint by Moonlight's key) has that name with a pencil
+  on the bar, which names it (`ArtworkPaintingView`'s Name Your Mosaic); named, it renames.
+  `-demo ravenna-paint-complete-doors` screenshots it.
+- **Print… and Show Lines** (painting-company row 330; SideStore and Debug builds, the release
+  keeping Share › Print Template…): Print… sits where the app has it, beside Share in a card's
+  menu and in More, and opens the app's own Print's preview (`App/Shared`'s
+  `Export/PrintPreview.swift` and `Export/TemplatePrint.swift`) on the mosaic's sheet, its tiles as
+  areas to paint, as `PDFExporter` lays any template. More › Show Lines on a finished mosaic is the
+  app's turned round: a finished mosaic has no ink to take away (its joints are grout, the mosaic
+  itself), so it brings back the sheet's lines over the tiles (`CanvasView.showsLines`,
+  `CanvasUniforms.keepLinesWhole`), off at first, for as long as the screen is up. `-demo
+  ravenna-print-preview` (and `-painted`; `MosaicPrintDemo`) and `ravenna-paint-complete-lines`
+  screenshot them.
 - **The App Review note** for the version that ships it (Guideline 2.3.1):
   `docs/ravenna/app-review-note.md`.
 
@@ -1462,7 +1483,7 @@ and at the top of a gallery card's menu, beside Share, in every build: it makes 
 the session on screen, whatever is painted) and hands it, as data, with no file to delete, to the
 system's print dialog (`PrintSheet`, `UIPrintInteractionController`), which hangs from the card
 or the More button on an iPad. Share's Print Template… left on November 17, 2026 (one way to print
-per menu: painting-company `process/design-budget.md`); Paint by Mosaic's card keeps its own. From 1.3 (painting-company row 357) Print… opens Print's preview first (`PrintPreviewSheet`,
+per menu: painting-company `process/design-budget.md`); Paint by Mosaic's release card keeps its own. From 1.3 (painting-company row 357) Print… opens Print's preview first (`PrintPreviewSheet`,
 `Export/PrintPreview.swift`): the pages as they will print, drawn from the PDF itself
 (`PrintPages`), a Blank / Painted switch (`PDFExporter.Layout.painted`: the template's pages
 painted in, never printed), and two rows of `PDFExporter.Layout`'s choices: Size (`PDFExporter.sizes`:
@@ -1477,7 +1498,7 @@ Printing takes no free painting. One dialog at a time (the controller is the sys
 Print… is not offered where the device can't print, nor in Refine's Try Painting (More offers it
 only for a painting of the gallery's, `PaintView.asksForRating`). `TemplatePrintTests`; `GalleryActionsTests` and
 `PaintingNavigationTests` tap it (`checkPrintDialog`, which skips where the simulator shows no
-dialog it can see). Paint by Mosaic has no Print… yet. The launch purge and the sweep of stale exports each
+dialog it can see). Paint by Mosaic opens the same preview on a mosaic (Ravenna, above). The launch purge and the sweep of stale exports each
 new export runs (`ArtworkExporter.staleExportAge`) catch what a closed app left behind. The completion share picture and the time-lapse stay on light
 paper (`CanvasSnapshot.Options`). Send Template… (a gallery card's menu › Share) opens `SendTemplateSheet`: the
 blank page and the Original Photo switch, off until the painter turns it on (the sweep of

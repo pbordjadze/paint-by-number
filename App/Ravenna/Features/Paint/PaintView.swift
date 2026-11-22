@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import MosaicKit
 import Observation
 import os
 import PaintCore
@@ -24,6 +25,10 @@ struct PaintView: View {
     let session: PaintingSession
     var title: String = ""
     var onClose: (() -> Void)?
+    /// Names the mosaic from the Finished bar (`CompletionBar.onName`; SideStore and Debug builds).
+    var onName: (() -> Void)?
+    /// False while the mosaic has only the name the app gave it (`Artwork.isNamed`).
+    var isNamed = true
     /// Where the canvas first looks (demo scenarios); nil = fit.
     var initialCamera: CanvasCamera?
     /// Scales fill animation durations (demo scenarios).
@@ -41,6 +46,11 @@ struct PaintView: View {
     @State private var showsNumbers = true
     @State private var confirmRestart = false
     @State private var timelapse: TimelapseRequest?
+    /// The finished mosaic shows the sheet's lines over its tiles (More › Show Lines,
+    /// `CanvasView.showsLines`), for as long as the screen is up.
+    @State private var linesShown: Bool
+    /// Print's preview, up for More › Print… (painting-company row 330).
+    @State private var printPreview: PrintPreviewRequest?
     @State private var canvasUnavailable = false
     @State private var completionShare = CompletionShare()
     /// Bumped once the completion bar is up after the painting was finished on this screen (not
@@ -60,6 +70,9 @@ struct PaintView: View {
     @State private var makingOf: MakingOfSource?
     @State private var showsMakingOf = false
     @State private var aboutSample: Sample?
+    /// Set in Stone's book, opened by the In Stone door after Finished (`FinishedDoors`).
+    @State private var settingInStone: SetInStoneRequest?
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
@@ -109,20 +122,25 @@ struct PaintView: View {
         paper.usesDarkPaper(interfaceIsDark: system == .dark) ? .dark : system
     }
 
-    /// `showsPhoto` opens with the photo shown (demo scenarios).
+    /// `showsPhoto` opens with the photo shown, `showsLines` with More › Show Lines on (demo
+    /// scenarios).
     init(
         session: PaintingSession, title: String = "", onClose: (() -> Void)? = nil,
+        onName: (() -> Void)? = nil, isNamed: Bool = true,
         initialCamera: CanvasCamera? = nil, fillDurationScale: Float = 1, showsPhoto: Bool = false,
-        onTemplateFrame: ((CGRect) -> Void)? = nil, hidesStatusBar: Bool = true
+        showsLines: Bool = false, onTemplateFrame: ((CGRect) -> Void)? = nil, hidesStatusBar: Bool = true
     ) {
         self.session = session
         self.title = title
         self.onClose = onClose
+        self.onName = onName
+        self.isNamed = isNamed
         self.initialCamera = initialCamera
         self.fillDurationScale = fillDurationScale
         self.onTemplateFrame = onTemplateFrame
         self.hidesStatusBar = hidesStatusBar
         _peek = State(initialValue: PhotoPeek(latched: showsPhoto))
+        _linesShown = State(initialValue: showsLines)
     }
 
     var body: some View {
@@ -196,6 +214,14 @@ struct PaintView: View {
         .sheet(item: $aboutSample) { sample in
             SampleAboutView(sample: sample)
         }
+        .sheet(item: $settingInStone) { request in
+            SetInStoneSheet(request: request)
+                .pageSizedOnPad()
+        }
+        .sheet(item: $printPreview) { request in
+            PrintPreviewSheet(request: request)
+                .pageSizedOnPad()
+        }
         .fullScreenCover(isPresented: $showsMakingOf, onDismiss: {
             makingOf = nil
             chrome.isShowingMakingOf = false
@@ -239,11 +265,17 @@ struct PaintView: View {
 
     /// The Metal canvas with the floating bars over it.
     private func canvasAndChrome(geo: GeometryProxy, palette: PaletteLayout) -> some View {
-        ZStack {
+        // The doors after Finished under the completion bar, where they fit (`FinishedDoors`).
+        let doors = session.isComplete
+            ? Self.doorMetrics(
+                count: finishedDoors.count, size: geo.size, compactHeight: verticalSizeClass == .compact,
+                dynamicTypeSize: dynamicTypeSize)
+            : nil
+        return ZStack {
             PaintCanvas(
                 session: session, controller: controller,
-                chromeInsets: canvasInsets(safe: geo.safeAreaInsets, palette: palette),
-                showsNumbers: showsNumbers, paperAppearance: paperAppearance,
+                chromeInsets: canvasInsets(safe: geo.safeAreaInsets, palette: palette, doors: doors),
+                showsNumbers: showsNumbers, showsLines: linesShown, paperAppearance: paperAppearance,
                 lineWeight: lineWeight,
                 initialCamera: initialCamera, fillDurationScale: fillDurationScale,
                 onPencilAction: { handlePencil($0) }, onUnavailable: { canvasUnavailable = true },
@@ -272,7 +304,7 @@ struct PaintView: View {
             // arrow (Paul, October 18: "No arrow"; an arrow from the top of the canvas seemed to point
             // at the Photo button on a phone).
             if feedback == nil, PaintTips.desk.pageTip != nil {
-                let visiblePadding = visibleCanvasPadding(safe: geo.safeAreaInsets, palette: palette)
+                let visiblePadding = visibleCanvasPadding(safe: geo.safeAreaInsets, palette: palette, doors: doors)
                 TipView(PaintTips.desk.pageTip, isPresented: nil, arrowEdge: nil)
                     .frame(maxWidth: Self.pageTipWidth)
                     .padding(.horizontal, Self.edge)
@@ -306,7 +338,7 @@ struct PaintView: View {
                         .padding(.horizontal, Self.edge)
                         .padding(.bottom, Self.bottomGap)
                 } else if !palette.side || session.isComplete {
-                    bottomBar(palette)
+                    bottomBar(palette, doors: doors)
                         .padding(.horizontal, Self.edge)
                         .padding(.bottom, Self.bottomGap)
                 }
@@ -315,7 +347,7 @@ struct PaintView: View {
             if feedback == nil && palette.side && !session.isComplete {
                 HStack {
                     Spacer(minLength: 0)
-                    bottomBar(palette)
+                    bottomBar(palette, doors: nil)
                         .padding(.trailing, Self.edge)
                         .padding(.top, sidePaletteTop)
                         .padding(.bottom, Self.edge)
@@ -437,14 +469,20 @@ struct PaintView: View {
     /// coordinates, x from the leading edge. One recipe for this screen's layout and for the
     /// thumbnail a mosaic opens on (`ArtworkPaintingView`), so the thumbnail lands where the canvas
     /// puts the page and nothing moves as the mosaic takes its place (painting-company row 364).
+    /// A finished mosaic's `doors` after Finished (`FinishedDoor.shown`) are counted in, their
+    /// panel at the height it is laid out to have.
     static func openingPage(
-        of templateSize: CGSize, colors: Int, isComplete: Bool, size: CGSize, safe: EdgeInsets, regularWidth: Bool,
-        dynamicTypeSize: DynamicTypeSize, rows: PaletteRows
+        of templateSize: CGSize, colors: Int, isComplete: Bool, doors: Int = 0, compactHeight: Bool = false,
+        size: CGSize, safe: EdgeInsets, regularWidth: Bool, dynamicTypeSize: DynamicTypeSize, rows: PaletteRows
     ) -> CGRect {
         let palette = paletteLayout(
             in: size, colors: colors, regularWidth: regularWidth, dynamicTypeSize: dynamicTypeSize, rows: rows)
+        let metrics = isComplete
+            ? doorMetrics(count: doors, size: size, compactHeight: compactHeight, dynamicTypeSize: dynamicTypeSize)
+            : nil
         let insets = canvasInsets(
             safe: safe, palette: palette, isComplete: isComplete,
+            completionHeight: completionHeight(metrics, dynamicTypeSize: dynamicTypeSize),
             barHeight: 44 * QuietPainting.scale(regularWidth: regularWidth))
         // As `CanvasView` fits the template at its least zoom and centres it.
         let screen = CGSize(width: size.width + safe.leading + safe.trailing, height: size.height + safe.top + safe.bottom)
@@ -466,18 +504,20 @@ struct PaintView: View {
     }
 
     /// Canvas insets in full-screen coordinates: safe area plus the floating bars.
-    private func canvasInsets(safe: EdgeInsets, palette: PaletteLayout) -> EdgeInsets {
-        Self.canvasInsets(safe: safe, palette: palette, isComplete: session.isComplete, barHeight: barHeight)
+    private func canvasInsets(safe: EdgeInsets, palette: PaletteLayout, doors: DoorMetrics?) -> EdgeInsets {
+        Self.canvasInsets(
+            safe: safe, palette: palette, isComplete: session.isComplete,
+            completionHeight: Self.completionHeight(doors, dynamicTypeSize: dynamicTypeSize), barHeight: barHeight)
     }
 
     private static func canvasInsets(
-        safe: EdgeInsets, palette: PaletteLayout, isComplete: Bool, barHeight: CGFloat
+        safe: EdgeInsets, palette: PaletteLayout, isComplete: Bool, completionHeight: CGFloat, barHeight: CGFloat
     ) -> EdgeInsets {
         let top = safe.top + topGap + barHeight + canvasGap
         if isComplete {
             return EdgeInsets(
                 top: top, leading: safe.leading,
-                bottom: safe.bottom + bottomGap + CompletionBar.height + canvasGap, trailing: safe.trailing)
+                bottom: safe.bottom + bottomGap + completionHeight + canvasGap, trailing: safe.trailing)
         }
         if palette.side {
             return EdgeInsets(top: top, leading: safe.leading, bottom: safe.bottom + 8,
@@ -502,9 +542,34 @@ struct PaintView: View {
     private static let pageTipDepth: CGFloat = 32
     private static let pageTipWidth: CGFloat = 420
 
+    /// The completion bar's height: with its doors, the panel's as counted
+    /// (`CompletionBar.panelHeight`), never measured.
+    private static func completionHeight(_ doors: DoorMetrics?, dynamicTypeSize: DynamicTypeSize) -> CGFloat {
+        doors.map { CompletionBar.panelHeight($0, dynamicTypeSize: dynamicTypeSize) } ?? CompletionBar.height
+    }
+
+    /// The doors after Finished this mosaic shows (none in the release: `FinishedDoor.isOffered`).
+    private var finishedDoors: [FinishedDoor] {
+        FinishedDoor.shown(original: work?.sample != nil, stone: session.wall != nil)
+    }
+
+    /// The doors after Finished, `count` of them, in a painting screen of `size` (the safe area's):
+    /// at most `FinishedDoor.doorsShare` of its height for the panel, as wide as the panel may be.
+    /// Nil where there are none or they don't fit: the bar alone.
+    static func doorMetrics(
+        count: Int, size: CGSize, compactHeight: Bool, dynamicTypeSize: DynamicTypeSize
+    ) -> DoorMetrics? {
+        guard count > 0 else { return nil }
+        let room = size.height * FinishedDoor.doorsShare(compactHeight: compactHeight)
+        let width = CompletionBar.doorsWidth(count: count, available: size.width - 2 * edge)
+        return DoorMetrics.fitting(
+            count: count, width: width, height: room - CompletionBar.height - CompletionBar.doorsInset,
+            dynamicTypeSize: min(dynamicTypeSize, .xxLarge))
+    }
+
     /// The canvas's visible area within the safe area (the canvas itself ignores it).
-    private func visibleCanvasPadding(safe: EdgeInsets, palette: PaletteLayout) -> EdgeInsets {
-        let insets = canvasInsets(safe: safe, palette: palette)
+    private func visibleCanvasPadding(safe: EdgeInsets, palette: PaletteLayout, doors: DoorMetrics?) -> EdgeInsets {
+        let insets = canvasInsets(safe: safe, palette: palette, doors: doors)
         return EdgeInsets(
             top: max(0, insets.top - safe.top), leading: max(0, insets.leading - safe.leading),
             bottom: max(0, insets.bottom - safe.bottom), trailing: max(0, insets.trailing - safe.trailing))
@@ -668,10 +733,20 @@ struct PaintView: View {
         .glassEffect(.regular, in: .capsule)
     }
 
-    /// In three groups: how the page looks, the palette (or Replay) and Give Feedback, then Restart.
+    /// In three groups: how the page looks, the palette (or Replay), Print and Give Feedback, then
+    /// Restart.
     private var moreMenu: some View {
         Menu {
             Toggle(isOn: $showsNumbers) { Label("Show Numbers", systemImage: "number") }
+            #if UNRELEASED
+            // Paint by Moonlight's Show Lines, for tiles: a finished mosaic has no ink to take
+            // away (its joints are grout, the mosaic itself), so here it brings back the lines
+            // the tiles were set by, the sheet's drawing over them. A replay shows the mosaic
+            // being set, without.
+            if session.isComplete, !session.isReplaying {
+                Toggle(isOn: $linesShown) { Label("Show Lines", systemImage: "scribble") }
+            }
+            #endif
             Toggle(isOn: $zenMode) { Label("Zen Mode", systemImage: "leaf") }
             Button { controller.zoomToFit() } label: { Label("Fit to Screen", systemImage: "arrow.down.right.and.arrow.up.left") }
             Divider()
@@ -682,6 +757,12 @@ struct PaintView: View {
             } else {
                 paletteMenu
             }
+            #if UNRELEASED
+            if PrintSheet.isAvailable {
+                Button(action: printTemplate) { Label("Print…", systemImage: "printer") }
+                    .accessibilityIdentifier("print-template")
+            }
+            #endif
             Button(action: startFeedback) { Label("Give Feedback…", systemImage: "exclamationmark.bubble") }
             workItems
             Divider()
@@ -704,6 +785,7 @@ struct PaintView: View {
             Button("Restart", role: .destructive) {
                 undoManager?.removeAllActions(withTarget: session)
                 session.reset()
+                linesShown = false
             }
         } message: {
             Text("Every tile will be lifted.")
@@ -774,13 +856,15 @@ struct PaintView: View {
     // MARK: Bottom
 
     @ViewBuilder
-    private func bottomBar(_ palette: PaletteLayout) -> some View {
+    private func bottomBar(_ palette: PaletteLayout, doors: DoorMetrics?) -> some View {
         if session.isComplete {
             let transition: AnyTransition = reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity)
             CompletionBar(
                 session: session, title: title, showsTitle: !badgeShowsTitle, share: completionShare,
                 sealBounces: sealBounces, onReplay: replay, onStopReplay: controller.stopReplay,
-                onShareTimelapse: shareTimelapse, onClose: onClose)
+                onShareTimelapse: shareTimelapse, onName: FinishedDoor.isOffered ? onName : nil, isNamed: isNamed,
+                onClose: onClose, doors: doors, doorList: finishedDoors, original: work?.sample,
+                onOriginal: { aboutSample = $0 }, onStone: setInStone)
                 .transition(transition)
         } else {
             PaletteBar(
@@ -814,10 +898,27 @@ struct PaintView: View {
         }
     }
 
+    /// In Stone, a door after Finished: Set in Stone's book of the mosaic as it is on screen.
+    private func setInStone() {
+        guard let mosaic = session.wall?.mosaic, !mosaic.tiles.isEmpty else { return }
+        let names = session.colorNicknames
+        settingInStone = SetInStoneRequest(
+            mosaic: mosaic, title: title.isEmpty ? String(localized: "Mosaic", bundle: .ravenna) : title,
+            names: (0..<mosaic.palette.count).map { $0 < names.count ? names[$0] : nil })
+    }
+
     /// From the live session: the saved copy may lag behind.
     private func shareTimelapse() {
         let name = title.isEmpty ? String(localized: "Mosaic", bundle: .ravenna) : title
         timelapse = TimelapseRequest(title: name, source: .live(template: session.template, progress: session.progress, mosaic: session.wall?.mosaic))
+    }
+
+    /// More › Print… (SideStore and Debug builds): Print's preview on the mosaic's sheet (its
+    /// tiles as areas to paint, the numbers and the color key), whatever is set, from the live
+    /// session.
+    private func printTemplate() {
+        let name = title.isEmpty ? String(localized: "Mosaic", bundle: .ravenna) : title
+        printPreview = PrintPreviewRequest(template: session.template, title: name, nicknames: session.colorNicknames)
     }
 
     private func handlePencil(_ action: PencilAction) {

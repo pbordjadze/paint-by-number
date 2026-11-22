@@ -24,6 +24,8 @@ struct SettingsView: View {
     private static let tipRow = "settings-music"
     @State private var tipsReset = false
     @State private var showsClock = false
+    /// The year the Year row's wheel rests on (`EraClock.Reading`).
+    @State private var clockYear = EraClock.Reading()
     @Environment(\.leaveRavenna) private var leaveRavenna
 
     init() {
@@ -138,11 +140,14 @@ struct SettingsView: View {
                         // forward to the present it brings Paint by Moonlight back.
                         Button {
                             withAnimation { showsClock.toggle() }
+                            // Closed without opening an era: the row reads its own year again.
+                            clockYear.isOpen = showsClock
+                            if !showsClock { clockYear.year = nil }
                         } label: {
                             LabeledContent {
                                 // Tinted as the pickers' values beside it are: it, too, is tapped
                                 // to change (painting-company row 281).
-                                Text(verbatim: EraClock.text(of: EraYear.byzantium))
+                                EraClock.Value(clockYear, home: EraYear.byzantium)
                                     .foregroundStyle(.tint)
                             } label: {
                                 SwiftUI.Label {
@@ -159,6 +164,7 @@ struct SettingsView: View {
                                 dismiss()
                                 leaveRavenna(for: year)
                             }
+                            .reporting(to: clockYear)
                             .accessibilityIdentifier("era-clock")
                         }
                         NavigationLink(value: Destination.acknowledgements) {

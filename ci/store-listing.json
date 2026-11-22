@@ -758,20 +758,20 @@
   },
   "inAppPurchases": {
     "com.pbordjadze.paintbynumber.unlimited": {
-      "reviewNote": "Open Settings > Unlimited Paintings, or start a sixth new painting on the same day, or tap the pencil button (Change) in a painting (the drawing tools come with it). The sheet has the purchase and Restore Purchases."
+      "reviewNote": "Open Settings > Unlimited Paintings, or start a sixth new painting on the same day, or tap the pencil button (Edit) in a painting (the drawing tools come with it). The sheet has the purchase and Restore Purchases."
     }
   },
   "nomination": {
     "name": "Paint by Moonlight 1.3: Paint Together",
     "type": "APP_ENHANCEMENTS",
     "description": [
-      "Paint by Moonlight turns a photo into a paint-by-numbers painting entirely on the device, with no AI image generation: its own pipeline draws the photo as a coloring book and mixes the paints from it, and the painter fills it in one calm tap at a time.",
+      "Paint by Moonlight turns a photo into a paint-by-numbers painting entirely on the device, with no AI image generation: its own pipeline draws the photo as a coloring book and mixes its paints, and the painter fills it in one calm tap at a time.",
       "",
-      "Version 1.3 makes it something to share. Paint Together uses SharePlay: on a FaceTime call, two people paint the same picture, each fill landing on both screens as it is made. Nothing passes through a server of ours; there are no accounts. We know of no other paint-by-numbers app that paints together over FaceTime.",
+      "Version 1.3 makes it something to share. With Paint Together, over SharePlay, two people on a FaceTime call paint the same picture, each fill landing on both screens. We know of no other paint-by-numbers app that paints together over FaceTime.",
       "",
-      "The painting also leaves the app. An interactive widget keeps the painting in progress on the Home Screen and Lock Screen, and its Paint One Area button fills the next area without opening the app; a second widget hangs a finished painting a day in StandBy; finished paintings become stickers in Messages. Print now previews the pages first, with layers to turn off, down to a plain coloring page to paint with real brushes.",
+      "The painting also leaves the app: a widget keeps it on the Home Screen, where Paint One Area fills the next area without opening the app, and on the Lock Screen; StandBy shows a finished painting a day; finished paintings become stickers in Messages. Print previews its pages, down to a plain coloring page for real brushes.",
       "",
-      "It is made by one developer, in English and ten more languages, with VoiceOver painting area by area, Dynamic Type and Reduce Motion, no ads and no tracking."
+      "It is made by one developer, in eleven languages, with VoiceOver painting area by area, Dynamic Type and Reduce Motion, no ads and no tracking."
     ],
     "publishStartDate": "2026-11-26T00:00:00Z",
     "deviceFamilies": [
@@ -787,6 +787,6 @@
     "hasInAppEvents": false,
     "launchInSelectMarketsFirst": false,
     "preOrderEnabled": false,
-    "submit": false
+    "submit": true
   }
 }
