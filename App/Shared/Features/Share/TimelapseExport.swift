@@ -109,7 +109,7 @@ struct TimelapseExportSheet: View {
         .scrollBounceBehavior(.basedOnSize)
         .defaultScrollAnchor(.center)
         .background {
-            ActivityShareSheet(item: readyURL) {
+            ActivityShareSheet(item: readyURL, activities: model.request.shareActivities()) {
                 Task {
                     await model.finishSharing()
                     dismiss()

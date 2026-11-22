@@ -1,6 +1,7 @@
 import Foundation
 import MosaicKit
 import PaintCore
+import UIKit
 import UniformTypeIdentifiers
 
 /// Renders shareable files of an artwork (off the main actor).
@@ -196,4 +197,9 @@ nonisolated struct TimelapseRequest: Identifiable, Sendable {
         }
         return url
     }
+}
+
+extension TimelapseRequest {
+    /// The era's own actions in the time-lapse's share sheet: none in Paint by Mosaic.
+    @MainActor func shareActivities() -> [UIActivity] { [] }
 }
