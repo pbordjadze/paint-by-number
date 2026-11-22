@@ -9,7 +9,9 @@ import Foundation
 /// glazed.
 ///
 /// The file is read as hostile input: magic `PBGL`, a format version, the piece count, one
-/// `Int16` a piece, then the count of glasses offered and each one's OKLab and RGB (six `Float32`).
+/// `Int16` a piece, then the count of glasses offered and each one's OKLab and RGB (six `Float32`),
+/// then (from November 22, 2026) the piece count again and a byte a piece, 1 where the painter
+/// has framed it (`GlassFraming`); a file without them has its glazed pieces framed.
 /// Fields are only ever appended (readers ignore trailing bytes); bump `formatVersion` only when
 /// an existing field changes meaning. A glass past what the window offers reads as none, never
 /// as another glass.
@@ -29,11 +31,17 @@ public struct Glazing: Sendable, Equatable {
     public var glass: [Int16]
     /// The glasses the window offers, as they were when it was made.
     public let offered: [PaletteColor]
+    /// Per piece, whether the painter has led it in (a glazed piece always has).
+    public var framed: [Bool]
 
     public init(pieces: Int, offered: [PaletteColor]) {
         glass = Array(repeating: Self.none, count: max(0, pieces))
+        framed = Array(repeating: false, count: max(0, pieces))
         self.offered = offered
     }
+
+    /// Whether piece `r` is leaded: framed, or glazed.
+    public func isFramed(_ r: Int) -> Bool { framed[r] || glass[r] != Self.none }
 
     public var glazedCount: Int { glass.reduce(0) { $0 + ($1 == Self.none ? 0 : 1) } }
 
@@ -48,6 +56,8 @@ public struct Glazing: Sendable, Equatable {
         for c in offered {
             for v in [c.oklab.x, c.oklab.y, c.oklab.z, c.rgb.x, c.rgb.y, c.rgb.z] { put(v) }
         }
+        put(UInt32(framed.count))
+        for f in framed { put(UInt8(f ? 1 : 0)) }
         return data
     }
 
@@ -88,5 +98,12 @@ public struct Glazing: Sendable, Equatable {
         }
         self.glass = glass.map { $0 >= 0 && Int($0) < offeredCount ? $0 : Self.none }
         self.offered = offered
+        framed = self.glass.map { $0 != Self.none }
+        // The frames, when the file has them (a file from before them ends here).
+        if data.endIndex - offset >= MemoryLayout<UInt32>.size {
+            let framedCount = Int(try get(UInt32.self))
+            guard framedCount == count, framedCount <= data.endIndex - offset else { throw CodingError.corrupt }
+            framed = try (0..<framedCount).map { _ in try get(UInt8.self) != 0 }
+        }
     }
 }
