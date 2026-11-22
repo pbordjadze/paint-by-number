@@ -115,7 +115,7 @@ enum GlassDemo {
         switch scenario {
         case "glass-glaze":
             glaze(model, share: 0.6)
-            model.selected = model.offered.count - 2
+            model.selected = min(1, model.template.palette.count - 1)
         case "glass-finished":
             glaze(model, share: 1)
             model.finish(heldAt: sunHold ?? 0)

@@ -11,7 +11,8 @@ import os
 /// window's fields (`GlassTexture.fields()`, one texture at the template's size), its photo and the
 /// glasses offered. A piece's glass rides in its region state (`RegionState.mode`,
 /// `code(glass:replacing:)`), so a glass pours in from the touch over the one before it. No
-/// outlines and no numbers: the lead is the drawing, and glazing is free.
+/// outlines, the lead is the drawing; each piece not yet glazed shows the number of its glass
+/// (every mode is by numbers, painting-company row 366), in candlelight ink over the dark.
 nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
     /// Must match `GlassParameters` (Shaders.metal).
     struct Parameters {
@@ -23,7 +24,8 @@ nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
     static let rimShare: Float = 0.025
 
     let drawsOutlines = false
-    let drawsNumbers = false
+    let drawsNumbers = true
+    let ink: SIMD3<Float>? = CanvasColor.linearP3(sRGB: SIMD3(0.97, 0.92, 0.80))
     let backdrop: SIMD3<Float>? = CanvasColor.linearP3(sRGB: GlassPicture.nave)
 
     /// How long the sun takes to pass behind a finished window.

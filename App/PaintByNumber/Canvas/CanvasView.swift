@@ -597,7 +597,9 @@ final class CanvasView: UIView, PaintingCanvas {
 
     /// The paper, backdrop and ink the next frame draws with.
     private var canvasPalette: CanvasPalette {
-        .resolve(paperAppearance, interfaceIsDark: traitCollection.userInterfaceStyle == .dark)
+        var palette = CanvasPalette.resolve(paperAppearance, interfaceIsDark: traitCollection.userInterfaceStyle == .dark)
+        if let ink = mode?.ink { palette.ink = ink }
+        return palette
     }
 
     /// The Paper preference or the system appearance changed.

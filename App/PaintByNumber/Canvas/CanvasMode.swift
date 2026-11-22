@@ -21,6 +21,8 @@ nonisolated protocol CanvasMode: AnyObject, Sendable {
     var backdrop: SIMD3<Float>? { get }
     var drawsOutlines: Bool { get }
     var drawsNumbers: Bool { get }
+    /// The numbers' ink (linear Display P3), nil for the paper's.
+    var ink: SIMD3<Float>? { get }
     func prepare(_ commands: any MTLCommandBuffer, frame: CanvasModeFrame)
     func drawPaint(_ encoder: any MTLRenderCommandEncoder, frame: CanvasModeFrame)
     func drawOver(_ encoder: any MTLRenderCommandEncoder, frame: CanvasModeFrame)
@@ -29,6 +31,7 @@ nonisolated protocol CanvasMode: AnyObject, Sendable {
 
 nonisolated extension CanvasMode {
     var backdrop: SIMD3<Float>? { nil }
+    var ink: SIMD3<Float>? { nil }
     func prepare(_ commands: any MTLCommandBuffer, frame: CanvasModeFrame) {}
     func drawOver(_ encoder: any MTLRenderCommandEncoder, frame: CanvasModeFrame) {}
     func isAnimating(at time: Float) -> Bool { false }

@@ -7,10 +7,11 @@ import SwiftUI
 import UIKit
 import os
 
-/// Glazing a window (painting-company row 366; Paul's free glazing, November 20, 2026): the room
-/// dark, the window's pieces clear lenses over its photo, and below it the glasses as beads, the
-/// window's own then the glazier's classics (`GlassPalette.offered`). Any glass goes in any piece:
-/// a touch, or a drag across pieces, pours the bead's glass in from the finger, tinting its lens. Glazed whole, the sun passes behind the window once.
+/// Glazing a window (painting-company row 366; by number, Paul's pick of November 22, 2026): the
+/// room dark, the window's pieces clear lenses over its photo, each numbered for the glass the
+/// photo suggests, and below it those glasses as numbered beads. A touch, or a drag across
+/// pieces, pours the bead's glass into each piece of its number, from the finger, tinting its
+/// lens. Glazed whole, the sun passes behind the window once.
 /// The window is on the painting screen's own canvas (`GlassCanvas`), in Stained Glass's mode
 /// (`GlassMode`).
 @MainActor
@@ -37,8 +38,10 @@ final class GlassGlazeModel: CanvasTouches {
         }
     }
     private(set) var glazedCount: Int
-    /// The bead in hand: a place in `offered`.
-    var selected = 0
+    /// The bead in hand: a place in `offered`. Its pieces' numbers stand out, as a paint's do.
+    var selected = 0 {
+        didSet { selectNumbers() }
+    }
     /// When the window was glazed whole on screen, for the sun's pass.
     private(set) var finishedAt: Date?
     /// The glasses are put away (a finished window stands alone): a touch brings them back and
@@ -68,14 +71,42 @@ final class GlassGlazeModel: CanvasTouches {
         self.offered = offered
         self.mode = mode
         session = PaintingSession(template: template)
+        hidden = Self.hidden(in: template)
         // The bead in hand at first: the glass suggested for the largest piece left unglazed.
         let largest = template.regions.indices.filter { glazing.glass[$0] == Glazing.none }
             .max { template.regions[$0].area < template.regions[$1].area }
         selected = min(largest.map { Int(template.regions[$0].colorIndex) } ?? 0, max(0, offered.count - 1))
+        selectNumbers()
+    }
+
+    /// The canvas emphasizes the numbers of the bead in hand: one of the window's own glasses,
+    /// whose number is its place (a classic has no pieces of its own).
+    private func selectNumbers() {
+        session.select(color: selected < template.palette.count ? selected : nil)
     }
 
     var pieces: Int { template.regions.count }
     var isComplete: Bool { glazedCount == pieces }
+
+    /// The pieces the lead covers whole: no wider than the lead, so no touch can find one and
+    /// no eye sees it (a line drawn close beside another leaves one where they meet). Each takes
+    /// the glass suggested for it as the window opens (`glazeHidden`), so a window is never left
+    /// an invisible piece short of finished, nor its number shown on the lead.
+    @ObservationIgnored let hidden: [Int]
+
+    nonisolated static func hidden(in template: Template) -> [Int] {
+        let half = Float(GlassPicture.leadWidth(width: template.width, height: template.height)) / 2
+        return template.regions.indices.filter { r in (template.labels(ofRegion: r).map(\.radius).max() ?? 0) < half }
+    }
+
+    /// Glazes the hidden pieces still empty, for good (Undo never takes them back).
+    private func glazeHidden() {
+        for r in hidden where glazing.glass[r] == Glazing.none {
+            let glass = Int16(min(Int(template.regions[r].colorIndex), max(0, offered.count - 1)))
+            glazing.glass[r] = glass
+            canvas?.showMode(r, value: GlassMode.code(glass: Int(glass), replacing: nil), painted: true, from: nil, animated: false)
+        }
+    }
 
     /// The piece under `p` (canvas units), if any.
     func piece(at p: SIMD2<Float>) -> Int? {
@@ -108,7 +139,9 @@ final class GlassGlazeModel: CanvasTouches {
     @discardableResult
     func glaze(_ r: Int, from p: SIMD2<Float>? = nil, animated: Bool) -> Bool {
         let glass = Int16(selected)
-        guard r < pieces, selected < offered.count, glazing.glass[r] != glass else { return false }
+        // By number (Paul's pick, November 22, 2026): a piece takes only its own number's glass.
+        guard r < pieces, selected < offered.count, glazing.glass[r] != glass,
+              Int(template.regions[r].colorIndex) == selected else { return false }
         let wasComplete = isComplete
         let before = glazing.glass[r]
         if stroke == nil { stroke = [] }
@@ -179,6 +212,11 @@ final class GlassGlazeModel: CanvasTouches {
     /// Every glazed piece shown on a canvas just made, as it stands.
     private func showAll() {
         guard let canvas else { return }
+        // A window saved before its hidden pieces glazed themselves (one left with only those
+        // finishes as it opens).
+        let glazed = glazedCount
+        glazeHidden()
+        if glazedCount != glazed { changed() }
         for r in 0..<pieces {
             guard let glass = Self.glass(glazing.glass[r]) else { continue }
             canvas.showMode(r, value: GlassMode.code(glass: glass, replacing: nil), painted: true, from: nil, animated: false)
@@ -413,8 +451,7 @@ struct GlassGlazeView: View {
     }
 }
 
-/// The glasses, one bead each: the window's own, a breath, then the glazier's classics. Reads
-/// only the bead in hand.
+/// The window's glasses, one numbered bead each. Reads only the bead in hand.
 private struct GlassBeads: View {
     let model: GlassGlazeModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -422,11 +459,9 @@ private struct GlassBeads: View {
     var body: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 14) {
-                ForEach(model.offered.indices, id: \.self) { g in
-                    // The window's own glasses, then a breath, then the glazier's classics.
-                    if g == model.template.palette.count && g > 0 {
-                        Color.clear.frame(width: 10, height: 1).accessibilityHidden(true)
-                    }
+                // The window's own glasses, one a number (by number, the glazier's classics,
+                // which no piece is numbered for, stay in the box).
+                ForEach(0..<min(model.template.palette.count, model.offered.count), id: \.self) { g in
                     bead(g)
                 }
             }
@@ -450,6 +485,16 @@ private struct GlassBeads: View {
                                                  startRadius: 0, endRadius: 16))
                 }
                 .overlay { Circle().strokeBorder(.white.opacity(isSelected ? 0.95 : 0.32), lineWidth: isSelected ? 3 : 1) }
+                .overlay {
+                    // The window's own glasses carry their pieces' number.
+                    if g < model.template.palette.count {
+                        Text(g + 1, format: .number)
+                            .font(.system(.footnote, design: .serif, weight: .bold))
+                            .foregroundStyle(.white)
+                            .shadow(color: .black.opacity(0.7), radius: 1.5)
+                            .dynamicTypeSize(...DynamicTypeSize.xLarge)
+                    }
+                }
                 .shadow(color: color.opacity(0.6), radius: isSelected ? 10 : 4)
                 .frame(width: 40, height: 40)
                 .scaleEffect(isSelected ? 1.15 : 1)
