@@ -1,4 +1,5 @@
 import CoreGraphics
+import Foundation
 import os
 import PaintCore
 import SwiftUI
@@ -108,9 +109,15 @@ struct CreateFlowView: View {
             .overlay {
                 if let departure { DepartingPicture(departure: departure, page: page) }
             }
-            // Touches go nowhere on the way to the painting, but for the show while it plays.
+            // Touches go nowhere on the way to the painting, but for the show while it plays; a
+            // tap while the short Making-of's lines burn in skips to the painting (`FormingShow`).
             .overlay {
-                if isHandingOver && !(makingOf != nil && hasArrived && !showEnded) { Color.clear.contentShape(.rect) }
+                if isHandingOver && !(makingOf != nil && hasArrived && !showEnded) {
+                    Color.clear
+                        .contentShape(.rect)
+                        .onTapGesture { previewPicture.skipForming() }
+                        .accessibilityHidden(true)
+                }
             }
             // The painting has no status bar: the flow lets it go before its picture moves, so the
             // place it moves to is the one the painting will have.
@@ -173,9 +180,11 @@ struct CreateFlowView: View {
             // `create-tip` is ready once its tip is up (`ShellDemo.prepare`).
             // `create-refine-guide` is ready once the guide's practice canvas shows (`RefineModel.land`).
             // `create-refine-unlock` is ready once the sheet shows its price (`UnlockSheet`).
-            // `create-forming-page` is ready once its page is in its place (`handOver`).
+            // `create-forming-page` and `-stars` are ready once the page is in its place (`handOver`),
+            // `create-forming` and `-graphite` once the graphite is drawn (`TemplatePreviewView`).
             if (openingSample != nil && ShellDemo.current != .createTip && ShellDemo.current?.opensGuide == nil
-                && ShellDemo.current != .createRefineUnlock && ShellDemo.current?.formingHold != .page)
+                && ShellDemo.current != .createRefineUnlock && ShellDemo.current?.formingHold?.starts != true
+                && ShellDemo.current?.formingHold?.readyOnGraphite != true)
                 || ShellDemo.current == .createFromFile || ShellDemo.current?.opensDrawing == true {
                 DemoMode.markReady()
             }
@@ -295,7 +304,7 @@ struct CreateFlowView: View {
         if let entry {
             if let show {
                 makingOf = MakingOfRequest(source: show, entry: entry)
-            } else if let content = departing() {
+            } else if let content = departing(template) {
                 departure = PictureDeparture(content: content, rect: entry, radius: Theme.cardRadius, opacity: 0)
                 departure?.lay(at: entry, lineScale: previewPicture.lineScale ?? 1)
             }
@@ -305,17 +314,13 @@ struct CreateFlowView: View {
         if show == nil, FormingPlan.passage(forms: isForming, reduceMotion: reduceMotion) == .crossFade,
            let home = previewPicture.picture, let photo = model.source?.preview {
             staying = PictureDeparture(
-                content: .forming(photo: photo, lines: nil), rect: home, radius: Theme.cardRadius, opacity: 0)
+                content: .forming(photo: photo, lines: nil, numbers: nil), rect: home, radius: Theme.cardRadius, opacity: 0)
             staying?.lay(at: home, lineScale: 1)
         }
         handingOver = Task {
-            // The picture forming's lines are still being drawn: the lift waits for the rest
-            // (the painting was saved meanwhile).
-            if let began = previewPicture.linesBegan {
-                let elapsed = (ContinuousClock.now - began).components
-                let wait = FormingPlan.liftWait(sinceLines: Double(elapsed.seconds) + Double(elapsed.attoseconds) * 1e-18)
-                if wait > 0 { try? await Task.sleep(for: .seconds(wait)) }
-            }
+            // The picture forming's lines are still being drawn, or burned in: the lift waits for
+            // the rest (the painting was saved meanwhile), or for a tap that skips it.
+            await previewPicture.formingDrawn()
             if entry != nil || staying != nil {
                 withAnimation(.easeOut(duration: StartHandoffPlan.lift)) {
                     departure?.opacity = 1
@@ -341,7 +346,7 @@ struct CreateFlowView: View {
                 // Nowhere to move from: it comes in where it goes.
                 if let show {
                     makingOf = MakingOfRequest(source: show, entry: nil)
-                } else if let place, let content = departing() {
+                } else if let place, let content = departing(template) {
                     // The photo that stayed gives way to the page itself: a moment for it to be drawn.
                     if staying != nil {
                         for _ in 0..<20 where page == nil {
@@ -366,8 +371,9 @@ struct CreateFlowView: View {
             guard !Task.isCancelled else { return }
             staying = nil
             #if DEBUG
-            // `create-forming-page` holds here, on the page the photo has dried into.
-            if ShellDemo.current?.formingHold == .page {
+            // `create-forming-page` holds here, on the page the photo has dried into, and
+            // `-stars` with its numbers halfway out.
+            if ShellDemo.current?.formingHold?.starts == true {
                 await pageSettled()
                 DemoMode.markReady()
                 return
@@ -381,12 +387,15 @@ struct CreateFlowView: View {
     }
 
     /// What leaves the preview for the painting: its picture, or, when the picture forms
-    /// (`FormingPlan`), the photo under the template's lines. Reduce Motion and The Making-of
-    /// bring no lines.
-    private func departing() -> PictureDeparture.Content? {
+    /// (`FormingPlan`), the photo under the template's lines, the page's numbers coming out
+    /// like stars on the way when the short Making-of played (`FormingShow`). Reduce Motion and
+    /// The Making-of bring no lines.
+    private func departing(_ template: Template) -> PictureDeparture.Content? {
         if isForming, let photo = model.source?.preview {
             let hasLines = FormingPlan.hasLines(reduceMotion: reduceMotion, playsShow: Preferences().playsMakingOf)
-            return .forming(photo: photo, lines: hasLines ? model.preview?.drawing : nil)
+            let lines = hasLines ? model.preview?.drawing : nil
+            let showed = lines != nil && FormingShow.isOn && previewPicture.formingShowed
+            return .forming(photo: photo, lines: lines, numbers: showed ? FormingShow.Stars(template) : nil)
         }
         return (model.preview?.picture).map { PictureDeparture.Content.preview($0) }
     }
@@ -481,7 +490,13 @@ struct CreateFlowView: View {
             }
             page = image
             if makingOf == nil {
-                withAnimation(.easeInOut(duration: StartHandoffPlan.settle)) { departure?.showsPage = true }
+                if departure?.numbers != nil {
+                    // The numbers come out like stars, behind the show's front (`FormingPageStars`).
+                    departure?.pageCameAt = .now
+                    departure?.showsPage = true
+                } else {
+                    withAnimation(.easeInOut(duration: StartHandoffPlan.settle)) { departure?.showsPage = true }
+                }
                 pageShownAt = .now
             } else if showEnded {
                 pageShownAt = .now
@@ -589,8 +604,10 @@ private struct PictureDeparture {
         /// left them, its wash toward the paper (which goes on to plain paper under the lines as
         /// the page comes in, `FormingPlan.paperOpacity`) and the template's lines. All of it,
         /// and the page, is laid out once at `base` and carried by one transform
-        /// (`FormingPlan.carry`), so nothing in it can part from the rest on the way.
-        case forming(photo: CGImage, lines: LineArtDrawing?)
+        /// (`FormingPlan.carry`), so nothing in it can part from the rest on the way. With the
+        /// `numbers` that come out like stars (`FormingShow`), the photo has already dried into
+        /// the paper on the preview.
+        case forming(photo: CGImage, lines: LineArtDrawing?, numbers: FormingShow.Stars?)
     }
 
     let content: Content
@@ -604,6 +621,14 @@ private struct PictureDeparture {
     var base: CGRect?
     /// How heavy its lines are drawn in that layout (`LineArtDrawing.lineWidth`).
     var lineScale: CGFloat = 1
+    /// When the page came in, its numbers coming out like stars (`FormingPageStars`).
+    var pageCameAt: Date?
+
+    /// The page's numbers that come out like stars as it comes in (`FormingShow`).
+    var numbers: FormingShow.Stars? {
+        if case .forming(_, _, let numbers) = content { return numbers }
+        return nil
+    }
 
     /// Lays the forming picture out at `base`, its lines as heavy as `lineScale` says there,
     /// leaving it to show where it showed, its corners as round to the eye. Before the move
@@ -636,22 +661,35 @@ private struct DepartingPicture: View {
         .accessibilityHidden(true)
     }
 
-    /// The picture and, once it shows, the page over it.
-    private var layers: some View {
+    /// The picture and, once it shows, the page over it, its numbers coming out like stars after
+    /// the short Making-of; laid out at `size`.
+    private func layers(_ size: CGSize) -> some View {
         ZStack {
             picture
             if let page, departure.showsPage {
-                Image(decorative: page, scale: 1)
-                    .resizable()
-                    .interpolation(.high)
-                    .transition(.opacity)
+                if let numbers = departure.numbers, let came = departure.pageCameAt {
+                    FormingPageStars(page: page, stars: numbers, since: came, size: size, held: heldStars)
+                } else {
+                    Image(decorative: page, scale: 1)
+                        .resizable()
+                        .interpolation(.high)
+                        .transition(.opacity)
+                }
             }
         }
     }
 
+    /// How far the numbers have come out in the `create-forming-stars` demo.
+    private var heldStars: Double? {
+        #if DEBUG
+        if ShellDemo.current?.formingHold == .stars { return 0.5 }
+        #endif
+        return nil
+    }
+
     /// Laid out where it shows: its frame is what moves.
     private func placed(origin: CGPoint) -> some View {
-        layers
+        layers(departure.rect.size)
             .frame(width: departure.rect.width, height: departure.rect.height)
             .clipShape(.rect(cornerRadius: departure.radius, style: .continuous))
             .offset(x: departure.rect.minX - origin.x, y: departure.rect.minY - origin.y)
@@ -662,7 +700,7 @@ private struct DepartingPicture: View {
     /// (`FormingPlan.carry`): the page coming in on the way travels with the rest.
     private func carried(from base: CGRect, origin: CGPoint) -> some View {
         let travel = FormingPlan.carry(layout: base.size, to: departure.rect.offsetBy(dx: -origin.x, dy: -origin.y))
-        return layers
+        return layers(base.size)
             .frame(width: base.width, height: base.height)
             .clipShape(.rect(cornerRadius: departure.radius, style: .continuous))
             .scaleEffect(travel.scale, anchor: .topLeading)
@@ -681,7 +719,7 @@ private struct DepartingPicture: View {
         case .preview(.lineArt(let drawing)):
             LineArtLayer(drawing: drawing, picture: CGRect(origin: .zero, size: departure.rect.size), scale: 1)
                 .equatable()
-        case .forming(let photo, let lines):
+        case .forming(let photo, let lines, let numbers):
             Image(decorative: photo, scale: 1)
                 .resizable()
                 .interpolation(.high)
@@ -690,7 +728,7 @@ private struct DepartingPicture: View {
             // in: the page can end a fraction of a point short of the picture's foot, where the
             // photo showed as a dark hairline, and ink under it never fades.
             FormingPaper()
-                .opacity(FormingPlan.paperOpacity(hasLines: lines != nil, dries: departure.showsPage))
+                .opacity(FormingPlan.paperOpacity(hasLines: lines != nil, dries: departure.showsPage, showed: numbers != nil))
             if let lines {
                 // Stroked for its layout, as the canvas lays its page: the move strokes nothing.
                 let layout = (departure.base ?? departure.rect).size

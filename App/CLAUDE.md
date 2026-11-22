@@ -642,7 +642,9 @@ canvas's. Stained Glass is the first (`GlassMode`, `GlassModeTests`).
 
 - `EdgeDetector` runs the two bundled models (provenance in its doc comment and
   `tools/models/convert_*.py`): `edgeMap` the HED contours, `lineDrawing` the drawing;
-  `EdgeDetector.maps(for:)` returns both (the drawing resampled to the contours' size). `EyeFinder`
+  `EdgeDetector.maps(for:)` returns both (the drawing resampled to the contours' size). The loaded models are kept
+  (`ModelPool`, emptied on a memory warning) and warmed 2 s after launch (`warmUp`), so a cold
+  pick waits no longer than a warm one (painting-company row 361). `EyeFinder`
   (Vision face landmarks of `SubjectVision`'s faces → eye contours and irises) and `ObjectFinder`
   (its foreground instance mask traced by PaintCore's `MaskContours`) find the eyes and subjects, `TextFinder` (Vision's text
   recognition, down to 1/128 of the photo's height; none on the simulator) the lines of text PaintCore's `Writing` keeps
@@ -772,6 +774,12 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   `regenerate`; the canvas takes no touches meanwhile; the menu gives each length's time, a band narrowed
 by the cuts made so far for one not cut yet, `LengthChip.expectedTimes`, and
 a length already cut while the painting is open is made again as it was, `cuts`). In SideStore and
+  Debug builds (`#if UNRELEASED`, painting-company row 361) the other lengths are cut ahead once the
+  painting has settled (`LengthPrecuts`: nearest first, one at a time at utility priority, the photo's
+  analysis found once, `ArtworkFactory.cut`, byte for byte `recut`'s; kept in memory into `cuts`, so
+  the menu gives their own times and a pick is put in by `restoreCut`), stopping when the painter
+  begins, a re-cut starts or the screen goes; a length picked while its cut is under way waits for it
+  (`claim`). In SideStore and
   Debug builds (`#if UNRELEASED`, painting-company row 352) the chip's menu ends in **Fine-Tune…**
   (`FineTuneSheet`, the preview's `SettingSlider`s): Colors, Detail and Lines, opening on what the
   painting was cut with, and Remake makes it again with them in place (`Library.retune`, recorded
@@ -786,7 +794,14 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   with the palette staying (the tools are full screen), one undo across paint and edits, the
   preview's sliders on this path, and a refined painting's kept base (its first ✎ makes the
   base again). Demos opening on a preview, drafts and drawings resumed keep the preview.
-  `PaintNowTests`.
+  `PaintNowTests`. In SideStore and Debug builds (`#if UNRELEASED`, painting-company row 361) Tonight's
+  Picture is made before it is picked (`TonightAhead`): 3 s after the app settles with no painting open
+  (`TonightAhead.Preparing` on `AppShellView`; never in demo or test launches), at background priority,
+  `CreateModel.makeAhead` decodes, analyzes, suggests and makes its base as the pick would, kept in
+  memory under its `Key` (picture and file, Painting Length, line art, tuning, mix, candidates, pipeline
+  version); `load(sample:)` takes it on an exact match (`begin` uses it, `adopt` lays the base with no
+  draft first, so the forming lines draw at once) and otherwise makes it as ever, stopping the making
+  ahead. A painting opened stops it, a memory warning lets it go. `TonightAheadTests`.
 - **The picture forming** (SideStore and Debug builds, `#if UNRELEASED`; painting-company row 293;
   `FormingPlan`, `Features/Create/Forming.swift`): a picture picked on the Paint page waits as its
   photo alone, with no draft, painted picture or divider over it (`CompareView` with no `after`),
@@ -796,8 +811,8 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   (`CompareView.lines`: stroked once, a soft-edged mask travelling over them, `drawIn` 0.7 s,
   eased), while the photo calms 45% toward the paper under them (`wash`), so the ink reads on a
   dark or busy picture; paper and ink are the page's own, dark paper's too (`FormingPlan.sheet`,
-  `FormingPaper`, `FormingLines`). The hand-off's lift waits for the rest of the drawing (`liftWait`, from
-  `PreviewPictureProbe.linesBegan`; the save runs meanwhile, so at most 0.7 s more), and its
+  `FormingPaper`, `FormingLines`). The hand-off's lift waits for the rest of the drawing (`liftWait`, until
+  `PreviewPictureProbe.formingDone`, one sleep a skip cuts short; the save runs meanwhile, so at most 0.7 s more), and its
   picture is the washed photo under those lines
   (`PictureDeparture.Content.forming`: photo, wash, lines and page laid out once at the page's
   place, `lay(at:)`, and carried there by one transform, `FormingPlan.carry`, since a page
@@ -810,8 +825,26 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   lift on, the release's durations and marks. Reduce Motion: no lines or wash, and
   the photo stays where it was (`staying`) and fades as the page fades in at its place. With The
   Making-of on: the wait is the same photo under the one status, no lines, and the show takes the photo as ever. A page from scratch, a drawing and the
-  settings' preview keep what they showed, and so does the release. `FormingTests`; the scenarios
-  `create-forming`, `-drawing`, `-lines` and `-page` hold it at a moment each (`ShellDemo.formingHold`), and
+  settings' preview keep what they showed. **The short Making-of** (SideStore and Debug builds only,
+  `FormingShow.isOn`; row 361, "graphite and fuse"; the release keeps the forming above) plays over it
+  as everyone's wait, with no status over it until the making has taken `FormingShow.patience` (4 s;
+  VoiceOver hears it at once): pencil lines are laid down along the photo's shapes from the middle, a
+  warm glint at their tip, its color draining only behind them (`GraphiteSketch`: a difference of
+  Gaussians on the median-filtered grey, opened, with light hatching in the shadows; its race the lines'
+  shortest ways from a seed, equalized by ink; made once off the main actor as eight cumulative images
+  and their glints, four cross-faded a frame; `tools/graphite_sim.py` makes and lays out the same off
+  the device, light or dark paper). The race nears its end without reaching it while the template is
+  made (`FormingShow.graphiteProgress`), never a still image, and finishes under the fuse; then its lines burn in behind a gold front (`FormingShow.glow`, stroked once off
+  the main actor, its glow in it; `FormingShow.Front`, a wavering blot drawn as one image scaled about
+  its centre, `FrontMasks`, which the numbers share) with the page's paper, done `drawIn` after the making as the plain forming's
+  lines are (a graphite shown less than `graphiteAtLeast`, 0.15 s, takes that from the fuse); and during
+  the glide the page's numbers come out behind the same front with a twinkle each (`FormingPageStars`,
+  in the hand-off's own `settle`). A single tap on the picture skips (`CompareView.tapped`, `FormingShow.skip`;
+  a double tap still zooms): made, to the painting; not yet, to the plain forming. A failed making hides
+  it; Reduce Motion and The Making-of on bring none of it (`hasLines`). `FormingTests`, `FormingShowTests`; the scenarios
+  `create-forming`, `-drawing`, `-lines` and `-page` hold it at a moment each (`ShellDemo.formingHold`; with
+  the short Making-of: the race at 70%, ready once the graphite is made, the fuse half burned, the lines burned in), `-graphite` the
+  race at 38% and `-stars` the numbers half out at the painting's place, and
   `StartHandoffUITests.testSlowedPickedPictureFormsIntoThePainting` attaches its frames.
 - `PhotoSourceView` (the Paint page, above): one scroll view; Tonight's Picture held to about 45%
   of the window's height, Your Own a grid (never a row that scrolls: its last ways in went unseen),
@@ -1373,11 +1406,18 @@ picture and makes the painting from it; the picture is divided into numbered reg
 one paint (how a region gets done is the medium's, never whether it is numbered); every painting
 can reach Finished by doing what the numbers say; and before it reaches a TestFlight or SideStore
 build, one painting is painted from a photo to Finished end to end, its frames attached to the
-branch's report (rules 7 to 10). A mode supplies its `ModeLook`, its gallery's content (its
+branch's report (rules 7 to 10); and a mode's Making Of shows off its medium's process and
+simulation, never the finished painting of the painter's picture, which is the painter's to
+uncover (rule 11; the main app's Making Of and Paint by Mosaic's are settled and keep what they
+show). A mode supplies its `ModeLook`, its gallery's content (its
 cards and its empty page, handed the ways in as `ModeWaysIn`), its painting screen and what a
-picked picture becomes (`make`, a `ModePicture`). Stained Glass and Watercolor are built on it; a
+picked picture becomes (`make`, a `ModePicture`). Stained Glass, Watercolor and Woodblock are built on it; a
 new mode starts from it, and something every mode needs goes into the frame, not into one mode.
-Paint by Mosaic is a copy of the app, not a mode, and keeps its own. **The Frame** (`FrameEra`,
+Paint by Mosaic is the bar for how far a mode may go: a mode may be as different as Mosaic (a
+library of its own look, a build book, its own doors and words) and still be in the frame, which
+widens with optional parts until Mosaic fits; where Mosaic has what every mode should, that becomes
+the frame instead. Until it is moved in, Paint by Mosaic is a copy of the app, not a mode, and
+keeps its own. **The Frame** (`FrameEra`,
 year 1000, `Era.frame`) is the frame with nothing of a mode's in it: its gallery, canvas and paints
 are empty places, named (`ModeSlot`), and a picture picked opens on a painting screen and is kept
 nowhere; its passages are the plain tiles both ways. Demos: `frame-gallery`, `frame-settings`,
@@ -1412,7 +1452,7 @@ builds, lights the eras' years (`EraYear.modes`) and draws a wheel resting besid
 with a rose window's light (`EraPassage.drawNave`); Paint by Mosaic's wheel reaches it too
 (`LeaveRavenna(for:)`). Demos: `glass-empty`, `glass-gallery`, `glass-lead`, `glass-lead-suggested`, `glass-glaze`,
 `glass-finished` (`GlassDemo`, on the mockup's monarch and lines, `GlassDemoLines`) and
-`era-passage-glass`; `EraDoorTests`, `SettingsTests.testTheClockOpensWatercolorAndStainedGlass`.
+`era-passage-glass`; `EraDoorTests`, `SettingsTests.testTheClockOpensWoodblockWatercolorAndStainedGlass`.
 
 ## Watercolor (1502)
 
@@ -1450,6 +1490,32 @@ wash flooding the screen (`EraPassage.drawWash`). `pbn watercolor` paints a temp
 device. Demos: `watercolor-empty`, `watercolor-paint`, `watercolor-painted`, `watercolor-making-of`
 (held mid-flood) (`WatercolorDemo`) and
 `era-passage-watercolor`.
+
+## Woodblock (1765)
+
+SideStore and Debug builds only (`#if UNRELEASED`; painting-company row 375): your photos,
+printed by numbers, a mode built on the canvas's mode hook as Stained Glass is. `Woodblock/`:
+`WoodblockEra` (the era's root, in the shared frame: its gallery of prints, `WoodblockGalleryView`,
+what a picked picture becomes, its blocks cut, and the print screen in `ModePaintingFrame`), `WoodblockShelf` (an `ArtworkStore` of its
+own, `Application Support/Woodblock/Prints/`, each print a painting's folder plus
+`woodblock.bench`, PaintCore's `WoodblockBench`, LZFSE; a print's template is the app's own made
+with `WoodblockPlan.paints` paints), `WoodblockBenchView` (the bench on the painting screen's own
+`CanvasView`: carve, ink, the sheet, rub, peel, the print so far, block after block; one line of
+words a step and one button for what a finger can't do; VoiceOver gets a button to finish each
+step), `WoodblockMode` (the `CanvasMode`: five textures on the bench's grid, the bench's arrays
+staged and only their changed cells blitted each frame; the canvas draws the colour blocks'
+numbers, the regions other blocks print set painted; on the print so far the mode draws them,
+faint and mirrored as the print is, over the areas blocks still to come print, so every area is
+numbered until it is printed, the frame's rule 8, Paul's pick of November 22) and `Woodblock.metal` (`woodblockFragment`:
+the block lit by the lamp, the grooves the tool left, the kyōgō, wet ink, the damp sheet's back,
+the peel's fold, the print the right way round). How a print is cut, carved and printed is
+PaintCore's (`Sources/PaintCore/Woodblock`: `WoodblockPlan`, `WoodblockField`, `WoodblockBench`,
+`Template.mirrored`; `pbn woodblock` prints one off the device). The door: 1765 on the year wheel
+(`EraYear.woodblock`, `Era.woodblock`); the passage is the tiles'. Demos: `woodblock-empty`,
+`-carve`, `-kyogo`, `-ink`, `-rub`, `-peel`, `-print`, `-finished`, `-gallery` (`WoodblockDemo`, on
+the library's wood duck); `EraDoorTests`, `WoodblockTests`, and `WoodblockUITests`, which plays a
+library picture to Finished (the frame's rule 10: the key block by strokes, the rest by the step
+buttons VoiceOver has, which `-woodblock-steps` shows in Debug) and attaches each block's print.
 
 ## Outside the app: widgets and stickers
 
