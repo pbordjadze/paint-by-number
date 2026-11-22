@@ -346,7 +346,7 @@ final class SettingsTests: XCTestCase {
     }
 
     /// The years that open an era on the wheel (`EraYear.modes` in SideStore and Debug builds).
-    private static let eras = [547, 1248, 1502]
+    private static let eras = [547, 1000, 1248, 1502]
 
     /// About one row of the year setter's wheel, in points (`EraClock`'s rails are 36 apart).
     private static let row: CGFloat = 38
