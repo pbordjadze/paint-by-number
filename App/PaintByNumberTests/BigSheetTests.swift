@@ -2,6 +2,7 @@
 import CoreGraphics
 import Foundation
 import PaintCore
+import PassKit
 import Testing
 @testable import PaintByNumber
 
@@ -51,13 +52,15 @@ struct BigSheetTests {
         let recipient = BigSheetRecipient(
             name: "Ada", email: "ada@example.com", line1: "1 Lane", line2: "", city: "Brooklyn", state: "NY", zip: "11201", country: "US")
         let sheet = Data("%PDF-1.7 sheet".utf8)
-        let body = BigSheetService.orderBody(sheet: sheet, product: .paper24x36, recipient: recipient, boundary: "b")
+        let key = BigSheetService.newKey()
+        let body = BigSheetService.orderBody(sheet: sheet, product: .paper24x36, recipient: recipient, key: key, boundary: "b")
         let text = String(decoding: body, as: UTF8.self)
         #expect(text.contains("name=\"sheet\"; filename=\"sheet.pdf\"\r\nContent-Type: application/pdf\r\n\r\n%PDF-1.7 sheet\r\n"))
         #expect(text.contains("name=\"order\""))
         let json = try #require(text.components(separatedBy: "Content-Type: application/json\r\n\r\n").last?.components(separatedBy: "\r\n--b--").first)
         let order = try #require(JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: Any])
         #expect(order["product"] as? String == "paper-24x36")
+        #expect(order["key"] as? String == key)
         let sent = try #require(order["recipient"] as? [String: String])
         #expect(sent["zip"] == "11201")
         #expect(sent["country"] == "US")
@@ -71,7 +74,7 @@ struct BigSheetTests {
         let payment = BigSheetPayment(
             price: "33.00", currency: "USD",
             token: .init(data: Data("{}".utf8).base64EncodedString(), network: "Visa", transactionId: "t1", instrument: "Visa 4242"))
-        let body = BigSheetService.orderBody(sheet: Data("%PDF-".utf8), product: .paper18x24, recipient: recipient, payment: payment, boundary: "b")
+        let body = BigSheetService.orderBody(sheet: Data("%PDF-".utf8), product: .paper18x24, recipient: recipient, payment: payment, key: BigSheetService.newKey(), boundary: "b")
         let text = String(decoding: body, as: UTF8.self)
         let json = try #require(text.components(separatedBy: "Content-Type: application/json\r\n\r\n").last?.components(separatedBy: "\r\n--b--").first)
         let order = try #require(JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: Any])
@@ -81,6 +84,23 @@ struct BigSheetTests {
         #expect(token["data"] == "e30=")
         #expect(token["network"] == "Visa")
         #expect(token["transactionId"] == "t1")
+    }
+
+    /// An order's key is what the relay keeps it under: 32 hex digits, new for each order.
+    @Test func anOrdersKeyIsThirtyTwoHexDigits() {
+        let key = BigSheetService.newKey()
+        #expect(key.count == 32)
+        #expect(key.allSatisfy { $0.isHexDigit && !$0.isUppercase })
+        #expect(key != BigSheetService.newKey())
+    }
+
+    /// Apple Pay's sheet shows the sheet and the total at the quote's price.
+    @Test func applePaysLinesAreTheQuotesPrice() throws {
+        let quote = BigSheetQuote(product: "paper-18x24", currency: "USD", price: "33.00", sandbox: nil)
+        let items = try #require(BigSheetApplePay.summary(item: "One Big Sheet", quote: quote))
+        #expect(items.count == 2)
+        #expect(items.allSatisfy { $0.amount == NSDecimalNumber(string: "33.00") })
+        #expect(BigSheetApplePay.summary(item: "x", quote: BigSheetQuote(product: "", currency: "USD", price: "free", sandbox: nil)) == nil)
     }
 
     /// Without its merchant id the app takes no payment: the screen's own form and test orders.

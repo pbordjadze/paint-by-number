@@ -60459,6 +60459,10 @@
       "comment" : "One Big Sheet: the alert's message when the order to the print service failed",
       "extractionState" : "manual"
     },
+    "This order may already be on its way. Check your email before ordering again." : {
+      "comment" : "One Big Sheet: the alert's message when the print service couldn't say whether the order went through",
+      "extractionState" : "manual"
+    },
     "Matte art paper, heavy enough for markers, gouache and a light coat of acrylic." : {
       "comment" : "One Big Sheet, under its size and price: what the sheet is printed on",
       "extractionState" : "manual"
