@@ -179,7 +179,8 @@ struct WoodblockTests {
                 near[x, y] = 0
             }
         }
-        let plan = WoodblockPlan(template: t, depth: try #require(PhotoDepth(nearness: near, sky: sky)))
+        let skyDepth = try #require(PhotoDepth(nearness: near, sky: sky))
+        let plan = WoodblockPlan(template: t, depth: skyDepth)
         let bokashi = try #require(plan.blocks.last)
         #expect(bokashi.kind == .bokashi)
         #expect(bokashi.paint == darkest)
@@ -187,7 +188,8 @@ struct WoodblockTests {
         // Too little sky is no sky: the plan reads the top of the picture as before.
         var speck = Grid<UInt8>(width: t.width, height: t.height, repeating: 0)
         speck[t.width / 2, t.height / 2] = 255
-        let specked = WoodblockPlan(template: t, depth: try #require(PhotoDepth(nearness: near, sky: speck)))
+        let speckDepth = try #require(PhotoDepth(nearness: near, sky: speck))
+        let specked = WoodblockPlan(template: t, depth: speckDepth)
         #expect(specked.blocks == plain.blocks)
     }
 }
