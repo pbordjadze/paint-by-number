@@ -9,7 +9,7 @@ import os
 /// - `woodblock-empty`: the era with no prints yet.
 /// - `woodblock-carve`: the key block, its first third carved.
 /// - `woodblock-kyogo`: the key block printed, block 1's proof on the next, numbered, a third carved.
-/// - `woodblock-ink`: the key block carved, half inked.
+/// - `woodblock-ink`: the key block printed, block 1 carved and half inked, its ink beside the line.
 /// - `woodblock-rub`: the key block's sheet laid and half rubbed, the print showing through.
 /// - `woodblock-peel`: that sheet held halfway peeled, its face on the flap.
 /// - `woodblock-print`: four blocks printed, the print so far the right way round.
@@ -62,7 +62,7 @@ enum WoodblockDemo {
         switch scenario {
         case "woodblock-carve": model.demoWork(printed: 0, step: .carve, share: 0.35)
         case "woodblock-kyogo": model.demoWork(printed: 1, step: .carve, share: 0.3)
-        case "woodblock-ink": model.demoWork(printed: 0, step: .ink, share: 0.5)
+        case "woodblock-ink": model.demoWork(printed: 1, step: .ink, share: 0.5)
         case "woodblock-rub": model.demoWork(printed: 0, step: .rub, share: 0.55)
         case "woodblock-peel": model.demoWork(printed: 0, step: .rub, share: 1)
         case "woodblock-print": model.demoWork(printed: 4, step: .peeled, share: 0)

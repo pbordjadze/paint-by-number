@@ -60289,74 +60289,218 @@
         }
       }
     },
-    "woodblock.ink" : {
-      "comment" : "The woodblock bench's line while ink is brushed onto the block",
+    "woodblock.inkKey" : {
+      "comment" : "The woodblock bench's line while black ink is brushed onto the key block (the drawing's lines)",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Trag die Farbe mit dem Pinsel auf."
+            "value" : "Streiche die Tusche auf die Linien."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Brush the colour on."
+            "value" : "Brush the ink on the lines."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aplica el color con el pincel."
+            "value" : "Pasa la tinta por las líneas."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Appliquez la couleur au pinceau."
+            "value" : "Passez l’encre sur les traits."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Stendi il colore col pennello."
+            "value" : "Stendi l’inchiostro sulle linee."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "刷毛で色をのせましょう。"
+            "value" : "線に墨をのせましょう。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "붓으로 색을 칠하세요."
+            "value" : "선에 먹을 바르세요."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Breng de kleur aan met de kwast."
+            "value" : "Strijk de inkt op de lijnen."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Passe a cor com o pincel."
+            "value" : "Passe a tinta nas linhas."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "用刷子刷上颜色。"
+            "value" : "在线条上刷墨。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "用刷子刷上顏色。"
+            "value" : "在線條上刷墨。"
+          }
+        }
+      }
+    },
+    "woodblock.inkColor" : {
+      "comment" : "The woodblock bench's line while a colour block's ink is brushed on: its number",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Streiche die Farbe von Druckstock %lld auf."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brush block %lld’s colour on."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pasa el color de la plancha %lld."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passez la couleur de la planche %lld."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stendi il colore della matrice %lld."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "版木%lldの色をのせましょう。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "판목 %lld의 색을 바르세요."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strijk de kleur van blok %lld op."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passe a cor da matriz %lld."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刷上第 %lld 块版的颜色。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刷上第 %lld 塊版的顏色。"
+          }
+        }
+      }
+    },
+    "woodblock.peeling" : {
+      "comment" : "The woodblock bench's line while the paper peels off the inked block",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Papier hebt sich mit dem Druck ab."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The sheet comes up with the print."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El papel se levanta con la estampa."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La feuille se soulève avec l’estampe."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il foglio si solleva con la stampa."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "紙が刷りといっしょにはがれます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "종이가 판화와 함께 떨어져요."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het vel komt los met de prent."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A folha sai com a gravura."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "纸揭起来，画也印上了。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "紙揭起來，畫也印上了。"
           }
         }
       }

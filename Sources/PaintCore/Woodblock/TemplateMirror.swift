@@ -74,6 +74,29 @@ extension Template {
         return out
     }
 
+    /// The template with each region's primary label alone (its pole): a printer marks an area
+    /// of the kyōgō once, where the canvas would spread a big region's number across it.
+    public func primaryLabelsOnly() -> Template {
+        var out = self
+        var kept: [Label] = []
+        kept.reserveCapacity(regions.count)
+        out.regions = regions.map { r in
+            var r = r
+            let start = Int(r.labelStart)
+            if r.labelCount > 0, start < labels.count {
+                r.labelStart = UInt32(kept.count)
+                r.labelCount = 1
+                kept.append(labels[start])
+            } else {
+                r.labelStart = UInt32(kept.count)
+                r.labelCount = 0
+            }
+            return r
+        }
+        out.labels = kept
+        return out
+    }
+
     /// The template with each cell of its drawing (the areas its drawn lines close, `TemplateLineArt`)
     /// printed in few paints: a paint holding less than `minorShare` of its cell takes the
     /// cell's main paint, so no speck or island of colour lies where no line drew it, unless

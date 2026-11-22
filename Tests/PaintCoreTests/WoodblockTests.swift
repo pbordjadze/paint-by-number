@@ -34,6 +34,17 @@ struct WoodblockTests {
         #expect(plan.blocks.last?.kind == .bokashi)
     }
 
+    @Test func eachAreaIsNumberedOnce() throws {
+        let t = try Self.template()
+        let plan = WoodblockPlan(template: t)
+        expectValid(plan.template)
+        #expect(plan.template.regions.allSatisfy { $0.labelCount == 1 })
+        #expect(plan.template.labels.count == plan.template.regions.count)
+        for (i, r) in plan.template.regions.enumerated() {
+            #expect(Int(plan.template.labels[Int(r.labelStart)].region) == i)
+        }
+    }
+
     @Test func theToolNeverCutsWhatStays() throws {
         let plan = WoodblockPlan(template: try Self.template())
         for b in plan.blocks.indices {

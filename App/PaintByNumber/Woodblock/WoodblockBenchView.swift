@@ -267,8 +267,11 @@ final class WoodblockBenchModel: CanvasTouches {
                 : String(localized: "woodblock.carveColor", defaultValue: "Clear the wood around block \(current?.number ?? 0)’s areas.",
                          comment: "The woodblock bench's line while a colour block is carved: its number")
         case .ink:
-            return String(localized: "woodblock.ink", defaultValue: "Brush the colour on.",
-                          comment: "The woodblock bench's line while ink is brushed onto the block")
+            return current?.kind == .key
+                ? String(localized: "woodblock.inkKey", defaultValue: "Brush the ink on the lines.",
+                         comment: "The woodblock bench's line while black ink is brushed onto the key block (the drawing's lines)")
+                : String(localized: "woodblock.inkColor", defaultValue: "Brush block \(current?.number ?? 0)’s colour on.",
+                         comment: "The woodblock bench's line while a colour block's ink is brushed on: its number")
         case .sheet:
             return String(localized: "woodblock.sheet", defaultValue: "Tap to lay the sheet.",
                           comment: "The woodblock bench's line when the damp paper is ready to lay on the block")
@@ -276,8 +279,16 @@ final class WoodblockBenchModel: CanvasTouches {
             return String(localized: "woodblock.rub", defaultValue: "Rub with the baren.",
                           comment: "The woodblock bench's line while the paper is pressed with a baren, the printer's rubbing pad")
         case .peeled:
-            return ""
+            return String(localized: "woodblock.peeling", defaultValue: "The sheet comes up with the print.",
+                          comment: "The woodblock bench's line while the paper peels off the inked block")
         }
+    }
+
+    /// The ink on the bench, shown beside the line while a colour block is worked.
+    var inkSwatch: Color? {
+        guard !isDone, !showsPrint, step != .peeled, let current, current.kind != .key else { return nil }
+        let space: Color.RGBColorSpace = plan.template.colorSpace == .displayP3 ? .displayP3 : .sRGB
+        return Color(space, red: Double(current.ink.x), green: Double(current.ink.y), blue: Double(current.ink.z))
     }
 
     func canvas(_ canvas: CanvasView, speak region: Int) -> (label: String, value: String) {
@@ -370,8 +381,7 @@ struct WoodblockBenchView: View {
             WoodblockCanvas(model: model)
             footer
         }
-        .background(Color(.displayP3, red: Double(WoodblockMode.bench.x), green: Double(WoodblockMode.bench.y),
-                          blue: Double(WoodblockMode.bench.z)).ignoresSafeArea())
+        .background(Self.benchColor.ignoresSafeArea())
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Share", systemImage: "square.and.arrow.up", action: share)
@@ -397,17 +407,31 @@ struct WoodblockBenchView: View {
 
     private var footer: some View {
         VStack(spacing: 10) {
-            Text(model.instruction)
-                .font(.display(.body))
-                .foregroundStyle(Color(red: 0.93, green: 0.86, blue: 0.74))
-                .multilineTextAlignment(.center)
-                .accessibilityIdentifier("woodblock-instruction")
+            HStack(spacing: 10) {
+                if let swatch = model.inkSwatch {
+                    Circle()
+                        .fill(swatch)
+                        .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
+                        .frame(width: 22, height: 22)
+                        .accessibilityHidden(true)
+                }
+                Text(model.instruction)
+                    .font(.display(.body))
+                    .foregroundStyle(Color(red: 0.93, green: 0.86, blue: 0.74))
+                    .multilineTextAlignment(.center)
+                    .accessibilityIdentifier("woodblock-instruction")
+            }
             action
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, minHeight: 92)
+        // The line sits on the bench itself, not on a bar of its own.
+        .background(Self.benchColor.ignoresSafeArea(edges: .bottom))
     }
+
+    private static let benchColor = Color(.displayP3, red: Double(WoodblockMode.bench.x),
+                                          green: Double(WoodblockMode.bench.y), blue: Double(WoodblockMode.bench.z))
 
     @ViewBuilder private var action: some View {
         if model.isDone {

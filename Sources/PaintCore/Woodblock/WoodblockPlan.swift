@@ -51,7 +51,7 @@ public struct WoodblockPlan: Sendable {
             let a = printed.palette[$0].oklab.x, b = printed.palette[$1].oklab.x
             return a != b ? a > b : $0 < $1
         }
-        let t = printed.reorderingPalette(order).mirrored()
+        let t = printed.reorderingPalette(order).mirrored().primaryLabelsOnly()
         template = t
         grid = WoodblockGrid(width: t.width, height: t.height)
         var blocks = [Block(kind: .key, paint: nil, ink: Self.sumi, opacity: 1)]
