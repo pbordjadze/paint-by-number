@@ -334,7 +334,9 @@ fragment float4 glassFillFragment(FillOut in [[stage_in]],
     float3 seen = curveEncode(photo.sample(linear, seenAt, bias(0.5)).rgb) * 0.94 + 0.05;
     float3 soft = curveEncode(photo.sample(linear, seenAt, level(3.0)).rgb) * 0.94 + 0.05;
     float3 detail = seen - soft;
-    float glow = (0.55 + 0.6 * pow(inner, 1.5)) * (0.9 + 0.1 * f.y);
+    // Darker toward the rim, as light through a thick edge; real glass shades its own, so under
+    // it the color stays even out to the lead.
+    float glow = (covered ? 1.15 : 0.55 + 0.6 * pow(inner, 1.5)) * (0.9 + 0.1 * f.y);
     float3 lit = now > 0u ? pouredGlass(curveEncode(glasses[now - 1u].rgb), seen, detail, glow) : seen;
     float3 under = before > 0u ? pouredGlass(curveEncode(glasses[before - 1u].rgb), seen, detail, glow) : seen;
     PaintSample ps = samplePaint(s, in.canvas, u.time.x, 1.0 / u.transform.z);

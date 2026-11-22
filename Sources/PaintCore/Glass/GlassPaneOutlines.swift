@@ -15,7 +15,7 @@ public enum GlassPaneOutlines {
     ///
     /// A pane is every pixel of its piece more than `inset` canvas units from the lead's middle
     /// (the edge between pieces), traced along the pixels' cracks, simplified to a pixel and
-    /// its corners cut twice, a pixel or two, so a staircase becomes a smooth glass edge. A shape under
+    /// its corners cut twice, by up to three pixels, so a staircase becomes a smooth glass edge. A shape under
     /// `minimumArea` square units is a shard and dropped. The lead round an island piece is a
     /// hole in the pane round it.
     public static func outlines(of t: Template, texture: GlassTexture, inset: Float, minimumArea: Float) -> [[[SIMD2<Float>]]] {
@@ -75,7 +75,7 @@ public enum GlassPaneOutlines {
         guard ring.count >= 3 else { return ring }
         // Each corner cut a quarter of the way along its sides, but never more than `cut`, so a
         // long straight edge keeps its corner where the lead turns.
-        for cut: Float in [1.5, 0.75] {
+        for cut: Float in [3, 1.5] {
             var next: [SIMD2<Float>] = []
             next.reserveCapacity(ring.count * 2)
             for i in ring.indices {
