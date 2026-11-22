@@ -128,6 +128,7 @@ final class CanvasView: UIView, PaintingCanvas {
             accessibilityCustomActions = touches == nil ? accessibilityActionList : nil
             accessibilityCustomRotors = touches == nil ? [areasRotor] : []
             accessibilityLabel = touches.map { $0.canvasSummary(self).label } ?? PaintSpeech.canvasLabel
+            updateStrokeGestures()
         }
     }
     /// A canvas touch asked to hide the photo.
@@ -180,6 +181,9 @@ final class CanvasView: UIView, PaintingCanvas {
     private let renderer: CanvasRenderer?
     private let scrollView = UIScrollView()
     private let zoomView = UIView()
+    private var pressRecognizer: UILongPressGestureRecognizer?
+    /// A mode's one-finger strokes (`updateStrokeGestures`).
+    private var strokeRecognizer: UIPanGestureRecognizer?
     private var displayLink: CADisplayLink?
     private let epoch = CACurrentMediaTime()
 
@@ -448,6 +452,7 @@ final class CanvasView: UIView, PaintingCanvas {
         press.allowableMovement = 12
         press.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.direct.rawValue)]
         scrollView.addGestureRecognizer(press)
+        pressRecognizer = press
 
         let pencil = UILongPressGestureRecognizer(target: self, action: #selector(handlePencil(_:)))
         pencil.minimumPressDuration = 0
@@ -1714,6 +1719,44 @@ final class CanvasView: UIView, PaintingCanvas {
         default: break
         }
         lastTap = (t, view, painted)
+    }
+
+    /// A mode whose strokes are drawn with one finger (`CanvasTouches.strokesWithOneFinger`) gets
+    /// them at once, a flick too, and the picture moves with two fingers; otherwise one finger
+    /// moves it and a stroke waits for the press to hold.
+    private func updateStrokeGestures() {
+        let strokes = touches?.strokesWithOneFinger ?? false
+        scrollView.panGestureRecognizer.minimumNumberOfTouches = strokes ? 2 : 1
+        if strokes, strokeRecognizer == nil {
+            let pan = UIPanGestureRecognizer(target: self, action: #selector(handleStroke(_:)))
+            pan.maximumNumberOfTouches = 1
+            pan.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.direct.rawValue)]
+            // A finger that rests first is the press's, as it always was.
+            if let pressRecognizer { pan.require(toFail: pressRecognizer) }
+            scrollView.addGestureRecognizer(pan)
+            strokeRecognizer = pan
+        }
+        strokeRecognizer?.isEnabled = strokes
+    }
+
+    @objc private func handleStroke(_ g: UIPanGestureRecognizer) {
+        guard let touches, !prefersPencilOnlyDrawing() else { return }
+        guard !showsPhoto else {
+            if g.state == .began { onDismissPhoto?() }
+            return
+        }
+        let here = g.location(in: zoomView)
+        switch g.state {
+        case .began:
+            // The pan begins once the finger has moved; the stroke begins where it touched down.
+            let moved = g.translation(in: zoomView)
+            touches.canvas(self, touched: canvasPoint(CGPoint(x: here.x - moved.x, y: here.y - moved.y)), phase: .began)
+            touches.canvas(self, touched: canvasPoint(here), phase: .moved)
+        case .changed:
+            touches.canvas(self, touched: canvasPoint(here), phase: .moved)
+        default:
+            touches.canvas(self, touched: canvasPoint(here), phase: .ended)
+        }
     }
 
     @objc private func handleDragPaint(_ g: UILongPressGestureRecognizer) {

@@ -433,6 +433,9 @@ final class GlassGlazeModel: CanvasTouches {
                     comment: "VoiceOver value of a piece of stained glass with no glass in it yet"))
     }
 
+    /// Lead is drawn with one finger, at once; two move the window.
+    var strokesWithOneFinger: Bool { true }
+
     func canvasSummary(_ canvas: CanvasView) -> (label: String, value: String) {
         (String(localized: "Window"), progressText)
     }
