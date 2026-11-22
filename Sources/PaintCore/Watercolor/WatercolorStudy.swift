@@ -149,10 +149,11 @@ public struct WatercolorStudy: Sendable {
 
         // The label map: the paper is 0, each shape its own area.
         var map = [UInt32](repeating: 0, count: w * h)
+        let boxes = shapes.map(\.reach)
         for y in 0..<h {
             for x in 0..<w {
                 let q = SIMD2(Float(x) + 0.5, Float(y) + 0.5)
-                for (k, s) in shapes.enumerated() where s.contains(q) {
+                for (k, s) in shapes.enumerated() where boxes[k].contains(q) && s.contains(q) {
                     map[y * w + x] = UInt32(k + 1)
                     break
                 }
@@ -317,6 +318,24 @@ public struct WatercolorStudy: Sendable {
                 let edge = r * (1 + 0.035 * wb.at(angle * 3) + 0.02 * wb.at(angle * 5 + 1))
                 return (d * d).sum() < edge * edge
             }
+        }
+
+        /// A box the shape never leaves, its wavering included: the label map tests only the
+        /// shapes whose box holds a pixel.
+        var reach: (min: SIMD2<Float>, max: SIMD2<Float>, contains: (SIMD2<Float>) -> Bool) {
+            let lo: SIMD2<Float>, hi: SIMD2<Float>
+            switch self {
+            case let .box(x0, y0, x1, y1, _):
+                let a = min(x1 - x0, y1 - y0) * 0.025
+                lo = SIMD2(x0 - a, y0 - a); hi = SIMD2(x1 + a, y1 + a)
+            case let .piece(x0, y0, x1, y1, l, r, _, _, _, _):
+                let a = min(x1 - x0, y1 - y0) * 0.025, bend = (y1 - y0) * 0.18
+                lo = SIMD2(min(x0, l - bend) - a, y0 - a); hi = SIMD2(max(x1, r + bend) + a, y1 + a)
+            case let .disc(cx, cy, r, _):
+                let e = r * 1.06
+                lo = SIMD2(cx - e, cy - e); hi = SIMD2(cx + e, cy + e)
+            }
+            return (lo, hi, { q in q.x >= lo.x && q.y >= lo.y && q.x <= hi.x && q.y <= hi.y })
         }
 
         /// A point well inside the shape.

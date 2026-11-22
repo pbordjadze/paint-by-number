@@ -25,7 +25,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 DESK = (232, 227, 217)
 HOLD = 0.5  # seconds the finished painting is held, drawing back out (WatercolorMakingOfView.hold)
-SET_ASIDE = 0.7  # seconds it is set aside (WatercolorMakingOfView.setAside)
+SET_ASIDE = 0.7  # seconds it is set aside (WatercolorMakingOfView.setAsideSeconds)
 RISE = 90  # points it rises as it goes (WatercolorMakingOfView.rise); about 2 px a point here
 PUSH = 1.15  # the push in toward a drying bloom (WatercolorMakingOfView.pushIn)
 PUSH_SECONDS = 1.4  # its ease in (WatercolorMakingOfView.pushSeconds)

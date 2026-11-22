@@ -83,7 +83,8 @@ final class WatercolorFilm {
     /// Motion), as fast as it goes with only the finished painting sent.
     func start(settlingAtOnce: Bool) {
         guard producing == nil else { return }
-        bare = renderer.picture(maxPixelSize: 2048)
+        // Reduce Motion's alone: the film shows the study over the desk otherwise.
+        if settlingAtOnce { bare = renderer.picture(maxPixelSize: 2048) }
         let mode: WatercolorFilmPlayer.Mode
         if let hold {
             mode = .hold(hold)
@@ -202,6 +203,7 @@ nonisolated final class WatercolorFilmPlayer: @unchecked Sendable {
     init(study: WatercolorStudy, sheet: WatercolorSheet) {
         plan = WatercolorMakingOf(study: study, sheet: sheet)
         sim = WatercolorSim(sheet: sheet)
+        sim.roundedFronts = true
     }
 
     /// Steps toward `step`, at most `most` steps.
@@ -504,7 +506,7 @@ struct WatercolorMakingOfView: View {
     /// The finished study held as the camera draws back out, then set aside
     /// (`tools/watercolor_making_of.py` films both), and how far it rises as it goes.
     static let hold: Double = 0.5
-    static let setAside: Double = 0.7
+    static let setAsideSeconds: Double = 0.7
     static let rise: CGFloat = 90
     /// The push in toward a drying bloom while the drying front sweeps: how far, and how long.
     static let pushIn: CGFloat = 1.15
@@ -548,7 +550,7 @@ struct WatercolorMakingOfView: View {
             } else {
                 withAnimation(.easeInOut(duration: Self.hold)) { pushedIn = false }
                 guard (try? await Task.sleep(for: .seconds(Self.hold))) != nil else { return }
-                end(after: Self.setAside)
+                end(after: Self.setAsideSeconds)
             }
         }
         .onChange(of: film.isDrying) { _, drying in

@@ -40,6 +40,7 @@ import Testing
                 #expect(painted.contains { $0.region == drop.region && $0.step < drop.step })
             }
             let sim = WatercolorSim(sheet: sheet)
+            sim.roundedFronts = true
             var cursor = 0, frame = 0
             while !plan.isSettled(sim, cursor: cursor), frame < 600 {
                 plan.play(sim, to: plan.step(at: Double(frame) / 30), cursor: &cursor)

@@ -41,6 +41,11 @@ public final class WatercolorSim {
 
     public let sheet: WatercolorSheet
     public private(set) var step = 0
+    /// A flood's front follows the slow noise alone, rounded, rather than the paper's fine
+    /// tooth as well, which made a ragged staircase of single cells, a flood-fill rather than
+    /// water (the Making Of's critic, November 22). The Making Of's study sets it; a painter's
+    /// sheet keeps the front its tap logs were painted with, so a log replays as it was.
+    public var roundedFronts = false
     public var time: Float { Float(step) * Self.dt }
 
     /// Water, settled and suspended pigment and the cell's wash properties (`count` each).
@@ -326,10 +331,7 @@ public final class WatercolorSim {
             let g = global(j)
             let lf = sheet.lowFrequency[g], p = sheet.paper[g]
             let df = Float(dist[j])
-            // The front follows the slow noise, rounded: the paper's fine tooth in it as well made a
-            // ragged staircase of single cells, a flood-fill rather than water (the study's critic,
-            // November 22).
-            let jitter = lf * 0.08 + (p - 0.5) * 0.015
+            let jitter = roundedFronts ? lf * 0.08 + (p - 0.5) * 0.015 : lf * 0.07 + (p - 0.5) * 0.1
             let arrival = when + duration * pow(max(df / dmax + jitter, 0), 0.75)
             // The drop lands where you touched: more water there pushes the pigment out, so the
             // touch stays a lighter bloom with the color gathered where the front comes to rest.
@@ -374,7 +376,7 @@ public final class WatercolorSim {
     public func drop(at canvas: SIMD2<Float>, radius: Float, water: Float, push: Float = 0.6) {
         guard let c = sheet.cell(at: canvas), radius > 1 else { return }
         let w = sheet.width, h = sheet.height
-        let r = Int((radius * 1.5).rounded(.up))
+        let r = Int((radius * 1.45 + 2).rounded(.up))
         var swept = SIMD4<Float>(repeating: 0)
         var ring: [(Int, Float)] = []
         var ringWeight: Float = 0

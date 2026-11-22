@@ -120,6 +120,7 @@ func runMakingOf(template painting: Template, sheet paintingSheet: WatercolorShe
     let sheet = WatercolorSheet(template: template, seed: paintingSheet.seed)
     let plan = WatercolorMakingOf(study: study, sheet: sheet)
     let sim = WatercolorSim(sheet: sheet)
+    sim.roundedFronts = true
     let fine = WatercolorSheet.paperHeight(width: sheet.width * 2, height: sheet.height * 2, seed: sheet.seed &+ 11)
     var cursor = 0, frame = 0
     var stepping: Double = 0, worstFrame: Double = 0
@@ -204,15 +205,18 @@ func watercolorRaster(_ sim: WatercolorSim, template t: Template, fine: [Float]?
             var d4 = SIMD4<Float>(repeating: 0), mine = SIMD4<Float>(repeating: 0)
             var mineWeight: Float = 0
             for (i, wgt) in corners { d4 += dens(i) * wgt }
-            // The own area's cells through a cubic B-spline over the 4×4 around (the shader's).
+            // The own area's cells: the film's through a cubic B-spline over the 4×4 around, the
+            // painting screen's bilinear over the 2×2 (the shader's).
+            let taps = front != nil ? 4 : 2, first = front != nil ? -1 : 0
             func spline(_ t: Float) -> [Float] {
+                guard taps == 4 else { return [1 - t, t] }
                 let t2 = t * t, t3 = t2 * t
                 return [(1 - 3 * t + 3 * t2 - t3) / 6, (3 * t3 - 6 * t2 + 4) / 6, (-3 * t3 + 3 * t2 + 3 * t + 1) / 6, t3 / 6]
             }
             let bx = spline(fx), by = spline(fy)
-            for j in 0..<4 {
-                for i in 0..<4 {
-                    let k = cell(x0 + i - 1, y0 + j - 1)
+            for j in 0..<taps {
+                for i in 0..<taps {
+                    let k = cell(x0 + i + first, y0 + j + first)
                     let wgt = bx[i] * by[j]
                     if Int(sheet.labels[k]) == r { mine += dens(k) * wgt; mineWeight += wgt }
                 }
