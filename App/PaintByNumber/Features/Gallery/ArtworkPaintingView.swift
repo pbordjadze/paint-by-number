@@ -65,7 +65,13 @@ struct ArtworkPaintingView: View {
     /// back to one puts that very template back (`Library.restoreCut`), never makes it again (the
     /// Mac's QA: Relaxed again came back as another painting, 347 areas then 344, made again from
     /// `source.jpg` where the first came from the photo itself). ✎ Change's Done forgets them.
+    /// In SideStore and Debug builds the other lengths' cuts made ahead join them (`precuts`).
     @State private var cuts: [PaintingLength: Cut] = [:]
+    #if UNRELEASED
+    /// The other lengths cut ahead while the chip shows and the painter has yet to begin
+    /// (`LengthPrecuts`, painting-company row 361), each into `cuts` as it is made.
+    @State private var precuts = LengthPrecuts()
+    #endif
 
     private struct Cut {
         let template: Template
@@ -467,10 +473,16 @@ struct ArtworkPaintingView: View {
                 OutsideDesk.layOutOnLeaving(library)
             }
         }
+        #if UNRELEASED
+        .onChange(of: precutTurn, initial: true) { _, turn in precutTurned(turn) }
+        #endif
         .onDisappear {
             TogetherLink.shared.paintingClosed(artworkID)
             regeneration?.cancel()
             recutting?.cancel()
+            #if UNRELEASED
+            precuts.forget()
+            #endif
             releaseHeldScreen()
             autosaver?.saveNow(refreshThumbnail: true)
         }
@@ -733,6 +745,9 @@ struct ArtworkPaintingView: View {
                 let document = try await library.adopt(draft, into: artworkID)
                 // The cuts kept were of the painting before the change.
                 cuts = [:]
+                #if UNRELEASED
+                precuts.forget()
+                #endif
                 _ = await RenderContext.ready()
                 await present(document, replacing: true)
             } catch is CancellationError {
@@ -770,12 +785,53 @@ struct ArtworkPaintingView: View {
         return LengthChip(
             regionCount: autosaver.session.template.regions.count,
             length: artwork.paintingLength.flatMap(PaintingLength.init(rawValue:)),
-            progress: recutting == nil ? nil : (library.regenerating[artworkID] ?? 0),
+            progress: recutting == nil ? nil : recutProgress,
             cutAreas: cuts.mapValues { $0.template.regions.count },
             isCustom: isCustomCut,
             onPick: recut(to:),
             onFineTune: fineTune)
     }
+
+    /// The re-cut's progress, 0…1: of a cut made ahead the painter is waiting for, else of the
+    /// cut being made and saved.
+    private var recutProgress: Double {
+        #if UNRELEASED
+        if let waiting = precuts.awaitedProgress { return waiting }
+        #endif
+        return library.regenerating[artworkID] ?? 0
+    }
+
+    #if UNRELEASED
+    /// When the other lengths are cut ahead: the chip showing on a painting settled on screen,
+    /// with no re-cut, ✎ Change or recovery under way, and the app in front. A new cut on
+    /// screen (a new session) starts them again, after `LengthPrecuts.settle`.
+    private struct PrecutTurn: Equatable {
+        let session: ObjectIdentifier
+        let length: String?
+        let isCustom: Bool
+    }
+
+    private var precutTurn: PrecutTurn? {
+        guard showsLengthChip, recutting == nil, changing == nil, change == nil, regeneration == nil,
+              scenePhase == .active, let autosaver, let artwork else { return nil }
+        return PrecutTurn(session: ObjectIdentifier(autosaver.session), length: artwork.paintingLength, isCustom: isCustomCut)
+    }
+
+    private func precutTurned(_ turn: PrecutTurn?) {
+        guard let turn, let artwork else {
+            precuts.stop()
+            // Begun: no length will be picked, so nothing found is kept.
+            if autosaver?.session.isStarted == true { precuts.forget() }
+            return
+        }
+        precuts.resume(
+            artwork: artwork, current: turn.length.flatMap(PaintingLength.init(rawValue:)), includingCurrent: turn.isCustom,
+            skipping: Set(cuts.keys), library: library
+        ) { cut in
+            cuts[cut.length] = Cut(template: cut.template, settings: cut.settings)
+        }
+    }
+    #endif
 
     /// The painting was cut with the painter's own settings, by Fine-Tune or the create flow's
     /// sliders: no length's suggestion, so the cuts keep none of it. SideStore and Debug builds,
@@ -801,6 +857,9 @@ struct ArtworkPaintingView: View {
             do {
                 let document = try await library.retune(artwork: artworkID, settings: settings)
                 cuts = [:]
+                #if UNRELEASED
+                precuts.forget()
+                #endif
                 _ = await RenderContext.ready()
                 await present(document, replacing: true)
                 Announcer.announce(LengthChip.summary(regionCount: document.template.regions.count))
@@ -824,12 +883,33 @@ struct ArtworkPaintingView: View {
             cuts[current] = Cut(template: autosaver.session.template, settings: artwork.settings)
         }
         let kept = cuts[length]
+        #if UNRELEASED
+        // A length not cut ahead yet: the cut under way is waited for, else one starts now on
+        // the photo's analysis found already. Claimed at once, before anything stops the others.
+        let precut = kept == nil ? artwork.map { precuts.claim(length, of: $0, library: library) } : nil
+        #endif
         recutting = Task {
             do {
-                let document = if let kept {
-                    try await library.restoreCut(artwork: artworkID, length: length, template: kept.template, settings: kept.settings)
+                let document: PaintingDocument
+                if let kept {
+                    document = try await library.restoreCut(
+                        artwork: artworkID, length: length, template: kept.template, settings: kept.settings)
                 } else {
-                    try await library.recut(artwork: artworkID, length: length)
+                    #if UNRELEASED
+                    if let precut {
+                        let made = try await withTaskCancellationHandler {
+                            try await precut.value
+                        } onCancel: {
+                            precut.cancel()
+                        }
+                        document = try await library.restoreCut(
+                            artwork: artworkID, length: length, template: made.template, settings: made.settings)
+                    } else {
+                        document = try await library.recut(artwork: artworkID, length: length)
+                    }
+                    #else
+                    document = try await library.recut(artwork: artworkID, length: length)
+                    #endif
                 }
                 if let made = library.artwork(with: artworkID)?.settings {
                     cuts[length] = Cut(template: document.template, settings: made)
@@ -841,6 +921,9 @@ struct ArtworkPaintingView: View {
             } catch {
                 showRecutFailure(error)
             }
+            #if UNRELEASED
+            precuts.finished()
+            #endif
             recutting = nil
         }
     }

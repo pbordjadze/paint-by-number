@@ -1,0 +1,862 @@
+import CoreGraphics
+import CoreImage
+import Foundation
+import PaintCore
+import SwiftUI
+
+/// The short Making-of as everyone's wait, "graphite and fuse" (painting-company row 361; SideStore
+/// and Debug builds, `UNRELEASED`: the release keeps the picture forming as it is). It grows out of
+/// the picture forming (`FormingPlan`) and keeps its rule: it adds nothing to the making, and it
+/// ends on exactly the page the painting will show.
+///
+/// 1. **Graphite** (the wait): from the moment the photo shows, pencil lines are laid down along
+///    its shapes from the middle (`GraphiteSketch`), a warm glint at their leading tip, the color
+///    draining only behind them. The race nears its end without reaching it for as long as the
+///    template is still being made (`graphiteProgress`), so it never stands still, and finishes
+///    under the fuse: a faster device sees less of it. No status shows over it until the making
+///    has taken `patience`.
+/// 2. **Fuse**: once the template is made, its own lines burn in across the graphite like a fuse,
+///    a band of gold at the burning front, the paper drying to the page's behind it. It is done
+///    `FormingPlan.drawIn` after the template is made, as the plain forming's drawing in is: a
+///    template made almost at once lets the graphite show `graphiteAtLeast` first, and its fuse
+///    burns that much faster.
+/// 3. **Stars**: as the picture glides to the painting's place (the hand-off's own `settle`, no
+///    time of its own), the page's numbers come out behind the same front, each with a twinkle
+///    (`Stars`), and the picture is the page the canvas draws.
+///
+/// A tap skips at any moment (`skip`): once the template is made, to the painting; before, to the
+/// plain picture forming, its lines drawn in as ever once made. Reduce Motion and The Making-of
+/// switched on bring none of it, as they bring no lines (`FormingPlan.hasLines`). VoiceOver hears
+/// the forming's one status, as before.
+///
+/// Each frame only moves what was made once: the graphite is four images cross-faded
+/// (`GraphiteSketch.Drawing`), the front an image (`FrontMasks`) scaled about its centre, the gold
+/// lines an image with their glow in it (`FormingShow.glow`), the ink lines the forming's own,
+/// stroked once.
+nonisolated enum FormingShow {
+    #if UNRELEASED
+    static let isOn = true
+    #else
+    static let isOn = false
+    #endif
+
+    /// Whether the picture forming plays the show: it forms with lines, and no tap has sent it to
+    /// the plain forming.
+    static func plays(forms: Bool, reduceMotion: Bool, playsMakingOf: Bool, skipped: Skip?) -> Bool {
+        isOn && forms && FormingPlan.hasLines(reduceMotion: reduceMotion, playsShow: playsMakingOf) && skipped != .toPlainLines
+    }
+
+    // MARK: Timing
+
+    /// How soon the graphite's race is half run (`graphiteProgress`): two thirds by the making of
+    /// a template on an iPad Air (1.1 s), slowed with the hand-off (`-handoffSlowdown`).
+    static var graphitePace: Double { 1.2 * StartHandoffPlan.glide }
+    /// How near its end the race comes while the template is still being made.
+    static let graphiteNears = 0.97
+    /// The least the graphite shows before the fuse is lit: a template made at once would show
+    /// it for a flicker, which reads as a glitch rather than a drawing. Taken from the fuse,
+    /// never added to the wait.
+    static var graphiteAtLeast: Double { 0.3 * StartHandoffPlan.glide }
+    /// The most the show keeps the hand-off waiting once the template is made: the plain
+    /// forming's drawing in, and no more.
+    static var longestTail: Double { FormingPlan.drawIn }
+    /// How long the graphite stands for the forming's status (seconds): a making slower than
+    /// this (an older device, a large photo) brings the status back, so the wait has a sign.
+    static let patience = 4.0
+
+    /// When the fuse is lit (seconds, any clock), the template made at `made` and the graphite
+    /// begun at `graphiteBegan` (nil: it never began): at once, unless the graphite has shown
+    /// for less than `graphiteAtLeast`.
+    static func fuseLit(madeAt made: Double, graphiteBegan: Double?) -> Double {
+        guard let began = graphiteBegan else { return made }
+        return max(made, min(began + graphiteAtLeast, made + graphiteAtLeast))
+    }
+
+    /// When the lines have burned in and the hand-off may lift: `longestTail` after the making,
+    /// whenever the fuse was lit.
+    static func done(madeAt made: Double) -> Double {
+        made + longestTail
+    }
+
+    /// How far the graphite has raced, `elapsed` seconds after it began, while the template is
+    /// being made: racing out, then ever slower toward `graphiteNears`, never still and never
+    /// done (a making of 4 s leaves it at 0.84, of 10 s at 0.92).
+    static func graphiteProgress(since elapsed: Double) -> Double {
+        let t = max(elapsed, 0)
+        return graphiteNears * t / (t + graphitePace)
+    }
+
+    /// How far a fuse burning for `length` seconds has burned `elapsed` seconds after it was
+    /// lit: catching, then steady.
+    static func fuseProgress(since elapsed: Double, length: Double) -> Double {
+        guard length > 0 else { return elapsed >= 0 ? 1 : 0 }
+        let x = min(max(elapsed / length, 0), 1)
+        return x * x * (3 - 2 * x)
+    }
+
+    /// The numbers come out during the glide: the hand-off's own settling into the page.
+    static var stars: Double { StartHandoffPlan.settle }
+
+    /// How far the numbers have come out, `elapsed` seconds after the page came in.
+    static func starsProgress(since elapsed: Double) -> Double {
+        let x = min(max(elapsed / stars, 0), 1)
+        return 1 - (1 - x) * (1 - x)
+    }
+
+    // MARK: Skipping
+
+    /// Where a tap goes.
+    nonisolated enum Skip: Equatable, Sendable {
+        /// The template isn't made: the graphite goes, and the photo waits as the plain forming's
+        /// does, its lines drawn in once made.
+        case toPlainLines
+        /// The template is made: the lines are all there at once, and the hand-off lifts now.
+        case toPainting
+    }
+
+    static func skip(isMade: Bool) -> Skip {
+        isMade ? .toPainting : .toPlainLines
+    }
+
+    // MARK: The front
+
+    /// Where the fuse and the numbers arrive: a blot growing from a little above the picture's
+    /// middle, near where the graphite began (`GraphiteSketch.seed`), its outline wavering (`shape`),
+    /// so it spreads rather than wipes. The same front in both, so the numbers come out where
+    /// the ink went. It only grows (its shape is the same at every size), so one image of it,
+    /// scaled about its centre, draws it at any progress (`FrontMasks`); at progress 1 even its
+    /// soft edge has passed every corner.
+    nonisolated enum Front {
+        static let centre = CGPoint(x: 0.5, y: 0.45)
+        /// How far the outline wavers, as a share of its reach.
+        static let wobble = 0.22
+        /// How wide the front's soft edge is, as a share of its reach: nearly sharp.
+        static let edge = 0.05
+
+        /// The outline's reach at `angle` (radians, y down), relative to its mean.
+        static func shape(at angle: Double) -> Double {
+            1 + wobble * (0.5 * sin(3 * angle + 0.7) + 0.3 * sin(5 * angle + 2.1) + 0.2 * sin(8 * angle + 4.4))
+        }
+
+        static func origin(in rect: CGRect) -> CGPoint {
+            CGPoint(x: rect.minX + rect.width * centre.x, y: rect.minY + rect.height * centre.y)
+        }
+
+        /// The mean reach at progress 1 (points): the inner end of its soft edge past the
+        /// farthest corner wherever the outline wavers in.
+        static func reach(in rect: CGRect) -> Double {
+            let o = origin(in: rect)
+            let dx = Double(max(o.x - rect.minX, rect.maxX - o.x)), dy = Double(max(o.y - rect.minY, rect.maxY - o.y))
+            return (dx * dx + dy * dy).squareRoot() / ((1 - wobble) * (1 - edge))
+        }
+
+        /// The side of the square the front's image fills at progress 1 (points).
+        static func side(in rect: CGRect) -> Double {
+            2 * (1 + wobble) * reach(in: rect)
+        }
+
+        /// The progress (0…1) at which the middle of the front's soft edge reaches `point`.
+        static func arrival(of point: CGPoint, in rect: CGRect) -> Double {
+            let o = origin(in: rect)
+            let dx = Double(point.x - o.x), dy = Double(point.y - o.y)
+            let full = reach(in: rect)
+            guard full > 0 else { return 0 }
+            let ratio = (dx * dx + dy * dy).squareRoot() / (full * shape(at: atan2(dy, dx)))
+            return min(1, ratio / (1 - edge / 2))
+        }
+
+        /// How opaque the front is at a point `ratio` of the way to its outline: whole inside its
+        /// soft edge, nothing past the outline.
+        static func alpha(ratio: Double) -> Double {
+            let t = min(max((1 - ratio) / edge, 0), 1)
+            return t * t * (3 - 2 * t)
+        }
+
+        /// The front at progress 1 as a square image `pixels` across, white with the front's
+        /// opacity, its centre the front's origin. Made once, off the main actor.
+        @concurrent
+        static func image(pixels: Int) async -> CGImage? {
+            guard pixels > 1 else { return nil }
+            let angles = 2048
+            let table = (0..<angles).map { shape(at: 2 * Double.pi * Double($0) / Double(angles)) }
+            let half = Double(pixels) / 2, extent = 1 + wobble
+            var bytes = [UInt8](repeating: 0, count: pixels * pixels * 4)
+            for y in 0..<pixels {
+                let v = (Double(y) + 0.5 - half) / half * extent
+                for x in 0..<pixels {
+                    let u = (Double(x) + 0.5 - half) / half * extent
+                    var angle = atan2(v, u)
+                    if angle < 0 { angle += 2 * Double.pi }
+                    let k = min(Int(angle / (2 * Double.pi) * Double(angles)), angles - 1)
+                    let a = UInt8((alpha(ratio: (u * u + v * v).squareRoot() / table[k]) * 255).rounded())
+                    let i = (y * pixels + x) * 4
+                    bytes[i] = a
+                    bytes[i + 1] = a
+                    bytes[i + 2] = a
+                    bytes[i + 3] = a
+                }
+            }
+            guard let space = CGColorSpace(name: CGColorSpace.sRGB),
+                  let provider = CGDataProvider(data: Data(bytes) as CFData)
+            else { return nil }
+            return CGImage(
+                width: pixels, height: pixels, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: pixels * 4, space: space,
+                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue), provider: provider,
+                decode: nil, shouldInterpolate: true, intent: .defaultIntent)
+        }
+    }
+
+    // MARK: The burning front
+
+    /// The gold of the burning front and of the twinkles: `Theme.gold`'s components.
+    static let goldRGB = SIMD3<Double>(0.788, 0.635, 0.290)
+
+    /// The template's lines in gold with their glow, filling a picture `size` points (as the
+    /// forming photo is filled: centred, cropped), `lineWidth` points wide as the ink's are and
+    /// heavier by `weight`: the burning front's layer, stroked once off the main actor at one
+    /// pixel a point (a glow needs no more), so a frame only moves its mask.
+    @concurrent
+    static func glow(_ drawing: LineArtDrawing, size: CGSize, lineWidth: CGFloat, weight: CGFloat = 1.8) async -> CGImage? {
+        let scale = min(1, 1600 / max(size.width, size.height, 1))
+        let w = Int((size.width * scale).rounded()), h = Int((size.height * scale).rounded())
+        let units = drawing.size
+        guard w >= 1, h >= 1, units.width > 0, units.height > 0, let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(
+                data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0, space: space,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        let s = max(size.width / units.width, size.height / units.height)
+        let gold = CGColor(srgbRed: goldRGB.x, green: goldRGB.y, blue: goldRGB.z, alpha: 1)
+        // Top-left origin, points, then canvas units filled into the picture.
+        context.translateBy(x: 0, y: CGFloat(h))
+        context.scaleBy(x: scale, y: -scale)
+        context.translateBy(x: (size.width - units.width * s) / 2, y: (size.height - units.height * s) / 2)
+        context.scaleBy(x: s, y: s)
+        context.setShadow(offset: .zero, blur: 6 * scale, color: gold)
+        context.setStrokeColor(gold)
+        context.setLineWidth(lineWidth * weight / s)
+        context.setLineCap(.round)
+        context.setLineJoin(.round)
+        context.addPath(drawing.path(within: CGRect(origin: .zero, size: units)).cgPath)
+        context.strokePath()
+        return context.makeImage()
+    }
+
+    // MARK: Stars
+
+    /// The page's numbers, where each comes out: a label's place and size as shares of the page's
+    /// width (the page is laid from its top at the picture's width, as the canvas lays it). At
+    /// most `limit` of them twinkle, spread over the page; every number comes out with the page.
+    nonisolated struct Stars: Sendable {
+        /// x, y and radius, over the template's width.
+        let labels: [SIMD3<Float>]
+
+        static let limit = 240
+        /// How long each twinkles, as a share of the beat.
+        static let life = 0.3
+
+        init(_ template: Template, limit: Int = Stars.limit) {
+            let width = Float(max(template.width, 1))
+            let all = template.labels
+            let step = max(1, (all.count + max(limit, 1) - 1) / max(limit, 1))
+            labels = Swift.stride(from: 0, to: all.count, by: step).map { i in
+                let label = all[i]
+                return SIMD3(label.position.x / width, label.position.y / width, label.radius / width)
+            }
+        }
+
+        /// How bright the twinkle of a number the front reached at `arrival` is at `progress`:
+        /// up and down again over `life`, nothing before or after.
+        static func twinkle(arrival: Double, progress: Double) -> Double {
+            let phase = (progress - arrival) / life
+            guard phase > 0, phase < 1 else { return 0 }
+            return sin(Double.pi * phase)
+        }
+
+        /// A four-pointed sparkle centred at `centre`.
+        static func sparkle(at centre: CGPoint, radius r: CGFloat) -> Path {
+            var path = Path()
+            let k = r * 0.2
+            path.move(to: CGPoint(x: centre.x, y: centre.y - r))
+            path.addQuadCurve(to: CGPoint(x: centre.x + r, y: centre.y), control: CGPoint(x: centre.x + k, y: centre.y - k))
+            path.addQuadCurve(to: CGPoint(x: centre.x, y: centre.y + r), control: CGPoint(x: centre.x + k, y: centre.y + k))
+            path.addQuadCurve(to: CGPoint(x: centre.x - r, y: centre.y), control: CGPoint(x: centre.x - k, y: centre.y + k))
+            path.addQuadCurve(to: CGPoint(x: centre.x, y: centre.y - r), control: CGPoint(x: centre.x - k, y: centre.y - k))
+            path.closeSubpath()
+            return path
+        }
+
+        /// The progress at which the front reaches each number on a page `size` points (its
+        /// width the template's): worked out once per page, not per frame.
+        func arrivals(on size: CGSize) -> [(point: CGPoint, radius: CGFloat, arrival: Double)] {
+            let rect = CGRect(origin: .zero, size: size)
+            let w = size.width
+            return labels.map { label in
+                let point = CGPoint(x: CGFloat(label.x) * w, y: CGFloat(label.y) * w)
+                return (point, min(max(CGFloat(label.z) * w * 1.4, 4), 14), Front.arrival(of: point, in: rect))
+            }
+        }
+
+        /// Draws the twinkles at `progress` of the numbers at `arrivals`.
+        static func draw(
+            _ arrivals: [(point: CGPoint, radius: CGFloat, arrival: Double)], in context: inout GraphicsContext,
+            progress: Double, color: Color
+        ) {
+            guard progress > 0, progress < 1 + life else { return }
+            for star in arrivals {
+                let glow = twinkle(arrival: star.arrival, progress: progress)
+                guard glow > 0 else { continue }
+                context.opacity = glow
+                context.fill(sparkle(at: star.point, radius: star.radius * CGFloat(0.6 + 0.4 * glow)), with: .color(color))
+            }
+            context.opacity = 1
+        }
+    }
+}
+
+/// The front's image (`FormingShow.Front.image`), made once for the app's life, off the main
+/// actor, as the first show begins; until then a front fades instead of spreading.
+enum FrontMasks {
+    private(set) static var image: CGImage?
+    /// The making under way, which a second caller waits for too.
+    private static var preparing: Task<Void, Never>?
+
+    static func prepare() async {
+        guard image == nil else { return }
+        if let preparing { return await preparing.value }
+        let making = Task { image = await FormingShow.Front.image(pixels: 768) }
+        preparing = making
+        await making.value
+        preparing = nil
+    }
+}
+
+/// The graphite drawing of a photo, the show's wait (`FormingShow`): pencil lines along the
+/// photo's real edges, with light hatching in its shadows, laid down from the middle along the
+/// shapes, the photo keeping its color wherever the pencil hasn't reached. Made once per photo and
+/// paper, off the main actor, at most `longSide` across: the blurs, the stripes and the images in
+/// Core Image (on the GPU, beside the template's making rather than in its way), the lines' and
+/// the race's arithmetic on the CPU. `tools/graphite_sim.py` makes the same off the device, step
+/// for step, and lays it out at any progress.
+///
+/// The lines are the grey's difference of Gaussians, dark only where the photo is darker than
+/// around it, past a threshold, so flat paper and sky stay bare; a 3 × 3 median before and an
+/// opening after leave no speck (an edge filter gave faint hairlines, a color dodge a blotchy
+/// emboss). Each pixel's arrival is its shortest way from `seed` along the lines, a line cheap to
+/// travel and bare paper dear, equalized so that the ink comes evenly over the race: the drawing
+/// runs along a shape before it jumps to the next.
+nonisolated enum GraphiteSketch {
+    static let longSide: CGFloat = 900
+    /// The difference of Gaussians (pixels): the finer blur against the broader.
+    static let fine = 1.8
+    static let broad = 4.5
+    /// How dark a line is for how sharp its edge, less what doesn't count as an edge.
+    static let gain: Float = 14
+    static let threshold: Float = 0.2
+    /// The hatching: where the blurred grey is darker than `shadow`, at most `hatch` of the ink,
+    /// in 45° stripes `hatchWidth` pixels wide.
+    static let shadow: CGFloat = 0.4
+    static let hatch: CGFloat = 0.16
+    static let hatchWidth: CGFloat = 3.5
+    /// The lines' strongest stroke, as a share of the ink.
+    static let pencil: CGFloat = 0.9
+    /// How far the grey photo goes toward the paper under the pencil.
+    static let paperShare = 0.9
+    /// How many images the race is drawn in: each one the drawing as far as it has reached by
+    /// its end.
+    static let stages = 8
+    /// The race is worked out on a grid this many times coarser than the drawing.
+    static let coarse = 4
+    /// The glint over the freshest strokes, at its strongest.
+    static let glint: CGFloat = 0.9
+    /// The glint's warmth, mixed half and half with the ink.
+    static let warm = SIMD3<Float>(0.75, 0.52, 0.30)
+
+    nonisolated struct Drawing: Sendable {
+        /// The drawing as far as the race has reached by the end of each of `stages` equal
+        /// shares of it, opaque there and clear beyond: each holds the one before it.
+        let stages: [CGImage]
+        /// The leading tip of each stage: a warm glint over the strokes it adds, at half size.
+        let glints: [CGImage]
+    }
+
+    /// One context for every drawing (Core Image's contexts are thread-safe and costly to make),
+    /// without color management: the sketch's arithmetic is on the photo's encoded values.
+    private static let context = CIContext(options: [.workingColorSpace: NSNull(), .cacheIntermediates: false])
+
+    @concurrent
+    static func draw(_ photo: CGImage, sheet: FormingPlan.Sheet) async -> Drawing? {
+        let source = CIImage(cgImage: photo)
+        let extent = source.extent
+        guard extent.width >= 16, extent.height >= 16, let space = CGColorSpace(name: CGColorSpace.sRGB) else { return nil }
+        let s = min(1, longSide / max(extent.width, extent.height))
+        let width = Int((extent.width * s).rounded(.down)), height = Int((extent.height * s).rounded(.down))
+        let bounds = CGRect(x: 0, y: 0, width: width, height: height)
+        let grey = source.transformed(by: CGAffineTransform(scaleX: s, y: s))
+            .applyingFilter("CIColorControls", parameters: [kCIInputSaturationKey: 0.0])
+            .clampedToExtent()
+            .applyingFilter("CIMedianFilter")
+
+        // The lines: broad blur less fine, on the CPU (Core Image has no signed difference).
+        guard let fineGrey = render(grey.applyingGaussianBlur(sigma: fine), bounds),
+              let broadGrey = render(grey.applyingGaussianBlur(sigma: broad), bounds)
+        else { return nil }
+        var difference = [Float](repeating: 0, count: width * height)
+        for i in difference.indices {
+            difference[i] = min(max((broadGrey[i] - fineGrey[i]) * gain - threshold, 0), 1)
+        }
+        // Each image the stages read is rendered once: the context keeps no intermediates, so a
+        // graph left whole would be worked out again for every stage.
+        let opened = greyImage(difference, width: width, height: height)
+            .clampedToExtent()
+            .applyingFilter("CIMorphologyMinimum", parameters: [kCIInputRadiusKey: 1.0])
+            .applyingFilter("CIMorphologyMaximum", parameters: [kCIInputRadiusKey: 1.0])
+        guard let openedLines = render(opened, bounds) else { return nil }
+        let lines = greyImage(openedLines, width: width, height: height).clampedToExtent()
+
+        // The hatching, screened with the lines: the strokes' strength.
+        let tone = grey.applyingGaussianBlur(sigma: 3)
+            .applyingFilter("CIColorMatrix", parameters: greyMatrix(times: -1.5 / shadow, plus: 1.5))
+            .applyingFilter("CIColorClamp")
+        let stripes = CIFilter(name: "CIStripesGenerator", parameters: [
+            "inputColor0": CIColor(red: 0, green: 0, blue: 0),
+            "inputColor1": CIColor(red: 1, green: 1, blue: 1),
+            kCIInputWidthKey: hatchWidth,
+            kCIInputSharpnessKey: 0.5,
+        ])?.outputImage?.transformed(by: CGAffineTransform(rotationAngle: .pi / 4))
+        guard let stripes else { return nil }
+        let hatching = tone
+            .applyingFilter("CIMultiplyCompositing", parameters: [kCIInputBackgroundImageKey: stripes])
+            .applyingFilter("CIColorMatrix", parameters: greyMatrix(times: hatch, plus: 0))
+        let strokes = lines
+            .applyingFilter("CIColorMatrix", parameters: greyMatrix(times: pencil, plus: 0))
+            .applyingFilter("CIScreenBlendMode", parameters: [kCIInputBackgroundImageKey: hatching])
+        let paper = CIImage(color: color(sheet.paper))
+        let base = grey.applyingFilter(
+            "CIDissolveTransition", parameters: [kCIInputTargetImageKey: paper, kCIInputTimeKey: paperShare])
+        let sketched = CIImage(color: color(sheet.ink)).applyingFilter(
+            "CIBlendWithMask", parameters: [kCIInputBackgroundImageKey: base, kCIInputMaskImageKey: strokes])
+        guard let drawingImage = context.createCGImage(sketched, from: bounds, format: .RGBA8, colorSpace: space) else { return nil }
+        let drawing = CIImage(cgImage: drawingImage)
+
+        // The race, on the lines' maximum over each coarse cell so that a thin line still counts.
+        let w = width / coarse, h = height / coarse
+        guard w >= 2, h >= 2 else { return nil }
+        let pooled = lines
+            .applyingFilter("CIMorphologyMaximum", parameters: [kCIInputRadiusKey: Double(coarse) / 2])
+            .transformed(by: CGAffineTransform(scaleX: CGFloat(w) / CGFloat(width), y: CGFloat(h) / CGFloat(height)))
+        guard let cells = render(pooled, CGRect(x: 0, y: 0, width: w, height: h)) else { return nil }
+        let raced = greyImage(arrivals(cells, width: w, height: h), width: w, height: h)
+            .clampedToExtent()
+            .transformed(by: CGAffineTransform(scaleX: CGFloat(width) / CGFloat(w), y: CGFloat(height) / CGFloat(h)))
+        guard let arrived = render(raced, bounds) else { return nil }
+        let arrival = greyImage(arrived, width: width, height: height)
+
+        let half = CGRect(x: 0, y: 0, width: width / 2, height: height / 2)
+        let tip = CIImage(color: color(sheet.ink * 0.5 + warm * 0.5))
+        var images: [CGImage] = [], glints: [CGImage] = []
+        var before: CIImage?
+        for stage in 0..<stages {
+            // Whole where the race arrived by the stage's end, nothing half a stage later.
+            let n = CGFloat(stages)
+            let reach = arrival
+                .applyingFilter("CIColorMatrix", parameters: greyMatrix(times: -2 * n, plus: 2 * CGFloat(stage) + 3))
+                .applyingFilter("CIColorClamp")
+            let drawn = drawing.applyingFilter(
+                "CIBlendWithMask", parameters: [kCIInputBackgroundImageKey: CIImage.empty(), kCIInputMaskImageKey: reach])
+            // The strokes this stage adds, and a soft warm glint over them.
+            let fresh = before.map {
+                reach.applyingFilter("CIMultiplyCompositing", parameters: [kCIInputBackgroundImageKey: $0.applyingFilter("CIColorInvert")])
+            } ?? reach
+            let glow = fresh
+                .applyingFilter("CIMultiplyCompositing", parameters: [kCIInputBackgroundImageKey: lines])
+                .transformed(by: CGAffineTransform(scaleX: 0.5, y: 0.5))
+                .applyingGaussianBlur(sigma: 1)
+                .applyingFilter("CIColorMatrix", parameters: greyMatrix(times: 2.5 * glint, plus: 0))
+                .applyingFilter("CIColorClamp", parameters: [
+                    "inputMinComponents": CIVector(x: 0, y: 0, z: 0, w: 0),
+                    "inputMaxComponents": CIVector(x: glint, y: glint, z: glint, w: 1),
+                ])
+            let glinted = tip.applyingFilter(
+                "CIBlendWithMask", parameters: [kCIInputBackgroundImageKey: CIImage.empty(), kCIInputMaskImageKey: glow])
+            guard let image = context.createCGImage(drawn, from: bounds, format: .RGBA8, colorSpace: space),
+                  let glintImage = context.createCGImage(glinted, from: half, format: .RGBA8, colorSpace: space)
+            else { return nil }
+            images.append(image)
+            glints.append(glintImage)
+            before = reach
+        }
+        return Drawing(stages: images, glints: glints)
+    }
+
+    /// An image's grey (its red), 0…1, rows from the top.
+    private static func render(_ image: CIImage, _ bounds: CGRect) -> [Float]? {
+        let count = Int(bounds.width) * Int(bounds.height)
+        guard count > 0 else { return nil }
+        var values = [Float](repeating: 0, count: count)
+        values.withUnsafeMutableBytes { bytes in
+            guard let base = bytes.baseAddress else { return }
+            context.render(
+                image, toBitmap: base, rowBytes: Int(bounds.width) * MemoryLayout<Float>.size, bounds: bounds, format: .Lf,
+                colorSpace: nil)
+        }
+        return values
+    }
+
+    /// A grey image of `values` (0…1, rows from the top).
+    private static func greyImage(_ values: [Float], width: Int, height: Int) -> CIImage {
+        let data = values.withUnsafeBufferPointer { Data(buffer: $0) }
+        return CIImage(
+            bitmapData: data, bytesPerRow: width * MemoryLayout<Float>.size, size: CGSize(width: width, height: height),
+            format: .Lf, colorSpace: nil)
+    }
+
+    /// The color matrix that maps each of a grey's channels v to `times` × v + `plus`.
+    private static func greyMatrix(times: CGFloat, plus: CGFloat) -> [String: Any] {
+        [
+            "inputRVector": CIVector(x: times, y: 0, z: 0, w: 0),
+            "inputGVector": CIVector(x: 0, y: times, z: 0, w: 0),
+            "inputBVector": CIVector(x: 0, y: 0, z: times, w: 0),
+            "inputAVector": CIVector(x: 0, y: 0, z: 0, w: 1),
+            "inputBiasVector": CIVector(x: plus, y: plus, z: plus, w: 0),
+        ]
+    }
+
+    private static func color(_ rgb: SIMD3<Float>) -> CIColor {
+        CIColor(red: CGFloat(rgb.x), green: CGFloat(rgb.y), blue: CGFloat(rgb.z))
+    }
+
+    /// Where the race begins on a grid `width` × `height` of lines (0…1, rows first): the
+    /// strongest line near the front's centre (`FormingShow.Front.centre`).
+    static func seed(_ lines: [Float], width w: Int, height h: Int) -> Int {
+        let cx = Double(w) * Double(FormingShow.Front.centre.x), cy = Double(h) * Double(FormingShow.Front.centre.y)
+        let far = Double(max(w, h))
+        var best = 0, bestScore = -Double.infinity
+        for y in 0..<h {
+            for x in 0..<w {
+                let dx = Double(x) - cx, dy = Double(y) - cy
+                let score = Double(lines[y * w + x]) - 0.6 * (dx * dx + dy * dy).squareRoot() / far
+                if score > bestScore { best = y * w + x; bestScore = score }
+            }
+        }
+        return best
+    }
+
+    /// When the race reaches each cell of a grid `width` × `height` of lines (0…1, rows first),
+    /// from 0 at `seed` to 1 at the last: the cells in order of their shortest way there over the
+    /// grid's eight neighbours (each step costing more the fainter the lines it crosses), each
+    /// arriving at the share of the ink, and of a little of the paper, reached by then.
+    static func arrivals(_ lines: [Float], width w: Int, height h: Int) -> [Float] {
+        let n = w * h
+        guard n > 0, lines.count == n else { return [] }
+        let cost = lines.map { 1 / (0.2 + $0) }
+        var distance = [Float](repeating: .infinity, count: n)
+        var heap = CellHeap()
+        let start = seed(lines, width: w, height: h)
+        distance[start] = 0
+        heap.push(0, start)
+        let steps: [(dx: Int, dy: Int, length: Float)] = [
+            (-1, 0, 1), (1, 0, 1), (0, -1, 1), (0, 1, 1), (-1, -1, 1.414), (1, -1, 1.414), (-1, 1, 1.414), (1, 1, 1.414),
+        ]
+        while let item = heap.pop() {
+            let d = item.key, cell = item.cell
+            guard d <= distance[cell] else { continue }
+            let x = cell % w, y = cell / w
+            for step in steps {
+                let nx = x + step.dx, ny = y + step.dy
+                guard nx >= 0, nx < w, ny >= 0, ny < h else { continue }
+                let next = ny * w + nx
+                let reached = d + step.length * 0.5 * (cost[cell] + cost[next])
+                if reached < distance[next] {
+                    distance[next] = reached
+                    heap.push(reached, next)
+                }
+            }
+        }
+        let order = distance.indices.sorted { (distance[$0], $0) < (distance[$1], $1) }
+        let total = lines.reduce(Float(0)) { $0 + $1 + 0.15 }
+        var arrival = [Float](repeating: 0, count: n)
+        var reached: Float = 0
+        for cell in order {
+            reached += lines[cell] + 0.15
+            arrival[cell] = min(reached / total, 1)
+        }
+        arrival[start] = 0
+        return arrival
+    }
+
+    /// The race's progress drawn at `progress` (0…1) of `stages` images: every stroke of stage
+    /// `whole` (nil: none yet) and stage `fading` coming in at its opacity (nil: the race is run).
+    static func shown(at progress: Double, stages: Int) -> (whole: Int?, fading: (stage: Int, opacity: Double)?) {
+        guard stages > 0 else { return (nil, nil) }
+        let k = min(max(progress, 0), 1) * Double(stages)
+        let done = min(Int(k), stages)
+        let fading: (stage: Int, opacity: Double)? = done < stages ? (done, k - Double(done)) : nil
+        return (done >= 1 ? done - 1 : nil, fading)
+    }
+
+    /// A binary min-heap of grid cells by distance.
+    private nonisolated struct CellHeap {
+        private var items: [(key: Float, cell: Int)] = []
+
+        mutating func push(_ key: Float, _ cell: Int) {
+            items.append((key, cell))
+            var i = items.count - 1
+            while i > 0 {
+                let parent = (i - 1) / 2
+                guard items[i].key < items[parent].key else { break }
+                items.swapAt(i, parent)
+                i = parent
+            }
+        }
+
+        mutating func pop() -> (key: Float, cell: Int)? {
+            guard let first = items.first else { return nil }
+            let last = items.removeLast()
+            if !items.isEmpty {
+                items[0] = last
+                var i = 0
+                while true {
+                    let l = 2 * i + 1, r = l + 1
+                    var smallest = i
+                    if l < items.count, items[l].key < items[smallest].key { smallest = l }
+                    if r < items.count, items[r].key < items[smallest].key { smallest = r }
+                    if smallest == i { break }
+                    items.swapAt(i, smallest)
+                    i = smallest
+                }
+            }
+            return first
+        }
+    }
+}
+
+/// The show's moments on the preview, as `TemplatePreviewView` keeps them.
+struct FormingMoments {
+    /// The photo's graphite drawing, and when it began to race over the photo.
+    var graphite: GraphiteSketch.Drawing?
+    var graphiteBegan: Date?
+    /// When the template's lines begin to burn in (it can be a moment ahead: `graphiteAtLeast`),
+    /// and when they have.
+    var fuseLit: Date?
+    var fuseDone: Date?
+    /// A demo's holds: how far the graphite and the fuse are (nil: as the clock says).
+    var heldGraphite: Double?
+    var heldFuse: Double?
+
+    /// How far the graphite has raced: by the clock until the fuse is lit, then the rest of the
+    /// way as the fuse burns.
+    func graphiteProgress(at now: Date) -> Double {
+        if let heldGraphite { return heldGraphite }
+        guard graphite != nil, let graphiteBegan else { return 0 }
+        guard let fuseLit, now >= fuseLit else {
+            return FormingShow.graphiteProgress(since: now.timeIntervalSince(graphiteBegan))
+        }
+        let raced = FormingShow.graphiteProgress(since: fuseLit.timeIntervalSince(graphiteBegan))
+        return raced + (1 - raced) * fuseProgress(at: now)
+    }
+
+    func fuseProgress(at now: Date) -> Double {
+        if let heldFuse { return heldFuse }
+        guard let fuseLit, let fuseDone else { return 0 }
+        return FormingShow.fuseProgress(since: now.timeIntervalSince(fuseLit), length: fuseDone.timeIntervalSince(fuseLit))
+    }
+
+    /// Until when anything moves: nil once nothing will, `distantFuture` while the graphite races
+    /// on a template still being made.
+    var movesUntil: Date? {
+        var until: Date?
+        if heldGraphite == nil, graphite != nil, graphiteBegan != nil {
+            until = fuseDone ?? .distantFuture
+        }
+        if heldFuse == nil, let fuseDone {
+            until = until.map { max($0, fuseDone) } ?? fuseDone
+        }
+        return until
+    }
+}
+
+/// What the front has reached at `progress`: a mask over a frame in which the picture is at
+/// `picture`, the front's image (`FrontMasks`) scaled about its origin.
+struct FormingFrontMask: View {
+    let picture: CGRect
+    let progress: Double
+
+    var body: some View {
+        if progress >= 1 {
+            Rectangle()
+        } else if progress <= 0 {
+            Color.clear
+        } else if let image = FrontMasks.image {
+            let o = FormingShow.Front.origin(in: picture)
+            let side = CGFloat(FormingShow.Front.side(in: picture))
+            Image(decorative: image, scale: 1)
+                .resizable()
+                .frame(width: side, height: side)
+                .scaleEffect(progress)
+                .position(x: o.x, y: o.y)
+        } else {
+            Rectangle().opacity(progress)
+        }
+    }
+}
+
+/// The show's graphite and fuse over the preview's photo (`FormingShow`): the graphite drawing as
+/// far as its strokes have raced, then the page's paper and its lines as far as they have burned, with the
+/// burning front in gold. `picture` is where the photo shows in a frame of `size`; `scale` is
+/// the lines' size beside the canvas's (`CompareView.canvasScale`).
+struct FormingShowLayers: View {
+    let moments: FormingMoments
+    let lines: LineArtDrawing?
+    let picture: CGRect
+    let size: CGSize
+    let scale: CGFloat
+    /// Nothing more will move: drawn as it ends, and the timeline paused.
+    @State private var stillAt: Date?
+    /// The burning front's gold lines (`FormingShow.glow`), for these lines at this size.
+    @State private var gold: (key: GoldKey, image: CGImage)?
+
+    private struct GoldKey: Equatable {
+        var lines: UUID
+        var size: CGSize
+    }
+    @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
+
+    private var isStill: Bool {
+        guard let until = moments.movesUntil else { return true }
+        return stillAt == until
+    }
+
+    var body: some View {
+        TimelineView(.animation(paused: isStill)) { context in
+            // Paused, every beat that began has ended, wherever the last frame left it.
+            let now = isStill ? Date.distantFuture : context.date
+            layers(graphite: moments.graphiteProgress(at: now), fuse: lines == nil ? 0 : moments.fuseProgress(at: now))
+        }
+        .frame(width: size.width, height: size.height, alignment: .topLeading)
+        .allowsHitTesting(false)
+        .task(id: moments.movesUntil) {
+            guard let until = moments.movesUntil, until < .distantFuture else { return }
+            let wait = until.timeIntervalSinceNow
+            if wait > 0 {
+                guard (try? await Task.sleep(for: .seconds(wait))) != nil else { return }
+            }
+            stillAt = until
+        }
+        // Keyed on the size too: a first layout at no size makes nothing, and the next retries.
+        .task(id: lines.map { GoldKey(lines: $0.id, size: picture.size) }) {
+            guard let lines, gold?.key != GoldKey(lines: lines.id, size: picture.size) else { return }
+            let key = GoldKey(lines: lines.id, size: picture.size)
+            let width = lines.lineWidth(scale: scale, weight: lineWeight)
+            guard let image = await FormingShow.glow(lines, size: key.size, lineWidth: width) else { return }
+            gold = (key, image)
+        }
+    }
+
+    @ViewBuilder
+    private func layers(graphite: Double, fuse: Double) -> some View {
+        ZStack(alignment: .topLeading) {
+            // Under paper wherever the fuse has burned: drawn only while some of it shows.
+            if let drawing = moments.graphite, graphite > 0, fuse < 1 {
+                let shown = GraphiteSketch.shown(at: graphite, stages: drawing.stages.count)
+                ZStack(alignment: .topLeading) {
+                    if let whole = shown.whole { placed(drawing.stages[whole]) }
+                    if let fading = shown.fading { placed(drawing.stages[fading.stage]).opacity(fading.opacity) }
+                    // The leading tip: the glint passes from one stage's fresh strokes to the next's.
+                    if let whole = shown.whole, let fading = shown.fading {
+                        placed(drawing.glints[whole]).opacity(1 - fading.opacity)
+                    }
+                    if let fading = shown.fading { placed(drawing.glints[fading.stage]).opacity(fading.opacity) }
+                }
+                .transition(.opacity)
+            }
+            if let lines {
+                // In from the moment the template is made, behind a front not yet lit: the lines
+                // are stroked once, before they burn.
+                FormingPaper()
+                    .mask(alignment: .topLeading) { FormingFrontMask(picture: picture, progress: fuse) }
+                FormingLines(drawing: lines, picture: picture, scale: scale)
+                    .equatable()
+                    .frame(width: size.width, height: size.height)
+                    .mask(alignment: .topLeading) { FormingFrontMask(picture: picture, progress: fuse) }
+                if let gold, gold.key.lines == lines.id, fuse > 0, fuse < 1 {
+                    // The burning front: the lines in gold along a narrow band behind it.
+                    placed(gold.image)
+                        .mask(alignment: .topLeading) {
+                            ZStack {
+                                FormingFrontMask(picture: picture, progress: fuse)
+                                FormingFrontMask(picture: picture, progress: fuse - 0.07)
+                                    .blendMode(.destinationOut)
+                            }
+                            .compositingGroup()
+                        }
+                }
+            }
+        }
+    }
+
+    /// An image filling the picture, in the frame.
+    private func placed(_ image: CGImage) -> some View {
+        Image(decorative: image, scale: 1)
+            .resizable()
+            .interpolation(.high)
+            .scaledToFill()
+            .frame(width: picture.width, height: picture.height)
+            .clipped()
+            .offset(x: picture.minX, y: picture.minY)
+            .frame(width: size.width, height: size.height, alignment: .topLeading)
+    }
+}
+
+/// The page coming into the departing picture as its numbers come out like stars
+/// (`FormingShow`): the page as the canvas draws it, behind the show's front, `since` it came,
+/// with a twinkle at each number as the front reaches it. The paper and lines under it are the
+/// page's already, so only the numbers change. `size` is the page's, in points.
+struct FormingPageStars: View {
+    let page: CGImage
+    let stars: FormingShow.Stars
+    let since: Date
+    let size: CGSize
+    /// A demo's hold: how far the numbers have come out.
+    var held: Double?
+    @State private var isOver = false
+    @State private var arrivals: [(point: CGPoint, radius: CGFloat, arrival: Double)] = []
+
+    var body: some View {
+        let shownArrivals = arrivals, gold = Color(.sRGB, red: FormingShow.goldRGB.x, green: FormingShow.goldRGB.y, blue: FormingShow.goldRGB.z)
+        TimelineView(.animation(paused: isOver || held != nil)) { context in
+            let progress = held ?? frontProgress(at: isOver ? .distantFuture : context.date)
+            ZStack(alignment: .topLeading) {
+                Image(decorative: page, scale: 1)
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: size.width, height: size.height)
+                    .mask(alignment: .topLeading) {
+                        FormingFrontMask(picture: CGRect(origin: .zero, size: size), progress: progress)
+                    }
+                if progress < 1 + FormingShow.Stars.life {
+                    Canvas { context, _ in
+                        FormingShow.Stars.draw(shownArrivals, in: &context, progress: progress, color: gold)
+                    }
+                    .frame(width: size.width, height: size.height)
+                }
+            }
+        }
+        .allowsHitTesting(false)
+        .task(id: size) { arrivals = stars.arrivals(on: size) }
+        .task {
+            guard held == nil else { return }
+            let wait = since.addingTimeInterval(FormingShow.stars).timeIntervalSinceNow
+            if wait > 0 {
+                guard (try? await Task.sleep(for: .seconds(wait))) != nil else { return }
+            }
+            isOver = true
+        }
+    }
+
+    /// The front's progress over the page at `now`, past 1 by a twinkle's `life` so the last
+    /// numbers reached twinkle out within the beat.
+    private func frontProgress(at now: Date) -> Double {
+        FormingShow.starsProgress(since: now.timeIntervalSince(since)) * (1 + FormingShow.Stars.life)
+    }
+}
