@@ -31,7 +31,7 @@ struct ModeShell<Gallery: View, Route: Hashable, Destination: View>: View {
     /// The wheel's year the painter left the mode for.
     let leave: (Int) -> Void
     /// What a picked picture becomes, while the shell shows it is working.
-    let make: (ModePicture) async -> Void
+    let make: @MainActor (ModePicture) async -> Void
     let gallery: (ModeWaysIn) -> Gallery
     let destination: (Route) -> Destination
 
@@ -42,7 +42,7 @@ struct ModeShell<Gallery: View, Route: Hashable, Destination: View>: View {
     @State private var isWorking = false
 
     init(look: ModeLook, path: Binding<[Route]>, leave: @escaping (Int) -> Void, opensSettings: Bool = false,
-         make: @escaping (ModePicture) async -> Void,
+         make: @escaping @MainActor (ModePicture) async -> Void,
          @ViewBuilder gallery: @escaping (ModeWaysIn) -> Gallery,
          @ViewBuilder destination: @escaping (Route) -> Destination) {
         self.look = look

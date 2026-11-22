@@ -1350,7 +1350,10 @@ new mode starts from it, and something every mode needs goes into the frame, not
 Paint by Mosaic is a copy of the app, not a mode, and keeps its own. **The Frame** (`FrameEra`,
 year 1000, `Era.frame`) is the frame with nothing of a mode's in it: its gallery, canvas and paints
 are empty places, named (`ModeSlot`), and a picture picked opens on a painting screen and is kept
-nowhere. Demos: `frame-gallery`, `frame-settings`, `frame-painting`.
+nowhere; its passages are the plain tiles both ways. Demos: `frame-gallery`, `frame-settings`,
+`frame-painting`. Moving onto the frame changed two things: Watercolor's + shows with its gallery
+empty too (rule 4), and Stained Glass's library picker is the shared one (square tiles, no
+captions; VoiceOver reads each title).
 
 ## Stained Glass (1248)
 

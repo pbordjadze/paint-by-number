@@ -15,7 +15,7 @@ struct FrameEra: View {
     @State private var path: [FramePicture] = []
 
     var body: some View {
-        ModeShell(look: Self.look, path: $path, leave: leave, opensSettings: Self.opensSettings, make: open) { _ in
+        ModeShell(look: Self.look, path: $path, leave: leave, opensSettings: Self.opensSettings, make: openPicture) { _ in
             ModeSlot(name: Text("The mode’s gallery"))
                 .padding(20)
         } destination: { picture in
@@ -33,9 +33,9 @@ struct FrameEra: View {
         #endif
     }
 
-    /// The Frame in itself: its look is the frame's plainest.
+    /// The Frame in itself: its look is the frame's plainest, a pale grey accent on near black.
     static var look: ModeLook {
-        ModeLook(year: EraYear.frame, title: Text("The Frame"), newTitle: Text("New Painting"), accent: Theme.gold,
+        ModeLook(year: EraYear.frame, title: Text("The Frame"), newTitle: Text("New Painting"), accent: Color(white: 0.82),
                  backdrop: Color(red: 0.11, green: 0.11, blue: 0.13), id: "frame")
     }
 
@@ -57,7 +57,7 @@ struct FrameEra: View {
         #endif
     }
 
-    private func open(_ picked: ModePicture) async {
+    private func openPicture(_ picked: ModePicture) async {
         guard let image = picked.cgImage else { return }
         let title = picked.sample?.title
             ?? String(localized: "frame.photo", defaultValue: "Your Photo",
@@ -77,7 +77,7 @@ struct FrameEra: View {
             guard let sample = Sample.starters.first, let url = sample.url,
                   let photo = try? await Background.run({ try PhotoLoader.load(url: url, maxPixelSize: 1200) })
             else { return }
-            await open(ModePicture(photo: photo, sample: sample))
+            await openPicture(ModePicture(photo: photo, sample: sample))
             try? await Task.sleep(for: .seconds(1.5))
             DemoMode.markReady()
         default:
