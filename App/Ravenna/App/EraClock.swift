@@ -253,10 +253,14 @@ public enum EraYear {
     /// and Debug builds; painting-company row 366).
     public static let stainedGlass = 1248
 
+    /// 1502, the year of Dürer's *Young Hare*, the most famous early watercolor: Watercolor's
+    /// (SideStore and Debug builds; painting-company row 373).
+    public static let watercolor = 1502
+
     /// The years that open an era, oldest first: the ones the wheel lights.
     public static var modes: [Int] {
         #if UNRELEASED
-        return [byzantium, stainedGlass]
+        return [byzantium, stainedGlass, watercolor]
         #else
         return [byzantium]
         #endif
@@ -264,5 +268,10 @@ public enum EraYear {
 
     public static func opensStainedGlass(_ year: Int) -> Bool { year == stainedGlass && modes.contains(year) }
 
+    public static func opensWatercolor(_ year: Int) -> Bool { year == watercolor && modes.contains(year) }
+
     public static func returnsToThePresent(_ year: Int) -> Bool { year >= present }
+
+    /// Whether a wheel left on `year` takes the painter somewhere: an era's year, or the present.
+    public static func opensAnEra(_ year: Int) -> Bool { returnsToThePresent(year) || modes.contains(year) }
 }

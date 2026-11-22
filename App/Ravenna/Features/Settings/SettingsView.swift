@@ -160,7 +160,7 @@ struct SettingsView: View {
                         .accessibilityIdentifier("about-year")
                         if showsClock {
                             EraClock(year: EraYear.byzantium) { year in
-                                guard EraYear.returnsToThePresent(year) || EraYear.opensStainedGlass(year) else { return }
+                                guard year != EraYear.byzantium, EraYear.opensAnEra(year) else { return }
                                 dismiss()
                                 leaveRavenna(for: year)
                             }
