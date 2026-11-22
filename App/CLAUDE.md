@@ -596,7 +596,8 @@ region states, whose `RegionState.mode` carries its own value per region, set wi
 and numbers, draw light over the picture and keep frames coming (`isAnimating`); its pipelines
 come from `RenderContext.makePipeline`. A mode that paints by its own rules takes the canvas's
 taps and strokes (`CanvasView.touches`, `CanvasTouches`) while pinch, pan and zoom stay the
-canvas's. Stained Glass is the first (`GlassMode`, `GlassModeTests`).
+canvas's. A mode may also lay a view over the painting in canvas units (`CanvasView.modeOverlay`, in the
+zooming view, so UIKit's pan and zoom carry it). Stained Glass is the first (`GlassMode`, `GlassModeTests`).
 
 ## Line art rendering
 
@@ -1403,7 +1404,12 @@ glass before it, pieces the lead covers whole glazed as the window opens
 it is whole, drawn by `glassFillFragment` and `glassLightFragment`: Liquid Glass misused as the
 window's glass, each piece a clear lens over the window's photo, its rim bending the photo and
 catching the light, a poured glass tinting it, the lead heavy came (`GlassMode`; the shelf's
-pictures are drawn by it too, `GlassShelf.picture`); VoiceOver has a piece element each; saves queued
+pictures are drawn by it too, `GlassShelf.picture`); on screen the glass itself is Apple's real Liquid
+Glass (`GlassPanes`, in the canvas's `modeOverlay`): each framed piece a pane inset in its lead, one
+glass effect per glass, a pane materializing as its piece is framed or poured and a poured one
+melting into its glass's neighbours, while the canvas draws its lenses flat under it
+(`GlassMode.lensesCovered`; Reduce Transparency keeps the canvas's lenses, Reduce Motion the
+melt away); VoiceOver has a piece element each; saves queued
 in order, `GlassShelf.enqueue`), `GlassPicture` (lead and glass colors, and the shelf's
 pictures). PaintCore's `GlassTexture` holds `fields()`, the lead's distance, shade, depth and
 grain, which the canvas's shader paints from (its own painted glass is the pictures' look where a

@@ -32,6 +32,11 @@ final class GlassGlazeModel: CanvasTouches {
     @ObservationIgnored weak var canvas: CanvasView? {
         didSet { if canvas !== oldValue { showAll() } }
     }
+    /// The window's real Liquid Glass over the canvas (`GlassPanes`), nil where the canvas's own
+    /// lenses are the glass (tests).
+    @ObservationIgnored var panes: GlassPanes? {
+        didSet { panes?.showAll(hold(of:)) }
+    }
     /// The glass in each piece. Not observed: a drag pours many a second, and the screen reads
     /// only how many are glazed (`glazedCount`).
     @ObservationIgnored private(set) var glazing: Glazing {
@@ -125,6 +130,7 @@ final class GlassGlazeModel: CanvasTouches {
             glazing.glass[r] = glass
             glazing.framed[r] = true
             canvas?.showMode(r, value: GlassMode.code(glass: Int(glass), replacing: nil), painted: true, from: nil, animated: false)
+            panes?.show(r, hold: hold(of: r), arriving: false)
         }
     }
 
@@ -221,6 +227,7 @@ final class GlassGlazeModel: CanvasTouches {
         for r in new {
             glazing.framed[r] = true
             canvas?.showMode(r, value: GlassMode.code(glass: nil, replacing: nil), painted: false, from: nil, animated: false)
+            panes?.show(r, hold: GlassPanes.clear, arriving: !reduceMotion)
         }
         framedByHand += new.filter { !hidden.contains($0) }.count
         endStroke()
@@ -242,6 +249,7 @@ final class GlassGlazeModel: CanvasTouches {
         glazing.glass[r] = glass
         canvas?.showMode(r, value: GlassMode.code(glass: Int(glass), replacing: Self.glass(before)), painted: true,
                          from: p, animated: animated)
+        panes?.show(r, hold: hold(of: r), arriving: animated && !reduceMotion)
         ring(glass: Int(glass), poured: animated)
         if isComplete && !wasComplete { finished() }
         if p == nil { endStroke() }
@@ -288,6 +296,7 @@ final class GlassGlazeModel: CanvasTouches {
                 canvas?.showMode(step.region, value: GlassMode.code(glass: nil, replacing: nil, framed: framed),
                                  painted: false, from: nil, animated: false)
             }
+            panes?.show(step.region, hold: hold(of: step.region), arriving: false)
         }
         if !isComplete {
             finishedAt = nil
@@ -323,6 +332,7 @@ final class GlassGlazeModel: CanvasTouches {
                 canvas.showMode(r, value: GlassMode.code(glass: nil, replacing: nil), painted: false, from: nil, animated: false)
             }
         }
+        panes?.showAll(hold(of:))
         if finishedAt != nil {
             mode.sun(at: canvas.canvasTime, held: sunHold, passes: !reduceMotion, hour: Self.hour())
         } else if isComplete {
@@ -362,6 +372,8 @@ final class GlassGlazeModel: CanvasTouches {
     nonisolated static func picture(template: Template, glazing: Glazing, offered count: Int, mode: GlassMode,
                                     longSide: Int) -> CGImage? {
         guard let context = RenderContext.shared, let scene = CanvasScene(template: template, context: context) else { return nil }
+        // No real glass lies over a picture.
+        let mode = mode.uncovered()
         let states = template.regions.indices.map { r -> RegionState in
             let g = r < glazing.glass.count ? Int(glazing.glass[r]) : -1
             guard g >= 0, g < count else {
@@ -382,6 +394,13 @@ final class GlassGlazeModel: CanvasTouches {
                 outlines: false, numbers: false,
                 clear: MTLClearColor(red: Double(nave.x), green: Double(nave.y), blue: Double(nave.z), alpha: 1), mode: mode),
             width: w, height: h, context: context)
+    }
+
+    /// What piece `r`'s pane holds (`GlassPanes.Hold`): its glass, the clear lens once framed, or none.
+    private func hold(of r: Int) -> GlassPanes.Hold? {
+        guard r < pieces else { return nil }
+        if let g = Self.glass(glazing.glass[r]), g < offered.count { return g + 1 }
+        return glazing.isFramed(r) ? GlassPanes.clear : nil
     }
 
     /// A glazing's glass as a place in `offered`, nil for none.
@@ -435,12 +454,26 @@ final class GlassGlazeModel: CanvasTouches {
 struct GlassCanvas: UIViewRepresentable {
     let model: GlassGlazeModel
 
+    final class Coordinator {
+        /// The window's real glass, laid in the canvas's zooming view.
+        var panes: UIHostingController<GlassPanesView>?
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
     func makeUIView(context: Context) -> CanvasView {
         let view = CanvasView(session: model.session)
         view.reduceMotion = context.environment.accessibilityReduceMotion
         view.mode = model.mode
         view.touches = model
         view.backgroundColor = UIColor(GlassPicture.color(GlassPicture.nave, space: .sRGB))
+        if let panes = model.panes {
+            let host = UIHostingController(rootView: GlassPanesView(panes: panes))
+            host.view.backgroundColor = .clear
+            host.safeAreaRegions = []
+            view.modeOverlay = host.view
+            context.coordinator.panes = host
+        }
         model.reduceMotion = context.environment.accessibilityReduceMotion
         model.canvas = view
         return view

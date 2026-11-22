@@ -104,6 +104,19 @@ final class CanvasView: UIView, PaintingCanvas {
             requestRender()
         }
     }
+    /// A view a mode lays over the painting in canvas units (Stained Glass's real glass,
+    /// `GlassPanes`): it rides the zooming view, so UIKit's pan and zoom move it with no work of its
+    /// own, and takes no touches.
+    var modeOverlay: UIView? {
+        didSet {
+            guard modeOverlay !== oldValue else { return }
+            oldValue?.removeFromSuperview()
+            guard let overlay = modeOverlay else { return }
+            overlay.frame = zoomView.bounds
+            overlay.isUserInteractionEnabled = false
+            zoomView.addSubview(overlay)
+        }
+    }
     /// Whether the layer draws past white now (`ExtendedRange`, for a mode that asks).
     private var drawsExtendedRange = false
     /// A mode that takes the canvas's touches in place of the painting session (`CanvasTouches`;
@@ -1290,6 +1303,7 @@ final class CanvasView: UIView, PaintingCanvas {
     /// still to come stops, so none plays on over the next screen (a replay ends in a finish, and
     /// night falls with a VoiceOver announcement), and their tasks let the canvas go.
     func tearDown() {
+        modeOverlay = nil
         replayTask?.cancel()
         replayTask = nil
         if isReplaying {

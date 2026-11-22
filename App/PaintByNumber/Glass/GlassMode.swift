@@ -60,7 +60,17 @@ nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
     /// How much of the screen's headroom past white the lit glass takes (`ExtendedRange`), so the
     /// brightest pane stays short of glaring.
     static let glowShare: Float = 0.85
-    private let light = OSAllocatedUnfairLock(initialState: Light())
+    /// Shared with the uncovered copy (`uncovered()`), so the shelf's and Share's pictures stand in
+    /// the same light.
+    private let light: OSAllocatedUnfairLock<Light>
+    private let covered: OSAllocatedUnfairLock<Bool>
+    /// Real Liquid Glass lies over the lenses (`GlassPanes`): the lenses are drawn flat under it,
+    /// the photo unbent and their rims unlit, since the glass above bends the photo and catches
+    /// the light itself; the poured color, the lead, the numbers and the light stay the canvas's.
+    var lensesCovered: Bool {
+        get { covered.withLock { $0 } }
+        set { covered.withLock { $0 = newValue } }
+    }
     /// How long the hour's light takes to come over a window.
     static let dayFade: Float = 1.5
 
@@ -88,9 +98,30 @@ nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
         self.fields = fields
         self.photo = photo
         self.glasses = glasses
+        light = OSAllocatedUnfairLock(initialState: Light())
+        covered = OSAllocatedUnfairLock(initialState: false)
         let width = Float(GlassPicture.leadWidth(width: template.width, height: template.height))
         let rim = Self.rimShare * Float(max(template.width, template.height))
         parameters = Parameters(lead: SIMD4(GlassPicture.lead, width), lens: SIMD4(rim, Float(offered.count), 0, 0))
+    }
+
+    /// The same window drawing its lenses whole, for pictures off the screen (the shelf's, Share's),
+    /// which have no real glass over them; itself when its lenses aren't covered.
+    func uncovered() -> GlassMode {
+        lensesCovered ? GlassMode(sharing: self) : self
+    }
+
+    private init(sharing other: GlassMode) {
+        pipeline = other.pipeline
+        lightPipeline = other.lightPipeline
+        extendedPipeline = other.extendedPipeline
+        extendedLightPipeline = other.extendedLightPipeline
+        fields = other.fields
+        photo = other.photo
+        glasses = other.glasses
+        parameters = other.parameters
+        light = other.light
+        covered = OSAllocatedUnfairLock(initialState: false)
     }
 
     /// The value a piece's region state carries: the glass in it (nil: none), the one it pours
@@ -108,6 +139,7 @@ nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
         guard scene.indexCount > 0 else { return }
         var u = frame.uniforms, p = parameters, l = light.withLock { $0 }
         p.lens.z = Self.glowShare * max(frame.headroom - 1, 0)
+        p.lens.w = lensesCovered ? 1 : 0
         let size = MemoryLayout<CanvasUniforms>.stride
         encoder.setRenderPipelineState(frame.format == RenderContext.extendedFormat ? extendedPipeline : pipeline)
         encoder.setVertexBuffer(scene.positions, offset: 0, index: 0)

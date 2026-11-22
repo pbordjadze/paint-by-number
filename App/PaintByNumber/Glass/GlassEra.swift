@@ -228,8 +228,19 @@ struct GlassWindowScreen: View {
                     unavailable = true
                     return
                 }
+                let template = opened.template
+                let outlines = await Background.run {
+                    GlassPanes.outlines(of: template, lead: GlassPicture.leadWidth(width: template.width, height: template.height))
+                }
                 let made = GlassGlazeModel(id: id, template: opened.template, glazing: opened.glazing, offered: opened.offered,
                                            mode: mode)
+                let panes = GlassPanes(outlines: outlines, offered: opened.offered, colorSpace: template.colorSpace)
+                panes.onCover = { [weak made] covered in
+                    guard let made, made.mode.lensesCovered != covered else { return }
+                    made.mode.lensesCovered = covered
+                    made.canvas?.requestRender()
+                }
+                made.panes = panes
                 made.onChange = { [shelf] glazing in
                     shelf.enqueue(glazing, of: id, template: opened.template, offered: opened.offered, texture: opened.texture,
                                   mode: mode)
