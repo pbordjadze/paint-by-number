@@ -11,7 +11,8 @@ import Foundation
 /// The file is read as hostile input: magic `PBGL`, a format version, the piece count, one
 /// `Int16` a piece, then the count of glasses offered and each one's OKLab and RGB (six `Float32`),
 /// then (from November 22, 2026) the piece count again and a byte a piece, 1 where the painter
-/// has framed it (`GlassFraming`); a file without them has its glazed pieces framed.
+/// has framed it (`GlassFraming`); a file without them has its glazed pieces framed (an older build that rewrites one drops
+/// the frames of pieces not yet glazed, which the painter leads again).
 /// Fields are only ever appended (readers ignore trailing bytes); bump `formatVersion` only when
 /// an existing field changes meaning. A glass past what the window offers reads as none, never
 /// as another glass.

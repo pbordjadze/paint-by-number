@@ -186,6 +186,33 @@ struct GlassTests {
         #expect(GlassFraming.framed(by: [SIMD2(10, 1), SIMD2(200, 1)], in: t, framed: none, reach: 3).isEmpty)
     }
 
+    /// Every piece can be framed, the last too: a stroke across the last bare piece frames it,
+    /// though there is nothing left to part it from.
+    @Test func everyPieceCanBeFramedStrokeByStroke() throws {
+        let t = try Self.window().template
+        var framed = [Bool](repeating: false, count: t.regions.count)
+        let topRight = Self.region(at: 200, 40, in: t), bottomRight = Self.region(at: 200, 140, in: t)
+        let left = Self.region(at: 40, 90, in: t)
+        func lay(_ stroke: [SIMD2<Float>]) -> [Int] {
+            let new = GlassFraming.framed(by: stroke, in: t, framed: framed, reach: 3)
+            for r in new { framed[r] = true }
+            return new
+        }
+        #expect(lay([SIMD2(100, 0), SIMD2(100, 100), SIMD2(240, 100)]) == [topRight])
+        #expect(lay([SIMD2(130, 88), SIMD2(110, 120), SIMD2(110, 180)]) == [bottomRight])
+        // The left piece, alone now: from the top border straight down to the bottom one.
+        #expect(lay([SIMD2(40, 0), SIMD2(40, 180)]) == [left])
+        #expect(framed.allSatisfy { $0 })
+    }
+
+    /// A finger dragged past the canvas's edge walls nothing out there.
+    @Test func aStrokePastTheEdgeIsSafe() throws {
+        let t = try Self.window().template
+        let none = [Bool](repeating: false, count: t.regions.count)
+        let stroke: [SIMD2<Float>] = [SIMD2(-20, -20), SIMD2(100, 0), SIMD2(100, 100), SIMD2(260, 100), SIMD2(300, 220)]
+        #expect(GlassFraming.framed(by: stroke, in: t, framed: none, reach: 3) == [Self.region(at: 200, 40, in: t)])
+    }
+
     /// Pieces already framed are leaded: a stroke may start from them, and they are never framed
     /// again.
     @Test func framedPiecesAreLeadToStartFrom() throws {

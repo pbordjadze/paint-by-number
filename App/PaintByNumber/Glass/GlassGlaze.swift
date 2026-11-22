@@ -10,9 +10,10 @@ import os
 
 /// Glazing a window (painting-company row 366; by number, Paul's pick of November 22, 2026): the
 /// room dark, the window's pieces clear lenses over its photo, each numbered for the glass the
-/// photo suggests, and below it those glasses as numbered beads. A touch, or a drag across
-/// pieces, pours the bead's glass into each piece of its number, from the finger, tinting its
-/// lens. Glazed whole, the sun passes behind the window once.
+/// photo suggests, and below it those glasses as numbered beads. A drag from the leaded part
+/// round bare pieces and back leads them (`GlassFraming`); a tap in a led piece of the bead's
+/// number pours its glass from the finger, tinting its lens. Glazed whole, the sun passes behind
+/// the window once.
 /// The window is on the painting screen's own canvas (`GlassCanvas`), in Stained Glass's mode
 /// (`GlassMode`).
 @MainActor
@@ -182,6 +183,7 @@ final class GlassGlazeModel: CanvasTouches {
             leadLayer = layer
             return layer
         }()
+        if layer.superlayer !== canvas.layer { canvas.layer.addSublayer(layer) }
         guard let stroke = leadStroke, let first = stroke.first else {
             layer.path = nil
             return
@@ -219,7 +221,7 @@ final class GlassGlazeModel: CanvasTouches {
             glazing.framed[r] = true
             canvas?.showMode(r, value: GlassMode.code(glass: nil, replacing: nil), painted: false, from: nil, animated: false)
         }
-        framedByHand += new.count
+        framedByHand += new.filter { !hidden.contains($0) }.count
         endStroke()
         ring(glass: Int(template.regions[new[0]].colorIndex), poured: true)
         changed()
@@ -271,7 +273,7 @@ final class GlassGlazeModel: CanvasTouches {
         guard let last = undoStack.popLast() else { return }
         for step in last.reversed() {
             let now = glazing.glass[step.region]
-            if glazing.framed[step.region] && !step.framed && step.glass == now { framedByHand -= 1 }
+            if glazing.framed[step.region] && !step.framed && step.glass == now && !hidden.contains(step.region) { framedByHand -= 1 }
             glazing.glass[step.region] = step.glass
             glazing.framed[step.region] = step.framed
             let framed = glazing.isFramed(step.region)

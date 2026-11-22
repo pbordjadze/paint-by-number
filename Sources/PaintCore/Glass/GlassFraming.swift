@@ -8,7 +8,8 @@ import Foundation
 ///
 /// The stroke is a wall across the bare part of the window: whatever bare part it parts from the
 /// largest is the chunk it took, and a piece is in the chunk when most of it is. A stroke that
-/// doesn't start and end on the leaded part, or parts nothing off, frames nothing.
+/// doesn't start and end on the leaded part, or parts nothing off, frames nothing; but one across
+/// the last bare piece of its part frames it, since there is nothing left to part it from.
 public enum GlassFraming {
     /// The bare pieces `stroke` (canvas units) frames, in order; none when it closes no frame.
     /// `framed` says which pieces are leaded already (its count is the template's pieces);
@@ -38,8 +39,11 @@ public enum GlassFraming {
             for k in 0...steps {
                 let p = a + d * (Float(k) / Float(steps))
                 let cx = Int(p.x.rounded(.down)), cy = Int(p.y.rounded(.down))
-                for y in max(0, cy - r)...min(h - 1, cy + r) where y >= 0 {
-                    for x in max(0, cx - r)...min(w - 1, cx + r) where x >= 0 {
+                // A finger past the canvas's edge walls nothing there.
+                let y0 = max(0, cy - r), y1 = min(h - 1, cy + r), x0 = max(0, cx - r), x1 = min(w - 1, cx + r)
+                guard y0 <= y1, x0 <= x1 else { continue }
+                for y in y0...y1 {
+                    for x in x0...x1 {
                         let dx = Float(x) + 0.5 - p.x, dy = Float(y) + 0.5 - p.y
                         if dx * dx + dy * dy <= reach * reach { wall[y * w + x] = true }
                     }
@@ -47,43 +51,64 @@ public enum GlassFraming {
             }
         }
 
-        // The bare part's pieces of land once the wall stands, 4-connected.
-        var land = [Int32](repeating: -1, count: w * h)
-        var sizes: [Int] = []
-        var stack: [Int] = []
-        for start in 0..<(w * h) where land[start] < 0 && !wall[start] && !leaded(start % w, start / w) {
-            let id = Int32(sizes.count)
-            var size = 0
-            land[start] = id
-            stack.append(start)
-            while let i = stack.popLast() {
-                size += 1
-                let x = i % w, y = i / w
-                for (nx, ny) in [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
-                where nx >= 0 && ny >= 0 && nx < w && ny < h {
-                    let j = ny * w + nx
-                    if land[j] < 0 && !wall[j] && !leaded(nx, ny) {
-                        land[j] = id
-                        stack.append(j)
+        // The bare part's pieces of land, 4-connected: before the wall stands (`blob`) and after
+        // (`land`).
+        func components(walled: Bool) -> (labels: [Int32], sizes: [Int]) {
+            var labels = [Int32](repeating: -1, count: w * h)
+            var sizes: [Int] = []
+            var stack: [Int] = []
+            func open(_ i: Int) -> Bool { labels[i] < 0 && !(walled && wall[i]) && !leaded(i % w, i / w) }
+            for start in 0..<(w * h) where open(start) {
+                let id = Int32(sizes.count)
+                var size = 0
+                labels[start] = id
+                stack.append(start)
+                while let i = stack.popLast() {
+                    size += 1
+                    let x = i % w, y = i / w
+                    for (nx, ny) in [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
+                    where nx >= 0 && ny >= 0 && nx < w && ny < h {
+                        let j = ny * w + nx
+                        if open(j) {
+                            labels[j] = id
+                            stack.append(j)
+                        }
                     }
                 }
+                sizes.append(size)
             }
-            sizes.append(size)
+            return (labels, sizes)
         }
-        guard sizes.count >= 2, let rest = sizes.indices.max(by: { sizes[$0] < sizes[$1] }) else { return [] }
+        let (land, sizes) = components(walled: true)
+        let blob = components(walled: false).labels
+        let rest = sizes.count >= 2 ? sizes.indices.max(by: { sizes[$0] < sizes[$1] }) : nil
 
-        // Each bare piece: how much of it is in the chunk, against how much of it isn't.
+        // Each bare piece: how much of it is in the chunk, against how much of it isn't; whether
+        // the wall crosses it; and the bare blob it lies in, with how many pieces that blob holds.
         var inside = [Int](repeating: 0, count: pieces)
         var outside = [Int](repeating: 0, count: pieces)
+        var crossed = [Bool](repeating: false, count: pieces)
+        var blobOf = [Int32](repeating: -1, count: pieces)
+        var blobPieces: [Int32: Set<Int>] = [:]
         for y in 0..<h {
             for x in 0..<w {
                 let p = Int(map[x, y])
                 guard p < pieces, !framed[p] else { continue }
                 let i = y * w + x
+                blobOf[p] = blob[i]
+                blobPieces[blob[i], default: []].insert(p)
+                if wall[i] { crossed[p] = true }
+                guard let rest else { continue }
                 if land[i] >= 0 && Int(land[i]) != rest { inside[p] += 1 } else if land[i] == Int32(rest) { outside[p] += 1 }
             }
         }
-        return (0..<pieces).filter { !framed[$0] && inside[$0] > 0 && inside[$0] >= outside[$0] }
+        // The last bare piece of a blob has nothing to be parted from: a stroke from the lead
+        // across it frames it, or no window could be finished.
+        return (0..<pieces).filter { p in
+            guard !framed[p] else { return false }
+            if inside[p] > 0 && inside[p] >= outside[p] { return true }
+            return crossed[p] && blobPieces[blobOf[p]]?.count == 1
+        }
     }
 
     /// Whether `p` lies within `reach` of the leaded part (the border counts).
