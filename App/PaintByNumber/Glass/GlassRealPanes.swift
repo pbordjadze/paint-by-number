@@ -21,7 +21,10 @@ import os
 /// `-realPanesLoop YES` plays the script again and again, for Instruments' Animation Hitches.
 /// `-realPanesCamera YES` holds the window up to the light: the rear camera's live picture is
 /// behind the glass, the photo a faint layer over it, and the window stays still for the hand
-/// to move instead.
+/// to move instead. `-realPanesGrouped YES` draws one glass effect per glass instead of one per
+/// pane: the poured panes of a glass, and the panes not yet poured, each one shape of many
+/// outlines, so the effects stay about seven whatever the count (the melt then joins only
+/// panes of different glasses).
 struct GlassRealPanes: View {
     static var count: Int? {
         guard let name = DemoMode.scenario, name.hasPrefix("glass-real-panes") else { return nil }
@@ -30,6 +33,13 @@ struct GlassRealPanes: View {
 
     static let loops = UserDefaults.standard.bool(forKey: "realPanesLoop")
     static let usesCamera = UserDefaults.standard.bool(forKey: "realPanesCamera")
+    static let grouped = UserDefaults.standard.bool(forKey: "realPanesGrouped")
+
+    static let glasses: [Color] = [
+        Color(red: 0.75, green: 0.08, blue: 0.12), Color(red: 0.10, green: 0.25, blue: 0.75),
+        Color(red: 0.95, green: 0.70, blue: 0.15), Color(red: 0.10, green: 0.55, blue: 0.30),
+        Color(red: 0.45, green: 0.15, blue: 0.55), Color(red: 0.90, green: 0.92, blue: 0.95),
+    ]
 
     let count: Int
 
@@ -42,7 +52,8 @@ struct GlassRealPanes: View {
         let id: Int
         /// In unit coordinates of the photo, shrunk toward the middle to leave the lead.
         let polygon: [CGPoint]
-        let glass: Color
+        /// Its glass, an index into `glasses`.
+        let glass: Int
         /// When it is poured, seconds into the script; past the script it stays clear.
         let pouredAt: Double
     }
@@ -70,10 +81,18 @@ struct GlassRealPanes: View {
                             }
                             GlassEffectContainer(spacing: melt(t) * rect.width) {
                                 ZStack(alignment: .topLeading) {
-                                    ForEach(panes) { pane in
-                                        Color.clear
-                                            .frame(width: rect.width, height: rect.height)
-                                            .glassEffect(glass(pane, at: t), in: PaneShape(polygon: pane.polygon))
+                                    if Self.grouped {
+                                        ForEach(groups(at: t)) { group in
+                                            Color.clear
+                                                .frame(width: rect.width, height: rect.height)
+                                                .glassEffect(group.glass, in: PaneShape(polygons: group.polygons))
+                                        }
+                                    } else {
+                                        ForEach(panes) { pane in
+                                            Color.clear
+                                                .frame(width: rect.width, height: rect.height)
+                                                .glassEffect(glass(pane, at: t), in: PaneShape(polygons: [pane.polygon]))
+                                        }
                                     }
                                 }
                             }
@@ -93,7 +112,24 @@ struct GlassRealPanes: View {
     }
 
     private func glass(_ pane: Pane, at t: Double) -> Glass {
-        t >= pane.pouredAt ? .clear.tint(pane.glass.opacity(0.55)) : .clear
+        t >= pane.pouredAt ? .clear.tint(Self.glasses[pane.glass].opacity(0.55)) : .clear
+    }
+
+    /// One glass effect's panes: those poured with one glass (id its index + 1), or those not yet
+    /// poured (id 0).
+    private struct GlassGroup: Identifiable {
+        let id: Int
+        let glass: Glass
+        let polygons: [[CGPoint]]
+    }
+
+    private func groups(at t: Double) -> [GlassGroup] {
+        var polygons = [[[CGPoint]]](repeating: [], count: Self.glasses.count + 1)
+        for pane in panes { polygons[t >= pane.pouredAt ? pane.glass + 1 : 0].append(pane.polygon) }
+        return polygons.indices.filter { !polygons[$0].isEmpty }.map { id in
+            GlassGroup(id: id, glass: id == 0 ? .clear : .clear.tint(Self.glasses[id - 1].opacity(0.55)),
+                  polygons: polygons[id])
+        }
     }
 
     /// The script's clock: looping, or held at its end.
@@ -141,11 +177,6 @@ struct GlassRealPanes: View {
             seeds.append(CGPoint(x: (Double(col) + 0.2 + 0.6 * unit()) / Double(columns),
                                  y: (Double(row) + 0.2 + 0.6 * unit()) / Double(rows)))
         }
-        let glasses: [Color] = [
-            Color(red: 0.75, green: 0.08, blue: 0.12), Color(red: 0.10, green: 0.25, blue: 0.75),
-            Color(red: 0.95, green: 0.70, blue: 0.15), Color(red: 0.10, green: 0.55, blue: 0.30),
-            Color(red: 0.45, green: 0.15, blue: 0.55), Color(red: 0.90, green: 0.92, blue: 0.95),
-        ]
         let lead = 0.006
         return seeds.indices.map { i in
             var cell = [CGPoint(x: 0, y: 0), CGPoint(x: 1, y: 0), CGPoint(x: 1, y: 1), CGPoint(x: 0, y: 1)]
@@ -163,7 +194,7 @@ struct GlassRealPanes: View {
                 let k = max(0, 1 - lead / d)
                 return CGPoint(x: cx + dx * k, y: cy + dy * k)
             }
-            return Pane(id: i, polygon: shrunk, glass: glasses[Int(random.next() % UInt64(glasses.count))],
+            return Pane(id: i, polygon: shrunk, glass: Int(random.next() % UInt64(glasses.count)),
                         pouredAt: 0.5 + 7 * Double(i) / Double(max(count, 1)))
         }
     }
@@ -236,18 +267,20 @@ private struct CameraBackdrop: UIViewRepresentable {
     }
 }
 
-/// A pane's outline, laid on the view's rect from unit coordinates.
+/// Panes' outlines, laid on the view's rect from unit coordinates.
 nonisolated private struct PaneShape: Shape {
-    let polygon: [CGPoint]
+    let polygons: [[CGPoint]]
 
     func path(in rect: CGRect) -> Path {
         var path = Path()
-        guard let first = polygon.first else { return path }
-        path.move(to: CGPoint(x: rect.minX + first.x * rect.width, y: rect.minY + first.y * rect.height))
-        for p in polygon.dropFirst() {
-            path.addLine(to: CGPoint(x: rect.minX + p.x * rect.width, y: rect.minY + p.y * rect.height))
+        for polygon in polygons {
+            guard let first = polygon.first else { continue }
+            path.move(to: CGPoint(x: rect.minX + first.x * rect.width, y: rect.minY + first.y * rect.height))
+            for p in polygon.dropFirst() {
+                path.addLine(to: CGPoint(x: rect.minX + p.x * rect.width, y: rect.minY + p.y * rect.height))
+            }
+            path.closeSubpath()
         }
-        path.closeSubpath()
         return path
     }
 }
