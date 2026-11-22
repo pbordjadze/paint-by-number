@@ -56,6 +56,8 @@ struct TemplatePreviewView: View {
     /// drawing and when it began to spread, when the lines' fuse is lit, and where a tap sent it.
     @State private var graphite: GraphiteSketch.Drawing?
     @State private var graphiteBegan: Date?
+    /// Counts the waits the graphite was let go after: a template made again draws it anew.
+    @State private var graphiteRound = 0
     /// The making has outlasted the show's `patience`: the forming's status shows over it.
     @State private var formingTookLong = false
     /// The photo the graphite began over: another paper redraws it without starting it again.
@@ -608,11 +610,13 @@ struct TemplatePreviewView: View {
     private struct GraphiteKey: Equatable {
         var photo: UUID
         var sheet: FormingPlan.Sheet
+        var round: Int
     }
 
     private var graphiteKey: GraphiteKey? {
         guard playsTheShow, model.source != nil else { return nil }
-        return GraphiteKey(photo: model.photoID, sheet: FormingPlan.sheet(paperAppearance, interfaceIsDark: colorScheme == .dark))
+        return GraphiteKey(
+            photo: model.photoID, sheet: FormingPlan.sheet(paperAppearance, interfaceIsDark: colorScheme == .dark), round: graphiteRound)
     }
 
     /// The show's graphite as the photo shows, and its fuse once the template is made.
@@ -626,11 +630,13 @@ struct TemplatePreviewView: View {
                 pictureProbe?.skipsForming = nil
                 pictureProbe?.formingDone = nil
                 pictureProbe?.formingShowed = false
+                graphite = nil
             }
             .task(id: graphiteKey) {
                 guard let key = graphiteKey, let photo = model.source?.preview else { return }
+                async let drawn = GraphiteSketch.draw(photo, sheet: key.sheet)
                 await FrontMasks.prepare()
-                guard let sketch = await GraphiteSketch.draw(photo, sheet: key.sheet), !Task.isCancelled else { return }
+                guard let sketch = await drawn, !Task.isCancelled else { return }
                 // Made meanwhile: the fuse burns over the photo itself.
                 guard playsTheShow, !forming.lines, fuseLit == nil else { return }
                 graphite = sketch
@@ -639,6 +645,16 @@ struct TemplatePreviewView: View {
                 graphitePhoto = key.photo
             }
             .onChange(of: forming.lines, initial: true) { _, lines in lightFuse(lines) }
+            // Once the lines have burned in, nothing shows the graphite again: its images go (a
+            // demo holding the fuse part way keeps them).
+            .task(id: fuseDone) {
+                guard let fuseDone, heldDraw == nil else { return }
+                let wait = fuseDone.timeIntervalSinceNow
+                if wait > 0 {
+                    guard (try? await Task.sleep(for: .seconds(wait))) != nil else { return }
+                }
+                graphite = nil
+            }
             // The show stands for the forming's status, which VoiceOver hears all the same, and
             // brings it back for a making slower than its patience (a demo's held wait never is).
             .onChange(of: showsTheWait, initial: true) { _, shows in
@@ -679,7 +695,15 @@ struct TemplatePreviewView: View {
     private func lightFuse(_ lines: Bool) {
         guard playsTheShow else { return }
         guard lines else {
+            // Made again (its lines gone for now): the fuse waits for the new template, and a
+            // graphite already let go is drawn anew.
             fuseLit = nil
+            fuseDone = nil
+            if formingSkip == .toPainting { formingSkip = nil }
+            if graphite == nil, graphiteBegan != nil {
+                graphiteBegan = nil
+                graphiteRound += 1
+            }
             return
         }
         guard fuseLit == nil else { return }
@@ -1427,7 +1451,12 @@ final class PreviewPictureProbe {
         guard wait > 0 else { return }
         let sleep = Task { _ = try? await Task.sleep(for: .seconds(wait)) }
         waiting = sleep
-        await sleep.value
+        // The hand-off cancelled stops the wait with it.
+        await withTaskCancellationHandler {
+            await sleep.value
+        } onCancel: {
+            sleep.cancel()
+        }
         waiting = nil
     }
 

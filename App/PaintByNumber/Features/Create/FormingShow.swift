@@ -318,13 +318,16 @@ nonisolated enum FormingShow {
 /// actor, as the first show begins; until then a front fades instead of spreading.
 enum FrontMasks {
     private(set) static var image: CGImage?
-    private static var preparing = false
+    /// The making under way, which a second caller waits for too.
+    private static var preparing: Task<Void, Never>?
 
     static func prepare() async {
-        guard !preparing, image == nil else { return }
-        preparing = true
-        image = await FormingShow.Front.image(pixels: 768)
-        preparing = false
+        guard image == nil else { return }
+        if let preparing { return await preparing.value }
+        let making = Task { image = await FormingShow.Front.image(pixels: 768) }
+        preparing = making
+        await making.value
+        preparing = nil
     }
 }
 
@@ -402,10 +405,14 @@ nonisolated enum GraphiteSketch {
         for i in difference.indices {
             difference[i] = min(max((broadGrey[i] - fineGrey[i]) * gain - threshold, 0), 1)
         }
-        let lines = greyImage(difference, width: width, height: height)
+        // Each image the stages read is rendered once: the context keeps no intermediates, so a
+        // graph left whole would be worked out again for every stage.
+        let opened = greyImage(difference, width: width, height: height)
             .clampedToExtent()
             .applyingFilter("CIMorphologyMinimum", parameters: [kCIInputRadiusKey: 1.0])
             .applyingFilter("CIMorphologyMaximum", parameters: [kCIInputRadiusKey: 1.0])
+        guard let openedLines = render(opened, bounds) else { return nil }
+        let lines = greyImage(openedLines, width: width, height: height).clampedToExtent()
 
         // The hatching, screened with the lines: the strokes' strength.
         let tone = grey.applyingGaussianBlur(sigma: 3)
@@ -427,8 +434,10 @@ nonisolated enum GraphiteSketch {
         let paper = CIImage(color: color(sheet.paper))
         let base = grey.applyingFilter(
             "CIDissolveTransition", parameters: [kCIInputTargetImageKey: paper, kCIInputTimeKey: paperShare])
-        let drawing = CIImage(color: color(sheet.ink)).applyingFilter(
+        let sketched = CIImage(color: color(sheet.ink)).applyingFilter(
             "CIBlendWithMask", parameters: [kCIInputBackgroundImageKey: base, kCIInputMaskImageKey: strokes])
+        guard let drawingImage = context.createCGImage(sketched, from: bounds, format: .RGBA8, colorSpace: space) else { return nil }
+        let drawing = CIImage(cgImage: drawingImage)
 
         // The race, on the lines' maximum over each coarse cell so that a thin line still counts.
         let w = width / coarse, h = height / coarse
@@ -437,9 +446,11 @@ nonisolated enum GraphiteSketch {
             .applyingFilter("CIMorphologyMaximum", parameters: [kCIInputRadiusKey: Double(coarse) / 2])
             .transformed(by: CGAffineTransform(scaleX: CGFloat(w) / CGFloat(width), y: CGFloat(h) / CGFloat(height)))
         guard let cells = render(pooled, CGRect(x: 0, y: 0, width: w, height: h)) else { return nil }
-        let arrival = greyImage(arrivals(cells, width: w, height: h), width: w, height: h)
+        let raced = greyImage(arrivals(cells, width: w, height: h), width: w, height: h)
             .clampedToExtent()
             .transformed(by: CGAffineTransform(scaleX: CGFloat(width) / CGFloat(w), y: CGFloat(height) / CGFloat(h)))
+        guard let arrived = render(raced, bounds) else { return nil }
+        let arrival = greyImage(arrived, width: width, height: height)
 
         let half = CGRect(x: 0, y: 0, width: width / 2, height: height / 2)
         let tip = CIImage(color: color(sheet.ink * 0.5 + warm * 0.5))
@@ -702,8 +713,13 @@ struct FormingShowLayers: View {
     let scale: CGFloat
     /// Nothing more will move: drawn as it ends, and the timeline paused.
     @State private var stillAt: Date?
-    /// The burning front's gold lines (`FormingShow.glow`), for these lines.
-    @State private var gold: (id: UUID, image: CGImage)?
+    /// The burning front's gold lines (`FormingShow.glow`), for these lines at this size.
+    @State private var gold: (key: GoldKey, image: CGImage)?
+
+    private struct GoldKey: Equatable {
+        var lines: UUID
+        var size: CGSize
+    }
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
 
     private var isStill: Bool {
@@ -727,11 +743,13 @@ struct FormingShowLayers: View {
             }
             stillAt = until
         }
-        .task(id: lines?.id) {
-            guard let lines, gold?.id != lines.id else { return }
+        // Keyed on the size too: a first layout at no size makes nothing, and the next retries.
+        .task(id: lines.map { GoldKey(lines: $0.id, size: picture.size) }) {
+            guard let lines, gold?.key != GoldKey(lines: lines.id, size: picture.size) else { return }
+            let key = GoldKey(lines: lines.id, size: picture.size)
             let width = lines.lineWidth(scale: scale, weight: lineWeight)
-            guard let image = await FormingShow.glow(lines, size: picture.size, lineWidth: width) else { return }
-            gold = (lines.id, image)
+            guard let image = await FormingShow.glow(lines, size: key.size, lineWidth: width) else { return }
+            gold = (key, image)
         }
     }
 
@@ -761,7 +779,7 @@ struct FormingShowLayers: View {
                     .equatable()
                     .frame(width: size.width, height: size.height)
                     .mask(alignment: .topLeading) { FormingFrontMask(picture: picture, progress: fuse) }
-                if let gold, gold.id == lines.id, fuse > 0, fuse < 1 {
+                if let gold, gold.key.lines == lines.id, fuse > 0, fuse < 1 {
                     // The burning front: the lines in gold along a narrow band behind it.
                     placed(gold.image)
                         .mask(alignment: .topLeading) {
