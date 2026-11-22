@@ -16,7 +16,8 @@ public enum GlassPaneOutlines {
     /// A pane is every pixel of its piece more than `inset` canvas units from the lead's middle
     /// (the edge between pieces), traced along the pixels' cracks, simplified to a pixel and
     /// its corners cut twice, by up to three pixels, so a staircase becomes a smooth glass edge. A shape under
-    /// `minimumArea` square units is a shard and dropped. The lead round an island piece is a
+    /// `minimumArea` square units is a shard and dropped, and so is one under a tenth of its piece's
+    /// largest: a thin tail of a piece narrower than the inset broke into a string of specks. The lead round an island piece is a
     /// hole in the pane round it.
     public static func outlines(of t: Template, texture: GlassTexture, inset: Float, minimumArea: Float) -> [[[SIMD2<Float>]]] {
         let w = t.width, h = t.height
@@ -45,10 +46,16 @@ public enum GlassPaneOutlines {
                 if x == 0 || y == 0 || x == w - 1 || y == h - 1 { touchesBorder[k] = true }
             }
         }
+        var largest = [Int](repeating: 0, count: pieces)
+        for k in 0..<count where first[k] >= 0 {
+            let piece = Int(components.classOf[k]) - 1
+            if piece >= 0 { largest[piece] = max(largest[piece], components.area[k]) }
+        }
         for k in 0..<count where first[k] >= 0 {
             let piece = Int(components.classOf[k]) - 1
             if piece >= 0 {
-                guard Float(components.area[k]) >= minimumArea else { continue }
+                let area = Float(components.area[k])
+                guard area >= minimumArea, area >= 0.1 * Float(largest[piece]) else { continue }
                 let ring = smoothed(MaskContours.trace(labels, label: UInt32(k), start: first[k], width: w, height: h))
                 if ring.count >= 3 { out[piece].append(ring) }
             } else if !touchesBorder[k] {
