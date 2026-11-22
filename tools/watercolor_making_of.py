@@ -6,12 +6,12 @@
 
 Reads <dir>/frame-NNNN.ppm (pbn's frames, 1/fps second shown apart) and making-of.csv (which
 frame settled) and writes <dir>/contact.jpg (--tiles frames evenly spaced up to the settled one,
-each with its time shown) and, when ffmpeg is on the path, <dir>/making-of.mp4: the frames, then
-the app's ending on the frames after (the painting held as the push in draws back out, then
-lifted off its own bare pencilled sheet at the same place and scale: the bare sheet with its
-numbers, drawn at the film's own size from labels.csv as the painting screen draws them, held
-as the app hands over to the painting screen; that last frame is also written as
-last-frame.png). Pillow only; the numbers in DejaVu Sans where it is installed.
+each with its time shown) and, when ffmpeg is on the path, <dir>/making-of.mp4: the frames (the
+painting's study sheet, `WatercolorStudy`), then the app's ending on the frames after (the study
+held as the push in draws back out, then set aside, rising as it fades off the bare desk, which
+then fades onto the painting's own bare pencilled sheet at the same place and scale: bare.ppm with its numbers,
+drawn at the film's own size from labels.csv as the painting screen draws them, held as the app
+hands over to it; that last frame is also written as last-frame.png). Pillow only; the numbers in DejaVu Sans where it is installed.
 """
 import argparse
 import csv
@@ -25,7 +25,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 DESK = (232, 227, 217)
 HOLD = 0.5  # seconds the finished painting is held, drawing back out (WatercolorMakingOfView.hold)
-LIFT = 0.7  # seconds it lifts off the bare sheet (WatercolorMakingOfView.lift)
+SET_ASIDE = 0.7  # seconds it is set aside (WatercolorMakingOfView.setAside)
+RISE = 90  # points it rises as it goes (WatercolorMakingOfView.rise); about 2 px a point here
 PUSH = 1.15  # the push in toward a drying bloom (WatercolorMakingOfView.pushIn)
 PUSH_SECONDS = 1.4  # its ease in (WatercolorMakingOfView.pushSeconds)
 NUMBER_INK = (48, 46, 51)  # WatercolorRenderer.numberInk, near enough
@@ -54,11 +55,14 @@ def on_desk(sheet, size, zoom=1.0, focus=(0.5, 0.5)):
     return out
 
 
-def lifted(finished, bare, u):
-    """The ending at u (0…1): the finished painting fading off its numbered bare sheet, both
-    on the desk at the same place and scale."""
-    ease = u * u * (3 - 2 * u)
-    return Image.blend(finished, bare, ease)
+def set_aside(study, u):
+    """The ending's first part at u (0…1): the dried study rising and fading off the bare desk
+    (an ease in)."""
+    ease = u * u
+    desk = Image.new("RGB", study.size, DESK)
+    risen = desk.copy()
+    risen.paste(study, (0, -round(RISE * 2 * ease)))
+    return Image.blend(risen, desk, ease)
 
 
 def numbered(sheet, size, labels, alpha):
@@ -163,9 +167,16 @@ def main():
             on_desk(ending_frame(j), size, zoom(k), focus).save(os.path.join(tmp, f"{k:05d}.png"))
             k += 1
         sheet = numbered(bare, size, labels, 1)
-        steps = round(LIFT * args.fps)
+        steps = round(SET_ASIDE * args.fps)
         for j in range(1, steps + 1):
-            lifted(on_desk(ending_frame(held + j), size), sheet, j / steps).save(os.path.join(tmp, f"{k:05d}.png"))
+            set_aside(on_desk(ending_frame(held + j), size), j / steps).save(os.path.join(tmp, f"{k:05d}.png"))
+            k += 1
+        # Then the bare desk fades, uncovering the painting's numbered sheet.
+        desk = Image.new("RGB", size, DESK)
+        fade = round(SET_ASIDE * 0.6 * args.fps)
+        for j in range(1, fade + 1):
+            u = j / fade
+            Image.blend(desk, sheet, u * u * (3 - 2 * u)).save(os.path.join(tmp, f"{k:05d}.png"))
             k += 1
         for _ in range(round(0.6 * args.fps)):
             sheet.save(os.path.join(tmp, f"{k:05d}.png"))

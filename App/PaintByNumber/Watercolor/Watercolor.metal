@@ -127,26 +127,31 @@ fragment float4 watercolor_fragment(
     float4 d4 = float4(density.sample(smooth, uv));
     // The pigment from the cells of this pixel's own area alone where it has any, so a wash ends
     // on the pencil line and not on the grid's staircase (a cell's area is the label under its
-    // centre, as `WatercolorSheet` reads it).
+    // centre, as `WatercolorSheet` reads it), through a cubic B-spline over the 4×4 cells
+    // around: a wash's front, a cell at a time on the grid, spreads as a rounded edge rather
+    // than as steps (bilinear showed every cell's corner, critic round 1, November 22).
     {
         float2 simSize = float2(density.get_width(), density.get_height());
         float2 g = uv * simSize - 0.5;
         float2 g0 = floor(g);
         float2 fr = g - g0;
+        float2 t2 = fr * fr, t3 = t2 * fr;
+        float2 bw[4] = {(1 - 3 * fr + 3 * t2 - t3) / 6, (3 * t3 - 6 * t2 + 4) / 6,
+                        (-3 * t3 + 3 * t2 + 3 * fr + 1) / 6, t3 / 6};
         float3 mine = float3(0);
         float mineWeight = 0;
-        for (int k = 0; k < 4; k++) {
-            float2 o = float2(float(k & 1), float(k >> 1));
-            float2 c = clamp(g0 + o, float2(0), simSize - 1);
-            // The cell's centre as the sheet reads the template, by one scale on both axes
-            // (the sheet's height is rounded): `WatercolorSheet`'s labels exactly.
-            float2 cellUV = (c + 0.5) / simSize.x * float2(1, u.canvasSize.x / u.canvasSize.y);
-            uint lab = labels.read(min(uint2(cellUV * float2(labelSize)), labelSize - 1)).r;
-            float wx = o.x > 0.5 ? fr.x : 1 - fr.x;
-            float wy = o.y > 0.5 ? fr.y : 1 - fr.y;
-            if (lab == region) {
-                mine += float3(density.read(uint2(c)).rgb) * (wx * wy);
-                mineWeight += wx * wy;
+        for (int j = 0; j < 4; j++) {
+            for (int i = 0; i < 4; i++) {
+                float2 c = clamp(g0 + float2(float(i - 1), float(j - 1)), float2(0), simSize - 1);
+                // The cell's centre as the sheet reads the template, by one scale on both axes
+                // (the sheet's height is rounded): `WatercolorSheet`'s labels exactly.
+                float2 cellUV = (c + 0.5) / simSize.x * float2(1, u.canvasSize.x / u.canvasSize.y);
+                uint lab = labels.read(min(uint2(cellUV * float2(labelSize)), labelSize - 1)).r;
+                float wgt = bw[i].x * bw[j].y;
+                if (lab == region) {
+                    mine += float3(density.read(uint2(c)).rgb) * wgt;
+                    mineWeight += wgt;
+                }
             }
         }
         if (mineWeight > 1e-3) { d4.rgb = mine / mineWeight; }
@@ -184,7 +189,10 @@ fragment float4 watercolor_fragment(
         // the top left; left to the water cell by cell, the drying read as grey blotches.
         float front = u.film.y - 1;
         float ahead = smoothstep(front - 0.15, front + 0.15, (uv.x + uv.y) * 0.5);
-        wet = max(wet, step(r.gain.w, u.time)) * ahead;
+        // Only where its pigment has come: the paper ahead of a flood's front stays paper, not a
+        // grey wet patch the shape of the area.
+        float has = smoothstep(0.0, 0.06, d.r + d.g + d.b);
+        wet = max(wet, step(r.gain.w, u.time) * has) * ahead;
         emphasis = 1;
     }
     if (wet > 0) {

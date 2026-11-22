@@ -326,7 +326,10 @@ public final class WatercolorSim {
             let g = global(j)
             let lf = sheet.lowFrequency[g], p = sheet.paper[g]
             let df = Float(dist[j])
-            let jitter = lf * 0.07 + (p - 0.5) * 0.1
+            // The front follows the slow noise, rounded: the paper's fine tooth in it as well made a
+            // ragged staircase of single cells, a flood-fill rather than water (the study's critic,
+            // November 22).
+            let jitter = lf * 0.08 + (p - 0.5) * 0.015
             let arrival = when + duration * pow(max(df / dmax + jitter, 0), 0.75)
             // The drop lands where you touched: more water there pushes the pigment out, so the
             // touch stays a lighter bloom with the color gathered where the front comes to rest.
@@ -356,6 +359,57 @@ public final class WatercolorSim {
         flood.soften = order.map(\.4)
         flood.edge = order.map(\.5)
         floods.append(flood)
+    }
+
+    /// A drop of clean water let fall from the brush onto a wash still damp, at `canvas`, over
+    /// `radius` cells: water only where the wash is still wet (dry paper and dried paint take
+    /// none), most at the middle. The flow does the rest: the drop's water spreads into the damp
+    /// wash around it, carrying the pigment it meets out to where it stalls, so the wash dries
+    /// pale where it fell and dark at its ragged edge (a bloom, a backrun). The first rush of
+    /// the drop, faster than a step's flow can carry, is done here: `push` of the pigment still
+    /// riding the water under it is swept out to where the rush stalls, a ragged ring about
+    /// `radius` out (the paper's slow noise bends it), and the flow and the drying take it from
+    /// there. The Making Of's study shows one (`WatercolorStudy`); a painter's taps lay whole
+    /// washes (`tap`).
+    public func drop(at canvas: SIMD2<Float>, radius: Float, water: Float, push: Float = 0.6) {
+        guard let c = sheet.cell(at: canvas), radius > 1 else { return }
+        let w = sheet.width, h = sheet.height
+        let r = Int((radius * 1.5).rounded(.up))
+        var swept = SIMD4<Float>(repeating: 0)
+        var ring: [(Int, Float)] = []
+        var ringWeight: Float = 0
+        for y in max(c.y - r, 0)..<min(c.y + r + 1, h) {
+            for x in max(c.x - r, 0)..<min(c.x + r + 1, w) {
+                let i = y * w + x
+                guard W[i] > Self.wetLine else { continue }
+                let dx = Float(x - c.x), dy = Float(y - c.y)
+                let d = (dx * dx + dy * dy).squareRoot()
+                // Where the rush stalls: ragged, as it runs over the paper's tooth.
+                let stall = radius * min(max(1 + 0.35 * sheet.lowFrequency[i] + 0.15 * (sheet.paper[i] - 0.5), 0.6), 1.45)
+                if d < stall {
+                    let u = d / stall
+                    let f = 1 - u * u
+                    W[i] += water * f
+                    let taken = S[i] * (push * f.squareRoot())
+                    S[i] -= taken
+                    swept += taken
+                }
+                let off = abs(d - stall)
+                if off < 2 {
+                    let k = 1 - off / 2
+                    ring.append((i, k))
+                    ringWeight += k
+                }
+            }
+        }
+        if ringWeight > 0 {
+            for (i, k) in ring { S[i] += swept * (k / ringWeight) }
+        } else {
+            // Nowhere wet to stall: what it lifted stays under it.
+            S[c.y * w + c.x] += swept
+        }
+        changedBox = Box(x0: max(c.x - r, 0), y0: max(c.y - r, 0), x1: min(c.x + r + 1, w), y1: min(c.y + r + 1, h))
+            .union(changedBox)
     }
 
     /// Distance from each cell to the nearest seed, 8-neighbour chamfer (1, √2): close to
