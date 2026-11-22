@@ -1651,6 +1651,78 @@
         }
       }
     },
+    "glass.lead.howTo" : {
+      "comment" : "Stained Glass: how to frame pieces by drawing lead and then pour glass, shown under the glass beads until the first pieces are framed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zieh Blei vom Rand um ein paar Stücke und zurück, dann tippe hinein, um zu gießen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draw lead from the edge round a few pieces and back, then tap inside to pour."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Traza plomo desde el borde alrededor de unas piezas y de vuelta, y toca dentro para verter."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trace le plomb depuis le bord autour de quelques pièces et reviens, puis touche l’intérieur pour couler."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Traccia il piombo dal bordo intorno a qualche pezzo e ritorna, poi tocca dentro per versare."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "縁から数ピースを囲んで戻るように鉛を引き、内側をタップしてガラスを流し込みます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "가장자리에서 조각 몇 개를 둘러 다시 돌아오도록 납선을 그은 뒤, 안쪽을 탭해 유리를 부으세요."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trek lood vanaf de rand om een paar stukken en terug, en tik erin om te gieten."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trace o chumbo da borda em volta de algumas peças e de volta, depois toque dentro para despejar."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从边缘画铅条，绕过几块再回来，然后轻点内部倒入玻璃。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從邊緣畫鉛條，繞過幾塊再回來，然後輕點內部倒入玻璃。"
+          }
+        }
+      }
+    },
     "Its photo and everything you changed in Edit will be lost." : {
       "comment" : "Gallery, the draft's Discard confirmation, in SideStore builds (where Refine is called Edit)",
       "extractionState" : "manual",

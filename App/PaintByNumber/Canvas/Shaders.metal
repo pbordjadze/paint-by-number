@@ -277,7 +277,9 @@ static float3 pouredGlass(float3 glass, float3 seen, float3 detail, float glow) 
 /// piece a clear lens over the photo, flat inside and rounded at its rim, where it bends the photo
 /// in from the lead and catches light from the top left, a thin bright line all round; a glass
 /// poured into it tints the lens, from the touch over the glass before it. The lead stays heavy
-/// medieval came. `states[r].mode` is the glass + 1, plus 1024 × (the glass it replaces + 1). The
+/// medieval came. A piece not yet framed (led in by the painter, `GlassFraming`) is the photo
+/// dimmed behind plain glass, a thin line round it where its lead will go. `states[r].mode` is the
+/// glass + 1, plus 1024 × (the glass it replaces + 1), plus 2^20 once framed. The
 /// fields texture is `GlassTexture.fields()` (lead distance, shade, depth, grain), the photo
 /// texture the window's photo at the template's size, mipmapped.
 fragment float4 glassFillFragment(FillOut in [[stage_in]],
@@ -296,7 +298,11 @@ fragment float4 glassFillFragment(FillOut in [[stage_in]],
     // The lead: half on each side of the edge (a piece's edge pixels are 1 away), uneven as cast
     // by hand.
     float d = f.x - 0.5;
-    float halfWidth = 0.5 * g.lead.w * (0.8 + 0.4 * valueNoise(in.canvas / (2.5 * g.lead.w)));
+    uint code = uint(max(s.mode, 0.0) + 0.5);
+    bool framed = code >= 1048576u;
+    code %= 1048576u;
+    float halfWidth = framed ? 0.5 * g.lead.w * (0.8 + 0.4 * valueNoise(in.canvas / (2.5 * g.lead.w)))
+                             : max(0.7, 0.06 * g.lead.w);
     // The lens: 0 at the lead, 1 past its rim; the way into the piece from the lead's distance.
     float rim = max(g.lens.x, 1.0);
     float inner = saturate((d - halfWidth) / rim), t = 1.0 - inner;
@@ -313,7 +319,6 @@ fragment float4 glassFillFragment(FillOut in [[stage_in]],
     float3 soft = curveEncode(photo.sample(linear, seenAt, level(3.0)).rgb) * 0.94 + 0.05;
     float3 detail = seen - soft;
     float glow = (0.55 + 0.6 * pow(inner, 1.5)) * (0.9 + 0.1 * f.y);
-    uint code = uint(max(s.mode, 0.0) + 0.5);
     // A glass past the last offered (never written so) reads as the last.
     uint count = uint(max(g.lens.y, 1.0));
     uint now = min(code % 1024u, count), before = min(code / 1024u, count);
@@ -321,6 +326,15 @@ fragment float4 glassFillFragment(FillOut in [[stage_in]],
     float3 under = before > 0u ? pouredGlass(curveEncode(glasses[before - 1u].rgb), seen, detail, glow) : seen;
     PaintSample ps = samplePaint(s, in.canvas, u.time.x, 1.0 / u.transform.z);
     float3 c = mix(under, lit, ps.coverage);
+    if (!framed) {
+        // Waiting for its lead: the photo flat and dim, a thin line round it.
+        float3 flat = curveEncode(photo.sample(linear, uv, bias(0.5)).rgb);
+        float grey = dot(flat, float3(0.3, 0.59, 0.11));
+        c = mix(float3(grey), flat, 0.55) * 0.5 + 0.03;
+        float aa = max(fwidth(d), 1e-3);
+        c = mix(c, float3(0.62, 0.58, 0.52), 1.0 - smoothstep(halfWidth - aa, halfWidth + aa, d));
+        return float4(curveDecode(c), 1.0);
+    }
     // Light on the rim from the top left, a thin bright line all round, its shade at the bottom right.
     float facing = saturate(-(n.x + n.y) * 0.70710678);
     float t3 = t * t * t;

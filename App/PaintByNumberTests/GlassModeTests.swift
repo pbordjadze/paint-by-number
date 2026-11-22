@@ -25,8 +25,9 @@ struct GlassModeTests {
         let other = try #require(t.regions.indices.first { $0 != r })
         let uniforms = CanvasSnapshot.uniforms(scene: scene, width: t.width, height: t.height, options: .painting)
 
-        func frame(glazed: Bool, outlines: Bool = true, numbers: Bool = true) throws -> CGImage {
+        func frame(glazed: Bool, framed: Bool = true, outlines: Bool = true, numbers: Bool = false) throws -> CGImage {
             var states = [RegionState](repeating: .settled(painted: false), count: scene.regionCount)
+            for i in states.indices { states[i].mode = GlassMode.code(glass: nil, replacing: nil, framed: framed) }
             if glazed {
                 states[r] = .settled(painted: true)
                 states[r].mode = GlassMode.code(glass: glass, replacing: nil)
@@ -53,11 +54,21 @@ struct GlassModeTests {
             return t.regionMap[x, y] != t.regionMap[x + 1, y] ? SIMD2(x, y) : nil
         }.first)
         #expect(luma(before[edge.x, edge.y]) + 40 < luma(before[x, y]), "the lead is dark")
-        // The lead is the drawing: the canvas's own outlines and numbers never show.
-        let bare = PixelReader(try frame(glazed: true, outlines: false, numbers: false))
+        // The lead is the drawing: the canvas's own outlines never show.
+        let unoutlined = PixelReader(try frame(glazed: true, outlines: false))
         for (px, py) in [(x, y), (edge.x, edge.y), (Int(elsewhere.x), Int(elsewhere.y))] {
-            #expect(bare[px, py] == after[px, py])
+            #expect(unoutlined[px, py] == after[px, py])
         }
+        // By number: a piece waiting for its glass shows its number, a glazed one doesn't.
+        let numbered = PixelReader(try frame(glazed: true, numbers: true))
+        #expect(numbered[x, y] == after[x, y], "a glazed piece's number is gone")
+        let label = try #require(t.labels(ofRegion: other).max { $0.radius < $1.radius }).position
+        let near = (-4...4).flatMap { dy in (-4...4).map { dx in (Int(label.x) + dx, Int(label.y) + dy) } }
+        #expect(near.contains { numbered[$0.0, $0.1] != after[$0.0, $0.1] }, "an unglazed piece is numbered")
+        // A piece not yet framed is the photo dimmed, its lead a thin line.
+        let unframed = PixelReader(try frame(glazed: false, framed: false))
+        #expect(luma(unframed[x, y]) + 20 < luma(before[x, y]), "an unframed piece waits in the dark")
+        #expect(luma(unframed[edge.x, edge.y]) > luma(before[edge.x, edge.y]), "its lead is only a thin line")
     }
 
     private static func chroma(_ p: PaletteColor) -> Float { (p.oklab.y * p.oklab.y + p.oklab.z * p.oklab.z).squareRoot() }
@@ -97,9 +108,11 @@ struct GlassModeTests {
 
     /// A pour's region state carries both glasses: the one poured and the one under it.
     @Test func aPourCarriesTheGlassItReplaces() {
-        #expect(GlassMode.code(glass: nil, replacing: nil) == 0)
-        #expect(GlassMode.code(glass: 0, replacing: nil) == 1)
-        #expect(GlassMode.code(glass: 4, replacing: 2) == 5 + 1024 * 3)
+        let framed = Float(GlassMode.framedFlag)
+        #expect(GlassMode.code(glass: nil, replacing: nil, framed: false) == 0)
+        #expect(GlassMode.code(glass: nil, replacing: nil) == framed)
+        #expect(GlassMode.code(glass: 0, replacing: nil) == 1 + framed)
+        #expect(GlassMode.code(glass: 4, replacing: 2) == 5 + 1024 * 3 + framed)
     }
 }
 #endif

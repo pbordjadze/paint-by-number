@@ -73,11 +73,15 @@ nonisolated final class GlassMode: CanvasMode, @unchecked Sendable {
         parameters = Parameters(lead: SIMD4(GlassPicture.lead, width), lens: SIMD4(rim, Float(offered.count), 0, 0))
     }
 
-    /// The value a piece's region state carries: the glass in it (nil: none) and the one it pours
-    /// over (nil: the clear lens). See `glassFillFragment`.
-    static func code(glass: Int?, replacing before: Int?) -> Float {
-        Float((glass.map { $0 + 1 } ?? 0) + 1024 * (before.map { $0 + 1 } ?? 0))
+    /// The value a piece's region state carries: the glass in it (nil: none), the one it pours
+    /// over (nil: the clear lens) and whether it is framed (led in by the painter; a glazed piece
+    /// always is, and a piece never shown is not). See `glassFillFragment`.
+    static func code(glass: Int?, replacing before: Int?, framed: Bool = true) -> Float {
+        Float((glass.map { $0 + 1 } ?? 0) + 1024 * (before.map { $0 + 1 } ?? 0) + (framed ? framedFlag : 0))
     }
+
+    /// The framed bit of a region state's code (exact in a `Float`, past every glass's place).
+    static let framedFlag = 1 << 20
 
     func drawPaint(_ encoder: any MTLRenderCommandEncoder, frame: CanvasModeFrame) {
         let scene = frame.scene

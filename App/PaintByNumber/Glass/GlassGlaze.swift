@@ -3,6 +3,7 @@ import CoreGraphics
 import Metal
 import Observation
 import PaintCore
+import QuartzCore
 import SwiftUI
 import UIKit
 import os
@@ -52,8 +53,22 @@ final class GlassGlazeModel: CanvasTouches {
     @ObservationIgnored var reduceMotion = false
     /// Where a demo holds the sun's pass (0…1), or nil.
     @ObservationIgnored var sunHold: Float?
-    @ObservationIgnored private var undoStack: [[(region: Int, glass: Int16)]] = []
-    @ObservationIgnored private var stroke: [(region: Int, glass: Int16)]?
+    /// A piece as it was before a step changed it, for Undo.
+    private struct Step {
+        let region: Int
+        let glass: Int16
+        let framed: Bool
+    }
+    @ObservationIgnored private var undoStack: [[Step]] = []
+    @ObservationIgnored private var stroke: [Step]?
+    /// The lead being drawn (canvas units), and the layer that shows it under the finger.
+    @ObservationIgnored private var leadStroke: [SIMD2<Float>]?
+    @ObservationIgnored private var leadLayer: CAShapeLayer?
+    /// Strokes lifted and being laid, in order.
+    @ObservationIgnored private var laying: Task<Void, Never>?
+    /// How many pieces the painter has framed (the hidden ones aside): none yet, and the screen
+    /// says how.
+    private(set) var framedByHand = 0
     /// The touch under way only brought the glasses back.
     @ObservationIgnored private var touchShowedBeads = false
     @ObservationIgnored private var saving: Task<Void, Never>?
@@ -71,7 +86,9 @@ final class GlassGlazeModel: CanvasTouches {
         self.offered = offered
         self.mode = mode
         session = PaintingSession(template: template)
-        hidden = Self.hidden(in: template)
+        let hidden = Self.hidden(in: template)
+        self.hidden = hidden
+        framedByHand = template.regions.indices.filter { glazing.isFramed($0) && !hidden.contains($0) }.count
         // The bead in hand at first: the glass suggested for the largest piece left unglazed.
         let largest = template.regions.indices.filter { glazing.glass[$0] == Glazing.none }
             .max { template.regions[$0].area < template.regions[$1].area }
@@ -104,6 +121,7 @@ final class GlassGlazeModel: CanvasTouches {
         for r in hidden where glazing.glass[r] == Glazing.none {
             let glass = Int16(min(Int(template.regions[r].colorIndex), max(0, offered.count - 1)))
             glazing.glass[r] = glass
+            glazing.framed[r] = true
             canvas?.showMode(r, value: GlassMode.code(glass: Int(glass), replacing: nil), painted: true, from: nil, animated: false)
         }
     }
@@ -116,36 +134,108 @@ final class GlassGlazeModel: CanvasTouches {
         return r < pieces ? r : nil
     }
 
-    /// A touch on the canvas: a tap pours into one piece, a stroke into each it crosses.
+    /// A touch on the canvas (Paul's interface, November 22, 2026): a stroke draws lead, and one
+    /// from the leaded part round bare pieces and back frames them (`GlassFraming`); a tap in a
+    /// framed piece pours its glass. With VoiceOver, activating a piece frames it and pours.
     @discardableResult
     func canvas(_ canvas: CanvasView, touched point: SIMD2<Float>, phase: CanvasTouchPhase) -> Bool {
         if phase == .tap || phase == .began {
             touchShowedBeads = beadsHidden
             if beadsHidden { beadsAsked += 1 }
         }
-        var poured = false
-        if !touchShowedBeads, phase != .ended, let r = piece(at: point) {
-            poured = glaze(r, from: point, animated: true)
-        }
-        if phase == .tap || phase == .ended {
-            touchShowedBeads = false
+        defer { if phase == .tap || phase == .ended { touchShowedBeads = false } }
+        guard !touchShowedBeads else { return false }
+        switch phase {
+        case .tap:
+            guard let r = piece(at: point) else { return false }
+            if !glazing.isFramed(r) && UIAccessibility.isVoiceOverRunning { frame([r]) }
+            let poured = glazing.isFramed(r) && glaze(r, from: point, animated: true)
             endStroke()
+            return poured
+        case .began:
+            leadStroke = [point]
+        case .moved:
+            leadStroke?.append(point)
+        case .ended:
+            leadStroke?.append(point)
+            if let stroke = leadStroke { lay(stroke) }
+            leadStroke = nil
         }
-        return poured
+        drawLead()
+        return false
     }
 
-    /// Pours the bead in hand into piece `r` from `p` (none: VoiceOver's activation, a stroke of
-    /// its own).
+    /// The lead under the finger, as wide as the lead it will be.
+    private func drawLead() {
+        guard let canvas else { return }
+        let layer = leadLayer ?? {
+            let layer = CAShapeLayer()
+            layer.fillColor = nil
+            layer.strokeColor = UIColor(GlassPicture.color(GlassPicture.lead, space: .sRGB)).cgColor
+            layer.lineCap = .round
+            layer.lineJoin = .round
+            layer.shadowColor = UIColor.white.cgColor
+            layer.shadowOpacity = 0.35
+            layer.shadowRadius = 1.5
+            layer.shadowOffset = .zero
+            canvas.layer.addSublayer(layer)
+            leadLayer = layer
+            return layer
+        }()
+        guard let stroke = leadStroke, let first = stroke.first else {
+            layer.path = nil
+            return
+        }
+        let path = CGMutablePath()
+        path.move(to: canvas.viewPoint(forCanvas: first))
+        for p in stroke.dropFirst() { path.addLine(to: canvas.viewPoint(forCanvas: p)) }
+        let zoom = canvas.viewPoint(forCanvas: SIMD2(1, 0)).x - canvas.viewPoint(forCanvas: .zero).x
+        layer.lineWidth = GlassPicture.leadWidth(width: template.width, height: template.height) * zoom
+        layer.path = path
+    }
+
+    /// Frames the pieces a lifted stroke closes, after the strokes before it.
+    private func lay(_ stroke: [SIMD2<Float>]) {
+        let before = laying
+        let template = template
+        let reach = Float(GlassPicture.leadWidth(width: template.width, height: template.height)) * 0.6
+        laying = Task {
+            await before?.value
+            let framed = template.regions.indices.map(glazing.isFramed)
+            let closed = await Background.run {
+                GlassFraming.framed(by: stroke, in: template, framed: framed, reach: reach)
+            }
+            frame(closed)
+        }
+    }
+
+    /// Frames `regions`, one step for Undo.
+    private func frame(_ regions: [Int]) {
+        let new = regions.filter { $0 < pieces && !glazing.isFramed($0) }
+        guard !new.isEmpty else { return }
+        endStroke()
+        stroke = new.map { Step(region: $0, glass: glazing.glass[$0], framed: false) }
+        for r in new {
+            glazing.framed[r] = true
+            canvas?.showMode(r, value: GlassMode.code(glass: nil, replacing: nil), painted: false, from: nil, animated: false)
+        }
+        framedByHand += new.count
+        endStroke()
+        ring(glass: Int(template.regions[new[0]].colorIndex), poured: true)
+        changed()
+    }
+
+    /// Pours the bead in hand into framed piece `r` from `p` (none: a stroke of its own).
     @discardableResult
     func glaze(_ r: Int, from p: SIMD2<Float>? = nil, animated: Bool) -> Bool {
         let glass = Int16(selected)
         // By number (Paul's pick, November 22, 2026): a piece takes only its own number's glass.
-        guard r < pieces, selected < offered.count, glazing.glass[r] != glass,
+        guard r < pieces, selected < offered.count, glazing.glass[r] != glass, glazing.isFramed(r),
               Int(template.regions[r].colorIndex) == selected else { return false }
         let wasComplete = isComplete
         let before = glazing.glass[r]
         if stroke == nil { stroke = [] }
-        stroke?.append((r, before))
+        stroke?.append(Step(region: r, glass: before, framed: glazing.framed[r]))
         glazing.glass[r] = glass
         canvas?.showMode(r, value: GlassMode.code(glass: Int(glass), replacing: Self.glass(before)), painted: true,
                          from: p, animated: animated)
@@ -181,13 +271,19 @@ final class GlassGlazeModel: CanvasTouches {
         guard let last = undoStack.popLast() else { return }
         for step in last.reversed() {
             let now = glazing.glass[step.region]
+            if glazing.framed[step.region] && !step.framed && step.glass == now { framedByHand -= 1 }
             glazing.glass[step.region] = step.glass
+            glazing.framed[step.region] = step.framed
+            let framed = glazing.isFramed(step.region)
             if let back = Self.glass(step.glass) {
                 canvas?.showMode(step.region, value: GlassMode.code(glass: back, replacing: Self.glass(now)), painted: true,
                                  from: nil, animated: true)
+            } else if step.glass != now {
+                canvas?.showMode(step.region, value: GlassMode.code(glass: Self.glass(now), replacing: nil, framed: framed),
+                                 painted: false, from: nil, animated: true)
             } else {
-                canvas?.showMode(step.region, value: GlassMode.code(glass: Self.glass(now), replacing: nil), painted: false,
-                                 from: nil, animated: true)
+                canvas?.showMode(step.region, value: GlassMode.code(glass: nil, replacing: nil, framed: framed),
+                                 painted: false, from: nil, animated: false)
             }
         }
         if !isComplete {
@@ -218,8 +314,11 @@ final class GlassGlazeModel: CanvasTouches {
         glazeHidden()
         if glazedCount != glazed { changed() }
         for r in 0..<pieces {
-            guard let glass = Self.glass(glazing.glass[r]) else { continue }
-            canvas.showMode(r, value: GlassMode.code(glass: glass, replacing: nil), painted: true, from: nil, animated: false)
+            if let glass = Self.glass(glazing.glass[r]) {
+                canvas.showMode(r, value: GlassMode.code(glass: glass, replacing: nil), painted: true, from: nil, animated: false)
+            } else if glazing.framed[r] {
+                canvas.showMode(r, value: GlassMode.code(glass: nil, replacing: nil), painted: false, from: nil, animated: false)
+            }
         }
         if finishedAt != nil {
             mode.sun(at: canvas.canvasTime, held: sunHold, passes: !reduceMotion, hour: Self.hour())
@@ -262,7 +361,11 @@ final class GlassGlazeModel: CanvasTouches {
         guard let context = RenderContext.shared, let scene = CanvasScene(template: template, context: context) else { return nil }
         let states = template.regions.indices.map { r -> RegionState in
             let g = r < glazing.glass.count ? Int(glazing.glass[r]) : -1
-            guard g >= 0, g < count else { return .settled(painted: false) }
+            guard g >= 0, g < count else {
+                var state = RegionState.settled(painted: false)
+                state.mode = GlassMode.code(glass: nil, replacing: nil, framed: r < glazing.framed.count && glazing.framed[r])
+                return state
+            }
             var state = RegionState.settled(painted: true)
             state.mode = GlassMode.code(glass: g, replacing: nil)
             return state
@@ -442,10 +545,21 @@ struct GlassGlazeView: View {
         VStack(spacing: 6) {
             // Its own view: a pour changes the count below, never the beads.
             GlassBeads(model: model)
-            Text(progressText)
-                .font(.footnote.monospacedDigit())
-                .foregroundStyle(.secondary)
-                .accessibilityHidden(true)
+            if model.framedByHand == 0 {
+                // How a window is led in, until the painter has framed a first piece.
+                Text(String(localized: "glass.lead.howTo",
+                            defaultValue: "Draw lead from the edge round a few pieces and back, then tap inside to pour.",
+                            comment: "Stained Glass: how to frame pieces by drawing lead and then pour glass, shown under the glass beads until the first pieces are framed"))
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20)
+            } else {
+                Text(progressText)
+                    .font(.footnote.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+            }
         }
         .padding(.bottom, 8)
     }
