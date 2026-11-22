@@ -15,6 +15,8 @@ struct RootView: View {
             PaintDemoView(scenario: scenario)
         case let scenario? where scenario.hasPrefix("making-of"):
             MakingOfDemoView(scenario: scenario)
+        case let scenario? where scenario.hasPrefix("print-preview"):
+            MosaicPrintDemo(scenario: scenario)
         default:
             AppShellView()
         }

@@ -180,6 +180,9 @@ def problems(listing):
                 found.append("nomination.publishStartDate should be a time, like 2026-10-27T00:00:00Z")
             found += [f"nomination.deviceFamilies: {f} is not one of {', '.join(FAMILIES)}"
                       for f in fields.get("deviceFamilies", []) if f not in FAMILIES]
+            # App Store Connect refuses a longer description (a 400 on POST /nominations, Nov 21 2026).
+            if isinstance(fields.get("description"), str) and len(fields["description"]) > 1000:
+                found.append(f"nomination.description is {len(fields['description'])} characters, over 1000")
             continue
         if section == "availability":
             if fields != {"territories": "all", "availableInNewTerritories": True}:
