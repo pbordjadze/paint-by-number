@@ -353,7 +353,7 @@ struct BigSheetSection: View {
                     Text("One Big Sheet")
                     Text("Printed full size and mailed to you")
                 } icon: {
-                    Image(systemName: "rectangle.portrait.on.rectangle.portrait")
+                    Image(systemName: "photo.artframe")
                 }
             }
             .accessibilityIdentifier("print-big-sheet")
@@ -368,11 +368,13 @@ struct BigSheetView: View {
     var service: BigSheetService = BigSheetServices.current
 
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var product: BigSheetProduct = .paper18x24
     @State private var quote: BigSheetQuote?
     @State private var quoteFailed = false
     @State private var recipient = BigSheetRecipient()
     @State private var picture: UIImage?
+    @State private var pagePicture: UIImage?
     @State private var placing = false
     @State private var placed: String?
     @State private var orderFailed = false
@@ -428,11 +430,15 @@ struct BigSheetView: View {
 
     // MARK: The sheet
 
+    @ViewBuilder
     private var sheetSection: some View {
+        // A section of its own, so the card under it keeps its rounded corners.
         Section {
             preview
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+        }
+        Section {
             Picker(selection: $product) {
                 ForEach(BigSheetProduct.allCases) { product in
                     Text(sizeText(product)).tag(product)
@@ -463,25 +469,59 @@ struct BigSheetView: View {
         }
     }
 
+    /// The sheet at its size beside the page the painter prints at home, both to one scale (the
+    /// larger sheet fills the room), so the size reads at a glance.
     private var preview: some View {
-        ZStack {
-            if let picture {
-                Image(uiImage: picture)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    // Paper, whatever the screen's appearance.
-                    .background(Color.white)
-                    .shadow(color: .black.opacity(0.08), radius: 1, y: 1)
-                    .shadow(color: .black.opacity(0.16), radius: 14, y: 8)
+        GeometryReader { proxy in
+            let wide = request.template.width > request.template.height
+            let page = Self.turned(CGSize(width: layout.paper.size.width / 72, height: layout.paper.size.height / 72), wide: wide)
+            let unit = Self.inchScale(in: proxy.size, page: page, wide: wide)
+            let poster = Self.turned(product.inches, wide: wide)
+            HStack(alignment: .bottom, spacing: unit * Self.gap) {
+                Self.paper(picture, width: poster.width * unit, height: poster.height * unit)
+                    .accessibilityElement()
                     .accessibilityLabel(Text(sizeText(product)))
-            } else {
-                ProgressView()
+                Self.paper(pagePicture, width: page.width * unit, height: page.height * unit)
+                    .accessibilityHidden(true)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            .animation(reduceMotion ? nil : .smooth, value: product)
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 18)
-        .frame(maxWidth: .infinity)
-        .frame(height: sizeClass == .regular ? 460 : 300)
+        .padding(.vertical, 22)
+        .frame(height: sizeClass == .regular ? 520 : 320)
+    }
+
+    /// A sheet of paper showing `picture`, white whatever the screen's appearance.
+    private static func paper(_ picture: UIImage?, width: CGFloat, height: CGFloat) -> some View {
+        ZStack {
+            Color.white
+            if let picture {
+                Image(uiImage: picture).resizable()
+            } else {
+                ProgressView().tint(.gray)
+            }
+        }
+        .frame(width: width, height: height)
+        .shadow(color: .black.opacity(0.08), radius: 1, y: 1)
+        .shadow(color: .black.opacity(0.16), radius: 14, y: 8)
+    }
+
+    /// The room between the two sheets, in inches.
+    private static let gap: CGFloat = 1.5
+
+    /// Points per inch that fit the largest sheet and the page beside it, turned the picture's way, in `room`.
+    private static func inchScale(in room: CGSize, page: CGSize, wide: Bool) -> CGFloat {
+        let largest = BigSheetProduct.allCases.map(\.inches).max { $0.width * $0.height < $1.width * $1.height } ?? .zero
+        let sheet = turned(largest, wide: wide)
+        let width = sheet.width + gap + page.width, height = max(sheet.height, page.height)
+        guard width > 0, height > 0 else { return 0 }
+        return max(0, min(room.width / width, room.height / height))
+    }
+
+    private static func turned(_ size: CGSize, wide: Bool) -> CGSize {
+        let long = max(size.width, size.height), short = min(size.width, size.height)
+        return wide ? CGSize(width: long, height: short) : CGSize(width: short, height: long)
     }
 
     @ViewBuilder
@@ -672,8 +712,13 @@ struct BigSheetView: View {
 
     private func draw() async {
         let request = request, layout = layout, product = product
+        if pagePicture == nil {
+            // The same sheet on the painter's own paper, for scale.
+            let page = await Self.sheetPDF(request, layout: layout, size: layout.paper.size)
+            pagePicture = await Self.render(page, longSide: 500).map { UIImage(cgImage: $0) }
+        }
         let data = await Self.sheetPDF(request, layout: layout, product: product)
-        let image = await Self.render(data)
+        let image = await Self.render(data, longSide: 1400)
         guard !Task.isCancelled else { return }
         picture = image.map { UIImage(cgImage: $0) }
         #if DEBUG
@@ -700,14 +745,19 @@ struct BigSheetView: View {
     /// The sheet's blank PDF, the layers as Print's preview chose them.
     @concurrent
     static func sheetPDF(_ request: PrintPreviewRequest, layout: PDFExporter.Layout, product: BigSheetProduct) async -> Data {
-        var blank = layout
-        blank.painted = false
-        return PDFExporter.sheet(for: request.template, title: request.title, layout: blank, size: product.points, nicknames: request.nicknames)
+        await sheetPDF(request, layout: layout, size: product.points)
     }
 
     @concurrent
-    private static func render(_ data: Data) async -> CGImage? {
-        PrintPages.images(of: data, longSide: 1400).first
+    static func sheetPDF(_ request: PrintPreviewRequest, layout: PDFExporter.Layout, size: CGSize) async -> Data {
+        var blank = layout
+        blank.painted = false
+        return PDFExporter.sheet(for: request.template, title: request.title, layout: blank, size: size, nicknames: request.nicknames)
+    }
+
+    @concurrent
+    private static func render(_ data: Data, longSide: CGFloat) async -> CGImage? {
+        PrintPages.images(of: data, longSide: longSide).first
     }
 }
 #endif
