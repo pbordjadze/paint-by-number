@@ -13,7 +13,9 @@ import SwiftUI
 /// (`GlassEra`) shows while the clock is at 1248, and for its scenarios, `-demo glass-<name>`
 /// (`GlassDemo`); `era-passage-glass` holds the way to it at the rose window's light. Watercolor
 /// (`WatercolorEra`) shows at 1502 and for `-demo watercolor-<name>` (`WatercolorDemo`);
-/// `era-passage-watercolor` holds the way to it as its wash floods in.
+/// `era-passage-watercolor` holds the way to it as its wash floods in. The Frame (`FrameEra`), the
+/// frame every mode shares with nothing of a mode's own in it, shows at 1000 and for
+/// `-demo frame-<name>`.
 struct RootView: View {
     @State private var door = EraDoor.shared
 
@@ -25,6 +27,8 @@ struct RootView: View {
                 glass
             } else if showsWatercolor {
                 watercolor
+            } else if showsFrame {
+                frame
             } else {
                 moonlight
             }
@@ -77,6 +81,22 @@ struct RootView: View {
     @ViewBuilder private var watercolor: some View {
         #if UNRELEASED
         WatercolorEra(leave: { year in door.go(to: Era.opened(by: year) ?? .moonlight) })
+        #endif
+    }
+
+    /// Whether The Frame is on screen: its era, or one of its demo scenarios (`frame-…`).
+    private var showsFrame: Bool {
+        #if UNRELEASED
+        return door.shown == .frame || FrameEra.isDemoScenario
+        #else
+        return false
+        #endif
+    }
+
+    /// The Frame (SideStore and Debug builds; `FrameEra`).
+    @ViewBuilder private var frame: some View {
+        #if UNRELEASED
+        FrameEra(leave: { year in door.go(to: Era.opened(by: year) ?? .moonlight) })
         #endif
     }
 
