@@ -137,6 +137,8 @@ struct EraDoorTests {
         door.covered()
         door.passed()
         #expect(EraDoor(defaults: defaults).shown == .woodblock)
+    }
+
     /// Watercolor (painting-company row 373) is kept across launches as Stained Glass is.
     @Test func theWatercolorEraOutlivesTheLaunch() throws {
         let defaults = try freshDefaults()

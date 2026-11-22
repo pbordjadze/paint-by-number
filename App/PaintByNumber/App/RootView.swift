@@ -71,6 +71,11 @@ struct RootView: View {
     private var showsWoodblock: Bool {
         #if UNRELEASED
         return door.shown == .woodblock || WoodblockEra.isDemoScenario
+        #else
+        return false
+        #endif
+    }
+
     /// Whether Watercolor is on screen: its era, or one of its demo scenarios (`watercolor-…`).
     private var showsWatercolor: Bool {
         #if UNRELEASED
@@ -84,6 +89,9 @@ struct RootView: View {
     @ViewBuilder private var woodblock: some View {
         #if UNRELEASED
         WoodblockEra(leave: { year in door.go(to: Era.opened(by: year) ?? .moonlight) })
+        #endif
+    }
+
     /// Watercolor (SideStore and Debug builds; `WatercolorEra`).
     @ViewBuilder private var watercolor: some View {
         #if UNRELEASED
