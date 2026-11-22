@@ -733,8 +733,8 @@ struct TemplatePreviewView: View {
     /// How far the graphite has raced in the `create-forming-graphite` demo.
     private var heldGraphite: Double? {
         #if DEBUG
-        if ShellDemo.current?.formingHold == .graphite { return 0.55 }
-        if ShellDemo.current?.formingHold == .waiting { return 1 }
+        if ShellDemo.current?.formingHold == .graphite { return 0.38 }
+        if ShellDemo.current?.formingHold == .waiting { return 0.7 }
         #endif
         return nil
     }

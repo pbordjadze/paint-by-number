@@ -71,7 +71,7 @@ struct FormingShowTests {
     /// Each beat runs from 0 to 1 and stays there, rising all the way.
     @Test func theBeatsRunFromNothingToWhole() {
         let fuse: (Double) -> Double = { FormingShow.fuseProgress(since: $0, length: 0.6) }
-        let beats: [(Double) -> Double] = [FormingShow.graphiteProgress(since:), fuse, FormingShow.starsProgress(since:)]
+        let beats: [(Double) -> Double] = [fuse, FormingShow.starsProgress(since:)]
         for progress in beats {
             #expect(progress(-1) == 0)
             #expect(progress(0) == 0)
@@ -83,11 +83,27 @@ struct FormingShowTests {
                 last = p
             }
         }
-        #expect(FormingShow.graphiteProgress(since: FormingShow.graphiteSweep) == 1)
         #expect(FormingShow.fuseProgress(since: 0.6, length: 0.6) == 1)
         #expect(FormingShow.starsProgress(since: FormingShow.stars) == 1)
         // A fuse with no time left is whole at once.
         #expect(FormingShow.fuseProgress(since: 0, length: 0) == 1)
+    }
+
+    /// While the template is being made the graphite races out, then ever slower, always moving
+    /// and never done: a slow making never shows a still drawing.
+    @Test func theGraphiteNeverStandsStill() {
+        #expect(FormingShow.graphiteProgress(since: -1) == 0)
+        #expect(FormingShow.graphiteProgress(since: 0) == 0)
+        #expect(abs(FormingShow.graphiteProgress(since: FormingShow.graphitePace) - FormingShow.graphiteNears / 2) < 1e-9)
+        var last = 0.0
+        for t in stride(from: 0.25, through: 30, by: 0.25) {
+            let p = FormingShow.graphiteProgress(since: t)
+            #expect(p > last && p < FormingShow.graphiteNears)
+            last = p
+        }
+        // Still visibly moving after the status comes back.
+        let later = FormingShow.graphiteProgress(since: FormingShow.patience + 1) - FormingShow.graphiteProgress(since: FormingShow.patience)
+        #expect(later > 0.01)
     }
 
     /// A tap before the template is made goes to the plain forming; after, to the painting.
@@ -102,18 +118,19 @@ struct FormingShowTests {
         #expect(skipped.fuseProgress(at: now) == 1)
     }
 
-    /// The preview's moments: the graphite spreads from when it began, the fuse from when it is
-    /// lit (which may be a moment ahead) to when it is done, demos hold either, and nothing
-    /// moves past their ends.
+    /// The preview's moments: the graphite races from when it began, the fuse from when it is
+    /// lit (which may be a moment ahead) to when it is done, the graphite finishing as it burns;
+    /// demos hold either, and nothing moves past their ends.
     @Test func theMomentsFollowTheClock() throws {
         let image = try #require(Self.image())
-        let drawing = GraphiteSketch.Drawing(base: image, stages: [image])
+        let drawing = GraphiteSketch.Drawing(stages: [image], glints: [image])
         let began = Date(timeIntervalSinceReferenceDate: 1000)
         var moments = FormingMoments(graphite: drawing, graphiteBegan: began)
         #expect(moments.graphiteProgress(at: began) == 0)
-        #expect(moments.graphiteProgress(at: began.addingTimeInterval(FormingShow.graphiteSweep)) == 1)
+        #expect(moments.graphiteProgress(at: began.addingTimeInterval(5)) == FormingShow.graphiteProgress(since: 5))
         #expect(moments.fuseProgress(at: began.addingTimeInterval(5)) == 0)
-        #expect(moments.movesUntil == began.addingTimeInterval(FormingShow.graphiteSweep))
+        // Racing on until the template is made.
+        #expect(moments.movesUntil == .distantFuture)
 
         let made = began.addingTimeInterval(0.05)
         let lit = began.addingTimeInterval(FormingShow.graphiteAtLeast)
@@ -122,7 +139,12 @@ struct FormingShowTests {
         moments.fuseDone = done
         #expect(moments.fuseProgress(at: lit.addingTimeInterval(-0.01)) == 0)
         #expect(moments.fuseProgress(at: done) == 1)
-        #expect(moments.movesUntil == max(began.addingTimeInterval(FormingShow.graphiteSweep), done))
+        #expect(moments.movesUntil == done)
+        // The graphite carries on by the clock until the fuse is lit, then finishes with it.
+        let before = lit.addingTimeInterval(-0.01)
+        #expect(moments.graphiteProgress(at: before) == FormingShow.graphiteProgress(since: before.timeIntervalSince(began)))
+        #expect(abs(moments.graphiteProgress(at: lit) - FormingShow.graphiteProgress(since: FormingShow.graphiteAtLeast)) < 1e-9)
+        #expect(abs(moments.graphiteProgress(at: done) - 1) < 1e-9)
 
         // No graphite drawing, no graphite.
         #expect(FormingMoments(graphiteBegan: began).graphiteProgress(at: began.addingTimeInterval(9)) == 0)
@@ -190,24 +212,23 @@ struct FormingShowTests {
     }
 
     /// The race's images: none before it begins, each stage whole once passed and the next
-    /// fading in, every stroke at the end; the photo drained early in the race.
+    /// fading in (its glint with it), every stroke at the end and no tip left.
     @Test func theGraphiteStagesFollowTheRace() {
-        #expect(GraphiteSketch.shown(at: 0, stages: 8).whole == nil)
-        #expect(GraphiteSketch.shown(at: 0, stages: 8).fading == nil)
+        let start = GraphiteSketch.shown(at: 0, stages: 8)
+        #expect(start.whole == nil && start.fading?.stage == 0 && start.fading?.opacity == 0)
         let early = GraphiteSketch.shown(at: 0.05, stages: 8)
         #expect(early.whole == nil && early.fading?.stage == 0)
         #expect(abs((early.fading?.opacity ?? 0) - 0.4) < 1e-9)
-        let held = GraphiteSketch.shown(at: 0.55, stages: 8)
-        #expect(held.whole == 3 && held.fading?.stage == 4)
+        // The `create-forming-graphite` hold: a little past a third.
+        let held = GraphiteSketch.shown(at: 0.38, stages: 8)
+        #expect(held.whole == 2 && held.fading?.stage == 3)
         let end = GraphiteSketch.shown(at: 1, stages: 8)
         #expect(end.whole == 7 && end.fading == nil)
-        #expect(GraphiteSketch.drained(at: 0) == 0)
-        #expect(GraphiteSketch.drained(at: GraphiteSketch.drains) == 1)
-        #expect(GraphiteSketch.drained(at: 1) == 1)
     }
 
-    /// The graphite is a real pencil drawing: strokes along a photo's edges and bare paper where
-    /// it is flat, in the sheet's ink.
+    /// The graphite is a real pencil drawing: a line along a photo's edge and bare paper where it
+    /// is flat, in the sheet's ink; and the race's first stage leaves the photo's far corner to
+    /// the photo.
     @Test func theGraphiteDrawsPencilStrokes() async throws {
         // A light photo with a dark square in it.
         let size = 120
@@ -221,24 +242,28 @@ struct FormingShowTests {
         let photo = try #require(context.makeImage())
         let sheet = FormingPlan.Sheet(paper: SIMD3(0.95, 0.94, 0.9), ink: SIMD3(0.1, 0.1, 0.12))
         let drawing = try #require(await GraphiteSketch.draw(photo, sheet: sheet))
-        #expect(drawing.stages.count == GraphiteSketch.stages)
-        #expect(drawing.base.width == size && drawing.base.height == size)
-        let last = try #require(drawing.stages.last)
-        // The square's edge is drawn; the middle of the flat paper and of the square are not.
-        #expect(try Self.alpha(of: last, x: 40, y: 60) > 0.3)
-        #expect(try Self.alpha(of: last, x: 10, y: 10) < 0.05)
-        #expect(try Self.alpha(of: last, x: 60, y: 60) < 0.05)
+        #expect(drawing.stages.count == GraphiteSketch.stages && drawing.glints.count == GraphiteSketch.stages)
+        let last = try #require(drawing.stages.last), first = try #require(drawing.stages.first)
+        #expect(last.width == size && last.height == size)
+        // All of it drawn: the line just inside the square's edge, bare paper outside it and
+        // little more than hatching in the square's middle.
+        let edge = try Self.pixel(of: last, x: 43, y: 60), paper = try Self.pixel(of: last, x: 10, y: 10)
+        let middle = try Self.pixel(of: last, x: 60, y: 60)
+        #expect(edge.alpha > 0.99 && edge.red < 0.4)
+        #expect(paper.alpha > 0.99 && paper.red > 0.85)
+        #expect(middle.red > 0.7)
+        #expect(try Self.pixel(of: first, x: 2, y: 2).alpha < 0.05)
     }
 
-    /// A pixel's alpha (0…1) in an image.
-    private static func alpha(of image: CGImage, x: Int, y: Int) throws -> Double {
+    /// A pixel's red (premultiplied) and alpha, 0…1, in an image.
+    private static func pixel(of image: CGImage, x: Int, y: Int) throws -> (red: Double, alpha: Double) {
         let context = try #require(CGContext(
             data: nil, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB)!,
             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
         // The one pixel is the image's (x, y), y from the top.
         context.draw(image, in: CGRect(x: -x, y: y + 1 - image.height, width: image.width, height: image.height))
         let data = try #require(context.data)
-        return Double(data.load(fromByteOffset: 3, as: UInt8.self)) / 255
+        return (Double(data.load(fromByteOffset: 0, as: UInt8.self)) / 255, Double(data.load(fromByteOffset: 3, as: UInt8.self)) / 255)
     }
 
     /// The numbers' twinkles: one per label up to the limit, spread over the page, each lit only

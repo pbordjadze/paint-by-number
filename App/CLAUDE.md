@@ -827,11 +827,13 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   settings' preview keep what they showed. **The short Making-of** (SideStore and Debug builds only,
   `FormingShow.isOn`; row 361, "graphite and fuse"; the release keeps the forming above) plays over it
   as everyone's wait, with no status over it until the making has taken `FormingShow.patience` (4 s;
-  VoiceOver hears it at once): the photo's color drains as pencil strokes race along its shapes from the
-  middle (`GraphiteSketch`: a color-dodge sketch in the sheet's ink, its race the strokes' shortest ways
-  from a seed, made once off the main actor as a base and eight cumulative images cross-faded;
-  `tools/graphite_sim.py` makes the same off the device, light or dark paper) and linger until the
-  template is made; then its lines burn in behind a gold front (`FormingShow.glow`, stroked once off
+  VoiceOver hears it at once): pencil lines are laid down along the photo's shapes from the middle, a
+  warm glint at their tip, its color draining only behind them (`GraphiteSketch`: a difference of
+  Gaussians on the median-filtered grey, opened, with light hatching in the shadows; its race the lines'
+  shortest ways from a seed, equalized by ink; made once off the main actor as eight cumulative images
+  and their glints, four cross-faded a frame; `tools/graphite_sim.py` makes and lays out the same off
+  the device, light or dark paper). The race nears its end without reaching it while the template is
+  made (`FormingShow.graphiteProgress`), never a still image, and finishes under the fuse; then its lines burn in behind a gold front (`FormingShow.glow`, stroked once off
   the main actor, its glow in it; `FormingShow.Front`, a wavering blot drawn as one image scaled about
   its centre, `FrontMasks`, which the numbers share) with the page's paper, done `drawIn` after the making as the plain forming's
   lines are (a graphite shown less than `graphiteAtLeast`, 0.15 s, takes that from the fuse); and during
@@ -840,8 +842,8 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   a double tap still zooms): made, to the painting; not yet, to the plain forming. A failed making hides
   it; Reduce Motion and The Making-of on bring none of it (`hasLines`). `FormingTests`, `FormingShowTests`; the scenarios
   `create-forming`, `-drawing`, `-lines` and `-page` hold it at a moment each (`ShellDemo.formingHold`; with
-  the short Making-of: the graphite whole, ready once it is drawn, the fuse half burned, the lines burned in), `-graphite` the
-  graphite's race half run and `-stars` the numbers half out at the painting's place, and
+  the short Making-of: the race at 70%, ready once the graphite is made, the fuse half burned, the lines burned in), `-graphite` the
+  race at 38% and `-stars` the numbers half out at the painting's place, and
   `StartHandoffUITests.testSlowedPickedPictureFormsIntoThePainting` attaches its frames.
 - `PhotoSourceView` (the Paint page, above): one scroll view; Tonight's Picture held to about 45%
   of the window's height, Your Own a grid (never a row that scrolls: its last ways in went unseen),
