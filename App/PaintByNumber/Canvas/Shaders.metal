@@ -328,15 +328,16 @@ fragment float4 glassFillFragment(FillOut in [[stage_in]],
     uint count = uint(max(g.lens.y, 1.0));
     uint now = min(code % 1024u, count), before = min(code / 1024u, count);
     // The rim pulls the photo in from deeper in the piece; under real glass (a glazed piece's), the
-    // glass does.
-    bool covered = g.lens.w > 0.5 && now > 0u;
-    float2 seenAt = (in.canvas + n * pow(t, 2.2) * rim * (covered ? 0.0 : 1.1)) / size;
+    // glass does. A piece just poured keeps its own lens until its pane has materialized over it
+    // (`GlassPanes.arrivalDuration`), or the photo showed flat and dark under no glass at all.
+    float covered = g.lens.w > 0.5 && now > 0u ? smoothstep(0.3, 0.8, u.time.x - s.start) : 0.0;
+    float2 seenAt = (in.canvas + n * pow(t, 2.2) * rim * 1.1 * (1.0 - covered)) / size;
     float3 seen = curveEncode(photo.sample(linear, seenAt, bias(0.5)).rgb) * 0.94 + 0.05;
     float3 soft = curveEncode(photo.sample(linear, seenAt, level(3.0)).rgb) * 0.94 + 0.05;
     float3 detail = seen - soft;
     // Darker toward the rim, as light through a thick edge; real glass shades its own, so under
     // it the color stays even out to the lead.
-    float glow = (covered ? 1.15 : 0.55 + 0.6 * pow(inner, 1.5)) * (0.9 + 0.1 * f.y);
+    float glow = mix(0.55 + 0.6 * pow(inner, 1.5), 1.15, covered) * (0.9 + 0.1 * f.y);
     float3 lit = now > 0u ? pouredGlass(curveEncode(glasses[now - 1u].rgb), seen, detail, glow) : seen;
     float3 under = before > 0u ? pouredGlass(curveEncode(glasses[before - 1u].rgb), seen, detail, glow) : seen;
     PaintSample ps = samplePaint(s, in.canvas, u.time.x, 1.0 / u.transform.z);
@@ -352,12 +353,12 @@ fragment float4 glassFillFragment(FillOut in [[stage_in]],
     }
     // Light on the rim from the top left, a thin bright line all round, its shade at the bottom right.
     // Real glass lights its own rim.
-    if (!covered) {
+    if (covered < 1.0) {
         float facing = saturate(-(n.x + n.y) * 0.70710678);
         float t3 = t * t * t;
         float sigma = rim / 26.0, off = inner * rim - 2.5 * sigma;
-        c += t3 * facing * facing * 0.9 + 0.35 * exp(-off * off / (2.0 * sigma * sigma));
-        c -= t3 * saturate((n.x + n.y) * 0.70710678) * 0.12;
+        c += (1.0 - covered) * (t3 * facing * facing * 0.9 + 0.35 * exp(-off * off / (2.0 * sigma * sigma))
+                                - t3 * saturate((n.x + n.y) * 0.70710678) * 0.12);
     }
     // The came, its rounded face catching a soft sheen.
     float aa = max(fwidth(d), 1e-3);
