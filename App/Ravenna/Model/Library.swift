@@ -181,10 +181,12 @@ final class Library {
 
     @discardableResult
     func create(_ draft: ArtworkDraft) async throws -> Artwork {
-        let artwork = Artwork(
+        var made = Artwork(
             title: draft.title, createdAt: draft.date, template: draft.template, settings: draft.settings,
             settingsOrigin: draft.settingsOrigin, paintingLength: draft.paintingLength,
             progress: draft.progress, sampleName: draft.sampleName, recipe: draft.recipe, hasMosaic: draft.mosaic != nil)
+        if !draft.isNamed { made.titled = false }
+        let artwork = made
         let store = self.store
         try await Background.run {
             let progress = draft.progress ?? PaintProgress(regionCount: draft.template.regions.count)
@@ -313,10 +315,14 @@ final class Library {
 
     // MARK: Editing
 
+    /// Names the mosaic; kept as it is, the name it was given becomes its own all the same.
     func rename(_ id: UUID, to title: String) {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, var artwork = artwork(with: id), !artwork.needsNewerApp, artwork.title != trimmed else { return }
+        guard !trimmed.isEmpty, var artwork = artwork(with: id), !artwork.needsNewerApp,
+              artwork.title != trimmed || !artwork.isNamed
+        else { return }
         artwork.title = trimmed
+        if artwork.titled != nil { artwork.titled = true }
         replace(artwork, resort: false)
         persistMeta(artwork)
     }
