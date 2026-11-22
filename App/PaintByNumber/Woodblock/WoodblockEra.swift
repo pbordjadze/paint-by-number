@@ -2,62 +2,27 @@
 import CoreGraphics
 import Foundation
 import PaintCore
-import PhotosUI
 import Ravenna
 import SwiftUI
 import os
 
 /// Woodblock, the era behind 1765 on the year wheel (painting-company row 375; SideStore and
-/// Debug builds): your photos, printed by numbers. A mode of the app's own: a print is the app's
-/// own template made with few paints (`WoodblockShelf.template`), its blocks the key block's
-/// drawing and one block per numbered paint (`WoodblockPlan`), carved, inked and printed on the
-/// bench (`WoodblockBenchView`). The era is its gallery of prints, New Print (a photo or a
-/// library picture) and Settings, whose Year wheel leaves it. Dark only: a workshop by lamplight.
+/// Debug builds): your photos, printed by numbers. A mode in the frame every mode shares
+/// (`ModeShell`): a print is the app's own template made with few paints
+/// (`WoodblockShelf.template`), its blocks the key block's drawing and one block per numbered
+/// paint (`WoodblockPlan`), carved, inked and printed on the bench (`WoodblockBenchView`). Dark,
+/// a workshop by lamplight.
 struct WoodblockEra: View {
     let leave: (Int) -> Void
 
     @State private var shelf = WoodblockShelf.shared
     @State private var path: [UUID] = []
-    @State private var picking = false
-    @State private var picked: PhotosPickerItem?
-    @State private var showsSettings = false
-    @State private var showsLibrary = false
-    @State private var isCutting = false
 
     var body: some View {
-        NavigationStack(path: $path) {
-            WoodblockGalleryView(shelf: shelf, onNew: { picking = true }, onLibrary: { showsLibrary = true },
-                                 onSettings: { showsSettings = true }, onOpen: { path.append($0) })
-                .navigationDestination(for: UUID.self) { id in
-                    WoodblockPrintScreen(shelf: shelf, id: id)
-                }
-        }
-        .overlay {
-            if isCutting {
-                VStack(spacing: 12) {
-                    ProgressView().controlSize(.large)
-                    Text("Cutting the blocks…")
-                        .font(.display(.body))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(28)
-                .glassEffect(in: .rect(cornerRadius: 22))
-            }
-        }
-        .photosPicker(isPresented: $picking, selection: $picked, matching: .images)
-        .onChange(of: picked) { _, item in
-            guard let item else { return }
-            picked = nil
-            Task { await load(item) }
-        }
-        .sheet(isPresented: $showsSettings) {
-            WoodblockSettingsView(leave: leave)
-        }
-        .sheet(isPresented: $showsLibrary) {
-            GlassLibraryView { sample in
-                showsLibrary = false
-                Task { await load(sample) }
-            }
+        ModeShell(look: Self.look, path: $path, leave: leave, make: cut) { waysIn in
+            WoodblockGalleryView(shelf: shelf, waysIn: waysIn, onOpen: { path.append($0) })
+        } destination: { id in
+            WoodblockPrintScreen(shelf: shelf, id: id)
         }
         .task {
             await shelf.load()
@@ -65,11 +30,15 @@ struct WoodblockEra: View {
             await WoodblockDemo.run(scenario: DemoMode.scenario, shelf: shelf, path: $path)
             #endif
         }
-        .tint(WoodblockEra.lamp)
-        .preferredColorScheme(.dark)
     }
 
-    /// The lamp's warm light, the era's tint.
+    /// Woodblock in the frame every mode shares (`ModeShell`).
+    static var look: ModeLook {
+        ModeLook(year: EraYear.woodblock, title: Text("Woodblock"), newTitle: Text("New Print"), accent: lamp,
+                 backdrop: bench, working: Text("Cutting the blocks…"), id: "woodblock")
+    }
+
+    /// The lamp's warm light, the era's accent.
     static let lamp = Color(red: 0.95, green: 0.72, blue: 0.42)
     /// The bench the canvas draws, for SwiftUI: `WoodblockMode.bench` is linear, a SwiftUI
     /// colour's components are encoded (read as they are, the bench showed black around it).
@@ -91,36 +60,12 @@ struct WoodblockEra: View {
         #endif
     }
 
-    private func load(_ item: PhotosPickerItem) async {
+    /// Cuts a picture's blocks and opens the print on the bench.
+    private func cut(_ picked: ModePicture) async {
         do {
-            guard let data = try await item.loadTransferable(type: Data.self) else { return }
-            let photo = try await Background.run { try PhotoLoader.load(data: data, maxPixelSize: ArtworkStore.sourceMaxPixelSize) }
-            await start(photo, title: shelf.title(), sampleName: nil)
-        } catch {
-            Log.library.error("Couldn't load a photo for a print: \(String(describing: error), privacy: .public)")
-        }
-    }
-
-    private func load(_ sample: Sample) async {
-        guard let url = sample.url else { return }
-        do {
-            let photo = try await Background.run {
-                try PhotoLoader.load(data: Data(contentsOf: url), maxPixelSize: ArtworkStore.sourceMaxPixelSize)
-            }
-            await start(photo, title: sample.title, sampleName: sample.id)
-        } catch {
-            Log.library.error("Couldn't load a library picture for a print: \(String(describing: error), privacy: .public)")
-        }
-    }
-
-    /// Cuts a photo's blocks and opens the print on the bench.
-    private func start(_ photo: RGBAImage, title: String, sampleName: String?) async {
-        isCutting = true
-        defer { isCutting = false }
-        do {
-            let (template, settings) = try await WoodblockShelf.template(of: photo)
-            let artwork = try await shelf.create(template: template, settings: settings, photo: photo, title: title,
-                                                 sampleName: sampleName)
+            let (template, settings) = try await WoodblockShelf.template(of: picked.photo)
+            let artwork = try await shelf.create(template: template, settings: settings, photo: picked.photo,
+                                                 title: picked.sample?.title ?? shelf.title(), sampleName: picked.sample?.id)
             path = [artwork.id]
         } catch {
             Log.library.error("Couldn't make a print: \(String(describing: error), privacy: .public)")
@@ -131,39 +76,21 @@ struct WoodblockEra: View {
 /// The prints: a card each, newest first; none yet, a way to make the first.
 struct WoodblockGalleryView: View {
     let shelf: WoodblockShelf
-    let onNew: () -> Void
-    let onLibrary: () -> Void
-    let onSettings: () -> Void
+    let waysIn: ModeWaysIn
     let onOpen: (UUID) -> Void
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
-        Group {
-            if shelf.isLoaded && shelf.prints.isEmpty {
-                empty
-            } else {
-                ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 160), spacing: 18)], spacing: 22) {
-                        ForEach(shelf.prints) { artwork in
-                            WoodblockCard(shelf: shelf, artwork: artwork, onOpen: { onOpen(artwork.id) })
-                        }
+        if shelf.isLoaded && shelf.prints.isEmpty {
+            empty
+        } else {
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: sizeClass == .compact ? 150 : 220), spacing: 22)], spacing: 26) {
+                    ForEach(shelf.prints) { artwork in
+                        WoodblockCard(shelf: shelf, artwork: artwork, onOpen: { onOpen(artwork.id) })
                     }
-                    .padding(20)
                 }
-            }
-        }
-        .background(WoodblockEra.bench.ignoresSafeArea())
-        .navigationTitle(Text("Woodblock"))
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button("Settings", systemImage: "gearshape", action: onSettings)
-                    .accessibilityIdentifier("woodblock-settings")
-            }
-            ToolbarItem(placement: .primaryAction) {
-                Menu("New Print", systemImage: "plus") {
-                    Button("A Photo", systemImage: "photo", action: onNew)
-                    Button("The Library", systemImage: "books.vertical", action: onLibrary)
-                }
-                .accessibilityIdentifier("woodblock-new")
+                .padding(20)
             }
         }
     }
@@ -179,7 +106,7 @@ struct WoodblockGalleryView: View {
             Text("Choose a photo: carve its blocks, then print them by number.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
-            Button("Choose a Photo", action: onNew)
+            Button("Choose a Photo", action: waysIn.photo)
                 .buttonStyle(.glassProminent)
                 .tint(Theme.signature)
                 .padding(.top, 6)
@@ -245,28 +172,30 @@ struct WoodblockCard: View {
     }
 }
 
-/// A print opened on the bench: read off the main actor, then the bench.
+/// A print opened on the bench, in the frame's painting screen (`ModePaintingFrame`): read off
+/// the main actor, then the bench. A print written by a newer app keeps its files as they are.
 struct WoodblockPrintScreen: View {
     let shelf: WoodblockShelf
     let id: UUID
     @State private var model: WoodblockBenchModel?
     @State private var failed = false
     @State private var unavailable = false
+    @State private var needsNewerApp = false
+
+    private var opening: ModeOpening {
+        if model != nil { return .open }
+        if unavailable { return .unavailable }
+        if needsNewerApp { return .needsNewerApp }
+        return failed ? .failed : .opening
+    }
 
     var body: some View {
-        Group {
+        ModePaintingFrame(title: shelf.print(id)?.title ?? "", opening: opening, cantOpen: Text("Can’t Open Print"),
+                          backdrop: WoodblockEra.bench) {
             if let model {
                 WoodblockBenchView(model: model, title: shelf.print(id)?.title ?? "")
-            } else if unavailable {
-                CanvasUnavailableView()
-            } else if failed {
-                ContentUnavailableView("Can’t Open Print", systemImage: "exclamationmark.triangle")
-            } else {
-                ProgressView()
             }
         }
-        .navigationTitle(Text(verbatim: shelf.print(id)?.title ?? ""))
-        .navigationBarTitleDisplayMode(.inline)
         .task(id: id) {
             guard model == nil, let artwork = shelf.print(id) else { return }
             do {
@@ -283,60 +212,17 @@ struct WoodblockPrintScreen: View {
                     unavailable = true
                     return
                 }
-                let bench0 = bench
-                let model = WoodblockBenchModel(id: id, plan: plan, bench: bench0, field: made.1, mode: made.0)
+                let model = WoodblockBenchModel(id: id, plan: plan, bench: bench, field: made.1, mode: made.0)
                 model.onChange = { [shelf] bench in shelf.enqueue(bench, of: id, plan: plan) }
                 #if DEBUG
                 WoodblockDemo.prepare(model)
                 #endif
                 self.model = model
+            } catch WoodblockBench.CodingError.newerVersion {
+                needsNewerApp = true
             } catch {
+                Log.library.error("Couldn't open print \(id.uuidString, privacy: .public): \(String(describing: error), privacy: .public)")
                 failed = true
-            }
-        }
-    }
-}
-
-/// The era's Settings: About's Year, whose wheel leaves the era.
-struct WoodblockSettingsView: View {
-    let leave: (Int) -> Void
-    @Environment(\.dismiss) private var dismiss
-    @State private var showsClock = false
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section("About") {
-                    Button {
-                        withAnimation { showsClock.toggle() }
-                    } label: {
-                        LabeledContent {
-                            Text(verbatim: EraClock.text(of: EraYear.woodblock)).foregroundStyle(.tint)
-                        } label: {
-                            SwiftUI.Label {
-                                Text("Year").foregroundStyle(Color.primary)
-                            } icon: {
-                                Image(systemName: "clock")
-                            }
-                        }
-                    }
-                    .accessibilityIdentifier("about-year")
-                    if showsClock {
-                        EraClock(year: EraYear.woodblock) { year in
-                            guard year != EraYear.woodblock, EraYear.opensAnEra(year) else { return }
-                            dismiss()
-                            leave(year)
-                        }
-                        .accessibilityIdentifier("era-clock")
-                    }
-                }
-            }
-            .navigationTitle(Text("Settings"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
             }
         }
     }

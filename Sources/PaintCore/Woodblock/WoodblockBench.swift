@@ -16,6 +16,9 @@ public struct WoodblockBench: Sendable, Equatable {
     public enum Step: UInt8, Sendable { case carve = 0, ink, sheet, rub, peeled }
 
     public let width: Int
+    /// The plan's blocks it was carved for (`WoodblockPlan.signature`): a later build that cuts a
+    /// photo into other blocks finds the saved bench isn't theirs, never prints it on the wrong one.
+    public let blocks: UInt32
     public let height: Int
     /// The block being worked (`WoodblockPlan.blocks`); `blocks.count` once the print is done.
     public internal(set) var block: Int
@@ -45,6 +48,7 @@ public struct WoodblockBench: Sendable, Equatable {
     public init(plan: WoodblockPlan) {
         width = plan.grid.width
         height = plan.grid.height
+        blocks = plan.signature
         block = 0
         step = .carve
         let n = width * height
@@ -396,11 +400,12 @@ public struct WoodblockBench: Sendable, Equatable {
     static let magic: [UInt8] = Array("WDBK".utf8)
     public static let version: UInt8 = 1
 
-    /// The bench as bytes: magic, version, size, block, step, then the arrays as they are.
+    /// The bench as bytes: magic, version, size, block, the blocks' signature, step, then the
+    /// arrays as they are.
     public func encoded() -> [UInt8] {
         var out = Self.magic
         out.append(Self.version)
-        for v in [UInt32(width), UInt32(height), UInt32(block)] {
+        for v in [UInt32(width), UInt32(height), UInt32(block), blocks] {
             withUnsafeBytes(of: v.littleEndian) { out.append(contentsOf: $0) }
         }
         out.append(step.rawValue)
@@ -413,22 +418,29 @@ public struct WoodblockBench: Sendable, Equatable {
     /// Reads a bench saved for `plan` (hostile bytes: every size is checked against the plan's
     /// grid and the bytes there are before anything is read).
     public init(decoding bytes: [UInt8], plan: WoodblockPlan) throws {
-        guard bytes.count >= 18, Array(bytes[0..<4]) == Self.magic else { throw CodingError.notABench }
+        guard bytes.count >= 22, Array(bytes[0..<4]) == Self.magic else { throw CodingError.notABench }
         guard bytes[4] <= Self.version else { throw CodingError.newerVersion }
         func u32(_ at: Int) -> Int {
             Int(UInt32(bytes[at]) | UInt32(bytes[at + 1]) << 8 | UInt32(bytes[at + 2]) << 16 | UInt32(bytes[at + 3]) << 24)
         }
         let w = u32(5), h = u32(9), b = u32(13)
         guard w == plan.grid.width, h == plan.grid.height, b <= plan.blocks.count,
-              let step = Step(rawValue: bytes[17]) else { throw CodingError.corrupt }
+              UInt32(u32(17)) == plan.signature,
+              let step = Step(rawValue: bytes[21]) else { throw CodingError.corrupt }
         let n = w * h
-        guard bytes.count == 18 + 8 * n else { throw CodingError.corrupt }
+        guard bytes.count == Self.byteCount(cells: n) else { throw CodingError.corrupt }
         width = w
         height = h
+        blocks = plan.signature
         block = b
         self.step = b == plan.blocks.count ? .peeled : step
-        carved = Array(bytes[18..<(18 + 2 * n)])
-        inked = Array(bytes[(18 + 2 * n)..<(18 + 4 * n)])
-        sheet = Array(bytes[(18 + 4 * n)..<(18 + 8 * n)])
+        carved = Array(bytes[22..<(22 + 2 * n)])
+        inked = Array(bytes[(22 + 2 * n)..<(22 + 4 * n)])
+        sheet = Array(bytes[(22 + 4 * n)..<(22 + 8 * n)])
+    }
+
+    /// The size of a bench's bytes for a grid of `cells`.
+    public static func byteCount(cells: Int) -> Int {
+        22 + 8 * cells
     }
 }

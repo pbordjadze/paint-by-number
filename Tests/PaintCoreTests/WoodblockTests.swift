@@ -133,6 +133,10 @@ struct WoodblockTests {
         var wrongBlock = bytes
         wrongBlock[13] = 99
         #expect(throws: WoodblockBench.CodingError.corrupt) { try WoodblockBench(decoding: wrongBlock, plan: plan) }
+        // A bench carved for other blocks (a later build's cut of the photo) isn't this plan's.
+        var otherBlocks = bytes
+        otherBlocks[17] ^= 0xFF
+        #expect(throws: WoodblockBench.CodingError.corrupt) { try WoodblockBench(decoding: otherBlocks, plan: plan) }
     }
 
     @Test func aPaintAsPaleAsWashiIsLeftBare() throws {

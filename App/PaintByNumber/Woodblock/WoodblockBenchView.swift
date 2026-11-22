@@ -37,6 +37,8 @@ final class WoodblockBenchModel: CanvasTouches {
     private(set) var isTurning = false
     @ObservationIgnored var reduceMotion = false
     @ObservationIgnored private var last: SIMD2<Float>?
+    /// A stroke laid the sheet and hasn't lifted yet.
+    @ObservationIgnored private var laidByStroke = false
     @ObservationIgnored private var saving: Task<Void, Never>?
     @ObservationIgnored private var lastBite = Date.distantPast
     @ObservationIgnored private let bite = UIImpactFeedbackGenerator(style: .light)
@@ -78,6 +80,11 @@ final class WoodblockBenchModel: CanvasTouches {
     @discardableResult
     func canvas(_ canvas: CanvasView, touched point: SIMD2<Float>, phase: CanvasTouchPhase) -> Bool {
         guard !isTurning, !showsPrint else { return false }
+        // The rest of the stroke that laid the sheet rubs nothing either.
+        if laidByStroke {
+            if phase == .ended || phase == .tap { laidByStroke = false }
+            return true
+        }
         let p = plan.grid.cells(point)
         let from = phase == .began || phase == .tap ? p : (last ?? p)
         last = phase == .ended || phase == .tap ? nil : p
@@ -95,6 +102,7 @@ final class WoodblockBenchModel: CanvasTouches {
             // The touch that lays the sheet rubs nothing.
             last = nil
             laySheet()
+            laidByStroke = phase == .began
             return true
         case .rub:
             mode.update(.inked, from: bench.inked, dirty: bench.rub(from: from, to: p, radius: baren))
@@ -455,12 +463,13 @@ struct WoodblockBenchView: View {
             Button("Lay the Sheet") { model.laySheet() }
                 .buttonStyle(.glass)
                 .accessibilityIdentifier("woodblock-lay")
-        } else if model.step == .rub && (model.canPeel || voiceOver) {
+        } else if model.step == .rub && (model.canPeel || stepsByButton) {
             HStack {
-                if voiceOver && !model.canPeel {
+                if stepsByButton && !model.canPeel {
                     Button("Rub It All") { model.finishStep() }
                         .buttonStyle(.glass)
                         .disabled(model.isTurning)
+                        .accessibilityIdentifier("woodblock-rub-all")
                 }
                 Button("Lift the Sheet") { model.peel() }
                     .buttonStyle(.glassProminent)
@@ -468,15 +477,26 @@ struct WoodblockBenchView: View {
                     .disabled(model.isTurning || !model.canPeel)
                     .accessibilityIdentifier("woodblock-peel")
             }
-        } else if voiceOver && (model.step == .carve || model.step == .ink) {
+        } else if stepsByButton && (model.step == .carve || model.step == .ink) {
             if model.step == .carve {
                 Button("Carve It") { model.finishStep() }
                     .buttonStyle(.glass)
+                    .accessibilityIdentifier("woodblock-carve-it")
             } else {
                 Button("Ink It") { model.finishStep() }
                     .buttonStyle(.glass)
+                    .accessibilityIdentifier("woodblock-ink-it")
             }
         }
+    }
+
+    /// The steps a finger works, each as a button: VoiceOver's way through, and a UI test's
+    /// (`-woodblock-steps`, Debug builds) once its own strokes have shown the finger's.
+    private var stepsByButton: Bool {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-woodblock-steps") { return true }
+        #endif
+        return voiceOver
     }
 
     private func share() {

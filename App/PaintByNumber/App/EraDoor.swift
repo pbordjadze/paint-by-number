@@ -20,6 +20,9 @@ enum Era: String {
     /// Watercolor, at 1502 (SideStore and Debug builds; painting-company row 373): real water on
     /// the app's own templates (`WatercolorEra`).
     case watercolor
+    /// The Frame, at 1000 (SideStore and Debug builds; painting-company row 379): the frame every
+    /// mode shares (`ModeShell`) with nothing of a mode's own in it (`FrameEra`).
+    case frame
 
     /// The era a year on the clock opens, nil for a year that opens none.
     static func opened(by year: Int) -> Era? {
@@ -28,6 +31,7 @@ enum Era: String {
         if EraYear.opensStainedGlass(year) { return .glass }
         if EraYear.opensWoodblock(year) { return .woodblock }
         if EraYear.opensWatercolor(year) { return .watercolor }
+        if EraYear.opensTheFrame(year) { return .frame }
         #endif
         if EraYear.returnsToThePresent(year) { return .moonlight }
         return nil
@@ -61,9 +65,9 @@ final class EraDoor {
         #if UNRELEASED
         shown = era
         #else
-        // Stained Glass, Watercolor and Woodblock are SideStore's and Debug's: a release opening
-        // on any of them opens at home.
-        shown = era == .glass || era == .watercolor || era == .woodblock ? .moonlight : era
+        // Stained Glass, Watercolor, Woodblock and The Frame are SideStore's and Debug's: a release
+        // opening on one opens at home.
+        shown = era == .glass || era == .watercolor || era == .woodblock || era == .frame ? .moonlight : era
         #endif
     }
 
@@ -127,9 +131,10 @@ struct EraPassage: View {
 
     /// Whether the passage to `destination` is the way back's own: to Paint by Moonlight from
     /// the mosaic era, with motion. Stained Glass's passages are the nave's, either way, and
-    /// Watercolor's a wash's (`drawWash`); every other passage is the tiles set and lifted.
+    /// Watercolor's a wash's (`drawWash`); every other passage, The Frame's both ways too, is the
+    /// tiles set and lifted.
     static func isWayBack(to destination: Era, from origin: Era? = nil, reduceMotion: Bool) -> Bool {
-        return destination == .moonlight && origin != .glass && origin != .watercolor && !reduceMotion
+        return destination == .moonlight && origin != .glass && origin != .watercolor && origin != .frame && !reduceMotion
     }
 
     /// When the screen is wholly covered, so the era can go in beneath, and when the passage is

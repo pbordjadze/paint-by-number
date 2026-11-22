@@ -1204,7 +1204,10 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   movement, kind, search and order (`MuseumQuery`, `MuseumQueryTests`; Most Colorful first).
   A work's page (`MuseumWorkView`) fetches its full image (about 3,000 px) as it opens; Paint
   This closes the Museum and loads it as a picked photo named after the work
-  (`CreateModel.load(imageData:title:)`, `paintsNow`). Pictures go through `MuseumImages`, a
+  (`CreateModel.load(imageData:title:)`, `paintsNow`). A work with a finished painting of it
+  hangs in a little frame on the wall, and one with a painting under way says Resume on its
+  page, which closes the flow and opens that painting (`MuseumPainted`: by the painting's name,
+  and the ids Paint This records; the shell's `resumePainting`). Pictures go through `MuseumImages`, a
   URL cache of their own on disk. Its scenarios are `museum` (with `-dark`), `museum-art-nouveau`
   and `museum-work` (with `-dark`), which need the network; `-demoMuseumPaint YES` paints the
   opened work once it is fetched.
@@ -1357,12 +1360,37 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
 - **The App Review note** for the version that ships it (Guideline 2.3.1):
   `docs/ravenna/app-review-note.md`.
 
+## The frame every mode shares (`Shell/`)
+
+SideStore and Debug builds (`#if UNRELEASED`; painting-company row 379). Every mode behind the
+year wheel is a `ModeShell` around what is its own; `ModeShell`'s doc comment is the rules, with no
+exceptions: a year (opened from the wheel, left from its Settings' Year row, `ModeSettingsView`);
+a gallery under the mode's name on its backdrop; Settings top left; New top right, with A Photo
+and The Library and nothing else (`ModeLibraryPicker`); one accent and the dark; the painting
+screen pushed on the gallery, its name inline, the same words while it opens or can't
+(`ModePaintingFrame`, `ModeOpening`). Every mode also guarantees, inside the frame: it starts from the painter's
+picture and makes the painting from it; the picture is divided into numbered regions, each number
+one paint (how a region gets done is the medium's, never whether it is numbered); every painting
+can reach Finished by doing what the numbers say; and before it reaches a TestFlight or SideStore
+build, one painting is painted from a photo to Finished end to end, its frames attached to the
+branch's report (rules 7 to 10). A mode supplies its `ModeLook`, its gallery's content (its
+cards and its empty page, handed the ways in as `ModeWaysIn`), its painting screen and what a
+picked picture becomes (`make`, a `ModePicture`). Stained Glass, Watercolor and Woodblock are built on it; a
+new mode starts from it, and something every mode needs goes into the frame, not into one mode.
+Paint by Mosaic is a copy of the app, not a mode, and keeps its own. **The Frame** (`FrameEra`,
+year 1000, `Era.frame`) is the frame with nothing of a mode's in it: its gallery, canvas and paints
+are empty places, named (`ModeSlot`), and a picture picked opens on a painting screen and is kept
+nowhere; its passages are the plain tiles both ways. Demos: `frame-gallery`, `frame-settings`,
+`frame-painting`. Moving onto the frame changed two things: Watercolor's + shows with its gallery
+empty too (rule 4), and Stained Glass's library picker is the shared one (square tiles, no
+captions; VoiceOver reads each title).
+
 ## Stained Glass (1248)
 
 SideStore and Debug builds only (`#if UNRELEASED`; painting-company row 366): the first mode built
 on the app's own code rather than a copy of it, as Paint by Mosaic is. `Glass/`: `GlassEra` (the
-era's root: its gallery `GlassGalleryView`, New Window through the system photo picker, its
-Settings with the Year row), `GlassShelf` (an `ArtworkStore` of its own,
+era's root, in the shared frame: its gallery `GlassGalleryView` and what a picked picture
+becomes, its lead), `GlassShelf` (an `ArtworkStore` of its own,
 `Application Support/StainedGlass/Windows/`, each window a painting's folder plus `glazing.bin`,
 PaintCore's `Glazing`), `GlassLead` (the Lead screen: the photo dimmed under the lead it suggests,
 PaintCore's `GlassLeadSuggestion` laid as the ground of `GlassWindow.Leading.suggested`, or a
@@ -1395,8 +1423,8 @@ wash groups; `WatercolorSim`: water, suspended and deposited pigment and granula
 1/60 s over the wet box only, each area's wash solved toward its paint so every result is
 beautiful; `WatercolorLog`, the taps, read as hostile input). A tap of the paint in hand floods its
 area from where it lands; any other tap is water, a laid area tapped again blooms: no tap is
-wrong. `Watercolor/` here: `WatercolorEra` (gallery, New Painting from a photo or the library,
-Settings with the Year row), `WatercolorShelf` (an `ArtworkStore` at
+wrong. `Watercolor/` here: `WatercolorEra` (in the shared frame: its gallery, and a picked picture
+made a painting with its Making Of), `WatercolorShelf` (an `ArtworkStore` at
 `Application Support/Watercolor/Paintings/`, each painting's folder plus `watercolor.json`, the
 tap log, and `watercolor.sheet`, the sim's LZFSE snapshot, so a painting opens without replaying),
 `WatercolorPainting` (the observable model), `WatercolorRenderer` + `Watercolor.metal` (the sheet
@@ -1424,8 +1452,8 @@ device. Demos: `watercolor-empty`, `watercolor-paint`, `watercolor-painted`, `wa
 
 SideStore and Debug builds only (`#if UNRELEASED`; painting-company row 375): your photos,
 printed by numbers, a mode built on the canvas's mode hook as Stained Glass is. `Woodblock/`:
-`WoodblockEra` (the era's root: its gallery of prints, New Print from a photo or the library
-(`GlassLibraryView`), its Settings with the Year row), `WoodblockShelf` (an `ArtworkStore` of its
+`WoodblockEra` (the era's root, in the shared frame: its gallery of prints, `WoodblockGalleryView`,
+what a picked picture becomes, its blocks cut, and the print screen in `ModePaintingFrame`), `WoodblockShelf` (an `ArtworkStore` of its
 own, `Application Support/Woodblock/Prints/`, each print a painting's folder plus
 `woodblock.bench`, PaintCore's `WoodblockBench`, LZFSE; a print's template is the app's own made
 with `WoodblockPlan.paints` paints), `WoodblockBenchView` (the bench on the painting screen's own
@@ -1440,7 +1468,9 @@ PaintCore's (`Sources/PaintCore/Woodblock`: `WoodblockPlan`, `WoodblockField`, `
 `Template.mirrored`; `pbn woodblock` prints one off the device). The door: 1765 on the year wheel
 (`EraYear.woodblock`, `Era.woodblock`); the passage is the tiles'. Demos: `woodblock-empty`,
 `-carve`, `-kyogo`, `-ink`, `-rub`, `-peel`, `-print`, `-finished`, `-gallery` (`WoodblockDemo`, on
-the library's wood duck); `EraDoorTests`.
+the library's wood duck); `EraDoorTests`, `WoodblockTests`, and `WoodblockUITests`, which plays a
+library picture to Finished (the frame's rule 10: the key block by strokes, the rest by the step
+buttons VoiceOver has, which `-woodblock-steps` shows in Debug) and attaches each block's print.
 
 ## Outside the app: widgets and stickers
 

@@ -1,7 +1,6 @@
 #if UNRELEASED
 import CoreGraphics
 import PaintCore
-import PhotosUI
 import Ravenna
 import SwiftUI
 import os
@@ -9,50 +8,24 @@ import os
 /// Stained Glass, the era behind 1248 on the year wheel (painting-company row 366; SideStore and
 /// Debug builds). A mode of the app's own, not a copy of it: a window is a PaintCore `Template`
 /// leaded by the painter's lines (`GlassLeadView`), kept by an `ArtworkStore` of its own
-/// (`GlassShelf`), glazed freely (`GlassGlazeView`). The era is its gallery of windows, New
-/// Window (a photo, then its lead) and Settings, whose Year wheel leaves it. Dark only: glass
-/// glows in a dark room.
+/// (`GlassShelf`), glazed freely (`GlassGlazeView`), in the frame every mode shares
+/// (`ModeShell`): its gallery of windows, New Window (a photo or a library picture, then its
+/// lead) and Settings, whose Year wheel leaves it. Dark, as every mode: glass glows in a dark room.
 struct GlassEra: View {
     let leave: (Int) -> Void
 
     @State private var shelf = GlassShelf.shared
     @State private var path: [GlassRoute] = []
-    @State private var picking = false
-    @State private var picked: PhotosPickerItem?
-    @State private var showsSettings = false
-    @State private var showsLibrary = false
-    @State private var isLoadingPhoto = false
 
     var body: some View {
-        NavigationStack(path: $path) {
-            GlassGalleryView(shelf: shelf, onNew: { picking = true }, onLibrary: { showsLibrary = true },
-                             onSettings: { showsSettings = true },
-                             onOpen: { path.append(.window($0)) })
-                .navigationDestination(for: GlassRoute.self) { route in
-                    switch route {
-                    case .lead(let lead):
-                        GlassLeadView(model: lead.model, onStart: { start($0, from: lead) }, onCancel: { closeLead(lead) })
-                    case .window(let id):
-                        GlassWindowScreen(shelf: shelf, id: id)
-                    }
-                }
-        }
-        .overlay {
-            if isLoadingPhoto { ProgressView().controlSize(.large) }
-        }
-        .photosPicker(isPresented: $picking, selection: $picked, matching: .images)
-        .onChange(of: picked) { _, item in
-            guard let item else { return }
-            picked = nil
-            Task { await load(item) }
-        }
-        .sheet(isPresented: $showsSettings) {
-            GlassSettingsView(leave: leave)
-        }
-        .sheet(isPresented: $showsLibrary) {
-            GlassLibraryView { sample in
-                showsLibrary = false
-                Task { await load(sample) }
+        ModeShell(look: Self.look, path: $path, leave: leave, make: lead) { waysIn in
+            GlassGalleryView(shelf: shelf, onNew: waysIn.photo, onOpen: { path.append(.window($0)) })
+        } destination: { route in
+            switch route {
+            case .lead(let lead):
+                GlassLeadView(model: lead.model, onStart: { start($0, from: lead) }, onCancel: { closeLead(lead) })
+            case .window(let id):
+                GlassWindowScreen(shelf: shelf, id: id)
             }
         }
         .task {
@@ -61,8 +34,12 @@ struct GlassEra: View {
             await GlassDemo.run(scenario: DemoMode.scenario, shelf: shelf, path: $path)
             #endif
         }
-        .tint(GlassEra.gold)
-        .preferredColorScheme(.dark)
+    }
+
+    /// Stained Glass in the frame every mode shares (`ModeShell`).
+    static var look: ModeLook {
+        ModeLook(year: EraYear.stainedGlass, title: Text("Stained Glass"), newTitle: Text("New Window"), accent: gold,
+                 backdrop: GlassPicture.color(GlassPicture.nave, space: .sRGB), id: "glass")
     }
 
     static let gold = Color(red: 0.96, green: 0.78, blue: 0.36)
@@ -77,36 +54,10 @@ struct GlassEra: View {
         #endif
     }
 
-    private func load(_ item: PhotosPickerItem) async {
-        isLoadingPhoto = true
-        defer { isLoadingPhoto = false }
-        do {
-            guard let data = try await item.loadTransferable(type: Data.self) else { return }
-            let photo = try await Background.run { try PhotoLoader.load(data: data, maxPixelSize: ArtworkStore.sourceMaxPixelSize) }
-            open(photo)
-        } catch {
-            Log.library.error("Couldn't load a photo for a window: \(String(describing: error), privacy: .public)")
-        }
-    }
-
-    /// A picture of the app's library, leaded as a photo is.
-    private func load(_ sample: Sample) async {
-        guard let url = sample.url else { return }
-        isLoadingPhoto = true
-        defer { isLoadingPhoto = false }
-        do {
-            let photo = try await Background.run {
-                try PhotoLoader.load(data: Data(contentsOf: url), maxPixelSize: ArtworkStore.sourceMaxPixelSize)
-            }
-            open(photo)
-        } catch {
-            Log.library.error("Couldn't load a library picture for a window: \(String(describing: error), privacy: .public)")
-        }
-    }
-
-    private func open(_ photo: RGBAImage) {
-        guard let picture = PhotoLoader.cgImage(from: photo) else { return }
-        path.append(.lead(GlassLeadRoute(model: GlassLeadModel(photo: photo, picture: picture))))
+    /// A photo or a library picture, to lead as a window.
+    private func lead(_ picked: ModePicture) async {
+        guard let picture = picked.cgImage else { return }
+        path.append(.lead(GlassLeadRoute(model: GlassLeadModel(photo: picked.photo, picture: picture))))
     }
 
     private func start(_ window: GlassWindow.Leaded, from lead: GlassLeadRoute) {
@@ -145,8 +96,6 @@ struct GlassLeadRoute: Hashable {
 struct GlassGalleryView: View {
     let shelf: GlassShelf
     let onNew: () -> Void
-    let onLibrary: () -> Void
-    let onSettings: () -> Void
     let onOpen: (UUID) -> Void
 
     var body: some View {
@@ -162,21 +111,6 @@ struct GlassGalleryView: View {
                     }
                     .padding(20)
                 }
-            }
-        }
-        .background(GlassPicture.color(GlassPicture.nave, space: .sRGB).ignoresSafeArea())
-        .navigationTitle(Text("Stained Glass"))
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button("Settings", systemImage: "gearshape", action: onSettings)
-                    .accessibilityIdentifier("glass-settings")
-            }
-            ToolbarItem(placement: .primaryAction) {
-                Menu("New Window", systemImage: "plus") {
-                    Button("A Photo", systemImage: "photo", action: onNew)
-                    Button("The Library", systemImage: "books.vertical", action: onLibrary)
-                }
-                .accessibilityIdentifier("glass-new")
             }
         }
     }
@@ -201,35 +135,6 @@ struct GlassGalleryView: View {
         .padding(32)
         .frame(maxWidth: 420)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-}
-
-/// The app's library of pictures, to lead as a window: the paintings, then the photographs.
-struct GlassLibraryView: View {
-    let onPick: (Sample) -> Void
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 14)], spacing: 14) {
-                    ForEach(Sample.all(of: .painting) + Sample.all(of: .photograph)) { sample in
-                        Button { onPick(sample) } label: { SampleTile(sample: sample) }
-                            .buttonStyle(.plain)
-                            .clipShape(.rect(cornerRadius: 10))
-                            .accessibilityIdentifier("glass-library-picture")
-                    }
-                }
-                .padding(16)
-            }
-            .navigationTitle(Text("The Library"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-            }
-        }
     }
 }
 
@@ -298,20 +203,18 @@ struct GlassWindowScreen: View {
     /// The device can't draw the canvas.
     @State private var unavailable = false
 
+    private var opening: ModeOpening {
+        if model != nil { return .open }
+        if unavailable { return .unavailable }
+        return failed ? .failed : .opening
+    }
+
     var body: some View {
-        Group {
+        ModePaintingFrame(title: shelf.window(id)?.title ?? "", opening: opening, cantOpen: Text("Can’t Open Window")) {
             if let model {
                 GlassGlazeView(model: model, title: shelf.window(id)?.title ?? "")
-            } else if unavailable {
-                CanvasUnavailableView()
-            } else if failed {
-                ContentUnavailableView("Can’t Open Window", systemImage: "exclamationmark.triangle")
-            } else {
-                ProgressView()
             }
         }
-        .navigationTitle(Text(verbatim: shelf.window(id)?.title ?? ""))
-        .navigationBarTitleDisplayMode(.inline)
         .task(id: id) {
             guard model == nil, let artwork = shelf.window(id) else { return }
             do {
@@ -338,58 +241,6 @@ struct GlassWindowScreen: View {
                 #endif
             } catch {
                 failed = true
-            }
-        }
-    }
-
-}
-
-/// The era's Settings: About's Year, whose wheel leaves the era.
-struct GlassSettingsView: View {
-    let leave: (Int) -> Void
-    @Environment(\.dismiss) private var dismiss
-    @State private var showsClock = false
-    /// The year the Year row's wheel rests on (`EraClock.Reading`).
-    @State private var clockYear = EraClock.Reading()
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section("About") {
-                    Button {
-                        withAnimation { showsClock.toggle() }
-                        // Closed without opening an era: the row reads its own year again.
-                        clockYear.isOpen = showsClock
-                        if !showsClock { clockYear.year = nil }
-                    } label: {
-                        LabeledContent {
-                            EraClock.Value(clockYear, home: EraYear.stainedGlass).foregroundStyle(.tint)
-                        } label: {
-                            SwiftUI.Label {
-                                Text("Year").foregroundStyle(Color.primary)
-                            } icon: {
-                                Image(systemName: "clock")
-                            }
-                        }
-                    }
-                    .accessibilityIdentifier("about-year")
-                    if showsClock {
-                        EraClock(year: EraYear.stainedGlass) { year in
-                            guard year != EraYear.stainedGlass, EraYear.opensAnEra(year) else { return }
-                            dismiss()
-                            leave(year)
-                        }
-                        .reporting(to: clockYear)
-                        .accessibilityIdentifier("era-clock")
-                    }
-                }
-            }
-            .navigationTitle(Text("Settings"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
             }
         }
     }

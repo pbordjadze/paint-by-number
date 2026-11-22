@@ -1,4 +1,5 @@
 #if UNRELEASED
+import Compression
 import CoreGraphics
 import Foundation
 import Observation
@@ -120,8 +121,7 @@ final class WoodblockShelf {
                 let data = try Data(contentsOf: url)
                 do {
                     guard data.count <= Self.maximumBenchBytes else { throw WoodblockBench.CodingError.corrupt }
-                    let raw = try (data as NSData).decompressed(using: .lzfse) as Data
-                    bench = try WoodblockBench(decoding: [UInt8](raw), plan: plan)
+                    bench = try WoodblockBench(decoding: Self.decompressed(data, plan: plan), plan: plan)
                 } catch WoodblockBench.CodingError.newerVersion {
                     throw WoodblockBench.CodingError.newerVersion
                 } catch {
@@ -133,6 +133,23 @@ final class WoodblockShelf {
             }
             return Opened(plan: plan, bench: bench)
         }
+    }
+
+    /// A bench's bytes out of their LZFSE, never more than the plan's bench holds: a crafted file
+    /// that expands past it is refused before it can take the memory.
+    nonisolated private static func decompressed(_ data: Data, plan: WoodblockPlan) throws -> [UInt8] {
+        let expected = WoodblockBench.byteCount(cells: plan.grid.width * plan.grid.height)
+        // One byte more than a bench, to tell a file that fills it from one that runs past.
+        var raw = [UInt8](repeating: 0, count: expected + 1)
+        let count = data.withUnsafeBytes { (source: UnsafeRawBufferPointer) -> Int in
+            guard let from = source.bindMemory(to: UInt8.self).baseAddress, !source.isEmpty else { return 0 }
+            return raw.withUnsafeMutableBufferPointer { into in
+                compression_decode_buffer(into.baseAddress!, into.count, from, source.count, nil, COMPRESSION_LZFSE)
+            }
+        }
+        guard count == expected else { throw WoodblockBench.CodingError.corrupt }
+        raw.removeLast()
+        return raw
     }
 
     nonisolated private static func write(_ bench: WoodblockBench, to dir: URL) throws {

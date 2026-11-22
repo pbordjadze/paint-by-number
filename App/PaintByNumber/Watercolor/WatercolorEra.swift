@@ -1,7 +1,6 @@
 #if UNRELEASED
 import CoreGraphics
 import PaintCore
-import PhotosUI
 import Ravenna
 import SwiftUI
 import UIKit
@@ -18,51 +17,19 @@ struct WatercolorEra: View {
 
     @State private var shelf = WatercolorShelf.shared
     @State private var path: [UUID] = []
-    @State private var picking = false
-    @State private var choosingPicture = false
-    @State private var picked: PhotosPickerItem?
-    @State private var showsSettings = false
-    @State private var isMaking = false
     /// The Making Of of the painting just made, over its painting screen.
     @State private var makingOf: WatercolorFilm?
 
     var body: some View {
-        NavigationStack(path: $path) {
-            WatercolorGalleryView(shelf: shelf, onPhoto: { picking = true }, onPicture: { choosingPicture = true },
-                                  onSettings: { showsSettings = true }, onOpen: { path.append($0) })
-                .navigationDestination(for: UUID.self) { id in
-                    WatercolorPaintScreen(shelf: shelf, id: id)
-                }
-        }
-        .overlay {
-            if isMaking {
-                VStack(spacing: 12) {
-                    ProgressView().controlSize(.large)
-                    Text("Making the painting…").font(.callout).foregroundStyle(.secondary)
-                }
-                .padding(28)
-                .background(.regularMaterial, in: .rect(cornerRadius: 22))
-            }
+        ModeShell(look: Self.look, path: $path, leave: leave, make: paint) { waysIn in
+            WatercolorGalleryView(shelf: shelf, waysIn: waysIn, onOpen: { path.append($0) })
+        } destination: { id in
+            WatercolorPaintScreen(shelf: shelf, id: id)
         }
         .overlay {
             if let makingOf {
                 WatercolorMakingOfView(film: makingOf) { self.makingOf = nil }
             }
-        }
-        .photosPicker(isPresented: $picking, selection: $picked, matching: .images)
-        .onChange(of: picked) { _, item in
-            guard let item else { return }
-            picked = nil
-            Task { await load(item) }
-        }
-        .sheet(isPresented: $choosingPicture) {
-            WatercolorPicturePicker { sample in
-                choosingPicture = false
-                Task { await load(sample) }
-            }
-        }
-        .sheet(isPresented: $showsSettings) {
-            WatercolorSettingsView(leave: leave)
         }
         .task {
             await shelf.load()
@@ -70,8 +37,12 @@ struct WatercolorEra: View {
             await WatercolorDemo.run(scenario: DemoMode.scenario, shelf: shelf, path: $path, makingOf: $makingOf)
             #endif
         }
-        .tint(WatercolorEra.ink)
-        .preferredColorScheme(.dark)
+    }
+
+    /// Watercolor in the frame every mode shares (`ModeShell`).
+    static var look: ModeLook {
+        ModeLook(year: EraYear.watercolor, title: Text("Watercolor"), newTitle: Text("New Painting"), accent: ink,
+                 backdrop: desk, working: Text("Making the painting…"), id: "watercolor")
     }
 
     /// The era's accent: an ultramarine wash, lifted to read on the slate.
@@ -98,29 +69,11 @@ struct WatercolorEra: View {
         #endif
     }
 
-    private func load(_ item: PhotosPickerItem) async {
-        do {
-            guard let data = try await item.loadTransferable(type: Data.self) else { return }
-            let photo = try await Background.run { try PhotoLoader.load(data: data, maxPixelSize: ArtworkStore.sourceMaxPixelSize) }
-            await make(from: photo, title: shelf.title(), sampleName: nil)
-        } catch {
-            Log.library.error("Couldn't load a photo for a watercolor: \(String(describing: error), privacy: .public)")
-        }
-    }
-
-    private func load(_ sample: Sample) async {
-        guard let url = sample.url else { return }
-        do {
-            let photo = try await Background.run { try PhotoLoader.load(url: url, maxPixelSize: ArtworkStore.sourceMaxPixelSize) }
-            await make(from: photo, title: sample.title, sampleName: sample.id)
-        } catch {
-            Log.library.error("Couldn't load a library picture for a watercolor: \(String(describing: error), privacy: .public)")
-        }
+    private func paint(_ picked: ModePicture) async {
+        await make(from: picked.photo, title: picked.sample?.title ?? shelf.title(), sampleName: picked.sample?.id)
     }
 
     private func make(from photo: RGBAImage, title: String, sampleName: String?) async {
-        isMaking = true
-        defer { isMaking = false }
         do {
             let (template, settings) = try await WatercolorShelf.template(of: photo, length: Preferences().paintingLength)
             let artwork = try await shelf.create(template: template, settings: settings, photo: photo, title: title, sampleName: sampleName)
@@ -139,9 +92,7 @@ struct WatercolorEra: View {
 /// The paintings: a sheet each on the slate, newest first; none yet, a blank sheet waiting.
 struct WatercolorGalleryView: View {
     let shelf: WatercolorShelf
-    let onPhoto: () -> Void
-    let onPicture: () -> Void
-    let onSettings: () -> Void
+    let waysIn: ModeWaysIn
     let onOpen: (UUID) -> Void
     @Environment(\.horizontalSizeClass) private var sizeClass
 
@@ -160,24 +111,6 @@ struct WatercolorGalleryView: View {
                     }
                     .padding(.horizontal, 24)
                     .padding(.vertical, 20)
-                }
-            }
-        }
-        .background(WatercolorEra.desk.ignoresSafeArea())
-        .navigationTitle(Text("Watercolor"))
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button("Settings", systemImage: "gearshape", action: onSettings)
-                    .accessibilityIdentifier("watercolor-settings")
-            }
-            // Empty, the blank sheet's own two buttons are the way in.
-            if !isEmpty {
-                ToolbarItem(placement: .primaryAction) {
-                    Menu("New Painting", systemImage: "plus") {
-                        Button("A Photo", systemImage: "photo", action: onPhoto)
-                        Button("The Library", systemImage: "books.vertical", action: onPicture)
-                    }
-                    .accessibilityIdentifier("watercolor-new")
                 }
             }
         }
@@ -202,10 +135,10 @@ struct WatercolorGalleryView: View {
                 .rotationEffect(.degrees(-0.8))
                 .padding(.horizontal, 8)
             HStack(spacing: 12) {
-                Button("A Photo", action: onPhoto)
+                Button("A Photo", action: waysIn.photo)
                     .buttonStyle(.glass)
                     .accessibilityIdentifier("watercolor-choose-photo")
-                Button("The Library", action: onPicture)
+                Button("The Library", action: waysIn.library)
                     .buttonStyle(.glass)
                     .accessibilityIdentifier("watercolor-choose-picture")
             }
@@ -327,116 +260,6 @@ nonisolated struct DeckleEdge: Shape {
         }
         path.closeSubpath()
         return path
-    }
-}
-
-/// The library's pictures to paint in water, paintings then photographs.
-struct WatercolorPicturePicker: View {
-    let onPick: (Sample) -> Void
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    section(Text("Paintings"), Sample.all(of: .painting))
-                    section(Text("Photographs"), Sample.all(of: .photograph))
-                }
-                .padding(20)
-            }
-            .navigationTitle(Text("The Library"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-            }
-        }
-    }
-
-    private func section(_ title: Text, _ samples: [Sample]) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            title.font(.display(.title3))
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: 12)], spacing: 12) {
-                ForEach(samples) { sample in
-                    Button { onPick(sample) } label: { WatercolorSampleTile(sample: sample) }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(Text(verbatim: sample.title))
-                        .accessibilityIdentifier("watercolor-library-picture")
-                }
-            }
-        }
-    }
-}
-
-private struct WatercolorSampleTile: View {
-    let sample: Sample
-    @State private var picture: CGImage?
-
-    var body: some View {
-        ZStack {
-            Rectangle().fill(.quaternary)
-            if let picture {
-                Image(decorative: picture, scale: 1).resizable().scaledToFill()
-            }
-        }
-        .aspectRatio(1, contentMode: .fit)
-        .clipShape(.rect(cornerRadius: 8))
-        .task {
-            guard let url = sample.url else { return }
-            picture = await Background.run { ImageCodec.image(at: url, maxPixelSize: 300) }
-        }
-    }
-}
-
-/// The era's Settings: About's Year, whose wheel leaves the era.
-struct WatercolorSettingsView: View {
-    let leave: (Int) -> Void
-    @Environment(\.dismiss) private var dismiss
-    @State private var showsClock = false
-    /// The year the Year row's wheel rests on (`EraClock.Reading`).
-    @State private var clockYear = EraClock.Reading()
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section("About") {
-                    Button {
-                        withAnimation { showsClock.toggle() }
-                        // Closed without opening an era: the row reads its own year again.
-                        clockYear.isOpen = showsClock
-                        if !showsClock { clockYear.year = nil }
-                    } label: {
-                        LabeledContent {
-                            EraClock.Value(clockYear, home: EraYear.watercolor).foregroundStyle(.tint)
-                        } label: {
-                            SwiftUI.Label {
-                                Text("Year").foregroundStyle(Color.primary)
-                            } icon: {
-                                Image(systemName: "clock")
-                            }
-                        }
-                    }
-                    .accessibilityIdentifier("about-year")
-                    if showsClock {
-                        EraClock(year: EraYear.watercolor) { year in
-                            guard year != EraYear.watercolor, EraYear.opensAnEra(year) else { return }
-                            dismiss()
-                            leave(year)
-                        }
-                        .reporting(to: clockYear)
-                        .accessibilityIdentifier("era-clock")
-                    }
-                }
-            }
-            .navigationTitle(Text("Settings"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
-            }
-        }
     }
 }
 #endif

@@ -37,6 +37,22 @@ public struct WoodblockPlan: Sendable {
     /// Sumi, the key block's ink.
     public static let sumi = SIMD3<Float>(0.11, 0.10, 0.10)
     /// The washi's color, unprinted.
+    /// The blocks, as a number a saved bench records (FNV-1a over their count and each one's kind
+    /// and paint; not the inks, which pass through floating-point math a system update may round
+    /// otherwise): the same photo cut by a build that chooses blocks otherwise has another.
+    public var signature: UInt32 {
+        var h: UInt32 = 2_166_136_261
+        func mix(_ v: UInt32) {
+            for k in 0..<4 { h = (h ^ ((v >> (8 * k)) & 0xFF)) &* 16_777_619 }
+        }
+        mix(UInt32(blocks.count))
+        for b in blocks {
+            mix(UInt32(b.kind.rawValue))
+            mix(UInt32(bitPattern: Int32(truncatingIfNeeded: b.paint ?? -1)))
+        }
+        return h
+    }
+
     public static let paper = SIMD3<Float>(0.95, 0.93, 0.875)
 
     /// The plan for a print of `template` (in the print's own space, as generated).
