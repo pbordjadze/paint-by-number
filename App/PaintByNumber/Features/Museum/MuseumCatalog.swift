@@ -23,6 +23,9 @@ nonisolated struct MuseumCatalog: Decodable, Sendable {
     /// Each work's title, artist, movement and year as search words, folded as a query's are
     /// (`MuseumQuery.words`), in `works`' order: made once, off the main actor, by `decode`.
     private(set) var searchWords: [[Substring]] = []
+    /// Painting names (`MuseumPainted.key`) that more than one work has: a painting so named
+    /// can't tell which it was painted from. Made with `searchWords`.
+    private(set) var sharedNames: Set<String> = []
 
     private enum CodingKeys: String, CodingKey { case version, made, museums, movements, works }
 
@@ -104,7 +107,43 @@ nonisolated struct MuseumCatalog: Decodable, Sendable {
         catalog.searchWords = catalog.works.map {
             MuseumQuery.words(of: "\($0.title) \($0.artist) \($0.movement) \($0.year)")
         }
+        var names: [String: Int] = [:]
+        for work in catalog.works { names[MuseumPainted.key(work.paintingTitle), default: 0] += 1 }
+        catalog.sharedNames = Set(names.filter { $0.value > 1 }.keys)
         return catalog
+    }
+}
+
+/// Which works the painter has painted (painting-company row 369): a finished one hangs in a
+/// frame on the wall, and one under way says Resume on its page. A painting from the Museum is
+/// named after its work (`Work.paintingTitle`), and Paint This records the work's id. A work
+/// matches a painting that bears its name when either its id was recorded or no other work has
+/// that name (paintings made before the ids were kept). A painting deleted or renamed matches
+/// nothing any more.
+nonisolated enum MuseumPainted {
+    static let defaultsKey = "museumPaintedWorks"
+
+    /// A name as compared: case, diacritics and width folded, ends trimmed.
+    static func key(_ name: String) -> String {
+        name.folding(options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive], locale: nil)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    static func matches(_ work: MuseumCatalog.Work, names: Set<String>, recorded: Set<String>,
+                        shared: Set<String>) -> Bool {
+        let name = key(work.paintingTitle)
+        guard names.contains(name) else { return false }
+        return recorded.contains(work.id) || !shared.contains(name)
+    }
+
+    static func recorded(in defaults: UserDefaults = .standard) -> Set<String> {
+        Set(defaults.stringArray(forKey: defaultsKey) ?? [])
+    }
+
+    static func record(_ id: String, in defaults: UserDefaults = .standard) {
+        var ids = recorded(in: defaults)
+        guard ids.insert(id).inserted else { return }
+        defaults.set(ids.sorted(), forKey: defaultsKey)
     }
 }
 

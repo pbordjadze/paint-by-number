@@ -1203,7 +1203,10 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   movement, kind, search and order (`MuseumQuery`, `MuseumQueryTests`; Most Colorful first).
   A work's page (`MuseumWorkView`) fetches its full image (about 3,000 px) as it opens; Paint
   This closes the Museum and loads it as a picked photo named after the work
-  (`CreateModel.load(imageData:title:)`, `paintsNow`). Pictures go through `MuseumImages`, a
+  (`CreateModel.load(imageData:title:)`, `paintsNow`). A work with a finished painting of it
+  hangs in a little frame on the wall, and one with a painting under way says Resume on its
+  page, which closes the flow and opens that painting (`MuseumPainted`: by the painting's name,
+  and the ids Paint This records; the shell's `resumePainting`). Pictures go through `MuseumImages`, a
   URL cache of their own on disk. Its scenarios are `museum` (with `-dark`), `museum-art-nouveau`
   and `museum-work` (with `-dark`), which need the network; `-demoMuseumPaint YES` paints the
   opened work once it is fetched.
