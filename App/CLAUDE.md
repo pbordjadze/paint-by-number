@@ -1406,7 +1406,9 @@ picture and makes the painting from it; the picture is divided into numbered reg
 one paint (how a region gets done is the medium's, never whether it is numbered); every painting
 can reach Finished by doing what the numbers say; and before it reaches a TestFlight or SideStore
 build, one painting is painted from a photo to Finished end to end, its frames attached to the
-branch's report (rules 7 to 10). A mode supplies its `ModeLook`, its gallery's content (its
+branch's report (rules 7 to 10); and a mode's Making Of shows off its medium's process and
+simulation, never the finished painting of the painter's picture, which is the painter's to
+uncover (rule 11). A mode supplies its `ModeLook`, its gallery's content (its
 cards and its empty page, handed the ways in as `ModeWaysIn`), its painting screen and what a
 picked picture becomes (`make`, a `ModePicture`). Stained Glass and Watercolor are built on it; a
 new mode starts from it, and something every mode needs goes into the frame, not into one mode.

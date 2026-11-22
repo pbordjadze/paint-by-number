@@ -37,6 +37,10 @@ import os
 /// 10. **Played to the end before it ships.** A mode reaches a TestFlight or SideStore build only
 ///    after one painting has been painted from a photo to Finished end to end on a device or
 ///    simulator, its frames attached to the branch's report.
+/// 11. **A Making Of shows the process, never the reveal** (Paul, November 22). A mode's Making Of
+///    shows off its medium and how fully its simulation works (the water, the lead, the press),
+///    never the finished painting of the painter's own picture: that is the joy the painter
+///    uncovers along the way.
 ///
 /// What a mode supplies: its `ModeLook`, its gallery, its painting screen, and what a picked
 /// picture becomes (`make`).
