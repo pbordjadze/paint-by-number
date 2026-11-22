@@ -254,7 +254,7 @@ public struct EraClock: View {
 }
 
 /// Which era a year on the clock opens: 547, the year San Vitale in Ravenna was consecrated, is
-/// Byzantium; 1248 Stained Glass, in SideStore and Debug builds; the present (or any later year)
+/// Byzantium; 1248 Stained Glass and 1765 Woodblock, in SideStore and Debug builds; the present (or any later year)
 /// is Paint by Moonlight's own. Every other year opens nothing.
 public enum EraYear {
     public static let byzantium = 547
@@ -269,6 +269,9 @@ public enum EraYear {
     /// and Debug builds; painting-company row 366).
     public static let stainedGlass = 1248
 
+    /// 1765, the year of Harunobu's first prints in full colour from many blocks, registered on
+    /// kentō: Woodblock's (SideStore and Debug builds; painting-company row 375).
+    public static let woodblock = 1765
     /// 1502, the year of Dürer's *Young Hare*, the most famous early watercolor: Watercolor's
     /// (SideStore and Debug builds; painting-company row 373).
     public static let watercolor = 1502
@@ -280,7 +283,7 @@ public enum EraYear {
     /// The years that open an era, oldest first: the ones the wheel lights.
     public static var modes: [Int] {
         #if UNRELEASED
-        return [byzantium, frame, stainedGlass, watercolor]
+        return [byzantium, frame, stainedGlass, watercolor, woodblock]
         #else
         return [byzantium]
         #endif
@@ -288,6 +291,7 @@ public enum EraYear {
 
     public static func opensStainedGlass(_ year: Int) -> Bool { year == stainedGlass && modes.contains(year) }
 
+    public static func opensWoodblock(_ year: Int) -> Bool { year == woodblock && modes.contains(year) }
     public static func opensWatercolor(_ year: Int) -> Bool { year == watercolor && modes.contains(year) }
 
     public static func opensTheFrame(_ year: Int) -> Bool { year == frame && modes.contains(year) }
