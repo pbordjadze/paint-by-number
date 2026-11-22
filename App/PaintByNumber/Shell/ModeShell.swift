@@ -7,7 +7,7 @@ import SwiftUI
 import os
 
 /// The frame every mode lives in (painting-company row 379; SideStore and Debug builds). A mode
-/// behind the year wheel (Stained Glass, Watercolor, the Cave, and The Frame, which is this and
+/// behind the year wheel (Stained Glass, Watercolor, Woodblock, the Cave, and The Frame, which is this and
 /// nothing else) is a `ModeShell` around what is its own. The rules, with no exceptions:
 ///
 /// 1. **A year.** The mode opens from its year on the wheel, and its Settings has About's Year
@@ -37,9 +37,22 @@ import os
 /// 10. **Played to the end before it ships.** A mode reaches a TestFlight or SideStore build only
 ///    after one painting has been painted from a photo to Finished end to end on a device or
 ///    simulator, its frames attached to the branch's report.
+/// 11. **A Making Of shows the process, never the reveal** (Paul, November 22). A mode's Making Of
+///    shows off its medium and how fully its simulation works (the water, the lead, the press),
+///    never the finished painting of the painter's own picture: that is the joy the painter
+///    uncovers along the way. Paint by Moonlight's own Making Of and Paint by Mosaic's are
+///    settled and keep what they show.
 ///
 /// What a mode supplies: its `ModeLook`, its gallery, its painting screen, and what a picked
-/// picture becomes (`make`). Paint by Mosaic is a copy of the app, not a mode, and keeps its own.
+/// picture becomes (`make`).
+///
+/// **How far a mode may go: Paint by Mosaic is the bar** (Paul, November 22). A mode may be as
+/// different as Mosaic is, with a library of its own look, a book for making it for real, its own
+/// doors and its own words, and still be in this frame; the frame widens, with optional parts a
+/// mode opts into, until Mosaic fits in it. The frame constrains as well as stretches: where
+/// Mosaic has something every mode should have, it becomes the frame and every mode follows it,
+/// not a Mosaic exception. Until Mosaic is moved in, Paint by Mosaic is a copy of the app, not a
+/// mode, and keeps its own.
 struct ModeShell<Gallery: View, Route: Hashable, Destination: View>: View {
     let look: ModeLook
     @Binding var path: [Route]

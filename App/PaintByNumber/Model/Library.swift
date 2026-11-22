@@ -791,6 +791,20 @@ final class Library {
         return document
     }
 
+    #if UNRELEASED
+    /// What a Painting Length's cut made ahead is made of (`LengthPrecuts`): the photo `recut`
+    /// cuts and the refinements `regenerate` lays, read off the main actor once the painting's
+    /// queued writes are in. Nothing is written.
+    func cutInputs(for id: UUID) async throws -> (photo: RGBAImage, refinements: TemplateRefinements) {
+        guard let artwork = artwork(with: id) else { throw ArtworkStore.StoreError.notFound }
+        _ = await writes[id]?.value
+        let store = self.store
+        return try await Background.run { () throws -> (photo: RGBAImage, refinements: TemplateRefinements) in
+            (try ArtworkFactory.sourcePhoto(of: artwork, in: store), try store.readRefinements(id))
+        }
+    }
+    #endif
+
     /// Cuts the painting again with the painter's own `settings`, from the length chip's
     /// Fine-Tune (painting-company row 352): what the create flow's sliders did before a picked
     /// picture opened straight as a painting. The settings are the painter's, so the painting
@@ -807,8 +821,8 @@ final class Library {
         return document
     }
 
-    /// Puts back a cut the painting had while open (`template`, made with `settings` at
-    /// `length`), as it was: never made again, which from `source.jpg` came out a few areas
+    /// Puts back a cut the painting had while open, or one cut ahead (`LengthPrecuts`: `recut`'s
+    /// cut, not saved till picked), `template`, made with `settings` at `length`, as it was: never made again, which from `source.jpg` came out a few areas
     /// different from the cut made from the photo itself (the Mac's QA, 347 areas then 344). The
     /// painting's refinements stay as they are.
     func restoreCut(artwork id: UUID, length: PaintingLength, template: Template, settings: GenerationSettings) async throws -> PaintingDocument {

@@ -65,6 +65,8 @@ final class WatercolorCanvasView: UIView, UIScrollViewDelegate {
         // A wash laid any other way (VoiceOver's action, a demo) wakes the sheet too.
         renderer.painting.onTap = { [weak self] in self?.setRunning(true) }
         isAccessibilityElement = false
+        // A sheet opened with washes still wet goes on drying at once, not at the first tap.
+        setRunning(renderer.needsFrames)
     }
 
     @available(*, unavailable)

@@ -87,6 +87,12 @@ before planning app work).
     hostile input), `CaveBay` (a bay's relief and rock maps), `CavePigmentLayer` (blown pigment,
     target-solved so every blow lands well; the hand stencil; `CaveProgress`, `PBCP`);
     `pbn cave` writes a plan and a lit preview of its bay.
+  - `Woodblock/`: Woodblock (painting-company row 375): `WoodblockPlan` (a template's blocks, in
+    the block's mirrored space: the key block's drawing, a block per paint light to dark,
+    numbered as the canvas numbers its paints, the bokashi), `WoodblockField` (what stays of a
+    block, as a signed distance, and the room the tool has), `WoodblockBench` (carving that
+    never cuts what stays, ink, the baren, the peel, the print; `woodblock.bench`, read as
+    hostile input) and `Template.mirrored`; `pbn woodblock` prints a template off the device.
   - `Watercolor/`: Watercolor (painting-company row 373): `WatercolorSheet` (a template as a
     sheet of paper, the watercolor key), `WatercolorSim` (water and pigment after Curtis et al.
     1997, deterministic on any core count, snapshots), `WatercolorLog` (the taps, read as

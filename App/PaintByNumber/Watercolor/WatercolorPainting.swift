@@ -126,10 +126,12 @@ final class WatercolorPainting {
         sim.isActive || (lastPaintedAt >= 0 && sim.time - lastPaintedAt < 0.5)
     }
 
-    /// Steps the simulation for `seconds` of wall time, at most `maximumSteps` steps (a frame
-    /// that came late doesn't make the next one later still). Settling at once, it steps for as
-    /// long as about two thirds of a frame instead. The number of steps taken.
-    func advance(by seconds: Double, maximumSteps: Int = 3) -> Int {
+    /// Steps the simulation for `seconds` of wall time, at most `maximumSteps` steps, and lets
+    /// the rest of a late frame's time go: catching up three steps a frame made the next frame
+    /// late too, and the painting stuck at 40 frames a second (an iPad Air, November 21), where
+    /// water a little slower is never seen. Settling at once, it steps for as long as about two
+    /// thirds of a frame instead. The number of steps taken.
+    func advance(by seconds: Double, maximumSteps: Int = 2) -> Int {
         guard isRunning else {
             owed = 0
             return 0
@@ -151,7 +153,7 @@ final class WatercolorPainting {
             owed -= dt
             steps += 1
         }
-        if steps == maximumSteps { owed = min(owed, dt) }
+        if steps == maximumSteps { owed = min(owed, dt * 0.5) }
         return steps
     }
 

@@ -17,6 +17,9 @@ enum Era: String {
     /// The Cave, at 15,000 BC (SideStore and Debug builds; painting-company row 371): no app on
     /// screen, only a torch-lit rock wall (`CaveEra`).
     case cave
+    /// Woodblock, at 1765 (SideStore and Debug builds; painting-company row 375): prints carved
+    /// and printed by numbers from the app's own templates (`WoodblockEra`).
+    case woodblock
     /// Watercolor, at 1502 (SideStore and Debug builds; painting-company row 373): real water on
     /// the app's own templates (`WatercolorEra`).
     case watercolor
@@ -30,6 +33,7 @@ enum Era: String {
         #if UNRELEASED
         if EraYear.opensStainedGlass(year) { return .glass }
         if year == CaveEra.year { return .cave }
+        if EraYear.opensWoodblock(year) { return .woodblock }
         if EraYear.opensWatercolor(year) { return .watercolor }
         if EraYear.opensTheFrame(year) { return .frame }
         #endif
@@ -65,9 +69,9 @@ final class EraDoor {
         #if UNRELEASED
         shown = era
         #else
-        // Stained Glass, the Cave, Watercolor and The Frame are SideStore's and Debug's: a release
-        // opening on one opens at home.
-        shown = era == .glass || era == .cave || era == .watercolor || era == .frame ? .moonlight : era
+        // Stained Glass, the Cave, Watercolor, Woodblock and The Frame are SideStore's and Debug's:
+        // a release opening on one opens at home.
+        shown = era == .glass || era == .cave || era == .watercolor || era == .woodblock || era == .frame ? .moonlight : era
         #endif
     }
 

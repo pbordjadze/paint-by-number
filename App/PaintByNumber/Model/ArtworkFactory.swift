@@ -87,8 +87,19 @@ nonisolated enum ArtworkFactory {
         async let importance = Self.importance(of: image)
         // Computed for this one template: the photo needn't take a place in the cache.
         let lineArt = try await LineArtInputs.forGeneration(of: image, settings: settings.lineArt, cached: false)
+        return try generated(
+            from: photo, settings: settings, refinements: refinements, importance: await importance, lineArt: lineArt,
+            progress: progress)
+    }
+
+    /// The generator's part of `template`, once Vision's importance and the line art's inputs
+    /// are found: the painter's refinements laid on them and on the template made of them.
+    private static func generated(
+        from photo: RGBAImage, settings: GenerationSettings, refinements: TemplateRefinements,
+        importance: PaintCore.Grid<Float>?, lineArt: LineArtInput?, progress: (@Sendable (Float) -> Void)?
+    ) throws -> Template {
         let inputs = refinements.refining(
-            importance: await importance, lineArt: lineArt, aspect: Float(photo.width) / Float(max(photo.height, 1)))
+            importance: importance, lineArt: lineArt, aspect: Float(photo.width) / Float(max(photo.height, 1)))
         // A refined painting's base is made of its paints (`TemplateRefinements.pin`): the photo
         // stored is a JPEG of the one its base was made from, whose paints chosen again would
         // not be the ones the painter's color changes were made to.
@@ -108,13 +119,17 @@ nonisolated enum ArtworkFactory {
     static func suggested(
         for photo: RGBAImage, keeping kept: GenerationSettings, length: PaintingLength, maxCandidates: Int
     ) async throws -> GenerationSettings {
-        var importance: PaintCore.Grid<Float>?
-        var hints: SubjectHints?
-        if let image = PhotoLoader.cgImage(from: photo) {
-            let subject = await SubjectImportance.analyze(image)
-            importance = subject.map
-            hints = subject.hints
-        }
+        let subject = await Self.subject(of: PhotoLoader.cgImage(from: photo))
+        return try suggested(for: photo, subject: subject, keeping: kept, length: length, maxCandidates: maxCandidates)
+    }
+
+    /// `suggested`'s choice, once Vision's findings (nil without an image of the photo) are in.
+    private static func suggested(
+        for photo: RGBAImage, subject: SubjectImportance.Analysis?, keeping kept: GenerationSettings,
+        length: PaintingLength, maxCandidates: Int
+    ) throws -> GenerationSettings {
+        let importance = subject?.map
+        let hints = subject?.hints
         let decision = try AutoSettings.choose(
             image: AutoSettings.draftImage(from: photo), sourceSize: (photo.width, photo.height), importance: importance,
             hints: hints, preference: length, maxCandidates: maxCandidates, lineArt: kept.lineArt, tuning: kept.tuning,
@@ -124,6 +139,67 @@ nonisolated enum ArtworkFactory {
         settings.paintMix = kept.paintMix
         settings.tuning = kept.tuning
         return settings.normalized
+    }
+
+    // MARK: Cuts made ahead
+
+    /// What a photo gives every Painting Length's cut alike, found once (`LengthPrecuts`,
+    /// painting-company row 361): Vision's findings and the line art's inputs. A cut made of it
+    /// (`cut(of:keeping:length:refinements:maxCandidates:progress:)`) is the cut `Library.recut`
+    /// makes, which finds them for each length: `suggested` and `template` without the finding.
+    struct Analysis: Sendable {
+        let photo: RGBAImage
+        /// Vision's importance and hints; nil without an image of the photo.
+        let subject: SubjectImportance.Analysis?
+        /// The line art settings `lineArt` was found for: it serves any that read the same inputs.
+        let lineArtSettings: LineArtSettings
+        let lineArt: LineArtInput?
+
+        /// Whether `settings` read the inputs found here (`LineArtInputs.forGeneration`: none for
+        /// classic lines, else those of the detector).
+        func serves(_ settings: LineArtSettings) -> Bool {
+            Self.sameInputs(settings, lineArtSettings)
+        }
+
+        static func sameInputs(_ a: LineArtSettings, _ b: LineArtSettings) -> Bool {
+            a.style.usesEdgeMap == b.style.usesEdgeMap && (!a.style.usesEdgeMap || a.detector == b.detector)
+        }
+    }
+
+    /// Vision's findings and the line art's inputs of `photo` for `lineArt`, side by side as
+    /// `template` finds them. Polls task cancellation.
+    @concurrent
+    static func analysis(of photo: RGBAImage, lineArt: LineArtSettings) async throws -> Analysis {
+        let image = PhotoLoader.cgImage(from: photo)
+        async let subject = Self.subject(of: image)
+        let inputs = try await LineArtInputs.forGeneration(of: image, settings: lineArt, cached: false)
+        return Analysis(photo: photo, subject: await subject, lineArtSettings: lineArt, lineArt: inputs)
+    }
+
+    /// The cut `Library.recut` makes at `length` for a painting of `kept` settings and
+    /// `refinements`, made of `analysis` and not saved: the settings `suggested` chooses and the
+    /// template `template` makes with them, byte for byte. Polls task cancellation.
+    @concurrent
+    static func cut(
+        of analysis: Analysis, keeping kept: GenerationSettings, length: PaintingLength, refinements: TemplateRefinements,
+        maxCandidates: Int, progress: (@Sendable (Float) -> Void)?
+    ) async throws -> (template: Template, settings: GenerationSettings) {
+        let settings = try suggested(
+            for: analysis.photo, subject: analysis.subject, keeping: kept, length: length, maxCandidates: maxCandidates)
+        try Task.checkCancellation()
+        // A blank start and a drawing read neither, and other line art may read other inputs.
+        guard refinements.start != .blank, settings.drawing == nil, analysis.serves(settings.lineArt) else {
+            return (try await template(from: analysis.photo, settings: settings, refinements: refinements, progress: progress), settings)
+        }
+        let made = try generated(
+            from: analysis.photo, settings: settings, refinements: refinements, importance: analysis.subject?.map,
+            lineArt: analysis.lineArt, progress: progress)
+        return (made, settings)
+    }
+
+    private static func subject(of image: CGImage?) async -> SubjectImportance.Analysis? {
+        guard let image else { return nil }
+        return await SubjectImportance.analyze(image)
     }
 
     /// `base` with the painter's edits laid, carried onto it first (`TemplateRefinements.rebased`:

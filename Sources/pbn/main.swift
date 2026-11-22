@@ -50,6 +50,12 @@
 //       the plan's bytes, seconds), areas.ppm (each area in its pigment, its lines in black) and
 //       wall.ppm (four bays lit by a torch as the app lights them: the mouth, the painting
 //       finished with a hand, half blown with its pigments, bare rock with its charcoal).
+//   pbn woodblock <template.pbnt> --out <dir>
+//       a Woodblock print (painting-company row 375; WoodblockPlan): the template's key block, a
+//       block per paint light to dark and the bokashi, each carved, inked and rubbed by
+//       WoodblockBench. Writes print.ppm (every block rubbed in full), print-light.ppm (a light
+//       pass of the baren on each) and woodblock.json (the blocks, their inks, the cells each
+//       keeps standing, the grid).
 //   pbn watercolor <photo | template.pbnt> --out <dir> [--seed N] [--spacing S] [--order paint|sweep]
 //       [--frames t1,t2,…] [generate options]
 //       a Watercolor painting (painting-company row 373; WatercolorSim): every area tapped once,
@@ -188,7 +194,7 @@ import Foundation
 import PaintCore
 
 let args = CommandLine.arguments
-guard args.count >= 2 else { fail("usage: pbn generate|drawing|glass|cave|edit|refine|practice|suggest|bench|trace|check|names|vocab ...") }
+guard args.count >= 2 else { fail("usage: pbn generate|drawing|glass|woodblock|cave|edit|refine|practice|suggest|bench|trace|check|names|vocab ...") }
 let options = parse(args.dropFirst(2))
 
 func run(_ command: String, _ options: Options) throws {
@@ -197,6 +203,7 @@ func run(_ command: String, _ options: Options) throws {
     case "drawing": try runDrawing(options)
     case "glass": try runGlass(options)
     case "cave": try runCave(options)
+    case "woodblock": try runWoodblock(options)
     case "watercolor": try runWatercolor(options)
     case "edit": try runEdit(options)
     case "refine": try runRefine(options)
