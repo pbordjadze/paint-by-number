@@ -1405,11 +1405,11 @@ it is whole, drawn by `glassFillFragment` and `glassLightFragment`: Liquid Glass
 window's glass, each piece a clear lens over the window's photo, its rim bending the photo and
 catching the light, a poured glass tinting it, the lead heavy came (`GlassMode`; the shelf's
 pictures are drawn by it too, `GlassShelf.picture`); on screen the glass itself is Apple's real Liquid
-Glass (`GlassPanes`, in the canvas's `modeOverlay`): each framed piece a pane inset in its lead, one
-glass effect per glass, a pane materializing as its piece is framed or poured and a poured one
-melting into its glass's neighbours, while the canvas draws its lenses flat under it
-(`GlassMode.lensesCovered`; Reduce Transparency keeps the canvas's lenses, Reduce Motion the
-melt away); VoiceOver has a piece element each; saves queued
+Glass (`GlassPanes`, in the canvas's `modeOverlay`): each glazed piece a pane inset in its lead, one
+glass effect per glass, a poured pane materializing and melting into its glass's neighbours,
+while the canvas draws those lenses flat under it (`GlassMode.lensesCovered`; an unglazed piece
+keeps the canvas's lens, so its number reads; Reduce Transparency keeps every canvas lens,
+Reduce Motion the melt away); VoiceOver has a piece element each; saves queued
 in order, `GlassShelf.enqueue`), `GlassPicture` (lead and glass colors, and the shelf's
 pictures). PaintCore's `GlassTexture` holds `fields()`, the lead's distance, shade, depth and
 grain, which the canvas's shader paints from (its own painted glass is the pictures' look where a

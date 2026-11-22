@@ -6,14 +6,15 @@ import SwiftUI
 import UIKit
 
 /// The window's glass as Apple's own Liquid Glass (painting-company row 366; Paul, November 22,
-/// 2026: the glass material the star): every framed piece a pane of real glass set in its lead,
-/// over the canvas, which keeps the photo, the lead, the numbers and the light (`GlassMode`, its
-/// lenses then drawn flat: `lensesCovered`). The panes are grouped, one glass effect per glass and
-/// one for the clear lenses, each a shape of many outlines: measured on an iPad Air, 120 panes so
-/// grouped stayed smooth where 60 effects of one pane each did not (`GlassRealPanes`). A pane comes
-/// as its piece is framed (the clear lens materializing) or poured (its glass materializing, then
-/// melting into the panes of the same glass beside it and snapping back to the lead); never under
-/// Reduce Motion. Under Reduce Transparency there is no real glass: the canvas's lenses draw whole.
+/// 2026: the glass material the star): every glazed piece a pane of real glass set in its lead,
+/// over the canvas, which keeps the photo, the poured color, the lead and the light (`GlassMode`,
+/// a glazed piece's lens then drawn flat: `lensesCovered`). A piece not yet glazed keeps the
+/// canvas's own lens, so its number reads clearly (real glass bends a number past reading over a
+/// busy photo). The panes are grouped, one glass effect per glass, each a shape of many outlines:
+/// measured on an iPad Air, 120 panes so grouped stayed smooth where 60 effects of one pane each
+/// did not (`GlassRealPanes`). A poured pane materializes, melts into the panes of its glass
+/// beside it and snaps back to the lead; never under Reduce Motion. Under Reduce Transparency
+/// there is no real glass: the canvas's lenses draw whole.
 ///
 /// It lives in the canvas's zooming view (`CanvasView.modeOverlay`), in canvas units, so UIKit's
 /// pan and zoom move it with no SwiftUI work.
@@ -30,9 +31,8 @@ final class GlassPanes {
         let size: CGSize
     }
 
-    /// What a piece holds: nil, no glass (not yet framed); `clear`, the clear lens; g + 1, glass g.
+    /// The glass a piece holds: a place in the glasses offered.
     typealias Hold = Int
-    static let clear: Hold = 0
 
     let outlines: Outlines
     /// The glasses offered, as their panes are tinted.
@@ -58,7 +58,6 @@ final class GlassPanes {
         /// The pieces arriving (each its own pane) and those melting with them (shown as they were).
         var pieces: [Int]
         let fresh: Set<Int>
-        let melts: Bool
         let start: Date
     }
 
@@ -66,18 +65,18 @@ final class GlassPanes {
         self.outlines = outlines
         tints = offered.map { GlassPicture.color($0.rgb, space: colorSpace).opacity(Self.tintOpacity) }
         holds = Array(repeating: nil, count: outlines.paths.count)
-        members = Array(repeating: [], count: offered.count + 1)
-        shapes = Array(repeating: Path(), count: offered.count + 1)
+        members = Array(repeating: [], count: offered.count)
+        shapes = Array(repeating: Path(), count: offered.count)
     }
 
     var size: CGSize { outlines.size }
 
     func glass(_ hold: Hold) -> Glass {
-        hold == Self.clear ? .clear : .clear.tint(tints[hold - 1])
+        .clear.tint(tints[hold])
     }
 
-    /// Piece `r` now holds `hold`; `arriving`, it comes as a pane of its own (framed or poured on
-    /// screen), and a poured one melts into the same glass beside it.
+    /// Piece `r` now holds `hold` (nil: no glass); `arriving`, poured on screen, it comes as a pane
+    /// of its own and melts into the same glass beside it.
     func show(_ r: Int, hold: Hold?, arriving: Bool) {
         guard r < holds.count else { return }
         let hold = hold.flatMap { $0 < members.count ? $0 : nil }
@@ -113,22 +112,10 @@ final class GlassPanes {
     }
 
     private func arrive(_ r: Int, hold: Hold, touched: inout Set<Int>) {
-        let now = Date.now
-        let melts = hold != Self.clear
-        // Pieces framed by one stroke arrive together.
-        if !melts, let last = arrivals.indices.last, arrivals[last].hold == hold, !arrivals[last].melts,
-           now.timeIntervalSince(arrivals[last].start) < 0.05 {
-            let joined = arrivals[last]
-            withAnimation(.smooth(duration: 0.5)) {
-                arrivals[last] = Arrival(id: joined.id, hold: hold, pieces: joined.pieces + [r], fresh: joined.fresh.union([r]),
-                                         melts: false, start: joined.start)
-            }
-            return
-        }
         let arriving = Set(arrivals.flatMap(\.pieces))
-        let beside = melts ? outlines.neighbours[r].filter { holds[$0] == hold && !arriving.contains($0) && outlines.paths[$0] != nil } : []
+        let beside = outlines.neighbours[r].filter { holds[$0] == hold && !arriving.contains($0) && outlines.paths[$0] != nil }
         nextArrival += 1
-        let arrival = Arrival(id: nextArrival, hold: hold, pieces: [r] + beside, fresh: [r], melts: melts, start: now)
+        let arrival = Arrival(id: nextArrival, hold: hold, pieces: [r] + beside, fresh: [r], start: .now)
         withAnimation(.smooth(duration: 0.5)) { arrivals.append(arrival) }
         touched.insert(hold)
         let id = arrival.id
@@ -170,19 +157,24 @@ final class GlassPanes {
     func meltSpacing(at date: Date) -> CGFloat {
         let gap = outlines.lead
         var spacing: CGFloat = 0
-        for arrival in arrivals where arrival.melts {
+        for arrival in arrivals {
             let t = date.timeIntervalSince(arrival.start)
             let rise = min(1, max(0, t / 0.3)), fall = min(1, max(0, (t - 0.55) / 0.3))
             let ease = { (x: Double) in x * x * (3 - 2 * x) }
-            spacing = max(spacing, 1.6 * gap * CGFloat(ease(rise) * (1 - ease(fall))))
+            spacing = max(spacing, 2 * gap * CGFloat(ease(rise) * (1 - ease(fall))))
         }
         return spacing
     }
 
-    var melting: Bool { arrivals.contains { $0.melts } }
+    var melting: Bool { !arrivals.isEmpty }
 
-    /// The panes of `template`'s pieces: each piece's rings less a band of the lead's width along
-    /// them (`lead`, canvas units), so a pane sits in the lead with the came over its edge.
+    /// How far inside its outline a pane's edge sits, as a share of the lead's width: past the
+    /// came's widest (`glassFillFragment` casts it 0.4 to 0.6 of the width each side), so no glass
+    /// lies over the lead, where it would bend it.
+    nonisolated static let insetShare: CGFloat = 0.62
+
+    /// The panes of `template`'s pieces: each piece's rings less a band along them (`lead`, the
+    /// lead's width in canvas units; `insetShare`), so a pane sits inside its came.
     nonisolated static func outlines(of template: Template, lead: CGFloat) -> Outlines {
         var paths: [CGPath?] = []
         paths.reserveCapacity(template.regions.count)
@@ -192,10 +184,14 @@ final class GlassPanes {
                 piece.addLines(between: polygon.map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) })
                 piece.closeSubpath()
             }
-            let band = piece.copy(strokingWithWidth: lead, lineCap: .round, lineJoin: .round, miterLimit: 10)
-            let pane = piece.subtracting(band, using: .evenOdd)
-            let box = pane.boundingBoxOfPath
-            paths.append(pane.isEmpty || box.width < 1 || box.height < 1 ? nil : pane)
+            let band = piece.copy(strokingWithWidth: lead * insetShare * 2, lineCap: .round, lineJoin: .round, miterLimit: 10)
+            // Shards the band leaves at a sharp joint or in a sliver would poke through the lead.
+            let pane = CGMutablePath()
+            for part in piece.subtracting(band, using: .evenOdd).componentsSeparated(using: .evenOdd) {
+                let box = part.boundingBoxOfPath
+                if min(box.width, box.height) >= lead * 0.5 { pane.addPath(part) }
+            }
+            paths.append(pane.isEmpty ? nil : pane)
         }
         var neighbours = Array(repeating: Set<Int>(), count: template.regions.count)
         for edge in template.edges where edge.right != BoundaryEdge.outside {

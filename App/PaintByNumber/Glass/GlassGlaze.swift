@@ -227,7 +227,6 @@ final class GlassGlazeModel: CanvasTouches {
         for r in new {
             glazing.framed[r] = true
             canvas?.showMode(r, value: GlassMode.code(glass: nil, replacing: nil), painted: false, from: nil, animated: false)
-            panes?.show(r, hold: GlassPanes.clear, arriving: !reduceMotion)
         }
         framedByHand += new.filter { !hidden.contains($0) }.count
         endStroke()
@@ -396,11 +395,10 @@ final class GlassGlazeModel: CanvasTouches {
             width: w, height: h, context: context)
     }
 
-    /// What piece `r`'s pane holds (`GlassPanes.Hold`): its glass, the clear lens once framed, or none.
+    /// The glass piece `r`'s pane holds (`GlassPanes`), nil while it is unglazed.
     private func hold(of r: Int) -> GlassPanes.Hold? {
-        guard r < pieces else { return nil }
-        if let g = Self.glass(glazing.glass[r]), g < offered.count { return g + 1 }
-        return glazing.isFramed(r) ? GlassPanes.clear : nil
+        guard r < pieces, let g = Self.glass(glazing.glass[r]), g < offered.count else { return nil }
+        return g
     }
 
     /// A glazing's glass as a place in `offered`, nil for none.

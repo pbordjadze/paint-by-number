@@ -190,9 +190,9 @@ struct GlassModeTests {
         #expect(model.framedByHand == 0 && !model.canUndo, "then the frame")
     }
 
-    /// Real Liquid Glass (painting-company row 366): each framed piece a pane inside its lead, in
-    /// the shape of the glass it holds, moving to its glass's shape as it is poured and back on
-    /// Undo; pictures off the screen draw their lenses whole.
+    /// Real Liquid Glass (painting-company row 366): each glazed piece a pane inside its lead, in
+    /// the shape of the glass it holds, gone again on Undo; pictures off the screen draw their
+    /// lenses whole.
     @Test func eachPieceIsAPaneOfItsGlassInsideTheLead() throws {
         let t = Fixtures.mosaic
         let context = try #require(RenderContext.shared)
@@ -209,7 +209,7 @@ struct GlassModeTests {
         let panes = GlassPanes(outlines: outlines, offered: t.palette, colorSpace: t.colorSpace)
         model.panes = panes
         let r = try #require(t.regions.indices.first { r in
-            !model.hidden.contains(r) && (t.labels(ofRegion: r).first?.radius ?? 0) > Float(lead) * 0.75
+            !model.hidden.contains(r) && (t.labels(ofRegion: r).first?.radius ?? 0) > Float(lead) * 0.9
         })
         let label = try #require(t.labels(ofRegion: r).first)
         let middle = CGPoint(x: CGFloat(label.position.x), y: CGFloat(label.position.y))
@@ -217,15 +217,14 @@ struct GlassModeTests {
         let onLead = CGPoint(x: CGFloat(edge.x), y: CGFloat(edge.y))
         #expect(panes.shapes.allSatisfy { !$0.contains(middle) }, "a bare piece has no glass")
         model.frame([r])
-        #expect(panes.shapes[GlassPanes.clear].contains(middle) || panes.arrivals.contains { $0.pieces.contains(r) },
-                "framed, a clear pane")
-        #expect(!panes.path(of: r).contains(onLead), "the pane stays inside its lead")
+        #expect(panes.shapes.allSatisfy { !$0.contains(middle) }, "framed, it keeps the canvas's lens until glazed")
+        #expect(panes.path(of: r).contains(middle) && !panes.path(of: r).contains(onLead), "the pane stays inside its lead")
         let own = Int(t.regions[r].colorIndex)
         model.selected = own
         #expect(model.glaze(r, animated: false))
-        #expect(panes.shapes[own + 1].contains(middle) && !panes.shapes[GlassPanes.clear].contains(middle))
+        #expect(panes.shapes[own].contains(middle))
         model.undo()
-        #expect(!panes.shapes[own + 1].contains(middle))
+        #expect(panes.shapes.allSatisfy { !$0.contains(middle) }, "Undo takes the pane away")
 
         #expect(mode.uncovered() === mode, "uncovered, the window is its own picture")
         mode.lensesCovered = true
