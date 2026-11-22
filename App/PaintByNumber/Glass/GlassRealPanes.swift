@@ -1,8 +1,10 @@
 #if DEBUG && UNRELEASED
+import AVFoundation
 import CoreGraphics
 import PaintCore
 import QuartzCore
 import SwiftUI
+import UIKit
 import os
 
 /// A test of Apple's own Liquid Glass as a window's glass (painting-company row 366): every pane a
@@ -17,6 +19,9 @@ import os
 /// snaps back; 13 to 15 s still. At 15 s it prints and logs one `real-panes` line (frames, the
 /// mean and 95th percentile gap, frames over 1.5 refreshes) and holds the last frame.
 /// `-realPanesLoop YES` plays the script again and again, for Instruments' Animation Hitches.
+/// `-realPanesCamera YES` holds the window up to the light: the rear camera's live picture is
+/// behind the glass, the photo a faint layer over it, and the window stays still for the hand
+/// to move instead.
 struct GlassRealPanes: View {
     static var count: Int? {
         guard let name = DemoMode.scenario, name.hasPrefix("glass-real-panes") else { return nil }
@@ -24,6 +29,7 @@ struct GlassRealPanes: View {
     }
 
     static let loops = UserDefaults.standard.bool(forKey: "realPanesLoop")
+    static let usesCamera = UserDefaults.standard.bool(forKey: "realPanesCamera")
 
     let count: Int
 
@@ -50,9 +56,18 @@ struct GlassRealPanes: View {
                     if let photo {
                         let rect = fitted(CGSize(width: photo.width, height: photo.height), in: proxy.size)
                         ZStack(alignment: .topLeading) {
-                            Image(decorative: photo, scale: 1)
-                                .resizable()
-                                .frame(width: rect.width, height: rect.height)
+                            if Self.usesCamera {
+                                CameraBackdrop()
+                                    .frame(width: rect.width, height: rect.height)
+                                Image(decorative: photo, scale: 1)
+                                    .resizable()
+                                    .frame(width: rect.width, height: rect.height)
+                                    .opacity(0.3)
+                            } else {
+                                Image(decorative: photo, scale: 1)
+                                    .resizable()
+                                    .frame(width: rect.width, height: rect.height)
+                            }
                             GlassEffectContainer(spacing: melt(t) * rect.width) {
                                 ZStack(alignment: .topLeading) {
                                     ForEach(panes) { pane in
@@ -86,7 +101,7 @@ struct GlassRealPanes: View {
         Self.loops ? elapsed.truncatingRemainder(dividingBy: 15) : min(elapsed, 15)
     }
 
-    private func drift(_ t: Double) -> Double { t < 8 ? sin(.pi * t / 8) : 0 }
+    private func drift(_ t: Double) -> Double { !Self.usesCamera && t < 8 ? sin(.pi * t / 8) : 0 }
 
     /// The container's spacing as a share of the window's width: none, growing past the lead from 8
     /// to 11 s (the panes melting), and none again from 11 s (the lead snapping them apart).
@@ -173,6 +188,51 @@ struct GlassRealPanes: View {
             }
         }
         return out
+    }
+}
+
+/// The rear camera's live picture, filling its frame.
+private struct CameraBackdrop: UIViewRepresentable {
+    final class PreviewView: UIView {
+        override class var layerClass: AnyClass { AVCaptureVideoPreviewLayer.self }
+        var preview: AVCaptureVideoPreviewLayer? { layer as? AVCaptureVideoPreviewLayer }
+        let session = AVCaptureSession()
+    }
+
+    func makeUIView(context: Context) -> PreviewView {
+        let view = PreviewView()
+        view.preview?.session = view.session
+        view.preview?.videoGravity = .resizeAspectFill
+        Self.start(UncheckedSendable(view.session))
+        return view
+    }
+
+    func updateUIView(_ view: PreviewView, context: Context) {}
+
+    static func dismantleUIView(_ view: PreviewView, coordinator: ()) {
+        stop(UncheckedSendable(view.session))
+    }
+
+    nonisolated private static func stop(_ box: UncheckedSendable<AVCaptureSession>) {
+        DispatchQueue.global(qos: .userInitiated).async { box.value.stopRunning() }
+    }
+
+    /// Configured and started off the main thread, once the camera is allowed.
+    nonisolated private static func start(_ box: UncheckedSendable<AVCaptureSession>) {
+        AVCaptureDevice.requestAccess(for: .video) { granted in
+            guard granted else { return }
+            DispatchQueue.global(qos: .userInitiated).async {
+                let session = box.value
+                session.beginConfiguration()
+                session.sessionPreset = .hd1920x1080
+                if let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+                   let input = try? AVCaptureDeviceInput(device: camera), session.canAddInput(input) {
+                    session.addInput(input)
+                }
+                session.commitConfiguration()
+                session.startRunning()
+            }
+        }
     }
 }
 
