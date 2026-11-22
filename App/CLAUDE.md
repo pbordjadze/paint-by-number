@@ -1379,7 +1379,9 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
   The Original, for a library work, opens `SampleAboutView`. A mosaic still under the name the app
   gave it (a photo's date: `Artwork.titled`, Paint by Moonlight's key) has that name with a pencil
   on the bar, which names it (`ArtworkPaintingView`'s Name Your Mosaic); named, it renames.
-  `-demo ravenna-paint-complete-doors` screenshots it.
+  `-demo ravenna-paint-complete-doors` (a library work, named, four doors) and
+  `ravenna-paint-complete-unnamed` (as from the painter's own photo: the date with its pencil,
+  three doors) screenshot it.
 - **Print… and Show Lines** (painting-company row 330; SideStore and Debug builds, the release
   keeping Share › Print Template…): Print… sits where the app has it, beside Share in a card's
   menu and in More, and opens the app's own Print's preview (`App/Shared`'s
