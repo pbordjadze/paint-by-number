@@ -1450,23 +1450,29 @@ device. Demos: `watercolor-empty`, `watercolor-paint`, `watercolor-painted`, `wa
 
 ## The Cave (15,000 BC)
 
-SideStore and Debug builds only (`#if UNRELEASED`; painting-company row 371): no app on screen,
-only a rock wall in the dark lit by the painter's torch. `Cave/`: `CaveEra` (the root: the shelf
-loaded, the photo picker, a photo drawn through `CaveVision` and PaintCore's `CavePlan`),
-`CaveWallView` (a `CAMetalLayer` on a display link; each bay's maps made off the main thread as
-the camera nears it; VoiceOver's one element with its custom actions), `CaveScene` (the torch,
-the blow, the hand of four or five fingers, the walk at the screen's edges), `CaveRenderer` and `CaveShader` (compiled at runtime from source, so nothing
-reaches the app's metallib; a soft shadow marched toward the torch through the relief),
+SideStore and Debug builds only (`#if UNRELEASED`; painting-company row 371), in the frame every
+mode shares (`ModeShell`, row 379). `Cave/`: `CaveEra` (the root in `ModeShell`: `CaveGalleryView`,
+each painting a card of its bay lit by a torch, `CaveCard`, drawn on the CPU by `CavePicture` and
+kept as its `picture.jpg`; with none, the gallery is the cave's mouth itself, alive, whose
+charcoal on the bare rock asks for the first photo; a picked picture drawn through `CaveVision`
+and PaintCore's `CavePlan`, its areas numbered by dots of their pigment; `CavePaintingScreen`,
+pushed, in `ModePaintingFrame`), `CaveWallView` (a `CAMetalLayer` on a display link; each bay's
+maps made off the main thread as the camera nears it; VoiceOver's one element with its custom
+actions), `CaveScene` (the torch, the blow, the hand of four or five fingers; `isSingle`, the
+painting screen's one bay between plain rock, the camera still and no daylight, where the
+empty gallery's mouth walks), `CaveRenderer` and `CaveShader` (compiled at runtime from source,
+so nothing reaches the app's metallib; a soft shadow marched toward the torch through the relief),
 `CaveSound` (synthesized fire, breath and drips in an `AVAudioEnvironmentNode`'s hall; Core
 Haptics; Settings' Sounds and Haptics) and `CaveShelf` (`Application Support/Cave/Wall/`, the
-paintings oldest first). The way out is the app's one thing left on screen, a Liquid Glass
-Settings button whose Year wheel leaves as every era's does (`CaveSettingsView`). Demos: `cave-mouth`, `cave-blowing`, `cave-hand`, `cave-wall`
-(`CaveDemo`); `CaveAppTests`. `CaveFossils`: Liquid Glass misused on purpose, the system's
-controls found as glass in the rock (a cracked "more" pill, the mouth as a back button, the year
-wheel carved under the mouth), drawn by the shader and lit only by the torch and the daylight;
-none of it is a control. Not on the year wheel yet: 15,000 BC is lit once the wheel reaches back
-before year 1 (`EraClock`, Stained Glass's work); until then only the demos open the Cave, and its
-Settings wheel stands at the wheel's oldest year.
+paintings oldest first, each with its name). Demos: `cave-mouth` (the empty gallery),
+`cave-blowing`, `cave-hand` (a painting's screen), `cave-wall` (the gallery) (`CaveDemo`;
+`-caveAutoPaint YES` has a painting's screen blow itself to Finished); `CaveAppTests`, and
+`CaveUITests`, which paints a library picture to Finished. `CaveFossils`: Liquid Glass misused on
+purpose, the system's controls found as glass in the rock (a cracked "more" pill over a
+painting, the mouth as a back button, the year wheel carved under the mouth), drawn by the
+shader and lit only by the torch and the daylight; none of it is a control. Not on the year
+wheel yet: 15,000 BC is lit once the wheel reaches back before year 1 (`EraClock`, Stained
+Glass's work); until then only the demos open the Cave.
 
 ## Outside the app: widgets and stickers
 

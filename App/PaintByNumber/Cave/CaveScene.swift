@@ -23,6 +23,8 @@ final class CaveScene {
         var progress: CaveProgress
         /// Its pigment as saved (`CavePigmentLayer.rgba()`), nil for none yet.
         var pigment: [UInt8]?
+        /// Its name in the gallery and on its screen.
+        var title: String = ""
 
         var isComplete: Bool { !progress.done.contains(false) && progress.hand != nil }
     }
@@ -101,11 +103,16 @@ final class CaveScene {
 
     static let cameraKey = "cave.camera"
 
-    init(paintings: [Painting], sound: CaveSound, defaults: UserDefaults = .standard) {
+    /// One painting on its own, as the frame's painting screen shows it (painting-company row
+    /// 379): its bay between plain rock, the camera still on it, no mouth, no walking.
+    let isSingle: Bool
+
+    init(paintings: [Painting], sound: CaveSound, single: Bool = false, defaults: UserDefaults = .standard) {
         self.paintings = paintings
         self.sound = sound
+        self.isSingle = single
         self.defaults = defaults
-        if let saved = defaults.object(forKey: Self.cameraKey) as? Double {
+        if !single, let saved = defaults.object(forKey: Self.cameraKey) as? Double {
             camera = Float(saved)
         }
         cameraTarget = camera
@@ -117,16 +124,22 @@ final class CaveScene {
 
     /// The bay being worked: the newest painting while it isn't complete, else the bare rock past it.
     var activeBay: Int {
+        if isSingle { return 1 }
         guard let last = paintings.last else { return 1 }
         return last.isComplete ? paintings.count + 1 : paintings.count
     }
 
     /// The far end of the cave: a little past the bay after the one being worked, into the dark.
-    var end: Float { Float((activeBay + 1) * CaveWall.bayWidth + 150) }
+    var end: Float { isSingle ? Float(8 * CaveWall.bayWidth) : Float((activeBay + 1) * CaveWall.bayWidth + 150) }
 
     /// The bay at `index`, or nil past the cave's end.
     func bay(_ index: Int) -> Bay? {
         guard index >= 0, index <= activeBay + 1 else { return nil }
+        if isSingle {
+            guard index == 1, let p = paintings.first else { return Bay(content: .bare, tools: .none, key: "rock-\(index)") }
+            let tools: CaveBay.Tools = p.isComplete ? .none : .pigments
+            return Bay(content: .painting(p.plan), tools: tools, key: "\(p.id)-\(tools == .pigments)")
+        }
         if index == 0 { return Bay(content: .mouth, tools: .none, key: "mouth") }
         if index <= paintings.count {
             let p = paintings[index - 1]
@@ -143,7 +156,7 @@ final class CaveScene {
         let onScreenFirst = Int((camera / Float(CaveWall.bayWidth)).rounded(.down))
         let onScreenLast = Int(((camera + visibleWidth) / Float(CaveWall.bayWidth)).rounded(.down))
         var first = max(0, onScreenFirst - 1)
-        var last = max(first, min(onScreenLast + 1, activeBay + 1))
+        var last = max(first, min(onScreenLast + 1, isSingle ? 3 : activeBay + 1))
         while last - first + 1 > CaveShader.slots {
             if last > onScreenLast { last -= 1 } else if first < onScreenFirst { first += 1 } else { last -= 1 }
         }
@@ -205,7 +218,7 @@ final class CaveScene {
             grips[id] = Grip.none
             return
         }
-        if layer == nil, ((local - CaveWall.charcoal) / SIMD2(30, 24)).caveLengthSquared < 1 {
+        if !isSingle, layer == nil, ((local - CaveWall.charcoal) / SIMD2(30, 24)).caveLengthSquared < 1 {
             grips[id] = Grip.none
             onChoosePhoto?()
             return
@@ -231,7 +244,7 @@ final class CaveScene {
     func touchEnded(_ id: ObjectIdentifier) {
         touches[id] = nil
         let grip = grips.removeValue(forKey: id)
-        if case .some(.torch) = grip {
+        if case .some(.torch) = grip, !isSingle {
             defaults.set(Double(cameraTarget), forKey: Self.cameraKey)
         }
         if !grips.values.contains(where: { if case .blow = $0 { true } else { false } }) { sound.blow(false) }
@@ -291,14 +304,15 @@ final class CaveScene {
 
     /// Walks a bay deeper (1) or toward the daylight (-1), the torch carried along.
     func walk(_ bays: Int) {
+        guard !isSingle else { return }
         cameraTarget += Float(bays * CaveWall.bayWidth)
         clampCamera()
         torchRest.x = cameraTarget + visibleWidth * 0.5
         defaults.set(Double(cameraTarget), forKey: Self.cameraKey)
     }
 
-    var isAtMouth: Bool { camera < Float(CaveWall.bayWidth) * 0.5 }
-    var isAtEnd: Bool { cameraTarget >= maxCamera - 1 }
+    var isAtMouth: Bool { isSingle || camera < Float(CaveWall.bayWidth) * 0.5 }
+    var isAtEnd: Bool { isSingle || cameraTarget >= maxCamera - 1 }
 
     #if DEBUG
     // MARK: - The demos' painter
@@ -330,7 +344,9 @@ final class CaveScene {
         for grip in grips.values {
             guard case .torch(let offset, let finger) = grip else { continue }
             let side = finger.x / max(1, viewSize.x)
-            if side < 0.15 { cameraTarget -= 320 * dt * (0.15 - side) / 0.15 }
+            if isSingle {
+                // One painting: the torch goes where the finger takes it, and the wall stays.
+            } else if side < 0.15 { cameraTarget -= 320 * dt * (0.15 - side) / 0.15 }
             if side > 0.85 { cameraTarget += 320 * dt * (side - 0.85) / 0.15 }
             clampCamera()
             let at = screenToWall(finger) + offset
@@ -441,6 +457,12 @@ final class CaveScene {
     var maxCamera: Float { max(0, end - visibleWidth) }
 
     private func clampCamera() {
+        if isSingle {
+            // The painting's bay in the middle of the screen.
+            cameraTarget = Float(CaveWall.bayWidth) * 1.5 - visibleWidth / 2
+            camera = cameraTarget
+            return
+        }
         cameraTarget = min(max(cameraTarget, 0), maxCamera)
         camera = min(max(camera, -50), maxCamera + 50)
     }
@@ -470,13 +492,15 @@ final class CaveScene {
 
     func uniforms(drawable: SIMD2<Float>) -> CaveUniforms {
         let pxPerPoint = drawable.y / Float(CaveWall.height)
-        let lampOn: Float = activeBay >= 1 ? 1 : 0
+        let lampOn: Float = activeBay >= 1 && (!isSingle || layer != nil) ? 1 : 0
+        // One painting on its own is deep in the cave: no daylight reaches it.
+        let mouth = isSingle ? SIMD2<Float>(-20_000, -20_000) : CaveWall.mouth
         let lamp = CaveWall.lampFlame + SIMD2(Float(activeBay * CaveWall.bayWidth), -6)
         return CaveUniforms(
             view: SIMD4(drawable.x, drawable.y, pxPerPoint, camera),
             torch: SIMD4(torch.x, torch.y + 10, 64, flicker),
             lamp: SIMD4(lamp.x, lamp.y, 30, lampOn),
-            mouth: SIMD4(CaveWall.mouth.x, CaveWall.mouth.y, flare, 0),
+            mouth: SIMD4(mouth.x, mouth.y, flare, 0),
             misc: SIMD4(time, end, CaveBay.reliefDepth, reduceMotion ? 1 : 0),
             slotsA: SIMD4(repeating: -1), slotsB: SIMD4(repeating: -1))
     }
@@ -523,7 +547,7 @@ final class CaveScene {
                                   inner: inner, outer: SIMD4(0.78, 0.24, 0.04, 0)))
         }
         // The fat lamp's flame, by the tools.
-        if activeBay >= 1 {
+        if activeBay >= 1, !isSingle || layer != nil {
             let lamp = CaveWall.lampFlame + SIMD2(Float(activeBay * CaveWall.bayWidth), 0)
             let lf = 1 + 0.12 * sin(t * 17) + 0.08 * sin(t * 41)
             out.append(CaveSprite(.glow, at: lamp, radii: SIMD2(30, 30), inner: SIMD4(1, 0.59, 0.24, 0.22), outer: SIMD4(1, 0.47, 0.16, 0)))
@@ -560,7 +584,7 @@ final class CaveScene {
     /// The pigments on the ledge, when a painting is being blown.
     var hasPigments: Bool { layer != nil }
     var isWaitingForHand: Bool { layer?.isFinished == true && layer?.hand == nil && hand == nil }
-    var isAtBareRock: Bool { layer == nil }
+    var isAtBareRock: Bool { layer == nil && !isSingle }
     var progressText: (done: Int, of: Int)? { layer.map { ($0.doneCount, $0.plan.areaCount) } }
 }
 

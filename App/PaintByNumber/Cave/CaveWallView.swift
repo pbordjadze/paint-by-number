@@ -195,6 +195,7 @@ final class CaveWallView: UIView {
                 return String(localized: "cave.value.painting", defaultValue: "\(pigment) in hand. Areas blown: \(progress.done) of \(progress.of)",
                               comment: "VoiceOver value of the cave wall while a painting is blown: the pigment in hand, then the areas done of all its areas")
             }
+            if scene.isSingle { return String(localized: "Finished") }
             return String(localized: "cave.value.bare", defaultValue: "Bare rock, and a lump of charcoal to draw with",
                           comment: "VoiceOver value of the cave wall at bare rock, where a new painting is drawn")
         }

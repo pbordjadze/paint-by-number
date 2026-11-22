@@ -24,7 +24,7 @@ struct CaveAppTests {
         let shelf = CaveShelf(root: root)
         await shelf.load()
         #expect(shelf.paintings.isEmpty)
-        let id = try await shelf.add(plan)
+        let id = try await shelf.add(plan, title: "Horse")
         var layer = CavePigmentLayer(plan: plan)
         layer.finishAll()
         layer.stencil(CaveHand.spread(at: CaveWall.handSpot), amount: 1)
@@ -35,6 +35,47 @@ struct CaveAppTests {
         await again.load()
         #expect(again.paintings.map(\.id) == [id])
         #expect(again.paintings.first?.isComplete == true)
+        #expect(again.paintings.first?.title == "Horse")
+        // The gallery's picture: drawn, kept, and the painting can go.
+        let picture = await again.picture(of: id)
+        #expect(picture?.width == CavePigmentLayer.width)
+        #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent(id.uuidString).appendingPathComponent(CaveShelf.pictureFile).path))
+        again.delete(id)
+        await again.flush()
+        #expect(again.paintings.isEmpty)
+        let third = CaveShelf(root: root)
+        await third.load()
+        #expect(third.paintings.isEmpty)
+    }
+
+    /// The frame's painting screen: one painting's bay, the camera still on it, plain rock round it
+    /// and no mouth, its pigments on the ledge until it is finished.
+    @Test func onePaintingStandsAloneInTheDark() async {
+        let plan = await Background.run {
+            let sample = CaveSample.horse()
+            return CavePlan.make(photo: sample.photo, subject: sample.subject, kind: .animal)
+        }
+        let defaults = UserDefaults(suiteName: "CaveTests.\(UUID().uuidString)")!
+        let painting = CaveScene.Painting(id: UUID(), plan: plan, progress: CaveProgress(done: Array(repeating: false, count: plan.areaCount)))
+        let scene = CaveScene(paintings: [painting], sound: CaveSound(sounds: false, haptics: false), single: true, defaults: defaults)
+        scene.layOut(size: SIMD2(390, 844))
+        #expect(scene.activeBay == 1)
+        #expect(scene.hasPigments)
+        #expect(!scene.isAtBareRock)
+        if case .painting = scene.bay(1)?.content {} else { Issue.record("Bay 1 isn't the painting") }
+        #expect(scene.bay(0)?.content == .bare)
+        #expect(scene.bay(2)?.content == .bare)
+        let camera = scene.camera
+        scene.walk(1)
+        for _ in 0..<60 { scene.step(1 / 60) }
+        #expect(scene.camera == camera)
+        #expect(scene.uniforms(drawable: SIMD2(780, 1688)).mouth.x < -10_000)
+        for _ in 0..<600 where !scene.isWaitingForHand { scene.step(1 / 60); _ = scene.blowNextArea() }
+        #expect(scene.isWaitingForHand)
+        scene.leaveHand()
+        for _ in 0..<240 { scene.step(1 / 60) }
+        #expect(!scene.hasPigments)
+        #expect(scene.paintings.first?.isComplete == true)
     }
 
     @Test func theWallStartsAtTheMouthAndWalksIn() {
