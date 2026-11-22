@@ -176,7 +176,7 @@ jobs:
         shell: bash
         run: |
           apt-get install -y -qq --no-install-recommends nodejs > /dev/null
-          node --test feedback-relay/worker.test.js feedback-relay/votes.test.js
+          node --test feedback-relay/worker.test.js feedback-relay/votes.test.js feedback-relay/print.test.js
       - name: Quality regression
         # Also after failed tests: the metrics help explain them.
         if: ${{ !cancelled() && env.COMPILE != '1' }}

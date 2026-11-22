@@ -10,7 +10,8 @@
 //   and the header X-Moonlight-App, the app's version and build.
 //
 // It also counts the painters' votes for a coming night's picture (POST /v1/votes, GET
-// /v1/ballots/<date>): votes.js, whose header is that part's manual.
+// /v1/ballots/<date>): votes.js, whose header is that part's manual. And it sends One Big Sheet's
+// templates to the print service (/v1/print/): print.js, whose header is that part's manual.
 //
 // It commits the three files to refs/heads/main of the repository named by the variable
 // FEEDBACK_REPO, in one commit made with the Git Data API (blobs, tree, commit, ref), under
@@ -43,8 +44,10 @@
 
 import { Buffer } from "node:buffer";
 
+import { handlePrint, routesPrint } from "./print.js";
 import { handleVotes, routesVotes } from "./votes.js";
 
+export { PrintSheet } from "./print.js";
 export { Ballot } from "./votes.js";
 
 const PATH = "/v1/feedback";
@@ -74,6 +77,7 @@ export default {
 export async function handle(request, env, deps = {}) {
   const url = new URL(request.url);
   if (routesVotes(url.pathname)) return handleVotes(request, env, deps);
+  if (routesPrint(url.pathname)) return handlePrint(request, env, deps);
   if (url.pathname !== PATH) return reject(404);
   if (request.method !== "POST") return reject(405, { allow: "POST" });
   if (!configured(env)) {
