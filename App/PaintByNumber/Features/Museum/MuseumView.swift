@@ -390,10 +390,17 @@ struct MuseumTile: View {
     }
 }
 
+private nonisolated struct ResumePaintingKey: EnvironmentKey {
+    static let defaultValue: (@MainActor (UUID) -> Void)? = nil
+}
+
 extension EnvironmentValues {
     /// Opens a painting of the library from inside the create flow (the Museum's Resume); nil
-    /// outside the app shell.
-    @Entry var resumePainting: (@MainActor (UUID) -> Void)?
+    /// outside the app shell. A key of its own, as `paintPicture`'s: `@Entry` warns of a closure.
+    var resumePainting: (@MainActor (UUID) -> Void)? {
+        get { self[ResumePaintingKey.self] }
+        set { self[ResumePaintingKey.self] = newValue }
+    }
 }
 
 extension Color {
