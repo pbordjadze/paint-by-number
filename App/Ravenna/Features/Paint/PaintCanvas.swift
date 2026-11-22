@@ -42,6 +42,8 @@ struct PaintCanvas: UIViewRepresentable {
     /// Space taken by floating chrome, in the canvas's own (full-screen) coordinates.
     var chromeInsets = EdgeInsets()
     var showsNumbers = true
+    /// The finished mosaic shows the sheet's lines over its tiles (`CanvasView.showsLines`).
+    var showsLines = false
     var paperAppearance = PaperAppearance.default
     /// How heavy a coloring book's drawing is (Settings › Line Weight); classic templates ignore it.
     var lineWeight = LineWeight.default
@@ -72,6 +74,7 @@ struct PaintCanvas: UIViewRepresentable {
         view.reduceMotion = context.environment.accessibilityReduceMotion
         view.paperAppearance = paperAppearance
         view.lineWeight = lineWeight
+        view.showsLines = showsLines
         controller.view = view
         // Deferred: state mustn't change while SwiftUI is making views.
         if !view.isRenderable, let onUnavailable { Task { onUnavailable() } }
@@ -87,6 +90,7 @@ struct PaintCanvas: UIViewRepresentable {
         view.reduceMotion = context.environment.accessibilityReduceMotion
         view.paperAppearance = paperAppearance
         view.lineWeight = lineWeight
+        view.showsLines = showsLines
         view.onPencilAction = onPencilAction
         // Loader and callbacks first: showing the photo may start loading it.
         view.photoLoader = photoLoader

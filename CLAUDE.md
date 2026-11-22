@@ -721,7 +721,7 @@ him itself, with a push notification once he has gone quiet.
   it's built.
 - **Hand off at about 400k tokens** of context: start a fresh session with a brief of the rows,
   branch@sha, CI state, open questions to Paul, pending check-ins and what's next (the shape of
-  painting-company's `.claude/skills/front-desk/SKILL.md` › Hand-offs), and tell Paul its id.
+  painting-company's `archive/desk/front-desk-skill/SKILL.md` › Hand-offs), and tell Paul its id.
 - **Backlog commits.** A session adds and updates its own rows in painting-company's `backlog.md`
   and commits them straight to that repository's `main`, fetching first (several sessions write
   it). It runs no CI, so nothing there waits on a night train.

@@ -1,3 +1,4 @@
+import Observation
 import SwiftUI
 
 /// The year setter behind the secret door: one wheel of years, under a plain Year row in Paint by
@@ -12,9 +13,11 @@ import SwiftUI
 /// scrolling; the years that open an era
 /// (`EraYear.modes`) lit in gold among quieter ones, and a wheel left on a year beside one of
 /// them is drawn on to it (`pull`), where it clicks into place, so the eras are found without
-/// being shown.
+/// being shown. Its Year row shows the year it rests on (`reporting(to:)`, `Value`), as a system
+/// date row shows what its wheel is turned to.
 public struct EraClock: View {
     private let onSettle: (Int) -> Void
+    private var reading: Reading?
     /// The wheel's rows, made once, not at each turn (the wheel's body runs again at every year
     /// it rests on, and a row's ink reads the calendar).
     private let rows: [Row]
@@ -95,10 +98,48 @@ public struct EraClock: View {
                 }
                 try? await Task.sleep(for: voiceOver ? Self.spokenRest : Self.rest)
                 guard !Task.isCancelled else { return }
+                // A rest that lands while the row is closing the wheel leaves the row its own year.
+                if let reading, reading.isOpen { reading.year = year }
                 onSettle(year)
             }
         }
         .onDisappear { settling?.cancel() }
+    }
+
+    /// The wheel, telling `reading` each year it comes to rest on.
+    public func reporting(to reading: Reading) -> EraClock {
+        var clock = self
+        clock.reading = reading
+        return clock
+    }
+
+    /// The year a wheel last came to rest on, for its Year row; nil before it has (or once the
+    /// row has closed it), when the row shows its own year. Settings holds it and only the row's
+    /// `Value` reads it, so a turn of the wheel redraws that one text, not the list.
+    @Observable
+    public final class Reading {
+        public var year: Int?
+        /// False once the row has closed the wheel: a rest still settling then changes nothing.
+        @ObservationIgnored public var isOpen = true
+
+        public init() {}
+    }
+
+    /// The Year row's value: the year the wheel rests on, or `home`, written as the wheel writes
+    /// it, its digits of one width so the row holds still as they change.
+    public struct Value: View {
+        private let reading: Reading
+        private let home: Int
+
+        public init(_ reading: Reading, home: Int) {
+            self.reading = reading
+            self.home = home
+        }
+
+        public var body: some View {
+            Text(verbatim: EraClock.text(of: reading.year ?? home))
+                .monospacedDigit()
+        }
     }
 
     /// The wheel's size, growing with the numerals' text size up to the clock's cap (read here,
@@ -237,10 +278,14 @@ public enum EraYear {
     /// (SideStore and Debug builds; painting-company row 373).
     public static let watercolor = 1502
 
+    /// 1000, a round year for the modes still to come: The Frame's (SideStore and Debug builds;
+    /// painting-company row 379), a mode that is only the frame every mode shares.
+    public static let frame = 1000
+
     /// The years that open an era, oldest first: the ones the wheel lights.
     public static var modes: [Int] {
         #if UNRELEASED
-        return [byzantium, stainedGlass, watercolor]
+        return [byzantium, frame, stainedGlass, watercolor]
         #else
         return [byzantium]
         #endif
@@ -249,6 +294,8 @@ public enum EraYear {
     public static func opensStainedGlass(_ year: Int) -> Bool { year == stainedGlass && modes.contains(year) }
 
     public static func opensWatercolor(_ year: Int) -> Bool { year == watercolor && modes.contains(year) }
+
+    public static func opensTheFrame(_ year: Int) -> Bool { year == frame && modes.contains(year) }
 
     public static func returnsToThePresent(_ year: Int) -> Bool { year >= present }
 

@@ -9,8 +9,6 @@ import os
 ///
 /// - `glass-empty`: the era with no windows yet.
 /// - `glass-gallery`: three windows, one finished, one half glazed, one not begun.
-/// - `glass-lead`: the Lead screen with the demo's lines drawn on a blank start.
-/// - `glass-lead-suggested`: the Lead screen as it opens, the lead the photo suggests laid.
 /// - `glass-fresh`: a window as it opens: every piece numbered and waiting for its lead.
 /// - `glass-glaze`: a window with its larger pieces glazed in the glasses suggested.
 /// - `glass-finished`: the window glazed whole, the sun held halfway across it.
@@ -50,26 +48,6 @@ enum GlassDemo {
             case let real where real.hasPrefix("glass-real-panes"):
                 // `GlassRealPanes` lays itself over the era and says when it is ready.
                 break
-            case "glass-lead":
-                let photo = try await Background.run { try Self.photo() }
-                guard let picture = PhotoLoader.cgImage(from: photo) else { return }
-                let model = GlassLeadModel(photo: photo, picture: picture, start: .blank)
-                let reach = CGFloat(Self.reach(width: model.width, height: model.height))
-                for line in Self.lines(width: model.width, height: model.height) {
-                    model.add(line.map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) }, reach: reach)
-                }
-                path.wrappedValue = [.lead(GlassLeadRoute(model: model))]
-                _ = await model.make()
-                try? await Task.sleep(for: .seconds(1))
-                DemoMode.markReady()
-            case "glass-lead-suggested":
-                let photo = try await Background.run { try Self.photo() }
-                guard let picture = PhotoLoader.cgImage(from: photo) else { return }
-                let model = GlassLeadModel(photo: photo, picture: picture)
-                path.wrappedValue = [.lead(GlassLeadRoute(model: model))]
-                _ = await model.make()
-                try? await Task.sleep(for: .seconds(1))
-                DemoMode.markReady()
             case "glass-gallery":
                 for share in [0.0, 0.55, 1.0] {
                     let artwork = try await window(on: shelf)

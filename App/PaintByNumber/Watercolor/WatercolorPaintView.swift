@@ -13,28 +13,21 @@ struct WatercolorPaintScreen: View {
     @State private var failed = false
     @State private var needsNewerApp = false
 
+    private var opening: ModeOpening {
+        if opened != nil { return .open }
+        if needsNewerApp { return .needsNewerApp }
+        return failed ? .failed : .opening
+    }
+
     var body: some View {
-        Group {
+        // A painting written by a newer app keeps its files as they are: an older app never
+        // writes over a newer one's.
+        ModePaintingFrame(title: shelf.painting(id)?.title ?? "", opening: opening, cantOpen: Text("Can’t Open Painting"),
+                          backdrop: WatercolorEra.desk) {
             if let opened {
                 WatercolorPaintView(shelf: shelf, painting: opened.painting, renderer: opened.renderer)
-            } else if needsNewerApp {
-                // Its files are left as they are: an older app never writes over a newer one's.
-                ContentUnavailableView {
-                    Label("Needs a Newer Version", systemImage: "arrow.up.circle")
-                } description: {
-                    Text(verbatim: String(localized: "gallery.recovery.newer.untitled",
-                                          defaultValue: "This painting was made with a newer version of Paint by Moonlight. Update the app to keep painting it.",
-                                          comment: "Recovery screen text for an untitled painting made by a newer app version"))
-                }
-            } else if failed {
-                ContentUnavailableView("Can’t Open Painting", systemImage: "exclamationmark.triangle")
-            } else {
-                ProgressView()
             }
         }
-        .background(WatercolorEra.desk.ignoresSafeArea())
-        .navigationTitle(Text(verbatim: shelf.painting(id)?.title ?? ""))
-        .navigationBarTitleDisplayMode(.inline)
         .task(id: id) {
             guard opened == nil, let artwork = shelf.painting(id) else { return }
             do {

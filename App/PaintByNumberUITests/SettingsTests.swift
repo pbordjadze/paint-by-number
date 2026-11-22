@@ -273,6 +273,34 @@ final class SettingsTests: XCTestCase {
         attachScreenshot(of: app, named: "back-in-the-present")
     }
 
+    /// The Year row reads the year its wheel rests on, as a system date row reads its wheel, and
+    /// the present again once the row closes the wheel (painting-company rows 236 and 366).
+    @MainActor
+    func testTheYearRowReadsTheWheel() throws {
+        let app = openSettings()
+        let row = app.descendants(matching: .any)["about-year"]
+        scroll(app, to: row)
+        let present = Calendar(identifier: .gregorian).component(.year, from: .now)
+        XCTAssertTrue(describe(row).contains(String(present)), "The Year row doesn't read the present: \(describe(row))")
+        row.tap()
+        let wheel = app.pickerWheels.firstMatch
+        XCTAssertTrue(wheel.waitForExistence(timeout: 10), "The Year row brought out no wheel")
+        scroll(app, to: wheel)
+        // A few rows back, slowly: nowhere near an era's year, which would open it.
+        wheel.swipeDown(velocity: .slow)
+        var rested = ""
+        let reads = waitUntil(timeout: 10) {
+            guard let shown = (wheel.value as? String).map({ String($0.prefix(4)) }), shown != String(present) else { return false }
+            rested = shown
+            return describe(row).contains(shown)
+        }
+        XCTAssertTrue(reads, "The Year row reads \(describe(row)), not the wheel's \(rested)")
+        row.tap()
+        XCTAssertTrue(wheel.waitForNonExistence(timeout: 5), "The Year row didn't put the wheel away")
+        XCTAssertTrue(waitUntil(timeout: 5) { describe(row).contains(String(present)) },
+                      "Closed, the Year row reads \(describe(row)), not the present")
+    }
+
     /// Flicks the year setter's one wheel to `year`, as a painter does:
     /// `adjust(toPickerWheelValue:)` left the wheel reading the present on the way back with no
     /// selection made, so the era never changed (CI, November 6). The present is the wheel's end,
@@ -346,7 +374,7 @@ final class SettingsTests: XCTestCase {
     }
 
     /// The years that open an era on the wheel (`EraYear.modes` in SideStore and Debug builds).
-    private static let eras = [547, 1248, 1502]
+    private static let eras = [547, 1000, 1248, 1502]
 
     /// About one row of the year setter's wheel, in points (`EraClock`'s rails are 36 apart).
     private static let row: CGFloat = 38
