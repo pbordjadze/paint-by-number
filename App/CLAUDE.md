@@ -1347,9 +1347,11 @@ PaintCore's `GlassLeadSuggestion` laid as the ground of `GlassWindow.Leading.sug
 blank window by Start From; the finger's lines laid one by one, ends joined as the Pen joins, the
 pieces a line closes flashing; Erase's tap takes lead away junction to junction, as Edit's Line
 Eraser does; lead that closes nothing stays as drawn, Paul's choice), `GlassGlaze`
-(glazing by number on the painting screen's own `CanvasView` in `GlassMode`, Canvas above: each
-piece numbered for its glass, the mode's own ink, the bead of that number pouring into it from
-the finger over the glass before it, pieces the lead covers whole glazed as the window opens
+(leading and glazing by number on the painting screen's own `CanvasView` in `GlassMode`, Canvas
+above: each piece cut, thinly outlined and numbered for its glass, the mode's own ink; a stroke
+from the leaded part round bare pieces and back frames them, `GlassFraming`, kept in
+`glazing.bin`; a tap in a framed piece pours the bead of its number from the finger over the
+glass before it, pieces the lead covers whole glazed as the window opens
 (`GlassGlazeModel.hidden`, so none is left unfindable), the sun passing once when
 it is whole, drawn by `glassFillFragment` and `glassLightFragment`: Liquid Glass misused as the
 window's glass, each piece a clear lens over the window's photo, its rim bending the photo and

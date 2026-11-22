@@ -106,6 +106,33 @@ struct GlassModeTests {
         #expect(cues.allSatisfy { $0.volume < 0.35 }, "a soft note")
     }
 
+    /// By hand and by number (Paul's interface, November 22, 2026): a piece takes glass only once
+    /// it is framed, and only its own number's; Undo takes back a pour, then a frame.
+    @Test func aPieceIsFramedBeforeItTakesItsOwnGlass() throws {
+        let t = Fixtures.mosaic
+        let context = try #require(RenderContext.shared)
+        let mode = try #require(GlassMode(template: t, texture: GlassTexture(template: t), offered: t.palette, photo: nil,
+                                          context: context))
+        let model = GlassGlazeModel(id: UUID(), template: t, glazing: Glazing(pieces: t.regions.count, offered: t.palette),
+                                    offered: t.palette, mode: mode)
+        let r = try #require(t.regions.indices.first { !model.hidden.contains($0) })
+        let own = Int(t.regions[r].colorIndex)
+        model.selected = own
+        #expect(!model.glaze(r, animated: false), "a bare piece takes no glass")
+        model.frame([r])
+        #expect(model.framedByHand == 1 && model.canUndo)
+        if t.palette.count > 1 {
+            model.selected = (own + 1) % t.palette.count
+            #expect(!model.glaze(r, animated: false), "another number's glass doesn't go in")
+        }
+        model.selected = own
+        #expect(model.glaze(r, animated: false) && model.glazedCount == 1)
+        model.undo()
+        #expect(model.glazedCount == 0 && model.framedByHand == 1, "Undo takes the glass back first")
+        model.undo()
+        #expect(model.framedByHand == 0 && !model.canUndo, "then the frame")
+    }
+
     /// A pour's region state carries both glasses: the one poured and the one under it.
     @Test func aPourCarriesTheGlassItReplaces() {
         let framed = Float(GlassMode.framedFlag)

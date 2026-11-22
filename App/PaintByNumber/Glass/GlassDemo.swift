@@ -11,6 +11,7 @@ import os
 /// - `glass-gallery`: three windows, one finished, one half glazed, one not begun.
 /// - `glass-lead`: the Lead screen with the demo's lines drawn on a blank start.
 /// - `glass-lead-suggested`: the Lead screen as it opens, the lead the photo suggests laid.
+/// - `glass-fresh`: a window as it opens: every piece numbered and waiting for its lead.
 /// - `glass-glaze`: a window with its larger pieces glazed in the glasses suggested.
 /// - `glass-finished`: the window glazed whole, the sun held halfway across it.
 /// - `glass-real-panes-<N>`: Apple's Liquid Glass as the glass, N panes (`GlassRealPanes`).
@@ -104,6 +105,8 @@ enum GlassDemo {
         var glazing = opened.glazing
         let t = opened.template
         let order = t.regions.indices.sorted { t.regions[$0].area > t.regions[$1].area }
+        // Framed a little ahead of the glass, as a painter leads a chunk and then pours it.
+        model.frame(Array(order.prefix(Int((Double(order.count) * min(1, share + 0.2)).rounded()))))
         for r in order.prefix(Int((Double(order.count) * share).rounded())) {
             glazing.glass[r] = Int16(t.regions[r].colorIndex)
         }
@@ -127,6 +130,8 @@ enum GlassDemo {
     private static func glaze(_ model: GlassGlazeModel, share: Double) {
         let t = model.template
         let order = t.regions.indices.sorted { t.regions[$0].area > t.regions[$1].area }
+        // Framed a little ahead of the glass, as a painter leads a chunk and then pours it.
+        model.frame(Array(order.prefix(Int((Double(order.count) * min(1, share + 0.2)).rounded()))))
         for r in order.prefix(Int((Double(order.count) * share).rounded())) {
             model.selected = Int(t.regions[r].colorIndex)
             model.glaze(r, animated: false)
@@ -134,7 +139,7 @@ enum GlassDemo {
     }
 
     static func shown(_ model: GlassGlazeModel) {
-        guard scenario == "glass-glaze" || scenario == "glass-finished" else { return }
+        guard ["glass-fresh", "glass-glaze", "glass-finished"].contains(scenario) else { return }
         Task {
             try? await Task.sleep(for: .seconds(1))
             DemoMode.markReady()

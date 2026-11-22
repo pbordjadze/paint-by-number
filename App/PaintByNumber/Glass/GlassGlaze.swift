@@ -210,7 +210,7 @@ final class GlassGlazeModel: CanvasTouches {
     }
 
     /// Frames `regions`, one step for Undo.
-    private func frame(_ regions: [Int]) {
+    func frame(_ regions: [Int]) {
         let new = regions.filter { $0 < pieces && !glazing.isFramed($0) }
         guard !new.isEmpty else { return }
         endStroke()
