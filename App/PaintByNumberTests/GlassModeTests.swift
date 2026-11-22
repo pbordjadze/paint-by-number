@@ -72,14 +72,70 @@ struct GlassModeTests {
         #expect(luma(unframed[edge.x, edge.y]) > luma(before[edge.x, edge.y]), "its lead is only a thin line")
     }
 
+    /// Past white (`ExtendedRange`): drawn into the extended range, a whole window's poured glass
+    /// glows brighter than white once the sun has passed, as far as the screen's headroom lets it;
+    /// with no headroom, or before the sun, nothing goes past white.
+    @Test func aWholeWindowGlowsPastWhite() throws {
+        let t = Fixtures.mosaic
+        let context = try #require(RenderContext.shared)
+        let scene = try #require(CanvasScene(template: t, context: context))
+        let photo = try #require(Self.greyPhoto(width: t.width, height: t.height, level: 0.8))
+        let mode = try #require(GlassMode(template: t, texture: GlassTexture(template: t), offered: t.palette, photo: photo,
+                                          context: context))
+        var states = [RegionState](repeating: .settled(painted: true), count: scene.regionCount)
+        for r in states.indices { states[r].mode = GlassMode.code(glass: Int(t.regions[r].colorIndex), replacing: nil) }
+        let w = t.width, h = t.height
+        let uniforms = CanvasSnapshot.uniforms(scene: scene, width: w, height: h, options: .painting)
+
+        func brightest(headroom: Float) throws -> Float {
+            let format = RenderContext.extendedFormat
+            let d = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: format, width: w, height: h, mipmapped: false)
+            d.usage = [.renderTarget, .shaderRead]
+            d.storageMode = .private
+            let color = try #require(context.device.makeTexture(descriptor: d))
+            let outlines = try #require(context.makeOutlineTarget(width: w, height: h))
+            let rowBytes = w * 8
+            let readBack = try #require(context.device.makeBuffer(length: rowBytes * h, options: .storageModeShared))
+            let buffer = try #require(context.device.makeBuffer(
+                bytes: states, length: MemoryLayout<RegionState>.stride * states.count, options: .storageModeShared))
+            let commands = try #require(context.queue.makeCommandBuffer())
+            context.encode(
+                commands, scene: scene, states: buffer, uniforms: uniforms,
+                targets: RenderContext.Targets(
+                    color: color, multisample: context.makeMultisampleTarget(width: w, height: h, format: format),
+                    outlines: outlines),
+                content: RenderContext.Content(mode: mode, headroom: headroom))
+            let blit = try #require(commands.makeBlitCommandEncoder())
+            blit.copy(from: color, sourceSlice: 0, sourceLevel: 0, sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
+                      sourceSize: MTLSize(width: w, height: h, depth: 1), to: readBack, destinationOffset: 0,
+                      destinationBytesPerRow: rowBytes, destinationBytesPerImage: rowBytes * h)
+            blit.endEncoding()
+            commands.commit()
+            commands.waitUntilCompleted()
+            let values = readBack.contents().bindMemory(to: Float16.self, capacity: w * h * 4)
+            var most: Float = 0
+            for i in 0..<(w * h) { most = max(most, Float(values[i * 4]), Float(values[i * 4 + 1]), Float(values[i * 4 + 2])) }
+            return most
+        }
+        // The hour's light over the glass adds a little past white, which only the glow outdoes.
+        mode.sun(at: 0, held: 1, passes: true, hour: 12)
+        let lit = try brightest(headroom: 3), plain = try brightest(headroom: 1)
+        #expect(lit > 1.5, "the lit glass goes past white")
+        #expect(plain < 1.25, "with no headroom nothing does")
+        mode.sun(at: 1_000_000, passes: true, hour: 12)
+        #expect(try brightest(headroom: 3) < 1.25, "nor before the sun has passed")
+        mode.sun(at: 0, held: 1, passes: true, hour: nil)
+        #expect(try brightest(headroom: 3) < 1.25, "nor in a window not whole")
+    }
+
     private static func chroma(_ p: PaletteColor) -> Float { (p.oklab.y * p.oklab.y + p.oklab.z * p.oklab.z).squareRoot() }
 
-    private static func greyPhoto(width: Int, height: Int) -> CGImage? {
+    private static func greyPhoto(width: Int, height: Int, level: CGFloat = 0.5) -> CGImage? {
         guard let space = CGColorSpace(name: CGColorSpace.displayP3),
               let ctx = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0, space: space,
                                   bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
         else { return nil }
-        ctx.setFillColor(CGColor(colorSpace: space, components: [0.5, 0.5, 0.5, 1]) ?? CGColor(gray: 0.5, alpha: 1))
+        ctx.setFillColor(CGColor(colorSpace: space, components: [level, level, level, 1]) ?? CGColor(gray: level, alpha: 1))
         ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
         return ctx.makeImage()
     }

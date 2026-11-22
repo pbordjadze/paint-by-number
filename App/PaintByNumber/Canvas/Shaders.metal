@@ -241,7 +241,15 @@ fragment float4 fillFragment(FillOut in [[stage_in]],
 // Must match `GlassMode.Parameters` (GlassMode.swift).
 struct GlassParameters {
     float4 lead;        // rgb: the lead (sRGB-curved), w: its width on average (canvas units)
-    float4 lens;        // x: the lens's rim (canvas units), y: how many glasses there are
+    float4 lens;        // x: the lens's rim (canvas units), y: how many glasses there are, z: how far past white lit glass may go (0: not at all)
+};
+
+// Must match `GlassMode.Light` (GlassMode.swift).
+struct GlassLight {
+    float4 sun;         // x: start (renderer clock), y: duration, z: where a demo holds it (0…1; < 0: none), w: 1 while it may pass
+    float4 day;         // rgb: the hour's light, added; w: how much it dims the window (night)
+    float4 dayFrom;     // x: when the hour's light starts to come (renderer clock), y: 1 while it shows
+    float4 glow;        // x: when the glow past white starts to come, over the sun's pass (renderer clock), y: 1 while the window is whole
 };
 
 // Smooth value noise, 0…1, on the integer lattice.
@@ -281,12 +289,15 @@ static float3 pouredGlass(float3 glass, float3 seen, float3 detail, float glow) 
 /// dimmed behind plain glass, a thin line round it where its lead will go. `states[r].mode` is the
 /// glass + 1, plus 1024 × (the glass it replaces + 1), plus 2^20 once framed. The
 /// fields texture is `GlassTexture.fields()` (lead distance, shade, depth, grain), the photo
-/// texture the window's photo at the template's size, mipmapped.
+/// texture the window's photo at the template's size, mipmapped. On a canvas drawing past white
+/// (`ExtendedRange`) a whole window's poured glass glows brighter than white as the sun passes
+/// (`lens.z`, `GlassLight.glow`), deepest inside each piece; everything else stays within white.
 fragment float4 glassFillFragment(FillOut in [[stage_in]],
                                   const device RegionState *states [[buffer(1)]],
                                   constant FrameUniforms &u [[buffer(2)]],
                                   const device float4 *glasses [[buffer(3)]],
                                   constant GlassParameters &g [[buffer(4)]],
+                                  constant GlassLight &l [[buffer(5)]],
                                   texture2d<float> fields [[texture(0)]],
                                   texture2d<float> photo [[texture(1)]]) {
     constexpr sampler linear(filter::linear, mip_filter::linear, address::clamp_to_edge);
@@ -346,16 +357,17 @@ fragment float4 glassFillFragment(FillOut in [[stage_in]],
     float across = saturate(d / halfWidth);
     float crown = (across - 0.38) / 0.22;
     float3 came = g.lead.rgb * (1.0 + 2.2 * exp(-crown * crown) - 0.35 * smoothstep(0.75, 1.0, across));
-    c = mix(c, came, 1.0 - smoothstep(halfWidth - aa, halfWidth + aa, d));
-    return float4(curveDecode(c), 1.0);
+    float leaded = 1.0 - smoothstep(halfWidth - aa, halfWidth + aa, d);
+    c = mix(c, came, leaded);
+    // White at most, as an 8-bit target holds it, so only the glow below goes past it.
+    float3 lin = curveDecode(saturate(c));
+    if (g.lens.z > 0.0 && l.glow.y > 0.5 && now > 0u) {
+        float k = smoothstep(l.glow.x, l.glow.x + max(l.sun.y, 1e-3), u.time.x);
+        lin *= 1.0 + g.lens.z * k * ps.coverage * (1.0 - leaded) * (0.4 + 0.6 * inner);
+    }
+    return float4(lin, 1.0);
 }
 
-// Must match `GlassMode.Light` (GlassMode.swift).
-struct GlassLight {
-    float4 sun;         // x: start (renderer clock), y: duration, z: where a demo holds it (0…1; < 0: none), w: 1 while it may pass
-    float4 day;         // rgb: the hour's light, added; w: how much it dims the window (night)
-    float4 dayFrom;     // x: when the hour's light starts to come (renderer clock), y: 1 while it shows
-};
 
 /// Light over a Stained Glass window, drawn on the sheet (canvasRectVertex, margin 0): light from
 /// behind, brightest a little above the middle; once the window is whole the sun passing behind
