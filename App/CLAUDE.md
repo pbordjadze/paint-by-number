@@ -1362,7 +1362,7 @@ builds, lights the eras' years (`EraYear.modes`) and draws a wheel resting besid
 with a rose window's light (`EraPassage.drawNave`); Paint by Mosaic's wheel reaches it too
 (`LeaveRavenna(for:)`). Demos: `glass-empty`, `glass-gallery`, `glass-lead`, `glass-lead-suggested`, `glass-glaze`,
 `glass-finished` (`GlassDemo`, on the mockup's monarch and lines, `GlassDemoLines`) and
-`era-passage-glass`; `EraDoorTests`, `SettingsTests.testTheClockOpensWatercolorAndStainedGlass`.
+`era-passage-glass`; `EraDoorTests`, `SettingsTests.testTheClockOpensWoodblockWatercolorAndStainedGlass`.
 
 ## Watercolor (1502)
 

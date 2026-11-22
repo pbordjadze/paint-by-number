@@ -87,7 +87,7 @@ struct EraDoorTests {
         #expect(EraClock.text(of: EraYear.byzantium) == "0547")
         #expect(EraClock.nearest(to: EraYear.present) == EraYear.present)
         #expect(EraClock.nearest(to: 547) == 547)
-        #expect(EraClock.nearest(to: 1750) == 1800, "a tie takes the later year")
+        #expect(EraClock.nearest(to: 1650) == 1700, "a tie takes the later year")
     }
 
     /// Stained Glass (painting-company row 366): 1248 opens it in SideStore and Debug builds, and
