@@ -1343,7 +1343,12 @@ exceptions: a year (opened from the wheel, left from its Settings' Year row, `Mo
 a gallery under the mode's name on its backdrop; Settings top left; New top right, with A Photo
 and The Library and nothing else (`ModeLibraryPicker`); one accent and the dark; the painting
 screen pushed on the gallery, its name inline, the same words while it opens or can't
-(`ModePaintingFrame`, `ModeOpening`). A mode supplies its `ModeLook`, its gallery's content (its
+(`ModePaintingFrame`, `ModeOpening`). Every mode also guarantees, inside the frame: it starts from the painter's
+picture and makes the painting from it; the picture is divided into numbered regions, each number
+one paint (how a region gets done is the medium's, never whether it is numbered); every painting
+can reach Finished by doing what the numbers say; and before it reaches a TestFlight or SideStore
+build, one painting is painted from a photo to Finished end to end, its frames attached to the
+branch's report (rules 7 to 10). A mode supplies its `ModeLook`, its gallery's content (its
 cards and its empty page, handed the ways in as `ModeWaysIn`), its painting screen and what a
 picked picture becomes (`make`, a `ModePicture`). Stained Glass and Watercolor are built on it; a
 new mode starts from it, and something every mode needs goes into the frame, not into one mode.

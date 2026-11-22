@@ -23,6 +23,21 @@ import os
 ///    name inline, and the same words while it opens or can't (`ModePaintingFrame`). Its canvas
 ///    and paints are the mode's.
 ///
+/// And what every mode guarantees inside the frame, since a frame around something that isn't
+/// paint by numbers is no use (Paul, November 21):
+///
+/// 7. **From the painter's picture.** Every painting starts from a picture (rule 4) and is made
+///    from it: the regions and their paints come from that picture.
+/// 8. **By numbers.** The picture is divided into numbered regions, each number one paint, shown
+///    on the canvas until the region is done. The medium decides how a region gets done (glass
+///    poured, a wash laid, a block printed), never whether it is numbered.
+/// 9. **Always finishable.** Every painting can reach Finished: a painter doing what the numbers
+///    say finishes it, no region can be left impossible, and Finished is the same moment in every
+///    mode (the painting whole, the gallery's card saying so).
+/// 10. **Played to the end before it ships.** A mode reaches a TestFlight or SideStore build only
+///    after one painting has been painted from a photo to Finished end to end on a device or
+///    simulator, its frames attached to the branch's report.
+///
 /// What a mode supplies: its `ModeLook`, its gallery, its painting screen, and what a picked
 /// picture becomes (`make`). Paint by Mosaic is a copy of the app, not a mode, and keeps its own.
 struct ModeShell<Gallery: View, Route: Hashable, Destination: View>: View {
