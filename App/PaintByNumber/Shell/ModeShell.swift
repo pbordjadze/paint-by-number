@@ -40,7 +40,8 @@ import os
 /// 11. **A Making Of shows the process, never the reveal** (Paul, November 22). A mode's Making Of
 ///    shows off its medium and how fully its simulation works (the water, the lead, the press),
 ///    never the finished painting of the painter's own picture: that is the joy the painter
-///    uncovers along the way.
+///    uncovers along the way. Paint by Moonlight's own Making Of and Paint by Mosaic's are
+///    settled and keep what they show.
 ///
 /// What a mode supplies: its `ModeLook`, its gallery, its painting screen, and what a picked
 /// picture becomes (`make`).
