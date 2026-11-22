@@ -11,35 +11,46 @@
 //   POST /v1/print/orders          multipart/form-data, at most 25 MB: `sheet`, the one-page PDF
 //                                  (checked by `%PDF-`), and `order`, JSON {"product", "recipient":
 //                                  {"name", "email", "line1", "line2"?, "city", "state"?, "zip",
-//                                  "country"}}. The sheet is kept for Prodigi to fetch (below), then
-//                                  the order placed. 201 {"ok": true, "order": "<Prodigi's id>",
-//                                  "sandbox": true|false}.
+//                                  "country"}[, "price", "currency", "payment": {"data", "network",
+//                                  "transactionId", "instrument"}]}. With STRIPE_SECRET_KEY set the
+//                                  order is paid first: the price is quoted again and must be the
+//                                  one the painter agreed to (409 if it moved), and the Apple Pay
+//                                  payment (PKPaymentToken's paymentData, base64) is charged through
+//                                  Stripe (402 declined or missing). Then the sheet is kept for
+//                                  Prodigi to fetch (below) and the order placed; a payment whose
+//                                  order fails is refunded. 201 {"ok": true, "order": "<Prodigi's
+//                                  id>", "sandbox": true|false, "paid": true|false}.
 //   GET  /v1/print/sheets/<id>/<token>.pdf
 //                                  the kept sheet, for Prodigi's printer: 404 for anything else.
 //
 // Failures are a bare status (the log has the detail): 400 a malformed body or an unknown product,
 // 404 another path, 405 another method, 411 no Content-Length, 413 too large, 415 not JSON or
 // multipart, or a sheet that is no PDF, 429 over the rate limit (PRINT_LIMITER), 500 misconfigured,
-// 502 Prodigi refused, 503 live printing, which this relay doesn't do (below).
+// 502 Prodigi or Stripe refused, 503 live printing or charging, which this relay doesn't do (below).
 //
 // Only the sandbox. PRODIGI_API must be Prodigi's sandbox (https://api.sandbox.prodigi.com/v4.0),
-// which prints nothing and charges nothing: the relay takes no payment yet, so an order against the
-// live API would be printed at Paul's cost for anyone who asked. Going live means a payment checked
-// here before the order (Apple Pay through Stripe), and Paul's word.
+// which prints nothing and charges nothing, and STRIPE_SECRET_KEY, when set, Stripe's test mode
+// (sk_test_), so no real card is charged for a print that never comes. Going live is Paul's word,
+// with both keys live and payment required (no order without STRIPE_SECRET_KEY).
 //
 // Privacy: the photo never comes here, only the printed sheet (lines, numbers, the key) and the
 // address it goes to. The sheet lives in its own Durable Object (PrintSheet, SQLite-backed, named by
 // a random id) under a random token, and deletes itself SHEET_DAYS after it was kept, by an alarm;
 // the address goes to Prodigi and is kept nowhere here.
 //
-// Secret PRODIGI_API_KEY (Prodigi's dashboard › Settings › API; the sandbox key). Variables
+// The print service is one object (`prodigi` below; PRINT_PROVIDER names another), so it can be
+// replaced without touching the rest. Secrets PRODIGI_API_KEY (Prodigi's dashboard › Settings › API; the sandbox key) and, optional,
+// STRIPE_SECRET_KEY (Stripe's dashboard › Developers › API keys; the test key). Variables
 // PRODIGI_API and MARKUP (wrangler.toml).
+
+import { Buffer } from "node:buffer";
 
 const PREFIX = "/v1/print/";
 const QUOTES = "/v1/print/quotes";
 const ORDERS = "/v1/print/orders";
 const SHEETS = "/v1/print/sheets/";
 const SANDBOX = "https://api.sandbox.prodigi.com/v4.0";
+const STRIPE = "https://api.stripe.com/v1";
 const MAX_QUOTE = 1024;
 const MAX_ORDER = 25 * 1024 * 1024;
 const MAX_FIELD = 200;
@@ -50,16 +61,84 @@ const PDF = [0x25, 0x50, 0x44, 0x46, 0x2d];
 const HEX = /^[0-9a-f]{32}$/;
 const COUNTRY = /^[A-Z]{2}$/;
 
+// MARK: The print service
+
 /**
- * What One Big Sheet offers, by the id the app sends, and the Prodigi SKU that prints it: Enhanced
- * Matte Art Paper, 200 gsm, which takes markers, gouache and a light coat of acrylic. A SKU here is
- * checked against Prodigi's product lookup before it is offered (GLOBAL-FAP-18x24 is named in
- * Prodigi's FAQ).
+ * A print service is one object (PRINT_PROVIDER picks it, Prodigi by default), so another (Gelato,
+ * say) is a second object of the same shape and nothing else here changes:
+ *   products              the app's product ids → the service's own product codes
+ *   configured(env)       whether its secrets and settings are there
+ *   isSandbox(env)        whether it is talking to its test system, which prints nothing
+ *   cost(env, deps, code, country)   → {cost, currency}: one sheet sent there, shipping included
+ *   place(env, deps, {reference, code, recipient, sheetUrl})   → the service's order id
  */
-export const PRODUCTS = {
-  "paper-18x24": "GLOBAL-FAP-18x24",
-  "paper-24x36": "GLOBAL-FAP-24x36",
+export const prodigi = {
+  name: "Prodigi",
+  // Enhanced Matte Art Paper, 200 gsm, which takes markers, gouache and a light coat of acrylic.
+  // A code here is checked against Prodigi's product lookup before it is offered
+  // (GLOBAL-FAP-18x24 is named in Prodigi's FAQ).
+  products: {
+    "paper-18x24": "GLOBAL-FAP-18x24",
+    "paper-24x36": "GLOBAL-FAP-24x36",
+  },
+
+  configured: (env) => Boolean(env.PRODIGI_API_KEY && env.PRODIGI_API),
+
+  isSandbox: (env) => env.PRODIGI_API === SANDBOX,
+
+  async cost(env, deps, code, country) {
+    const answer = await prodigiCall(env, deps, "POST", "/quotes", {
+      shippingMethod: SHIPPING,
+      destinationCountryCode: country,
+      items: [{ sku: code, copies: 1, attributes: {}, assets: [{ printArea: "default" }] }],
+    });
+    const chosen = (answer.quotes ?? []).find((q) => q.shipmentMethod === SHIPPING) ?? answer.quotes?.[0];
+    const total = chosen?.costSummary?.totalCost;
+    const cost = Number(total?.amount);
+    if (!chosen || !Number.isFinite(cost) || cost <= 0 || typeof total?.currency !== "string") {
+      throw new Error("Prodigi's quote had no total");
+    }
+    return { cost, currency: total.currency };
+  },
+
+  async place(env, deps, { reference, code, recipient, sheetUrl }) {
+    const placed = await prodigiCall(env, deps, "POST", "/orders", {
+      merchantReference: reference,
+      shippingMethod: SHIPPING,
+      recipient: {
+        name: recipient.name,
+        email: recipient.email,
+        address: {
+          line1: recipient.line1,
+          line2: recipient.line2,
+          postalOrZipCode: recipient.zip,
+          countryCode: recipient.country,
+          townOrCity: recipient.city,
+          stateOrCounty: recipient.state,
+        },
+      },
+      items: [{
+        merchantReference: "sheet",
+        sku: code,
+        copies: 1,
+        sizing: "fitPrintArea",
+        assets: [{ printArea: "default", url: sheetUrl }],
+      }],
+    });
+    const id = placed?.order?.id;
+    if (typeof id !== "string") throw Object.assign(new Error("Prodigi's answer had no order id"), { uncertain: true });
+    return id;
+  },
 };
+
+const PROVIDERS = { prodigi };
+
+function providerOf(env) {
+  return PROVIDERS[env.PRINT_PROVIDER ?? "prodigi"] ?? null;
+}
+
+/** The products the default service offers (the tests'). */
+export const PRODUCTS = prodigi.products;
 
 export function routesPrint(pathname) {
   return pathname.startsWith(PREFIX);
@@ -73,21 +152,22 @@ export async function handlePrint(request, env, deps = {}) {
   }
   if (url.pathname !== QUOTES && url.pathname !== ORDERS) return bare(404);
   if (request.method !== "POST") return bare(405, { allow: "POST" });
-  if (!env.PRODIGI_API_KEY || !env.PRODIGI_API || !env.PRINT_SHEETS) {
-    log("PRODIGI_API_KEY, PRODIGI_API or PRINT_SHEETS is missing");
+  const provider = providerOf(env);
+  if (!provider || !provider.configured(env) || !env.PRINT_SHEETS) {
+    log("The print service, its secrets or PRINT_SHEETS are missing");
     return bare(500);
   }
-  if (env.PRODIGI_API !== SANDBOX) {
-    log("PRODIGI_API is not the sandbox: live printing needs a payment checked first");
+  if (!provider.isSandbox(env)) {
+    log(`${provider.name} is not its sandbox: live printing waits for Paul's word`);
     return bare(503);
   }
   if (!(await allowed(env.PRINT_LIMITER, request.headers.get("cf-connecting-ip") ?? "unknown"))) return bare(429);
-  return url.pathname === QUOTES ? quote(request, env, deps) : order(request, env, deps);
+  return url.pathname === QUOTES ? quote(request, env, deps, provider) : order(request, env, deps, provider);
 }
 
 // MARK: Quotes
 
-async function quote(request, env, deps) {
+async function quote(request, env, deps, provider) {
   if (!/^application\/json\b/i.test(request.headers.get("content-type") ?? "")) return bare(415);
   const length = request.headers.get("content-length");
   if (length !== null && Number(length) > MAX_QUOTE) return bare(413);
@@ -99,32 +179,27 @@ async function quote(request, env, deps) {
   } catch {
     return bare(400);
   }
-  const sku = PRODUCTS[body?.product];
-  if (typeof body?.product !== "string" || !sku || typeof body?.country !== "string" || !COUNTRY.test(body.country)) {
+  const code = provider.products[body?.product];
+  if (typeof body?.product !== "string" || !code || typeof body?.country !== "string" || !COUNTRY.test(body.country)) {
     return bare(400);
   }
-  let answer;
+  let priced;
   try {
-    answer = await prodigi(env, deps, "POST", "/quotes", {
-      shippingMethod: SHIPPING,
-      destinationCountryCode: body.country,
-      items: [{ sku, copies: 1, attributes: {}, assets: [{ printArea: "default" }] }],
-    });
+    priced = await priceOf(env, deps, provider, code, body.country);
   } catch (error) {
     log("Quoting failed", error);
     return bare(502);
   }
-  const chosen = (answer.quotes ?? []).find((q) => q.shipmentMethod === SHIPPING) ?? answer.quotes?.[0];
-  const total = chosen?.costSummary?.totalCost;
-  const cost = Number(total?.amount);
-  if (!chosen || !Number.isFinite(cost) || cost <= 0 || typeof total?.currency !== "string") {
-    log("Prodigi's quote had no total");
-    return bare(502);
-  }
-  const price = priceFor(cost, env.MARKUP);
-  const result = { product: body.product, currency: total.currency, price: money(price) };
-  result.sandbox = { cost: money(cost), cut: money(price - cost) };
-  return json(200, result);
+  return json(200, {
+    product: body.product, currency: priced.currency, price: money(priced.price),
+    sandbox: { cost: money(priced.cost), cut: money(priced.price - priced.cost) },
+  });
+}
+
+/** The service's cost of one sheet sent to `country`, shipping included, and the painter's price. */
+async function priceOf(env, deps, provider, code, country) {
+  const { cost, currency } = await provider.cost(env, deps, code, country);
+  return { cost, currency, price: priceFor(cost, env.MARKUP) };
 }
 
 /** What the painter pays for `cost`: the markup laid on, rounded up to a whole unit. */
@@ -140,7 +215,7 @@ function money(value) {
 
 // MARK: Orders
 
-async function order(request, env, deps) {
+async function order(request, env, deps, provider) {
   const length = request.headers.get("content-length");
   if (length === null || !/^\d+$/.test(length)) return bare(411);
   if (Number(length) > MAX_ORDER) return bare(413);
@@ -162,11 +237,36 @@ async function order(request, env, deps) {
   } catch {
     return bare(400);
   }
-  const sku = PRODUCTS[body?.product];
+  const code = provider.products[body?.product];
   const recipient = cleanRecipient(body?.recipient);
-  if (typeof body?.product !== "string" || !sku || !recipient) return bare(400);
+  if (typeof body?.product !== "string" || !code || !recipient) return bare(400);
 
   const id = (deps.randomHex ?? randomHex)(), token = (deps.randomHex ?? randomHex)();
+  let charge = null;
+  if (env.STRIPE_SECRET_KEY) {
+    // Prodigi's sandbox prints nothing: a live card is never charged for it.
+    if (!env.STRIPE_SECRET_KEY.startsWith("sk_test_")) {
+      log(`STRIPE_SECRET_KEY is live while ${provider.name} is its sandbox`);
+      return bare(503);
+    }
+    const payment = cleanPayment(body?.payment);
+    if (!payment) return bare(402);
+    let priced;
+    try {
+      priced = await priceOf(env, deps, provider, code, recipient.country);
+    } catch (error) {
+      log("Pricing the order failed", error);
+      return bare(502);
+    }
+    // The painter agreed to the price on screen: a price that moved since is asked again.
+    if (money(priced.price) !== body.price || priced.currency !== body.currency) return bare(409);
+    try {
+      charge = await chargeApplePay(env, deps, payment, priced, id);
+    } catch (error) {
+      log("Charging the order failed", error);
+      return bare(error?.declined ? 402 : 502);
+    }
+  }
   const kept = await sheetStub(env, id).fetch("https://sheet/keep", {
     method: "POST",
     headers: { "x-token": token, "x-days": String(SHEET_DAYS) },
@@ -174,45 +274,27 @@ async function order(request, env, deps) {
   });
   if (!kept.ok) {
     log(`Keeping the sheet failed: HTTP ${kept.status}`);
+    await refund(env, deps, charge);
     return bare(502);
   }
   const origin = new URL(request.url).origin;
-  let placed;
+  let orderId;
   try {
-    placed = await prodigi(env, deps, "POST", "/orders", {
-      merchantReference: `sheet-${id.slice(0, 12)}`,
-      shippingMethod: SHIPPING,
-      recipient: {
-        name: recipient.name,
-        email: recipient.email,
-        address: {
-          line1: recipient.line1,
-          line2: recipient.line2,
-          postalOrZipCode: recipient.zip,
-          countryCode: recipient.country,
-          townOrCity: recipient.city,
-          stateOrCounty: recipient.state,
-        },
-      },
-      items: [{
-        merchantReference: "sheet",
-        sku,
-        copies: 1,
-        sizing: "fitPrintArea",
-        assets: [{ printArea: "default", url: `${origin}${SHEETS}${id}/${token}.pdf` }],
-      }],
+    orderId = await provider.place(env, deps, {
+      reference: `sheet-${id.slice(0, 12)}`, code, recipient, sheetUrl: `${origin}${SHEETS}${id}/${token}.pdf`,
     });
   } catch (error) {
+    if (error?.uncertain) {
+      // The service may have taken it: the sheet and the payment stay, the log has them for a look by hand.
+      log(`${provider.name} may hold sheet ${id} (payment ${charge ?? "none"})`, error);
+      return bare(502);
+    }
     log("Placing the order failed", error);
     await sheetStub(env, id).fetch("https://sheet/drop", { method: "POST" }).catch(() => {});
+    await refund(env, deps, charge);
     return bare(502);
   }
-  const orderId = placed?.order?.id;
-  if (typeof orderId !== "string") {
-    log("Prodigi's answer had no order id");
-    return bare(502);
-  }
-  return json(201, { ok: true, order: orderId, sandbox: env.PRODIGI_API === SANDBOX });
+  return json(201, { ok: true, order: orderId, sandbox: provider.isSandbox(env), paid: charge !== null });
 }
 
 /** The recipient with every field a trimmed string of sensible length, or null. */
@@ -233,6 +315,94 @@ export function cleanRecipient(value) {
   if (Object.values(cleaned).some((v) => v === null)) return null;
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(cleaned.email) || !COUNTRY.test(cleaned.country)) return null;
   return cleaned;
+}
+
+// MARK: Payment
+
+/**
+ * The Apple Pay payment the app hands on: PKPaymentToken's paymentData (base64), its network,
+ * transaction id and the card's display name, or null.
+ */
+export function cleanPayment(value) {
+  if (!value || typeof value !== "object") return null;
+  const { data, network, transactionId, instrument } = value;
+  if (typeof data !== "string" || data.length === 0 || data.length > 16384 || !/^[A-Za-z0-9+/=]+$/.test(data)) return null;
+  for (const field of [network, transactionId, instrument]) {
+    if (field !== undefined && (typeof field !== "string" || field.length > 200)) return null;
+  }
+  return { data, network: network ?? "", transactionId: transactionId ?? "", instrument: instrument ?? "" };
+}
+
+// Currencies Stripe counts in whole units.
+const ZERO_DECIMAL = new Set(["JPY", "KRW"]);
+
+/** Stripe's amount for `price` in `currency`: cents, or whole units where it counts so. */
+export function minorUnits(price, currency) {
+  return ZERO_DECIMAL.has(currency.toUpperCase()) ? Math.round(price) : Math.round(price * 100);
+}
+
+/**
+ * Charges the price through Stripe: the Apple Pay token made a Stripe token (as Stripe's iOS SDK
+ * does, `pk_token`), then a PaymentIntent confirmed at once. Returns its id once it succeeded;
+ * a declined card throws with `declined`.
+ */
+async function chargeApplePay(env, deps, payment, priced, id) {
+  const pkToken = Buffer.from(payment.data, "base64").toString("utf8");
+  const token = await stripe(env, deps, "/tokens", {
+    pk_token: pkToken,
+    pk_token_instrument_name: payment.instrument,
+    pk_token_payment_network: payment.network,
+    pk_token_transaction_id: payment.transactionId,
+  });
+  if (typeof token?.id !== "string") throw new Error("Stripe made no token");
+  const intent = await stripe(env, deps, "/payment_intents", {
+    amount: String(minorUnits(priced.price, priced.currency)),
+    currency: priced.currency.toLowerCase(),
+    confirm: "true",
+    "payment_method_types[]": "card",
+    "payment_method_data[type]": "card",
+    "payment_method_data[card][token]": token.id,
+    description: "One Big Sheet",
+    "metadata[sheet]": id,
+  });
+  if (intent?.status !== "succeeded" || typeof intent?.id !== "string") {
+    const error = new Error(`Stripe's payment is ${intent?.status ?? "missing"}`);
+    error.declined = true;
+    throw error;
+  }
+  return intent.id;
+}
+
+/** Gives a payment back (an order that couldn't be placed after it); logs what it can't. */
+async function refund(env, deps, charge) {
+  if (!charge) return;
+  try {
+    await stripe(env, deps, "/refunds", { payment_intent: charge });
+  } catch (error) {
+    log(`Refunding ${charge} failed`, error);
+  }
+}
+
+async function stripe(env, deps, path, fields) {
+  const fetcher = deps.fetch ?? fetch;
+  const response = await fetcher(`${STRIPE}${path}`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${env.STRIPE_SECRET_KEY}`, "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams(fields).toString(),
+  });
+  const text = await response.text();
+  let answer;
+  try {
+    answer = JSON.parse(text);
+  } catch {
+    throw new Error(`Stripe ${path}: HTTP ${response.status}, not JSON`);
+  }
+  if (!response.ok) {
+    const error = new Error(`Stripe ${path}: HTTP ${response.status} ${answer?.error?.code ?? ""}`);
+    error.declined = answer?.error?.type === "card_error";
+    throw error;
+  }
+  return answer;
 }
 
 // MARK: Sheets
@@ -298,9 +468,9 @@ export class PrintSheet {
   }
 }
 
-// MARK: Prodigi
+// MARK: Prodigi's API
 
-async function prodigi(env, deps, method, path, body) {
+async function prodigiCall(env, deps, method, path, body) {
   const fetcher = deps.fetch ?? fetch;
   const response = await fetcher(`${env.PRODIGI_API}${path}`, {
     method,

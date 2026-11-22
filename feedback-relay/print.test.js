@@ -2,15 +2,17 @@
 // Durable Object. `node --test feedback-relay/print.test.js`; CI's `core` job runs it.
 
 import assert from "node:assert/strict";
+import { Buffer } from "node:buffer";
 import { webcrypto } from "node:crypto";
 import { test } from "node:test";
 
-import { cleanRecipient, handlePrint, priceFor, PrintSheet, PRODUCTS } from "./print.js";
+import { cleanPayment, cleanRecipient, handlePrint, minorUnits, priceFor, PrintSheet, PRODUCTS } from "./print.js";
 import { handle } from "./worker.js";
 
 globalThis.crypto ??= webcrypto;
 
 const SANDBOX = "https://api.sandbox.prodigi.com/v4.0";
+const STRIPE = "https://api.stripe.com/v1";
 const KEY = "prodigi-sandbox-SECRET";
 const ID = "0123456789abcdef0123456789abcdef";
 const TOKEN = "fedcba9876543210fedcba9876543210";
@@ -47,12 +49,13 @@ function sheetsNamespace() {
   };
 }
 
-/** A fetch standing in for Prodigi: records each call and answers from `routes`. */
+/** A fetch standing in for Prodigi (and Stripe): records each call and answers from `routes`. */
 function prodigi(routes) {
   const calls = [];
   const fetcher = async (url, init) => {
-    calls.push({ url, init, body: init?.body ? JSON.parse(init.body) : undefined });
-    const path = url.slice(SANDBOX.length);
+    const stripe = url.startsWith(STRIPE);
+    calls.push({ url, init, body: init?.body ? (stripe ? Object.fromEntries(new URLSearchParams(init.body)) : JSON.parse(init.body)) : undefined });
+    const path = stripe ? `stripe:${url.slice(STRIPE.length)}` : url.slice(SANDBOX.length);
     const answer = routes[path];
     if (!answer) return new Response("not found", { status: 404 });
     return typeof answer === "function" ? answer() : new Response(JSON.stringify(answer), { status: 200 });
@@ -173,7 +176,7 @@ test("an order keeps the sheet for the printer, places the order with its URL, a
   const e = env();
   const answer = await handlePrint(await orderRequest(), e, { fetch: fetcher, randomHex: () => ids.shift() });
   assert.equal(answer.status, 201);
-  assert.deepEqual(await answer.json(), { ok: true, order: "ord_123456", sandbox: true });
+  assert.deepEqual(await answer.json(), { ok: true, order: "ord_123456", sandbox: true, paid: false });
 
   const sent = calls[0].body;
   assert.equal(calls[0].url, `${SANDBOX}/orders`);
@@ -261,4 +264,80 @@ test("other paths and methods", async () => {
   assert.equal((await handle(new Request("https://relay.example/v1/print/other", { method: "POST" }), env())).status, 404);
   assert.equal((await handle(new Request("https://relay.example/v1/print/quotes"), env())).status, 405);
   assert.equal((await handle(new Request(`https://relay.example/v1/print/sheets/${ID}/${TOKEN}.pdf`, { method: "POST" }), env())).status, 405);
+});
+
+// MARK: Payment
+
+const PAYMENT = {
+  data: Buffer.from('{"version":"EC_v1","data":"…"}').toString("base64"),
+  network: "Visa", transactionId: "abc123", instrument: "Visa 4242",
+};
+const PAID_ORDER = { product: "paper-18x24", recipient: RECIPIENT, price: "33.00", currency: "USD", payment: PAYMENT };
+const STRIPE_ENV = { STRIPE_SECRET_KEY: "sk_test_SECRET" };
+
+test("with Stripe, an order is charged the agreed price through Apple Pay before it is placed", async () => {
+  const ids = [ID, TOKEN];
+  const { calls, fetcher } = prodigi({
+    "/quotes": QUOTE, "/orders": PLACED,
+    "stripe:/tokens": { id: "tok_1" }, "stripe:/payment_intents": { id: "pi_1", status: "succeeded" },
+  });
+  const answer = await handlePrint(await orderRequest({ order: PAID_ORDER }), env(STRIPE_ENV), { fetch: fetcher, randomHex: () => ids.shift() });
+  assert.equal(answer.status, 201);
+  assert.deepEqual(await answer.json(), { ok: true, order: "ord_123456", sandbox: true, paid: true });
+  assert.deepEqual(calls.map((c) => c.url), [`${SANDBOX}/quotes`, `${STRIPE}/tokens`, `${STRIPE}/payment_intents`, `${SANDBOX}/orders`]);
+  assert.equal(calls[1].init.headers.authorization, "Bearer sk_test_SECRET");
+  assert.equal(calls[1].body.pk_token, '{"version":"EC_v1","data":"…"}');
+  assert.equal(calls[1].body.pk_token_payment_network, "Visa");
+  assert.equal(calls[2].body.amount, "3300");
+  assert.equal(calls[2].body.currency, "usd");
+  assert.equal(calls[2].body["payment_method_data[card][token]"], "tok_1");
+  assert.equal(calls[2].body.confirm, "true");
+});
+
+test("with Stripe, an order without a payment, or at a price that moved, is not placed", async () => {
+  const { calls, fetcher } = prodigi({ "/quotes": QUOTE, "/orders": PLACED });
+  const unpaid = await handlePrint(await orderRequest(), env(STRIPE_ENV), { fetch: fetcher });
+  assert.equal(unpaid.status, 402);
+  const moved = await handlePrint(await orderRequest({ order: { ...PAID_ORDER, price: "30.00" } }), env(STRIPE_ENV), { fetch: fetcher });
+  assert.equal(moved.status, 409);
+  assert.ok(!calls.some((c) => c.url.endsWith("/orders") || c.url.startsWith(STRIPE)));
+});
+
+test("a declined card is a 402 and places nothing", async () => {
+  const { calls, fetcher } = prodigi({
+    "/quotes": QUOTE, "/orders": PLACED, "stripe:/tokens": { id: "tok_1" },
+    "stripe:/payment_intents": () => new Response('{"error":{"type":"card_error","code":"card_declined"}}', { status: 402 }),
+  });
+  const answer = await handlePrint(await orderRequest({ order: PAID_ORDER }), env(STRIPE_ENV), { fetch: fetcher });
+  assert.equal(answer.status, 402);
+  assert.ok(!calls.some((c) => c.url === `${SANDBOX}/orders`));
+});
+
+test("a paid order Prodigi refuses is refunded", async () => {
+  const ids = [ID, TOKEN];
+  const { calls, fetcher } = prodigi({
+    "/quotes": QUOTE, "/orders": () => new Response("{}", { status: 500 }),
+    "stripe:/tokens": { id: "tok_1" }, "stripe:/payment_intents": { id: "pi_1", status: "succeeded" }, "stripe:/refunds": { id: "re_1" },
+  });
+  const answer = await handlePrint(await orderRequest({ order: PAID_ORDER }), env(STRIPE_ENV), { fetch: fetcher, randomHex: () => ids.shift() });
+  assert.equal(answer.status, 502);
+  const refund = calls.find((c) => c.url === `${STRIPE}/refunds`);
+  assert.equal(refund?.body.payment_intent, "pi_1");
+});
+
+test("a live Stripe key is never used against the sandbox printer", async () => {
+  const { calls, fetcher } = prodigi({ "/quotes": QUOTE, "/orders": PLACED });
+  const answer = await handlePrint(await orderRequest({ order: PAID_ORDER }), env({ STRIPE_SECRET_KEY: "sk_live_REAL" }), { fetch: fetcher });
+  assert.equal(answer.status, 503);
+  assert.equal(calls.length, 0);
+});
+
+test("payments and amounts are checked", () => {
+  assert.equal(cleanPayment({ ...PAYMENT, data: "not base64!" }), null);
+  assert.equal(cleanPayment({ ...PAYMENT, network: 4 }), null);
+  assert.equal(cleanPayment(null), null);
+  assert.deepEqual(cleanPayment({ data: "QQ==" }), { data: "QQ==", network: "", transactionId: "", instrument: "" });
+  assert.equal(minorUnits(33, "USD"), 3300);
+  assert.equal(minorUnits(33.1, "eur"), 3310);
+  assert.equal(minorUnits(4200, "JPY"), 4200);
 });

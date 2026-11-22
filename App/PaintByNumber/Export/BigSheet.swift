@@ -3,6 +3,7 @@ import CoreGraphics
 import Foundation
 import os
 import PaintCore
+import PassKit
 import SwiftUI
 import UIKit
 
@@ -12,8 +13,10 @@ import UIKit
 // the sheet and places the order; for now it talks to Prodigi's sandbox alone, which prints and
 // charges nothing, so every order here is a test order and the screen says so.
 //
-// What leaves the device, and only on Place Test Order: the one-page PDF of the template (its
-// lines, numbers, hints and key as the Layers menu chose them, never the photo) and the address.
+// What leaves the device, and only when the painter orders: the one-page PDF of the template (its
+// lines, numbers, hints and key as the Layers menu chose them, never the photo) and the address,
+// with an Apple Pay payment once the app has its merchant id (`BigSheetApplePay`). Until then
+// the screen takes the address itself and places a test order, unpaid.
 
 /// What One Big Sheet prints on: the sizes Prodigi's Enhanced Matte Art Paper comes in that make
 /// a sheet worth sending for, by the id the relay knows them by (`PRODUCTS` in print.js).
@@ -94,10 +97,11 @@ nonisolated enum BigSheetCountries {
 nonisolated struct BigSheetService: Sendable {
     let name: String
     let quote: @Sendable (BigSheetProduct, String) async throws -> BigSheetQuote
-    let order: @Sendable (Data, BigSheetProduct, BigSheetRecipient) async throws -> String
+    let order: @Sendable (Data, BigSheetProduct, BigSheetRecipient, BigSheetPayment?) async throws -> String
 
     nonisolated enum ServiceError: Error, Equatable {
-        /// The relay answered with this status instead of 2xx.
+        /// The relay answered with this status instead of 2xx: 402 a payment declined or missing,
+        /// 409 a price that moved since it was shown.
         case refused(Int)
         case notHTTP
         case malformed
@@ -122,20 +126,21 @@ nonisolated struct BigSheetService: Sendable {
                 guard let quote = try? JSONDecoder().decode(BigSheetQuote.self, from: data) else { throw ServiceError.malformed }
                 return quote
             },
-            order: { sheet, product, recipient in
+            order: { sheet, product, recipient, payment in
                 let boundary = FeedbackUploader.makeBoundary()
-                let body = orderBody(sheet: sheet, product: product, recipient: recipient, boundary: boundary)
+                let body = orderBody(sheet: sheet, product: product, recipient: recipient, payment: payment, boundary: boundary)
                 var request = FeedbackUploader.request(to: endpoint("/v1/print/orders"), app: AppInfo().summary, boundary: boundary)
                 request.timeoutInterval = 120
                 let (data, response) = try await session.upload(for: request, from: body)
-                try FeedbackUploader.check(response)
+                guard let http = response as? HTTPURLResponse else { throw ServiceError.notHTTP }
+                guard (200..<300).contains(http.statusCode) else { throw ServiceError.refused(http.statusCode) }
                 return try placedOrder(data)
             })
     }
 
     /// The order's form: the sheet's PDF and the order as JSON (print.js's `order` part).
-    static func orderBody(sheet: Data, product: BigSheetProduct, recipient: BigSheetRecipient, boundary: String) -> Data {
-        let order = Order(product: product.rawValue, recipient: recipient)
+    static func orderBody(sheet: Data, product: BigSheetProduct, recipient: BigSheetRecipient, payment: BigSheetPayment? = nil, boundary: String) -> Data {
+        let order = Order(product: product.rawValue, recipient: recipient, price: payment?.price, currency: payment?.currency, payment: payment?.token)
         let json = (try? JSONEncoder().encode(order)) ?? Data()
         return FeedbackUploader.body(of: [
             .init(name: "sheet", filename: "sheet.pdf", contentType: "application/pdf", data: sheet),
@@ -153,6 +158,9 @@ nonisolated struct BigSheetService: Sendable {
     private struct Order: Encodable {
         var product: String
         var recipient: BigSheetRecipient
+        var price: String?
+        var currency: String?
+        var payment: BigSheetPayment.Token?
     }
 }
 
@@ -182,13 +190,105 @@ nonisolated enum BigSheetServiceStub {
                     ? BigSheetQuote(product: product.rawValue, currency: "USD", price: "33.00", sandbox: .init(cost: "23.29", cut: "9.71"))
                     : BigSheetQuote(product: product.rawValue, currency: "USD", price: "49.00", sandbox: .init(cost: "34.80", cut: "14.20"))
             },
-            order: { _, _, _ in
+            order: { _, _, _, _ in
                 if failing { throw BigSheetService.ServiceError.refused(502) }
                 return "ord_828417"
             })
     }
 }
 #endif
+
+/// An Apple Pay payment for the relay to charge (print.js's `payment`): the price the painter
+/// agreed to, as the relay quoted it, and the token's data.
+nonisolated struct BigSheetPayment: Sendable, Equatable {
+    var price: String
+    var currency: String
+    var token: Token
+
+    nonisolated struct Token: Encodable, Sendable, Equatable {
+        /// PKPaymentToken's paymentData, base64.
+        var data: String
+        var network: String
+        var transactionId: String
+        var instrument: String
+    }
+}
+
+/// Apple Pay for One Big Sheet: the system's sheet with the price, which also asks where the sheet
+/// goes (name, address, email), so the screen needs no form of its own. Physical goods are paid
+/// for outside in-app purchase (App Review Guideline 3.1.3(e)); the relay charges the token
+/// through Stripe.
+@MainActor
+final class BigSheetApplePay: NSObject, @preconcurrency PKPaymentAuthorizationControllerDelegate {
+    /// The merchant id registered for the app (Certificates, Identifiers & Profiles › Merchant IDs)
+    /// and in its entitlements, with Stripe's certificate. Nil until it is: then One Big Sheet
+    /// takes the address on screen and places test orders unpaid.
+    static let merchant: String? = nil
+
+    static let networks: [PKPaymentNetwork] = [.visa, .masterCard, .amex, .discover]
+
+    static var isAvailable: Bool {
+        merchant != nil && PKPaymentAuthorizationController.canMakePayments(usingNetworks: networks)
+    }
+
+    private var authorize: ((PKPayment) async -> PKPaymentAuthorizationResult)?
+    private var finished: CheckedContinuation<Void, Never>?
+
+    /// Shows the sheet for `price` in `currency`; `authorize` places the order with the payment and
+    /// says how it went. Returns once the sheet has gone (false: it couldn't be shown).
+    func pay(item: String, price: Decimal, currency: String, authorize: @escaping (PKPayment) async -> PKPaymentAuthorizationResult) async -> Bool {
+        guard let merchant = Self.merchant else { return false }
+        let request = PKPaymentRequest()
+        request.merchantIdentifier = merchant
+        request.countryCode = "US"
+        request.currencyCode = currency
+        request.supportedNetworks = Self.networks
+        request.merchantCapabilities = .threeDSecure
+        request.shippingType = .shipping
+        request.requiredShippingContactFields = [.name, .postalAddress, .emailAddress]
+        let amount = NSDecimalNumber(decimal: price)
+        request.paymentSummaryItems = [
+            PKPaymentSummaryItem(label: item, amount: amount),
+            PKPaymentSummaryItem(label: EraSeam.appName, amount: amount),
+        ]
+        let controller = PKPaymentAuthorizationController(paymentRequest: request)
+        controller.delegate = self
+        self.authorize = authorize
+        guard await controller.present() else { return false }
+        await withCheckedContinuation { finished = $0 }
+        return true
+    }
+
+    func paymentAuthorizationController(_ controller: PKPaymentAuthorizationController, didAuthorizePayment payment: PKPayment) async -> PKPaymentAuthorizationResult {
+        await authorize?(payment) ?? PKPaymentAuthorizationResult(status: .failure, errors: nil)
+    }
+
+    func paymentAuthorizationControllerDidFinish(_ controller: PKPaymentAuthorizationController) {
+        controller.dismiss()
+        finished?.resume()
+        finished = nil
+    }
+
+    /// Where the sheet goes, from the contact Apple Pay gave, or nil when something needed is missing.
+    static func recipient(of contact: PKContact?) -> BigSheetRecipient? {
+        guard let contact, let address = contact.postalAddress else { return nil }
+        let lines = address.street.split(separator: "\n", maxSplits: 1).map(String.init)
+        let name = contact.name.map { PersonNameComponentsFormatter.localizedString(from: $0, style: .default) } ?? ""
+        let recipient = BigSheetRecipient(
+            name: name, email: contact.emailAddress ?? "", line1: lines.first ?? "", line2: lines.count > 1 ? lines[1] : "",
+            city: address.city, state: address.state, zip: address.postalCode, country: address.isoCountryCode.uppercased())
+        return recipient.isComplete ? recipient : nil
+    }
+
+    /// The token as the relay hands it to Stripe.
+    static func token(of payment: PKPayment) -> BigSheetPayment.Token {
+        BigSheetPayment.Token(
+            data: payment.token.paymentData.base64EncodedString(),
+            network: payment.token.paymentMethod.network?.rawValue ?? "",
+            transactionId: payment.token.transactionIdentifier,
+            instrument: payment.token.paymentMethod.displayName ?? "")
+    }
+}
 
 /// Print's preview's way to One Big Sheet: a row under the layout's choices, which pushes the
 /// sheet with the layers chosen there.
@@ -233,6 +333,7 @@ struct BigSheetView: View {
     @State private var placing = false
     @State private var placed: String?
     @State private var orderFailed = false
+    @State private var applePay = BigSheetApplePay()
 
     private struct QuoteKey: Equatable {
         var product: BigSheetProduct
@@ -256,7 +357,8 @@ struct BigSheetView: View {
                 confirmation(placed)
             } else {
                 sheetSection
-                shipToSection
+                // Apple Pay's sheet asks where it goes.
+                if !BigSheetApplePay.isAvailable { shipToSection }
             }
         }
         .navigationTitle("One Big Sheet")
@@ -404,7 +506,23 @@ struct BigSheetView: View {
 
     // MARK: The order
 
+    @ViewBuilder
     private var orderButton: some View {
+        if BigSheetApplePay.isAvailable {
+            PayWithApplePayButton(.order, action: payWithApplePay)
+                .payWithApplePayButtonStyle(.automatic)
+                .frame(height: 50)
+                .clipShape(.capsule)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 8)
+                .disabled(placing || quote?.product != product.rawValue)
+                .accessibilityIdentifier("big-sheet-apple-pay")
+        } else {
+            testOrderButton
+        }
+    }
+
+    private var testOrderButton: some View {
         Button(action: placeOrder) {
             Label("Place Test Order", systemImage: "shippingbox")
                 .frame(maxWidth: .infinity)
@@ -449,11 +567,40 @@ struct BigSheetView: View {
             defer { placing = false }
             do {
                 let sheet = await Self.sheetPDF(request, layout: layout, product: product)
-                placed = try await service.order(sheet, product, recipient)
+                placed = try await service.order(sheet, product, recipient, nil)
             } catch {
                 Log.library.error("Placing a big sheet's order failed: \(String(describing: error), privacy: .public)")
                 orderFailed = true
             }
+        }
+    }
+
+    /// Apple Pay's sheet for the price on screen; its authorization places the paid order.
+    private func payWithApplePay() {
+        guard !placing, let quote, quote.product == product.rawValue,
+              let price = Decimal(string: quote.price, locale: Locale(identifier: "en_US_POSIX"))
+        else { return }
+        placing = true
+        let request = request, layout = layout, product = product, service = service
+        Task {
+            defer { placing = false }
+            let shown = await applePay.pay(item: String(localized: "One Big Sheet"), price: price, currency: quote.currency) { payment in
+                guard let recipient = BigSheetApplePay.recipient(of: payment.shippingContact) else {
+                    return PKPaymentAuthorizationResult(status: .failure, errors: [PKPaymentRequest.paymentShippingAddressUnserviceableError(withLocalizedDescription: nil)])
+                }
+                let paid = BigSheetPayment(price: quote.price, currency: quote.currency, token: BigSheetApplePay.token(of: payment))
+                do {
+                    let sheet = await Self.sheetPDF(request, layout: layout, product: product)
+                    placed = try await service.order(sheet, product, recipient, paid)
+                    return PKPaymentAuthorizationResult(status: .success, errors: nil)
+                } catch {
+                    Log.library.error("A paid big sheet's order failed: \(String(describing: error), privacy: .public)")
+                    // A price that moved since it was shown is fetched again for the painter to see.
+                    if case BigSheetService.ServiceError.refused(409) = error { attempt += 1 }
+                    return PKPaymentAuthorizationResult(status: .failure, errors: nil)
+                }
+            }
+            if !shown { orderFailed = true }
         }
     }
 

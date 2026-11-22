@@ -64,6 +64,31 @@ struct BigSheetTests {
         #expect(sent["line1"] == "1 Lane")
     }
 
+    /// A paid order carries the price the painter agreed to and Apple Pay's token beside the address.
+    @Test func aPaidOrderCarriesThePriceAndTheToken() throws {
+        let recipient = BigSheetRecipient(
+            name: "Ada", email: "ada@example.com", line1: "1 Lane", line2: "", city: "Brooklyn", state: "NY", zip: "11201", country: "US")
+        let payment = BigSheetPayment(
+            price: "33.00", currency: "USD",
+            token: .init(data: Data("{}".utf8).base64EncodedString(), network: "Visa", transactionId: "t1", instrument: "Visa 4242"))
+        let body = BigSheetService.orderBody(sheet: Data("%PDF-".utf8), product: .paper18x24, recipient: recipient, payment: payment, boundary: "b")
+        let text = String(decoding: body, as: UTF8.self)
+        let json = try #require(text.components(separatedBy: "Content-Type: application/json\r\n\r\n").last?.components(separatedBy: "\r\n--b--").first)
+        let order = try #require(JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: Any])
+        #expect(order["price"] as? String == "33.00")
+        #expect(order["currency"] as? String == "USD")
+        let token = try #require(order["payment"] as? [String: String])
+        #expect(token["data"] == "e30=")
+        #expect(token["network"] == "Visa")
+        #expect(token["transactionId"] == "t1")
+    }
+
+    /// Without its merchant id the app takes no payment: the screen's own form and test orders.
+    @Test func applePayWaitsForTheMerchantID() {
+        #expect(BigSheetApplePay.merchant == nil || BigSheetApplePay.merchant?.hasPrefix("merchant.") == true)
+        if BigSheetApplePay.merchant == nil { #expect(!BigSheetApplePay.isAvailable) }
+    }
+
     /// The relay's answers: a quote's money in its currency, an order's id.
     @Test func theRelaysAnswersAreRead() throws {
         let quote = try JSONDecoder().decode(BigSheetQuote.self, from: Data(#"{"product":"paper-18x24","currency":"USD","price":"33.00","sandbox":{"cost":"23.29","cut":"9.71"}}"#.utf8))
