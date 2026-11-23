@@ -159,8 +159,34 @@ final class GlassShelf {
             Log.library.error("Couldn't save window \(id.uuidString, privacy: .public): \(String(describing: error), privacy: .public)")
             return
         }
-        if let i = windows.firstIndex(where: { $0.id == id }) { windows[i] = saved }
+        if let i = windows.firstIndex(where: { $0.id == id }) {
+            // A name given while this was written stays: the rename queued after it writes it.
+            var kept = saved
+            kept.title = windows[i].title
+            kept.titled = windows[i].titled
+            windows[i] = kept
+        }
         windows.sort { $0.modifiedAt > $1.modifiedAt }
+    }
+
+    /// Gives a window the painter's name for it (the frame's card menu, `ModeGallery`), its meta
+    /// written after the saves before it (which keep the name it holds here when they land).
+    func rename(_ id: UUID, to title: String) {
+        guard var artwork = window(id), !artwork.needsNewerApp, artwork.title != title else { return }
+        artwork.title = title
+        if artwork.titled != nil { artwork.titled = true }
+        if let i = windows.firstIndex(where: { $0.id == id }) { windows[i] = artwork }
+        let previous = saving[id]
+        let store = store
+        saving[id] = Task {
+            await previous?.value
+            guard let saved = window(id) else { return }
+            do {
+                try await Background.run { try store.writeMeta(saved) }
+            } catch {
+                Log.library.error("Couldn't rename window \(id.uuidString, privacy: .public): \(String(describing: error), privacy: .public)")
+            }
+        }
     }
 
     func delete(_ id: UUID) {
@@ -173,6 +199,14 @@ final class GlassShelf {
                 Log.library.error("Couldn't delete window \(id.uuidString, privacy: .public)")
             }
         }
+    }
+
+    /// The window as it stands, as large as the shelf keeps its picture: what the card menu's Share
+    /// shares.
+    func picture(of id: UUID) async -> CGImage? {
+        await saving[id]?.value
+        let store = store
+        return await Background.run { store.thumbnail(id, maxPixelSize: ArtworkStore.thumbnailMaxPixelSize) }
     }
 
     func thumbnail(of artwork: Artwork) async -> CGImage? {

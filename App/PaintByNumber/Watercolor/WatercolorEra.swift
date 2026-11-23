@@ -94,7 +94,6 @@ struct WatercolorGalleryView: View {
     let shelf: WatercolorShelf
     let waysIn: ModeWaysIn
     let onOpen: (UUID) -> Void
-    @Environment(\.horizontalSizeClass) private var sizeClass
 
     private var isEmpty: Bool { shelf.isLoaded && shelf.paintings.isEmpty }
 
@@ -103,17 +102,28 @@ struct WatercolorGalleryView: View {
             if isEmpty {
                 empty
             } else {
-                ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: sizeClass == .compact ? 140 : 200), spacing: 28)], spacing: 30) {
-                        ForEach(shelf.paintings) { artwork in
-                            WatercolorCard(shelf: shelf, artwork: artwork, onOpen: { onOpen(artwork.id) })
-                        }
+                ModeGallery(items: shelf.paintings.map(\.shelfItem), actions: actions, deleteTitle: Text("Delete Painting"),
+                            minimumWidth: (140, 200)) { item in
+                    if let artwork = shelf.painting(item.id) {
+                        WatercolorCard(shelf: shelf, artwork: artwork, onOpen: { onOpen(artwork.id) })
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 20)
                 }
             }
         }
+    }
+
+    /// The frame's card menu: shared as the painting stands (its picture on the shelf), printed
+    /// as its numbered sheet.
+    private var actions: ModeCardActions {
+        let shelf = shelf
+        return ModeCardActions(
+            rename: { shelf.rename($0, to: $1) },
+            delete: { shelf.delete($0) },
+            picture: { id in await shelf.picture(of: id) },
+            print: { id in
+                guard let artwork = shelf.painting(id) else { throw CocoaError(.fileNoSuchFile) }
+                return try await PrintPreviewRequest.saved(store: shelf.store, artwork: artwork)
+            })
     }
 
     private var empty: some View {
@@ -156,7 +166,6 @@ struct WatercolorCard: View {
     let artwork: Artwork
     let onOpen: () -> Void
     @State private var picture: CGImage?
-    @State private var asksToDelete = false
 
     private var progress: String {
         String(localized: "watercolor.progress", defaultValue: "Painted: \(artwork.paintedCount) of \(artwork.regionCount)",
@@ -213,12 +222,6 @@ struct WatercolorCard: View {
         .accessibilityValue(Text(verbatim: artwork.isComplete ? finished : progress))
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("watercolor-card")
-        .contextMenu {
-            Button("Delete", systemImage: "trash", role: .destructive) { asksToDelete = true }
-        }
-        .confirmationDialog(Text("Delete Painting"), isPresented: $asksToDelete, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) { shelf.delete(artwork.id) }
-        }
         .task(id: artwork.thumbnailVersion) {
             picture = await shelf.thumbnail(of: artwork)
         }

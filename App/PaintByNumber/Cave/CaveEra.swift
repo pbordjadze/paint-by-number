@@ -90,7 +90,6 @@ struct CaveGalleryView: View {
     let isReady: Bool
     let waysIn: ModeWaysIn
     let onOpen: (UUID) -> Void
-    @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -100,16 +99,25 @@ struct CaveGalleryView: View {
             CaveWallSurface(paintings: [], shelf: shelf, single: false, reduceMotion: reduceMotion, onChoosePhoto: waysIn.photo)
                 .ignoresSafeArea(edges: .bottom)
         } else {
-            ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: sizeClass == .compact ? 140 : 190), spacing: 22)], spacing: 26) {
-                    ForEach(shelf.paintings.reversed(), id: \.id) { painting in
-                        CaveCard(shelf: shelf, painting: painting, onOpen: { onOpen(painting.id) })
-                    }
+            // Newest first; the wall keeps them oldest first.
+            ModeGallery(items: shelf.paintings.reversed().map(\.shelfItem), actions: actions, deleteTitle: Text("Delete Painting"),
+                        minimumWidth: (140, 190)) { item in
+                if let painting = shelf.painting(item.id) {
+                    CaveCard(shelf: shelf, painting: painting, onOpen: { onOpen(painting.id) })
                 }
-                .padding(.horizontal, 22)
-                .padding(.vertical, 18)
             }
         }
+    }
+
+    /// The frame's card menu: shared as the bay stands. A cave painting keeps no numbered sheet
+    /// (no template: `CaveShelf`), so its menu has no Print….
+    private var actions: ModeCardActions {
+        let shelf = shelf
+        return ModeCardActions(
+            rename: { shelf.rename($0, to: $1) },
+            delete: { shelf.delete($0) },
+            picture: { id in await shelf.picture(of: id) },
+            print: nil)
     }
 }
 
@@ -119,7 +127,6 @@ struct CaveCard: View {
     let painting: CaveScene.Painting
     let onOpen: () -> Void
     @State private var picture: CGImage?
-    @State private var asksToDelete = false
 
     private var done: Int { painting.progress.done.filter { $0 }.count }
     private var count: String { "\(done.formatted())/\(painting.progress.done.count.formatted())" }
@@ -160,12 +167,6 @@ struct CaveCard: View {
         .accessibilityValue(Text(verbatim: painting.isComplete ? String(localized: "Finished") : progress))
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("cave-card")
-        .contextMenu {
-            Button("Delete", systemImage: "trash", role: .destructive) { asksToDelete = true }
-        }
-        .confirmationDialog(Text("Delete Painting"), isPresented: $asksToDelete, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) { shelf.delete(painting.id) }
-        }
         .task(id: "\(painting.id)-\(painting.revision)") {
             let drawn = await shelf.picture(of: painting.id)
             if !Task.isCancelled { picture = drawn }
@@ -225,5 +226,9 @@ struct CaveWallSurface: UIViewRepresentable {
         scene.reduceMotion = reduceMotion
         scene.onChoosePhoto = onChoosePhoto
     }
+}
+extension CaveScene.Painting {
+    /// The painting as the frame's gallery sees it.
+    var shelfItem: ModeShelfItem { ModeShelfItem(id: id, title: title, isComplete: isComplete) }
 }
 #endif
