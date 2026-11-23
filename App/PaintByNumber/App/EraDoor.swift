@@ -240,6 +240,12 @@ struct EraPassage: View {
     }
 
     private func draw(in graphics: inout GraphicsContext, size: CGSize, elapsed: TimeInterval, destination: Era, origin: Era?) {
+        draw(in: &graphics, size: size, elapsed: elapsed, destination: destination, origin: origin, reduceMotion: reduceMotion)
+    }
+
+    /// The passage at `elapsed` seconds (`PassageFrames` draws it frame by frame, Debug builds).
+    func draw(in graphics: inout GraphicsContext, size: CGSize, elapsed: TimeInterval, destination: Era, origin: Era?,
+              reduceMotion: Bool) {
         if Self.isWayBack(to: destination, from: origin, reduceMotion: reduceMotion) {
             drawWayBack(in: &graphics, size: size, elapsed: elapsed)
             return
@@ -723,3 +729,4 @@ private struct PassageRandom {
         return Double(z >> 11) / Double(1 << 53)
     }
 }
+

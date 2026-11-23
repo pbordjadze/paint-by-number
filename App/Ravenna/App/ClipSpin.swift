@@ -1,5 +1,6 @@
 #if DEBUG
 import Foundation
+import SwiftUI
 
 /// `-clipSpins "547,1502,1248,2026"` (Debug builds; painting-company's `tools/clip`): each time a
 /// year wheel (`EraClock`) comes out, it spins by itself to the next of these years, a row a
@@ -37,10 +38,17 @@ enum ClipSpin {
         for step in 1...steps {
             let t = Double(step) / Double(steps)
             let eased = 1 - pow(1 - t, 3)
-            set(rows[from + Int((Double(to - from) * eased).rounded())])
+            // Without animation: the wheel animates to a new selection and drops the next one that
+            // comes while it does, so a spin's last rows never showed. Each row is a frame here.
+            var still = Transaction()
+            still.disablesAnimations = true
+            withTransaction(still) { set(rows[from + Int((Double(to - from) * eased).rounded())]) }
             try? await Task.sleep(for: tick)
             if Task.isCancelled { return }
         }
+        // The wheel scrolls after its selection, a beat behind: let it come to rest on the year
+        // before the wheel settles, as a thumb lifted from it would.
+        try? await Task.sleep(for: tick * 40)
     }
 }
 #endif

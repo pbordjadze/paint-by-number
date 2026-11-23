@@ -1,5 +1,6 @@
 import Ravenna
 import SwiftUI
+import UIKit
 
 /// Routes to the app shell. Debug builds route to a demo scenario when launched with
 /// `-demo <name>` (see `DemoMode`); Release builds always show the shell. Every
@@ -53,6 +54,12 @@ struct RootView: View {
             // `era-passage-back`, `era-passage-night`: the way back, held at a moment each.
             if DemoMode.scenario == "era-passage-back" || DemoMode.scenario == "era-passage-night" {
                 door.playDemoWayBack()
+            }
+            // `-renderPassages <folder>`: the doors' passages drawn frame by frame, then quit.
+            if PassageFrames.folder != nil,
+               let screen = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen {
+                PassageFrames.renderAll(size: screen.bounds.size, scale: screen.scale)
+                exit(0)
             }
             #if UNRELEASED
             // `-demoModeGalleries YES`: the modes' galleries filled, for the doors to land on.
