@@ -448,3 +448,45 @@ test("the sheet's store failing charges nothing", async () => {
   assert.equal((await handlePrint(await orderRequest({ order: PAID_ORDER }), e, { fetch: fetcher })).status, 502);
   assert.equal(calls.length, 0);
 });
+
+test("a second try while the first is still pricing waits, and its failure can't drop the first's order", async () => {
+  let release;
+  const held = new Promise((resolve) => { release = resolve; });
+  const { calls, fetcher } = prodigi({
+    "/quotes": async () => { await held; return new Response(JSON.stringify(QUOTE), { status: 200 }); },
+    "/orders": PLACED, "stripe:/tokens": { id: "tok_1" }, "stripe:/payment_intents": { id: "pi_1", status: "succeeded" },
+  });
+  const e = env(STRIPE_ENV);
+  const first = handlePrint(await orderRequest({ order: PAID_ORDER }), e, { fetch: fetcher });
+  // The first is past its claim and waiting on the quote.
+  while (!calls.length) await new Promise((r) => setTimeout(r, 1));
+  const second = await handlePrint(await orderRequest({ order: { ...PAID_ORDER, price: "1.00" } }), e, { fetch: fetcher });
+  assert.equal(second.status, 202);
+  release();
+  assert.equal((await first).status, 201);
+  assert.equal(calls.filter((c) => c.url === `${STRIPE}/payment_intents`).length, 1);
+  assert.equal(e.PRINT_SHEETS.get(ID).storage.data.get("state"), "placed");
+});
+
+test("only the claim's holder marks or drops an order", async () => {
+  const e = env();
+  const stub = e.PRINT_SHEETS.get(ID);
+  const begun = await (await stub.fetch("https://sheet/begin", { method: "POST", headers: { "x-days": "14" }, body: PDF })).json();
+  assert.match(begun.claim, /^[0-9a-f]+$/);
+  const again = await (await stub.fetch("https://sheet/begin", { method: "POST", headers: { "x-days": "14" }, body: PDF })).json();
+  assert.equal(again.claim, undefined);
+  assert.equal((await stub.fetch("https://sheet/drop", { method: "POST", headers: { "x-claim": "beef" } })).status, 409);
+  assert.equal((await stub.fetch("https://sheet/mark", { method: "POST", headers: { "x-claim": "beef" }, body: '{"state":"charging"}' })).status, 409);
+  assert.equal(stub.storage.data.get("state"), "new");
+  assert.equal((await stub.fetch("https://sheet/mark", { method: "POST", headers: { "x-claim": begun.claim }, body: '{"state":"charging"}' })).status, 200);
+});
+
+test("a claim left new by a try that went away is taken by a later try", async () => {
+  const { fetcher } = prodigi({ "/orders": PLACED });
+  const e = env();
+  const stub = e.PRINT_SHEETS.get(ID);
+  await stub.fetch("https://sheet/begin", { method: "POST", headers: { "x-days": "14" }, body: PDF });
+  assert.equal((await handlePrint(await orderRequest(), e, { fetch: fetcher })).status, 202);
+  stub.storage.data.set("claimedAt", Date.now() - 10 * 60 * 1000);
+  assert.equal((await handlePrint(await orderRequest(), e, { fetch: fetcher })).status, 201);
+});

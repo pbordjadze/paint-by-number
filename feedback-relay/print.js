@@ -64,6 +64,8 @@ const MAX_ORDER = 25 * 1024 * 1024;
 const MAX_FIELD = 200;
 const CHUNK = 1024 * 1024;
 const SHEET_DAYS = 14;
+/** How long a try holds an order still "new" (pricing it) before another may take it on. */
+const CLAIM_MS = 120_000;
 const SHIPPING = "Standard";
 const PDF = [0x25, 0x50, 0x44, 0x46, 0x2d];
 const HEX = /^[0-9a-f]{32}$/;
@@ -284,7 +286,9 @@ async function order(request, env, deps, provider) {
     return bare(502);
   }
   if (begun.state === "placed") return placedAnswer(env, provider, begun.order, begun.charge);
-  if (begun.state !== "new") {
+  // Only the try holding the order's claim goes on: another try of it under way at once waits.
+  const claim = begun.claim;
+  if (!claim) {
     log(`Order ${key} is ${begun.state} already (payment ${begun.charge ?? "none"})`);
     return json(202, { ok: false, pending: true });
   }
@@ -296,15 +300,17 @@ async function order(request, env, deps, provider) {
       priced = await priceOf(env, deps, provider, code, recipient.country);
     } catch (error) {
       log("Pricing the order failed", error);
-      await drop(stub);
+      await drop(stub, claim);
       return bare(502);
     }
     // The painter agreed to the price on screen: a price that moved since is asked again.
     if (money(priced.price) !== body.price || priced.currency !== body.currency) {
-      await drop(stub);
+      await drop(stub, claim);
       return bare(409);
     }
-    await mark(stub, { state: "charging" });
+    // Leaving "new" is the gate: unrecorded, nothing is charged (the claim lapses, and a later try
+    // takes it).
+    if (!(await mark(stub, claim, { state: "charging" }))) return json(202, { ok: false, pending: true });
     try {
       charge = await chargeApplePay(env, deps, payment, priced, key);
     } catch (error) {
@@ -314,14 +320,15 @@ async function order(request, env, deps, provider) {
         return json(202, { ok: false, pending: true });
       }
       log("Charging the order failed", error);
-      await drop(stub);
+      await drop(stub, claim);
       return bare(error?.declined ? 402 : 502);
     }
-    await mark(stub, { state: "charged", charge });
+    await mark(stub, claim, { state: "charged", charge });
   }
 
   const origin = new URL(request.url).origin;
-  await mark(stub, { state: "placing", charge });
+  // An unpaid order leaves "new" here, the same gate.
+  if (!(await mark(stub, claim, { state: "placing", charge })) && !charge) return json(202, { ok: false, pending: true });
   let orderId;
   try {
     orderId = await provider.place(env, deps, {
@@ -334,11 +341,11 @@ async function order(request, env, deps, provider) {
       return json(202, { ok: false, pending: true });
     }
     log("Placing the order failed", error);
-    await drop(stub);
+    await drop(stub, claim);
     await refund(env, deps, charge, key);
     return bare(502);
   }
-  await mark(stub, { state: "placed", charge, order: orderId });
+  await mark(stub, claim, { state: "placed", charge, order: orderId });
   return placedAnswer(env, provider, orderId, charge);
 }
 
@@ -346,19 +353,25 @@ function placedAnswer(env, provider, orderId, charge) {
   return json(201, { ok: true, order: orderId, sandbox: provider.isSandbox(env), paid: Boolean(charge) });
 }
 
-/** Records where an order stands; a failure is logged and leaves the state before it, which is the safer. */
-async function mark(stub, state) {
+/**
+ * Records where an order stands, for the try holding its claim; says whether it did. A failure is
+ * logged: past "new" the state before it still keeps every other try out.
+ */
+async function mark(stub, claim, state) {
   try {
-    const answer = await stub.fetch("https://sheet/mark", { method: "POST", body: JSON.stringify(state) });
+    const answer = await stub.fetch("https://sheet/mark", { method: "POST", headers: { "x-claim": claim }, body: JSON.stringify(state) });
     if (!answer.ok) throw new Error(`HTTP ${answer.status}`);
+    return true;
   } catch (error) {
     log(`Recording an order as ${state.state} failed`, error);
+    return false;
   }
 }
 
-async function drop(stub) {
+/** Deletes an order that surely failed, only for the try holding its claim. */
+async function drop(stub, claim) {
   try {
-    await stub.fetch("https://sheet/drop", { method: "POST" });
+    await stub.fetch("https://sheet/drop", { method: "POST", headers: { "x-claim": claim } });
   } catch (error) {
     log("Dropping a sheet failed", error);
   }
@@ -516,10 +529,13 @@ function sheetStub(env, id) {
  * "charging", "charged", "placing", "placed") with the payment and order ids, and an alarm that
  * deletes it all.
  *   POST https://sheet/begin  the PDF as the body; x-days. Keeps it, unless the order is kept
- *                             already: answers {state, token, charge?, order?} as it stood
- *   POST https://sheet/mark   {state, charge?, order?}
+ *                             already: answers {state, token, charge?, order?, claim?}. The claim
+ *                             goes to the one try that may take the order on: the one that kept
+ *                             it, or one coming after a claim left "new" for CLAIM_MS (its try
+ *                             gone). Every other try gets none.
+ *   POST https://sheet/mark   x-claim; {state, charge?, order?}
  *   GET  https://sheet/read   x-token; the PDF, or 404
- *   POST https://sheet/drop   deletes it now (an order that surely failed)
+ *   POST https://sheet/drop   x-claim; deletes it now (an order that surely failed)
  */
 export class PrintSheet {
   constructor(state) {
@@ -534,20 +550,25 @@ export class PrintSheet {
       // The body first: storage calls hold the object's input gate, so between the look and the
       // write below no other try of the order runs; reading a request body doesn't.
       const bytes = new Uint8Array(await request.arrayBuffer());
-      const kept = await this.storage.get(["token", "state", "charge", "order"]);
+      const kept = await this.storage.get(["token", "state", "charge", "order", "claimedAt"]);
       if (kept.get("token")) {
-        return json(200, { token: kept.get("token"), state: kept.get("state"), charge: kept.get("charge"), order: kept.get("order") });
+        const answer = { token: kept.get("token"), state: kept.get("state"), charge: kept.get("charge"), order: kept.get("order") };
+        if (kept.get("state") === "new" && Date.now() - (kept.get("claimedAt") ?? 0) > CLAIM_MS) {
+          answer.claim = randomHex();
+          await this.storage.put({ claim: answer.claim, claimedAt: Date.now() });
+        }
+        return json(200, answer);
       }
-      const token = randomHex();
+      const token = randomHex(), claim = randomHex();
       const chunks = Math.ceil(bytes.byteLength / CHUNK);
       // A put takes at most 128 keys: a sheet is at most 25 chunks.
       const entries = { chunks };
       for (let i = 0; i < chunks; i++) entries[`chunk-${i}`] = bytes.slice(i * CHUNK, (i + 1) * CHUNK);
       await this.storage.put(entries);
       // The token last: a sheet with a token is whole.
-      await this.storage.put({ token, state: "new" });
+      await this.storage.put({ token, state: "new", claim, claimedAt: Date.now() });
       await this.storage.setAlarm(Date.now() + days * 24 * 3600 * 1000);
-      return json(201, { token, state: "new" });
+      return json(201, { token, state: "new", claim });
     }
     if (pathname === "/mark" && request.method === "POST") {
       let next;
@@ -557,6 +578,7 @@ export class PrintSheet {
         return bare(400);
       }
       if (!(await this.storage.get("token")) || typeof next?.state !== "string") return bare(404);
+      if ((await this.storage.get("claim")) !== request.headers.get("x-claim")) return bare(409);
       const entries = { state: next.state };
       if (typeof next.charge === "string") entries.charge = next.charge;
       if (typeof next.order === "string") entries.order = next.order;
@@ -572,6 +594,7 @@ export class PrintSheet {
       return new Response(new Blob(parts), { status: 200, headers: { "content-type": "application/pdf" } });
     }
     if (pathname === "/drop" && request.method === "POST") {
+      if ((await this.storage.get("claim")) !== request.headers.get("x-claim")) return bare(409);
       await this.storage.deleteAll();
       await this.storage.deleteAlarm?.();
       return json(200, { ok: true });

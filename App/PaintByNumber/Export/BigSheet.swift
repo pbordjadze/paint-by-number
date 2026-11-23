@@ -235,7 +235,7 @@ nonisolated struct BigSheetPayment: Sendable, Equatable {
 final class BigSheetApplePay: NSObject, PKPaymentAuthorizationControllerDelegate {
     /// The merchant id registered for the app (Certificates, Identifiers & Profiles › Merchant IDs)
     /// and in its entitlements, with Stripe's certificate. Nil until it is: then One Big Sheet
-    /// takes the address on screen and places test orders unpaid.
+    /// places test orders unpaid, to `BigSheetRecipient.testOrder`.
     static let merchant: String? = nil
 
     static let networks: [PKPaymentNetwork] = [.visa, .masterCard, .amex, .discover]
@@ -249,6 +249,8 @@ final class BigSheetApplePay: NSObject, PKPaymentAuthorizationControllerDelegate
     private var reprice: ((String) async -> BigSheetQuote?)?
     private var authorize: ((PKPayment, BigSheetQuote) async -> PKPaymentAuthorizationResult)?
     private var finished: CheckedContinuation<Void, Never>?
+    /// Held while its sheet shows: PassKit keeps only a weak delegate, not the controller.
+    private var controller: PKPaymentAuthorizationController?
     private var hasFinished = false
 
     /// Shows the sheet for `quote`'s price. As the painter picks where it goes, `reprice` prices it
@@ -275,9 +277,14 @@ final class BigSheetApplePay: NSObject, PKPaymentAuthorizationControllerDelegate
         self.reprice = reprice
         self.authorize = authorize
         hasFinished = false
-        guard await controller.present() else { return false }
+        self.controller = controller
+        guard await controller.present() else {
+            self.controller = nil
+            return false
+        }
         // The sheet may have gone before `present` came back.
         if !hasFinished { await withCheckedContinuation { finished = $0 } }
+        self.controller = nil
         return true
     }
 
@@ -416,6 +423,8 @@ struct BigSheetView: View {
             if placed == nil { orderButton }
         }
         .task(id: product) { await draw() }
+        // Another size is another order: an earlier try's key never answers for it.
+        .onChange(of: product) { orderKey = BigSheetService.newKey() }
         .task(id: QuoteKey(product: product, country: country, attempt: attempt)) { await fetchQuote() }
         .alert("Couldn’t Place the Order", isPresented: $orderFailed) {
             Button("OK", role: .cancel) {}
@@ -662,7 +671,7 @@ struct BigSheetView: View {
         guard !placing, let quote, quote.product == product.rawValue else { return }
         placing = true
         paymentFailed = false
-        let request = request, layout = layout, product = product, service = service, key = orderKey
+        let request = request, layout = layout, product = product, service = service
         Task {
             defer { placing = false }
             let shown = await applePay.pay(item: String(localized: "One Big Sheet"), quote: quote) { country in
@@ -674,7 +683,8 @@ struct BigSheetView: View {
                 let paid = BigSheetPayment(price: agreed.price, currency: agreed.currency, token: BigSheetApplePay.token(of: payment))
                 do {
                     let sheet = await Self.sheetPDF(request, layout: layout, product: product)
-                    placed = try await service.order(sheet, product, recipient, paid, key)
+                    // The key as it stands now: a card declined in this same sheet gave its key up.
+                    placed = try await service.order(sheet, product, recipient, paid, orderKey)
                     return PKPaymentAuthorizationResult(status: .success, errors: nil)
                 } catch {
                     Log.library.error("A paid big sheet's order failed: \(String(describing: error), privacy: .public)")
