@@ -469,27 +469,35 @@ struct BigSheetView: View {
         }
     }
 
-    /// The sheet at its size beside the page the painter prints at home, both to one scale (the
-    /// larger sheet fills the room), so the size reads at a glance.
+    /// The sheet beside the page the painter prints at home, both to one scale and named by their
+    /// sizes, so the size reads at a glance; the page shrinks as a larger sheet is picked.
     private var preview: some View {
         GeometryReader { proxy in
             let wide = request.template.width > request.template.height
             let page = Self.turned(CGSize(width: layout.paper.size.width / 72, height: layout.paper.size.height / 72), wide: wide)
-            let unit = Self.inchScale(in: proxy.size, page: page, wide: wide)
             let poster = Self.turned(product.inches, wide: wide)
+            let unit = Self.inchScale(in: CGSize(width: proxy.size.width, height: proxy.size.height - Self.captionRoom),
+                                      sheet: poster, page: page)
             HStack(alignment: .bottom, spacing: unit * Self.gap) {
-                Self.paper(picture, width: poster.width * unit, height: poster.height * unit)
-                    .accessibilityElement()
-                    .accessibilityLabel(Text(sizeText(product)))
-                Self.paper(pagePicture, width: page.width * unit, height: page.height * unit)
-                    .accessibilityHidden(true)
+                VStack(spacing: 8) {
+                    Self.paper(picture, width: poster.width * unit, height: poster.height * unit)
+                    Text(sizeText(product))
+                }
+                .accessibilityElement(children: .combine)
+                VStack(spacing: 8) {
+                    Self.paper(pagePicture, width: page.width * unit, height: page.height * unit)
+                    Text(sizeText(inches: CGSize(width: layout.paper.size.width / 72, height: layout.paper.size.height / 72)))
+                }
+                .accessibilityHidden(true)
             }
+            .font(.caption)
+            .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             .animation(reduceMotion ? nil : .smooth, value: product)
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 22)
-        .frame(height: sizeClass == .regular ? 520 : 320)
+        .padding(.vertical, 16)
+        .frame(height: sizeClass == .regular ? 440 : 300)
     }
 
     /// A sheet of paper showing `picture`, white whatever the screen's appearance.
@@ -509,11 +517,11 @@ struct BigSheetView: View {
 
     /// The room between the two sheets, in inches.
     private static let gap: CGFloat = 1.5
+    /// The room the sizes take under the sheets, in points.
+    private static let captionRoom: CGFloat = 28
 
-    /// Points per inch that fit the largest sheet and the page beside it, turned the picture's way, in `room`.
-    private static func inchScale(in room: CGSize, page: CGSize, wide: Bool) -> CGFloat {
-        let largest = BigSheetProduct.allCases.map(\.inches).max { $0.width * $0.height < $1.width * $1.height } ?? .zero
-        let sheet = turned(largest, wide: wide)
+    /// Points per inch that fit the sheet and the page beside it in `room`.
+    private static func inchScale(in room: CGSize, sheet: CGSize, page: CGSize) -> CGFloat {
         let width = sheet.width + gap + page.width, height = max(sheet.height, page.height)
         guard width > 0, height > 0 else { return 0 }
         return max(0, min(room.width / width, room.height / height))
@@ -544,13 +552,18 @@ struct BigSheetView: View {
     }
 
     private func sizeText(_ product: BigSheetProduct) -> String {
+        sizeText(inches: product.inches)
+    }
+
+    /// A portrait size in inches as the painter measures, width by height.
+    private func sizeText(inches size: CGSize) -> String {
         let inches = Locale.current.measurementSystem == .us
         func length(_ value: CGFloat) -> String {
             let measure = Measurement(value: Double(value), unit: UnitLength.inches)
             return (inches ? measure : measure.converted(to: .centimeters))
-                .formatted(.measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .number.precision(.fractionLength(0))))
+                .formatted(.measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .number.precision(.fractionLength(0...1))))
         }
-        let width = length(product.inches.width), height = length(product.inches.height)
+        let width = length(size.width), height = length(size.height)
         return String(localized: "print.size.dimensions", defaultValue: "\(width) × \(height)",
                       comment: "Print's Size choice: how big the picture prints, width by height; the arguments are lengths like 21 in or 53 cm")
     }
@@ -632,10 +645,27 @@ struct BigSheetView: View {
     private func confirmation(_ order: String) -> some View {
         Section {
             VStack(spacing: 12) {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 44))
-                    .foregroundStyle(Theme.signature)
-                    .accessibilityHidden(true)
+                if let picture {
+                    // The sheet on its way, with the seal of an order placed on its corner.
+                    Image(uiImage: picture)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxHeight: sizeClass == .regular ? 320 : 200)
+                        .shadow(color: .black.opacity(0.16), radius: 14, y: 8)
+                        .overlay(alignment: .bottomTrailing) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 44))
+                                .foregroundStyle(.white, Theme.signature)
+                                .offset(x: 14, y: 14)
+                        }
+                        .padding(.bottom, 12)
+                        .accessibilityHidden(true)
+                } else {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 44))
+                        .foregroundStyle(Theme.signature)
+                        .accessibilityHidden(true)
+                }
                 Text("Test Order Placed")
                     .font(.display(.title2, weight: .semibold))
                 Text(String(localized: "bigSheet.placed", defaultValue: "Order \(order). A test order prints nothing; a real one would arrive in about a week.",

@@ -315,7 +315,7 @@ nonisolated enum PDFExporter {
         guard let consumer = CGDataConsumer(data: data as CFMutableData),
               let ctx = CGContext(consumer: consumer, mediaBox: &box, info as CFDictionary)
         else { return Data() }
-        let factor = short / Paper.letter.size.width
+        let factor = sheetScale(short: short)
         let laid = CGRect(origin: .zero, size: CGSize(width: box.width / factor, height: box.height / factor))
 
         ctx.beginPDFPage(nil)
@@ -361,12 +361,19 @@ nonisolated enum PDFExporter {
         guard layout.numbers, let smallest = smallestNumberSize(t, detail: false) ?? smallestNumberSize(t, detail: true) else { return nil }
         let short = min(size.width, size.height), long = max(size.width, size.height)
         let page = t.width > t.height ? CGSize(width: long, height: short) : CGSize(width: short, height: long)
-        let factor = short / Paper.letter.size.width
+        let factor = sheetScale(short: short)
         // The page body, less the key's most, at the sheet's scale: a floor on the picture's size.
         let body = bodyRect(CGRect(x: 0, y: 0, width: page.width / factor, height: page.height / factor))
         let height = layout.colorKey ? body.height * 0.6 - keyGap * 2 : body.height
         let scale = min(body.width / CGFloat(max(t.width, 1)), height / CGFloat(max(t.height, 1))) * factor
         return smallest * scale
+    }
+
+    /// How much larger than on a page `sheet` draws its type, key and margins on a sheet whose
+    /// short side is `short` points: grown with the sheet, but by little more than half as much,
+    /// so on a poster the picture takes the paper and the key stays a key (a page's own size: 1).
+    static func sheetScale(short: CGFloat) -> CGFloat {
+        max(1, short / Paper.letter.size.width * 0.6)
     }
 
     /// How tall the color key comes out in `rect` (its entries' rows), measured on a scratch page.
