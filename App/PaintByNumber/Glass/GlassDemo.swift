@@ -66,13 +66,7 @@ enum GlassDemo {
                 try? await Task.sleep(for: .seconds(1))
                 DemoMode.markReady()
             case "glass-gallery":
-                for share in [0.0, 0.55, 1.0] {
-                    let artwork = try await window(on: shelf)
-                    guard share > 0 else { continue }
-                    let opened = try await shelf.open(artwork)
-                    await shelf.save(glazed(opened, share: share), of: artwork.id, template: opened.template, offered: opened.offered,
-                                     texture: opened.texture)
-                }
+                try await seedGallery(on: shelf)
                 try? await Task.sleep(for: .seconds(1.5))
                 DemoMode.markReady()
             default:
@@ -81,6 +75,18 @@ enum GlassDemo {
             }
         } catch {
             Log.demo.error("Stained Glass demo failed: \(String(describing: error), privacy: .public)")
+        }
+    }
+
+    /// `glass-gallery`'s three windows (not begun, half glazed, finished), and the gallery the door
+    /// opens on in a launch with `-demoModeGalleries YES` (`ModeGalleries`).
+    static func seedGallery(on shelf: GlassShelf) async throws {
+        for share in [0.0, 0.55, 1.0] {
+            let artwork = try await window(on: shelf)
+            guard share > 0 else { continue }
+            let opened = try await shelf.open(artwork)
+            await shelf.save(glazed(opened, share: share), of: artwork.id, template: opened.template, offered: opened.offered,
+                             texture: opened.texture)
         }
     }
 

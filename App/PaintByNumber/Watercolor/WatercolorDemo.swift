@@ -46,6 +46,18 @@ enum WatercolorDemo {
         }
     }
 
+    /// The gallery the door opens on in a launch with `-demoModeGalleries YES` (`ModeGalleries`):
+    /// the library's first pictures as sheets to paint.
+    static func seedGallery(on shelf: WatercolorShelf) async throws {
+        for sample in Sample.all.prefix(3) {
+            guard let url = sample.url else { continue }
+            let photo = try await Background.run { try PhotoLoader.load(url: url, maxPixelSize: ArtworkStore.sourceMaxPixelSize) }
+            let (template, settings) = try await WatercolorShelf.template(of: photo, length: .quick)
+            _ = try await shelf.create(template: template, settings: settings, photo: photo, title: sample.title,
+                                       sampleName: sample.id)
+        }
+    }
+
     /// Paints the demo's painting as the scenario asks, before it shows.
     static func prepare(_ painting: WatercolorPainting) {
         // The Making Of's scenario is ready when its film is (`run`).

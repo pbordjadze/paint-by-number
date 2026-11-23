@@ -153,4 +153,14 @@ struct EraDoorTests {
         #expect(EraDoor(defaults: defaults).shown == .watercolor)
     }
     #endif
+
+    /// `-passageFrameClock N` (`tools/clip`): the passage's time moves a 60th at a time, each step
+    /// held N 60ths, so every step is on screen long enough for a recording to keep it.
+    @Test func theFrameClockStepsThePassageA60thAtATime() {
+        #expect(EraPassage.frameTime(0, framesPerStep: 8) == 0)
+        #expect(EraPassage.frameTime(7.9 / 60, framesPerStep: 8) == 0)
+        #expect(EraPassage.frameTime(8.01 / 60, framesPerStep: 8) == 1.0 / 60)
+        #expect(EraPassage.frameTime(1, framesPerStep: 1) == 1)
+        #expect(EraPassage.frameTime(1, framesPerStep: 4) == 15.0 / 60)
+    }
 }

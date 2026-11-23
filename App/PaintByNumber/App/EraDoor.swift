@@ -208,9 +208,27 @@ struct EraPassage: View {
     private static func held(_ elapsed: TimeInterval) -> TimeInterval {
         #if DEBUG
         if let hold = demoHold { return min(elapsed, hold) }
+        if let frames = frameClock { return frameTime(elapsed, framesPerStep: frames) }
         #endif
         return elapsed
     }
+
+    #if DEBUG
+    /// `-passageFrameClock N` (Debug builds; painting-company's `tools/clip`): the passage steps
+    /// through its own time a 60th of a second at a time, each step held for N 60ths of the clock,
+    /// so a screen recording (which drops frames, or keeps only those that change) holds every
+    /// step: its distinct frames, one after another at 60 a second, are the passage frame by
+    /// frame. Nil when not asked for.
+    static let frameClock: Int? = {
+        let frames = UserDefaults.standard.integer(forKey: "passageFrameClock")
+        return frames > 0 ? frames : nil
+    }()
+
+    /// The step of the passage's time shown `elapsed` seconds in, each held `framesPerStep` 60ths.
+    nonisolated static func frameTime(_ elapsed: TimeInterval, framesPerStep: Int) -> TimeInterval {
+        (elapsed * 60 / Double(framesPerStep)).rounded(.down) / 60
+    }
+    #endif
 
     /// One tessera: its centre, side and turn, when it is set (0 to 1 through the cover), its color.
     struct Tile {

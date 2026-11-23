@@ -54,6 +54,10 @@ struct RootView: View {
             if DemoMode.scenario == "era-passage-back" || DemoMode.scenario == "era-passage-night" {
                 door.playDemoWayBack()
             }
+            #if UNRELEASED
+            // `-demoModeGalleries YES`: the modes' galleries filled, for the doors to land on.
+            await ModeGalleries.seed()
+            #endif
         }
         #endif
     }

@@ -130,7 +130,7 @@ below name both alike.
 
 
 - `App/`: `PaintByNumberApp`, `RootView`, `Preferences`/`SettingsKey`, `Theme`, `Quirks`, `LineWeight`,
-  `PreviewStyle`, `Sky`; DEBUG `DemoMode`, `ShellDemo`, `MainThreadWatchdog`, `Previews` (Xcode
+  `PreviewStyle`, `Sky`; DEBUG `DemoMode`, `ShellDemo`, `ModeGalleries` (with `UNRELEASED`), `MainThreadWatchdog`, `Previews` (Xcode
   previews, mostly of demo scenarios, for the Mac to render: painting-company row 365).
 - `Model/`: `Library` (@Observable, in the environment), `ArtworkStore` (file IO), `Artwork`,
   `ArtworkFactory` (photo → template), `CreateDraft` (with `DraftStore`) and `Drafts` (`library.drafts`,
@@ -244,7 +244,10 @@ below name both alike.
   `mark` lines (the line-art maps' `maps begin`/`end`, the start of a painting's `start begin`,
   `handoff begin`, `handoff drew`, `start end`, a demo's own) and the device's state with the
   memory footprint and its peak. `-demoStart YES` has a create scenario tap Start Painting by
-  itself, `-demoColdMaps YES` turns `LineArtMapsCache` off for a launch (the models and Vision run,
+  itself, `-passageFrameClock N` steps the era doors' passages a 60th at a time, each held N 60ths
+  (`EraPassage.frameTime`, for painting-company's `tools/clip`, which records them frame by frame),
+  `-demoModeGalleries YES` fills Stained Glass's and Watercolor's galleries for the doors to land on
+  (`ModeGalleries`), `-demoColdMaps YES` turns `LineArtMapsCache` off for a launch (the models and Vision run,
   as for a painter's own photo), `paint-zen-30` paints thirty Zen fills and `paint-colors-10` ten that each finish a color: with them
   `tools/perf-tour/run.sh` measures with no UI test, whose accessibility queries cost frames
   themselves (`PerformanceTour`, the UI test, is for what only a touch reaches).
