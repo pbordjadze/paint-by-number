@@ -102,6 +102,9 @@ public struct EraClock: View {
             }
         }
         .onDisappear { settling?.cancel() }
+        #if DEBUG
+        .task { await ClipSpin.spin(from: year, rows: rows.map(\.year)) { self.year = $0 } }
+        #endif
     }
 
     /// The wheel, telling `reading` each year it comes to rest on.
