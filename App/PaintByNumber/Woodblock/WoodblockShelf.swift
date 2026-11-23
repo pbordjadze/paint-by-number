@@ -84,7 +84,7 @@ final class WoodblockShelf {
     }
 
     /// Saves a new print, nothing carved, and lists it first.
-    func create(template: Template, settings: GenerationSettings, photo: RGBAImage, depth: PhotoDepth?,
+    func create(template: Template, settings: GenerationSettings, photo: RGBAImage, depth: PhotoDepth? = nil,
                 title: String, sampleName: String?) async throws -> Artwork {
         var artwork = Artwork(title: title, template: template, settings: settings, sampleName: sampleName)
         artwork.paintedCount = 0
