@@ -66,11 +66,12 @@ final class GlassShelf {
         let offered = GlassPalette.offered(for: template)
         let glazing = Glazing(pieces: template.regions.count, offered: offered)
         try await Background.run {
-            let source = PhotoLoader.cgImage(from: photo).flatMap {
+            let image = PhotoLoader.cgImage(from: photo)
+            let source = image.flatMap {
                 ImageCodec.jpegData(ImageCodec.downscaled($0, maxPixelSize: ArtworkStore.sourceMaxPixelSize), quality: 0.88)
             }
-            let thumbnail = GlassPicture.image(of: template, glazing: glazing, offered: offered, texture: GlassTexture(template: template),
-                                               longSide: ArtworkStore.thumbnailMaxPixelSize)
+            let thumbnail = Self.picture(of: template, glazing: glazing, offered: offered, texture: GlassTexture(template: template),
+                                         photo: image, mode: nil)
                 .flatMap(ImageCodec.pngData)
             try store.create(
                 artwork, template: template, progress: PaintProgress(regionCount: template.regions.count),
@@ -81,7 +82,8 @@ final class GlassShelf {
         return artwork
     }
 
-    /// A window to glaze: its lead and glasses, and the glass in each piece so far. A glazing
+    /// A window to glaze: its lead and glasses, the glass in each piece so far, and its photo at
+    /// the template's size, which its lenses look onto (none if it can't be read). A glazing
     /// file missing or damaged is a window not yet glazed (logged), never a lost window; one from
     /// a newer app throws.
     struct Opened: Sendable {
@@ -89,6 +91,7 @@ final class GlassShelf {
         var glazing: Glazing
         var offered: [PaletteColor]
         var texture: GlassTexture
+        var photo: CGImage?
     }
 
     func open(_ artwork: Artwork) async throws -> Opened {
@@ -113,30 +116,35 @@ final class GlassShelf {
                     Log.library.error("Unreadable glazing of window \(artwork.id.uuidString, privacy: .public): starting it unglazed")
                 }
             }
-            return Opened(template: template, glazing: glazing, offered: glazing.offered, texture: GlassTexture(template: template))
+            let photo = store.source(artwork.id, maxPixelSize: max(template.width, template.height))
+            return Opened(template: template, glazing: glazing, offered: glazing.offered, texture: GlassTexture(template: template),
+                          photo: photo)
         }
     }
 
     /// Writes a window's glazing, its picture on the shelf and its meta (the pieces glazed), after
     /// the window's saves before it, so an older glazing never lands over a newer one.
-    func save(_ glazing: Glazing, of id: UUID, template: Template, offered: [PaletteColor], texture: GlassTexture) async {
-        await enqueue(glazing, of: id, template: template, offered: offered, texture: texture).value
+    func save(_ glazing: Glazing, of id: UUID, template: Template, offered: [PaletteColor], texture: GlassTexture,
+              mode: GlassMode? = nil) async {
+        await enqueue(glazing, of: id, template: template, offered: offered, texture: texture, mode: mode).value
     }
 
     /// `save`, queued now and run in its turn: a caller that can't wait still has its saves
     /// written in the order it made them.
     @discardableResult
-    func enqueue(_ glazing: Glazing, of id: UUID, template: Template, offered: [PaletteColor], texture: GlassTexture) -> Task<Void, Never> {
+    func enqueue(_ glazing: Glazing, of id: UUID, template: Template, offered: [PaletteColor], texture: GlassTexture,
+                 mode: GlassMode? = nil) -> Task<Void, Never> {
         let previous = saving[id]
         let task = Task {
             await previous?.value
-            await write(glazing, of: id, template: template, offered: offered, texture: texture)
+            await write(glazing, of: id, template: template, offered: offered, texture: texture, mode: mode)
         }
         saving[id] = task
         return task
     }
 
-    private func write(_ glazing: Glazing, of id: UUID, template: Template, offered: [PaletteColor], texture: GlassTexture) async {
+    private func write(_ glazing: Glazing, of id: UUID, template: Template, offered: [PaletteColor], texture: GlassTexture,
+                       mode: GlassMode?) async {
         guard var artwork = window(id) else { return }
         artwork.paintedCount = glazing.glazedCount
         artwork.modifiedAt = .now
@@ -148,8 +156,9 @@ final class GlassShelf {
         do {
             try await Background.run {
                 try glazing.encoded().write(to: store.directory(for: id).appending(path: Self.glazingFile), options: .atomic)
-                if let png = GlassPicture.image(of: template, glazing: glazing, offered: offered, texture: texture,
-                                                longSide: ArtworkStore.thumbnailMaxPixelSize)
+                // Without the screen's mode, the window's photo makes one.
+                let photo = mode == nil ? store.source(id, maxPixelSize: max(template.width, template.height)) : nil
+                if let png = Self.picture(of: template, glazing: glazing, offered: offered, texture: texture, photo: photo, mode: mode)
                     .flatMap(ImageCodec.pngData) {
                     try? store.writeThumbnail(png, for: id)
                 }
@@ -167,6 +176,20 @@ final class GlassShelf {
             windows[i] = kept
         }
         windows.sort { $0.modifiedAt > $1.modifiedAt }
+    }
+
+    /// A window's card on the shelf, drawn as the canvas draws it (`mode`, or one made with
+    /// `photo`), or by `GlassPicture` where the device has no Metal.
+    nonisolated static func picture(of template: Template, glazing: Glazing, offered: [PaletteColor], texture: GlassTexture,
+                                    photo: CGImage?, mode: GlassMode?) -> CGImage? {
+        let longSide = ArtworkStore.thumbnailMaxPixelSize
+        if let mode = mode ?? RenderContext.shared.flatMap({
+            GlassMode(template: template, texture: texture, offered: offered, photo: photo, context: $0)
+        }), let image = GlassGlazeModel.picture(template: template, glazing: glazing, offered: offered.count, mode: mode,
+                                                 longSide: longSide) {
+            return image
+        }
+        return GlassPicture.image(of: template, glazing: glazing, offered: offered, texture: texture, longSide: longSide)
     }
 
     /// Gives a window the painter's name for it (the frame's card menu, `ModeGallery`), its meta

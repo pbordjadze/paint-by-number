@@ -607,7 +607,8 @@ region states, whose `RegionState.mode` carries its own value per region, set wi
 and numbers, draw light over the picture and keep frames coming (`isAnimating`); its pipelines
 come from `RenderContext.makePipeline`. A mode that paints by its own rules takes the canvas's
 taps and strokes (`CanvasView.touches`, `CanvasTouches`) while pinch, pan and zoom stay the
-canvas's. Stained Glass is the first (`GlassMode`, `GlassModeTests`).
+canvas's; one that draws with the finger (`strokesWithOneFinger`, Stained Glass's lead) gets a
+stroke at once, a flick too, and the picture moves with two fingers. Stained Glass is the first (`GlassMode`, `GlassModeTests`).
 
 ## Line art rendering
 
@@ -1453,28 +1454,31 @@ captions; VoiceOver reads each title).
 SideStore and Debug builds only (`#if UNRELEASED`; painting-company row 366): the first mode built
 on the app's own code rather than a copy of it, as Paint by Mosaic is. `Glass/`: `GlassEra` (the
 era's root, in the shared frame: its gallery `GlassGalleryView` and what a picked picture
-becomes, its lead), `GlassShelf` (an `ArtworkStore` of its own,
+becomes, its window), `GlassShelf` (an `ArtworkStore` of its own,
 `Application Support/StainedGlass/Windows/`, each window a painting's folder plus `glazing.bin`,
-PaintCore's `Glazing`), `GlassLead` (the Lead screen: the photo dimmed under the lead it suggests,
-PaintCore's `GlassLeadSuggestion` laid as the ground of `GlassWindow.Leading.suggested`, or a
-blank window by Start From; the finger's lines laid one by one, ends joined as the Pen joins, the
-pieces a line closes flashing; Erase's tap takes lead away junction to junction, as Edit's Line
-Eraser does; lead that closes nothing stays as drawn, Paul's choice), `GlassGlaze`
-(free glazing on the painting screen's own `CanvasView` in `GlassMode`, Canvas above: any bead's
-glass in any piece, poured from the finger over the glass before it, unlit pieces keeping a
-faint tint of the suggested glass, the sun passing once when it is whole, drawn by
-`glassFillFragment` and `glassLightFragment`; VoiceOver has a piece element each; saves queued
+PaintCore's `Glazing`; New Window cuts the picked photo as it suggests,
+`GlassWindow.Leading.suggested`, and opens it numbered, every piece bare), `GlassGlaze`
+(leading and glazing by number on the painting screen's own `CanvasView` in `GlassMode`, Canvas
+above: each piece cut, thinly outlined and numbered for its glass, the mode's own ink; a stroke
+from the leaded part round bare pieces and back frames them, `GlassFraming`, kept in
+`glazing.bin`; a tap in a framed piece pours the bead of its number from the finger over the
+glass before it, pieces the lead covers whole glazed as the window opens
+(`GlassGlazeModel.hidden`, so none is left unfindable), the sun passing once when
+it is whole, drawn by `glassFillFragment` and `glassLightFragment`: Liquid Glass misused as the
+window's glass, each piece a clear lens over the window's photo, its rim bending the photo and
+catching the light, a poured glass tinting it, the lead heavy came (`GlassMode`; the shelf's
+pictures are drawn by it too, `GlassShelf.picture`); VoiceOver has a piece element each; saves queued
 in order, `GlassShelf.enqueue`), `GlassPicture` (lead and glass colors, and the shelf's
-pictures). How glass looks is PaintCore's `GlassTexture` (lit glass bright deep in a piece and
-streaked, unlit flat and matte: one RGBA buffer a piece repaints for the shelf's pictures, and
-`fields()`, the lead's distance, shade, depth and grain, which the canvas's shader paints from), and the glasses a window suggests are `GlassPalette`'s jewel glasses
+pictures). PaintCore's `GlassTexture` holds `fields()`, the lead's distance, shade, depth and
+grain, which the canvas's shader paints from (its own painted glass is the pictures' look where a
+device has no Metal), and the glasses a window suggests are `GlassPalette`'s jewel glasses
 (never olive, khaki or brown; never near unlit's dark). A window with a taken title gets a number
-(`GlassShelf.title(on:)`). The door: the year wheel (`EraClock`) reaches back to 0001 in these
+(`GlassShelf.title(on:)`). The door: the year wheel (`EraClock`) reaches back to 15,000 BC in these
 builds, lights the eras' years (`EraYear.modes`) and draws a wheel resting beside one on to it
 (`EraClock.pulled`); 1248 opens `Era.glass` (`Era.opened(by:)`), whose passage is a nave's dark
 with a rose window's light (`EraPassage.drawNave`); Paint by Mosaic's wheel reaches it too
-(`LeaveRavenna(for:)`). Demos: `glass-empty`, `glass-gallery`, `glass-lead`, `glass-lead-suggested`, `glass-glaze`,
-`glass-finished` (`GlassDemo`, on the mockup's monarch and lines, `GlassDemoLines`) and
+(`LeaveRavenna(for:)`). Demos: `glass-empty`, `glass-gallery`, `glass-fresh`, `glass-glaze`,
+`glass-finished`, `glass-real-panes-<n>` (`GlassDemo`, on the mockup's monarch and lines, `GlassDemoLines`) and
 `era-passage-glass`; `EraDoorTests`, `SettingsTests.testTheClockOpensWoodblockWatercolorAndStainedGlass`.
 
 ## Watercolor (1502)
@@ -1536,9 +1540,9 @@ paintings oldest first, each with its name). Demos: `cave-mouth` (the empty gall
 `CaveUITests`, which paints a library picture to Finished. `CaveFossils`: Liquid Glass misused on
 purpose, the system's controls found as glass in the rock (a cracked "more" pill over a
 painting, the mouth as a back button, the year wheel carved under the mouth), drawn by the
-shader and lit only by the torch and the daylight; none of it is a control. Not on the year
-wheel yet: 15,000 BC is lit once the wheel reaches back before year 1 (`EraClock`, Stained
-Glass's work); until then only the demos open the Cave.
+shader and lit only by the torch and the daylight; none of it is a control. 15,000 BC is the year
+wheel's far end in SideStore and Debug builds (`EraYear.cave`), lit as every era's year is; a
+wheel rested there opens the Cave.
 
 ## Woodblock (1765)
 

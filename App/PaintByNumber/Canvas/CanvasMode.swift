@@ -21,6 +21,12 @@ nonisolated protocol CanvasMode: AnyObject, Sendable {
     var backdrop: SIMD3<Float>? { get }
     var drawsOutlines: Bool { get }
     var drawsNumbers: Bool { get }
+    /// The numbers' ink (linear Display P3), nil for the paper's.
+    var ink: SIMD3<Float>? { get }
+    /// Whether the canvas draws this mode past white where the screen can (`ExtendedRange`):
+    /// its layer then takes `RenderContext.extendedFormat`, and `CanvasModeFrame.headroom` says
+    /// how far past white the mode may go.
+    var wantsExtendedRange: Bool { get }
     func prepare(_ commands: any MTLCommandBuffer, frame: CanvasModeFrame)
     func drawPaint(_ encoder: any MTLRenderCommandEncoder, frame: CanvasModeFrame)
     func drawOver(_ encoder: any MTLRenderCommandEncoder, frame: CanvasModeFrame)
@@ -29,18 +35,24 @@ nonisolated protocol CanvasMode: AnyObject, Sendable {
 
 nonisolated extension CanvasMode {
     var backdrop: SIMD3<Float>? { nil }
+    var ink: SIMD3<Float>? { nil }
+    var wantsExtendedRange: Bool { false }
     func prepare(_ commands: any MTLCommandBuffer, frame: CanvasModeFrame) {}
     func drawOver(_ encoder: any MTLRenderCommandEncoder, frame: CanvasModeFrame) {}
     func isAnimating(at time: Float) -> Bool { false }
 }
 
 /// What a mode draws a frame from: the template's buffers, this frame's region states and the
-/// frame's uniforms (`frame.uniforms` is a copy to bind with `setVertexBytes`).
+/// frame's uniforms (`frame.uniforms` is a copy to bind with `setVertexBytes`), the target's pixel
+/// format (its pipelines' `format`) and how many times brighter than white the screen can show
+/// (1 but on a canvas drawing past white).
 nonisolated struct CanvasModeFrame {
     let context: RenderContext
     let scene: CanvasScene
     let states: any MTLBuffer
     var uniforms: CanvasUniforms
+    var format: MTLPixelFormat = RenderContext.colorFormat
+    var headroom: Float = 1
 }
 
 /// A mode that takes the canvas's touches (`CanvasView.touches`) and shows what they do through
@@ -56,6 +68,14 @@ protocol CanvasTouches: AnyObject {
     func canvas(_ canvas: CanvasView, speak region: Int) -> (label: String, value: String)
     /// The canvas's own VoiceOver label and value while a mode has its touches.
     func canvasSummary(_ canvas: CanvasView) -> (label: String, value: String)
+    /// Whether one finger draws a stroke at once, a flick too, and two move the picture: a mode
+    /// that draws with the finger (Stained Glass's lead). False, one finger moves the picture and
+    /// a stroke begins only after the finger rests (the painting's drag paint).
+    var strokesWithOneFinger: Bool { get }
+}
+
+extension CanvasTouches {
+    var strokesWithOneFinger: Bool { false }
 }
 
 enum CanvasTouchPhase { case tap, began, moved, ended }

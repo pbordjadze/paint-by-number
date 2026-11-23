@@ -74,9 +74,13 @@ struct EraDoorTests {
     @Test func theWheelStartsAt0547AndEndsAtThePresent() {
         let years = EraClock.years
         #if UNRELEASED
-        #expect(years.first == 1, "SideStore's wheel reaches back to 0001")
-        #expect(years.contains(EraYear.byzantium) && years.contains(EraYear.stainedGlass))
-        #expect(years.count < 60, "a few flicks from end to end")
+        #expect(years.first == EraYear.farthest, "SideStore's wheel reaches back to 15,000 BC")
+        #expect(years.filter { $0 < 1 } == Array(stride(from: -15000, through: -100, by: 100)),
+                "every century before Christ, a step each: a long scroll, on purpose")
+        #expect(years.contains(1) && years.contains(EraYear.byzantium) && years.contains(EraYear.stainedGlass))
+        #expect(years.filter { $0 >= 1 }.count < 60, "a few flicks from 0001 to the present")
+        #expect(EraClock.text(of: EraYear.farthest).contains("15"), "15,000 BC")
+        #expect(EraClock.text(of: -100) != EraClock.text(of: 100), "100 BC isn't 0100")
         #else
         #expect(years.first == EraYear.byzantium)
         #expect(years.count < 30, "the far end is a flick away, not a long scroll")
@@ -102,7 +106,8 @@ struct EraDoorTests {
         #expect(EraClock.isLit(1765) && EraClock.pulled(from: 1700) == 1765 && EraClock.pulled(from: 1800) == 1765)
         #expect(Era.opened(by: 1502) == .watercolor)
         #expect(Era.opened(by: 1000) == .frame)
-        #expect(EraYear.modes == [547, 1000, 1248, 1502, 1765])
+        #expect(EraYear.modes == [-15000, 547, 1000, 1248, 1502, 1765])
+        #expect(Era.opened(by: EraYear.farthest) == .cave && EraClock.isLit(EraYear.farthest))
         #expect(EraClock.isLit(1502) && EraClock.pulled(from: 1500) == 1502 && EraClock.pulled(from: 1600) == 1502)
         #expect(EraClock.isLit(1248) && EraClock.isLit(547) && !EraClock.isLit(1300))
         #expect(EraClock.pulled(from: 1200) == 1248 && EraClock.pulled(from: 1300) == 1248)
