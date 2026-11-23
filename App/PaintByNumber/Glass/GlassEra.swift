@@ -1,5 +1,6 @@
 #if UNRELEASED
 import CoreGraphics
+import Foundation
 import PaintCore
 import Ravenna
 import SwiftUI
@@ -81,7 +82,7 @@ enum GlassRoute: Hashable {
     case window(UUID)
 }
 
-/// The windows: a card each, newest first; none yet, a way to make the first.
+/// The windows, in the frame's gallery (`ModeGallery`): a card each; none yet, a way to make the first.
 struct GlassGalleryView: View {
     let shelf: GlassShelf
     let onNew: () -> Void
@@ -92,20 +93,32 @@ struct GlassGalleryView: View {
             if shelf.isLoaded && shelf.windows.isEmpty {
                 empty
             } else {
-                ScrollView {
-                    // One container, so the cards' glass is sampled together and never melts
-                    // card into card.
-                    GlassEffectContainer(spacing: 0) {
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 160), spacing: 18)], spacing: 22) {
-                            ForEach(shelf.windows) { artwork in
-                                GlassCard(shelf: shelf, artwork: artwork, onOpen: { onOpen(artwork.id) })
-                            }
+                // One container, so the cards' glass is sampled together and never melts
+                // card into card.
+                GlassEffectContainer(spacing: 0) {
+                    ModeGallery(items: shelf.windows.map(\.shelfItem), actions: actions, deleteTitle: Text("Delete Window"),
+                                minimumWidth: (160, 160)) { item in
+                        if let artwork = shelf.window(item.id) {
+                            GlassCard(shelf: shelf, artwork: artwork, onOpen: { onOpen(artwork.id) })
                         }
                     }
-                    .padding(20)
                 }
             }
         }
+    }
+
+    /// The frame's card menu, in Stained Glass's words for it: shared as the window stands (its
+    /// picture on the shelf), printed as its numbered sheet, keyed in its glasses.
+    private var actions: ModeCardActions {
+        let shelf = shelf
+        return ModeCardActions(
+            rename: { shelf.rename($0, to: $1) },
+            delete: { shelf.delete($0) },
+            picture: { id in await shelf.picture(of: id) },
+            print: { id in
+                guard let artwork = shelf.window(id) else { throw CocoaError(.fileNoSuchFile) }
+                return try await PrintPreviewRequest.saved(store: shelf.store, artwork: artwork)
+            })
     }
 
     private var empty: some View {
@@ -140,7 +153,6 @@ struct GlassCard: View {
     let artwork: Artwork
     let onOpen: () -> Void
     @State private var picture: CGImage?
-    @State private var asksToDelete = false
 
     private var progress: String {
         String(localized: "glass.progress", defaultValue: "Glazed: \(artwork.paintedCount) of \(artwork.regionCount)",
@@ -182,12 +194,6 @@ struct GlassCard: View {
         .accessibilityElement(children: .combine)
         .accessibilityValue(Text(progress))
         .accessibilityIdentifier("glass-card")
-        .contextMenu {
-            Button("Delete", systemImage: "trash", role: .destructive) { asksToDelete = true }
-        }
-        .confirmationDialog(Text("Delete Window"), isPresented: $asksToDelete, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) { shelf.delete(artwork.id) }
-        }
         .task(id: artwork.thumbnailVersion) {
             picture = await shelf.thumbnail(of: artwork)
         }

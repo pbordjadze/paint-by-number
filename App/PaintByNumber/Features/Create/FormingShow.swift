@@ -322,11 +322,13 @@ enum GraphiteShader {
     private static var compiled = false
 
     static func shader(_ sheet: FormingPlan.Sheet, progress: Double) -> Shader {
+        let graphite = sheet.paper + (sheet.ink - sheet.paper) * GraphiteSketch.lead
         let point = sheet.ink * (1 - GraphiteSketch.pointWarmth) + GraphiteSketch.warm * GraphiteSketch.pointWarmth
         return ShaderLibrary.formingGraphite(
-            .float(progress), .color(color(sheet.ink)), .color(color(point)), .color(color(sheet.paper)),
+            .float(progress), .color(color(graphite)), .color(color(point)), .color(color(sheet.paper)),
             .float(GraphiteSketch.pencil), .float(GraphiteSketch.edge), .float(GraphiteSketch.fresh), .float(GraphiteSketch.wash),
-            .float(GraphiteSketch.inkFrom), .float(GraphiteSketch.inkTo), .float(GraphiteSketch.pointFrom), .float(GraphiteSketch.pointTo))
+            .float(GraphiteSketch.inkFrom), .float(GraphiteSketch.inkTo), .float(GraphiteSketch.pointFrom), .float(GraphiteSketch.pointTo),
+            .float(GraphiteSketch.grain))
     }
 
     static func prepare() async {
@@ -400,7 +402,12 @@ nonisolated enum GraphiteSketch {
     /// The shading's constants, the shader's too: the strokes' strongest, how sharply a stroke
     /// comes in, how long a stretch behind the point is fresh, and how much of the photo's color
     /// goes near a stroke.
-    static let pencil = 0.95
+    static let pencil = 0.8
+    /// Graphite, not ink: the line is the sheet's ink `lead` of the way from its paper (a mid
+    /// grey on light paper), and the paper's grain takes up to `grain` of it, pixel by pixel
+    /// (the shader alone: `shade` is the line before the grain).
+    static let lead: Float = 0.85
+    static let grain = 0.3
     static let edge = 0.012
     static let fresh = 0.06
     static let wash = 0.25
