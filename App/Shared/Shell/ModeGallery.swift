@@ -98,9 +98,6 @@ struct ModeGallery<Card: View>: View {
                 if !name.isEmpty, name != item.title { actions.rename(item.id, name) }
             }
         }
-        .confirmationDialog(deleteTitle, isPresented: present($deleting), titleVisibility: .visible, presenting: deleting) { item in
-            Button("Delete", role: .destructive) { actions.delete(item.id) }
-        }
         .sheet(item: $printPreview) { request in
             PrintPreviewSheet(request: request)
         }
@@ -127,6 +124,10 @@ struct ModeGallery<Card: View>: View {
                 ForEach(items) { item in
                     card(item)
                         .contextMenu { menu(for: item) }
+                        // On the card: on iPad the question is a popover on what it asks about.
+                        .confirmationDialog(deleteTitle, isPresented: asksToDelete(item), titleVisibility: .visible) {
+                            Button("Delete", role: .destructive) { actions.delete(item.id) }
+                        }
                 }
             }
         }
@@ -180,6 +181,10 @@ struct ModeGallery<Card: View>: View {
                 Log.library.error("Preparing a mode's painting to print failed: \(String(describing: error), privacy: .public)")
             }
         }
+    }
+
+    private func asksToDelete(_ item: ModeShelfItem) -> Binding<Bool> {
+        Binding(get: { deleting?.id == item.id }, set: { if !$0, deleting?.id == item.id { deleting = nil } })
     }
 
     private func present(_ item: Binding<ModeShelfItem?>) -> Binding<Bool> {

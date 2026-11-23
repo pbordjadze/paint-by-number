@@ -190,12 +190,18 @@ final class WatercolorShelf {
             Log.library.error("Couldn't save watercolor \(id.uuidString, privacy: .public): \(String(describing: error), privacy: .public)")
             return
         }
-        if let i = paintings.firstIndex(where: { $0.id == id }) { paintings[i] = saved }
+        if let i = paintings.firstIndex(where: { $0.id == id }) {
+            // A name given while this was written stays: the rename queued after it writes it.
+            var kept = saved
+            kept.title = paintings[i].title
+            kept.titled = paintings[i].titled
+            paintings[i] = kept
+        }
         paintings.sort { $0.modifiedAt > $1.modifiedAt }
     }
 
     /// Gives a painting the painter's name for it (the frame's card menu, `ModeGallery`), its meta
-    /// written after the saves before it, which read the name from here.
+    /// written after the saves before it (which keep the name it holds here when they land).
     func rename(_ id: UUID, to title: String) {
         guard var artwork = painting(id), !artwork.needsNewerApp, artwork.title != title else { return }
         artwork.title = title
