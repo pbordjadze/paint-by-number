@@ -23,11 +23,13 @@ struct LivePhotoTests {
         let url = Fixtures.temporaryDirectory().appending(path: "still.jpg")
         let (template, progress) = try finishedStripes().painting()
         let image = try #require(CanvasSnapshot.render(template: template, progress: progress, size: CGSize(width: 120, height: 60)))
-        #expect(LivePhoto.writeStill(image, to: url, id: "pair-1"))
+        // A real UUID, as `save` names its pairs: ImageIO pads a shorter value to a UUID's length.
+        let id = UUID().uuidString
+        #expect(LivePhoto.writeStill(image, to: url, id: id))
         let source = try #require(CGImageSourceCreateWithURL(url as CFURL, nil))
         let properties = try #require(CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any])
         let maker = try #require(properties[kCGImagePropertyMakerAppleDictionary] as? [String: Any])
-        #expect(maker["17"] as? String == "pair-1")
+        #expect(maker["17"] as? String == id)
     }
 
     @Test func theMovieNamesThePairAndMarksItsKeyPhoto() async throws {
@@ -43,11 +45,26 @@ struct LivePhotoTests {
         let identifier = metadata.first { $0.identifier == .quickTimeMetadataContentIdentifier }
         #expect(try await identifier?.load(.stringValue) == "pair-2")
         #expect(try await asset.loadTracks(withMediaType: .metadata).count == 1)
+        // Every frame of the replay, no more and no less.
+        let replayed = try await AVURLAsset(url: replay).load(.duration).seconds
         let duration = try await asset.load(.duration).seconds
-        // About three seconds, as the camera's Live Photos are.
-        #expect(duration > 2.5 && duration < 3.5, "\(duration) s")
+        #expect(abs(duration - replayed) < 0.05, "\(duration) s, the replay \(replayed) s")
         let frames = try #require(try await asset.loadTracks(withMediaType: .video).first)
-        #expect(try await frames.load(.timeRange).duration.seconds > 2.5)
+        #expect(abs(try await frames.load(.timeRange).duration.seconds - replayed) < 0.05)
+    }
+
+    /// A painting of any size plays in about three seconds, as the camera's Live Photos do
+    /// (the three stripes above are a shorter replay: the schedule never stretches a few strokes).
+    @Test func aPaintingPlaysInAboutThreeSeconds() {
+        let pace = TimelapseFrameRenderer.Pace.livePhoto
+        let options = TimelapseExporter.Options(
+            size: CGSize(width: 320, height: 240), framesPerSecond: pace.framesPerSecond,
+            paintingSeconds: pace.paintingSeconds, introSeconds: pace.introSeconds, outroSeconds: pace.outroSeconds)
+        for strokes in [40, 400, 4000] {
+            let schedule = TimelapseSchedule(strokeCount: strokes, options: options)
+            let seconds = Double(schedule.frameCount) / Double(pace.framesPerSecond)
+            #expect(seconds > 2.5 && seconds < 3.5, "\(strokes) strokes: \(seconds) s")
+        }
     }
 }
 #endif
