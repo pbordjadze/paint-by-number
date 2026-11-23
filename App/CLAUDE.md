@@ -1251,7 +1251,8 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   (`CreateModel.load(imageData:title:)`, `paintsNow`). A work with a finished painting of it
   hangs in a little frame on the wall, and one with a painting under way says Resume on its
   page, which closes the flow and opens that painting (`MuseumPainted`: by the painting's name,
-  and the ids Paint This records; the shell's `resumePainting`). Pictures go through `MuseumImages`, a
+  and the ids Paint This records; the shell's `resumePainting`). Every mode's + menu opens it
+  too (`ModeShell`, The frame every mode shares). Pictures go through `MuseumImages`, a
   URL cache of their own on disk. Its scenarios are `museum` (with `-dark`), `museum-art-nouveau`
   and `museum-work` (with `-dark`), which need the network; `-demoMuseumPaint YES` paints the
   opened work once it is fetched.
@@ -1390,7 +1391,9 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
   The Original, for a library work, opens `SampleAboutView`. A mosaic still under the name the app
   gave it (a photo's date: `Artwork.titled`, Paint by Moonlight's key) has that name with a pencil
   on the bar, which names it (`ArtworkPaintingView`'s Name Your Mosaic); named, it renames.
-  `-demo ravenna-paint-complete-doors` screenshots it.
+  `-demo ravenna-paint-complete-doors` (a library work, named, four doors) and
+  `ravenna-paint-complete-unnamed` (as from the painter's own photo: the date with its pencil,
+  three doors) screenshot it.
 - **Print… and Show Lines** (painting-company row 330; SideStore and Debug builds, the release
   keeping Share › Print Template…): Print… sits where the app has it, beside Share in a card's
   menu and in More, and opens the app's own Print's preview (`App/Shared`'s
@@ -1409,8 +1412,11 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
 SideStore and Debug builds (`#if UNRELEASED`; painting-company row 379). Every mode behind the
 year wheel is a `ModeShell` around what is its own; `ModeShell`'s doc comment is the rules, with no
 exceptions: a year (opened from the wheel, left from its Settings' Year row, `ModeSettingsView`);
-a gallery under the mode's name on its backdrop; Settings top left; New top right, with A Photo
-and The Library and nothing else (`ModeLibraryPicker`); one accent and the dark; the painting
+a gallery under the mode's name on its backdrop; Settings top left; New top right, with the frame's
+three ways in, which every mode offers and none replaces: A Photo, The Library
+(`ModeLibraryPicker`) and The Museum (`MuseumView` with no `onResume`: no frames or Resume there,
+a mode's paintings being its own; a work painted names the painting, `ModePicture.title`; part
+of the frame, not a mode: no year, era or gallery of its own) and nothing else; one accent and the dark; the painting
 screen pushed on the gallery, its name inline, the same words while it opens or can't
 (`ModePaintingFrame`, `ModeOpening`). Every mode also guarantees, inside the frame: it starts from the painter's
 picture and makes the painting from it; the picture is divided into numbered regions, each number
@@ -1487,17 +1493,46 @@ wet; the sheet with its margins, `WatercolorRenderer.margins`, fitted above the 
 finished painting signed in pencil in its bottom margin, its title and 1502), `WatercolorPaintView`
 (canvas and paint box, `WatercolorPaintBox`: a tin of half pans lying over the desk, the pan in
 hand lifted, a used-up one scooped to its white, put away when the painting is finished, the
-sheet settling into its room; Reduce Motion settles each wash at once and moves nothing), `WatercolorMakingOfView` (the Making Of: a new
-painting painted once by a simulation of its own stepped off the main actor, PaintCore's
-`WatercolorMakingOf` its plan and clock, drawn with the same shader by `WatercolorFilmRenderer`,
-over the painting screen opening beneath; about six seconds, a tap lifts it away; Reduce Motion
-crossfades the finished painting in and out; VoiceOver skips it). The era
+sheet settling into its room; Reduce Motion settles each wash at once and moves nothing), `WatercolorMakingOfView` (the Making Of: the
+painting's paints tried on a study sheet, never the painting itself, which is the painter's to
+find (PaintCore's `WatercolorStudy`: a chart of its paints, a band laid wet in wet, a granulating
+stripe, discs that bloom, ruled and numbered with the painting's numbers); painted once by a
+simulation of its own stepped off the main actor, PaintCore's `WatercolorMakingOf` its plan and
+clock, drawn with the same shader by `WatercolorFilmRenderer`, over the painting screen opening
+beneath; a few seconds, then set aside onto the painting's bare sheet, and a tap sets it aside at
+once; Reduce Motion crossfades the dried study in and out; VoiceOver skips it). The era
 is dark (`preferredColorScheme`, as Stained Glass), its gallery sheets on the slate
 (`WatercolorCard`, `DeckleEdge`), empty a blank sheet with its two ways in. 1502 opens `Era.watercolor`, whose passage is a
 wash flooding the screen (`EraPassage.drawWash`). `pbn watercolor` paints a template off the
 device. Demos: `watercolor-empty`, `watercolor-paint`, `watercolor-painted`, `watercolor-making-of`
 (held mid-flood) (`WatercolorDemo`) and
 `era-passage-watercolor`.
+
+## The Cave (15,000 BC)
+
+SideStore and Debug builds only (`#if UNRELEASED`; painting-company row 371), in the frame every
+mode shares (`ModeShell`, row 379). `Cave/`: `CaveEra` (the root in `ModeShell`: `CaveGalleryView`,
+each painting a card of its bay lit by a torch, `CaveCard`, drawn on the CPU by `CavePicture` and
+kept as `picture-<fingerprint>.jpg`; with none, the gallery is the cave's mouth itself, alive, whose
+charcoal on the bare rock asks for the first photo; a picked picture drawn through `CaveVision`
+and PaintCore's `CavePlan`, its areas numbered by dots of their pigment; `CavePaintingScreen`,
+pushed, in `ModePaintingFrame`), `CaveWallView` (a `CAMetalLayer` on a display link; each bay's
+maps made off the main thread as the camera nears it; VoiceOver's one element with its custom
+actions), `CaveScene` (the torch, the blow, the hand of four or five fingers; `isSingle`, the
+painting screen's one bay between plain rock, the camera still and no daylight, where the
+empty gallery's mouth walks), `CaveRenderer` and `CaveShader` (compiled at runtime from source,
+so nothing reaches the app's metallib; a soft shadow marched toward the torch through the relief),
+`CaveSound` (synthesized fire, breath and drips in an `AVAudioEnvironmentNode`'s hall; Core
+Haptics; Settings' Sounds and Haptics) and `CaveShelf` (`Application Support/Cave/Wall/`, the
+paintings oldest first, each with its name). Demos: `cave-mouth` (the empty gallery),
+`cave-blowing`, `cave-hand` (a painting's screen), `cave-wall` (the gallery) (`CaveDemo`;
+`-caveAutoPaint YES` has a painting's screen blow itself to Finished); `CaveAppTests`, and
+`CaveUITests`, which paints a library picture to Finished. `CaveFossils`: Liquid Glass misused on
+purpose, the system's controls found as glass in the rock (a cracked "more" pill over a
+painting, the mouth as a back button, the year wheel carved under the mouth), drawn by the
+shader and lit only by the torch and the daylight; none of it is a control. Not on the year
+wheel yet: 15,000 BC is lit once the wheel reaches back before year 1 (`EraClock`, Stained
+Glass's work); until then only the demos open the Cave.
 
 ## Woodblock (1765)
 

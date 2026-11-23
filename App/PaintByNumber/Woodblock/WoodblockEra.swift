@@ -65,7 +65,7 @@ struct WoodblockEra: View {
         do {
             let (template, settings) = try await WoodblockShelf.template(of: picked.photo)
             let artwork = try await shelf.create(template: template, settings: settings, photo: picked.photo,
-                                                 title: picked.sample?.title ?? shelf.title(), sampleName: picked.sample?.id)
+                                                 title: picked.title ?? shelf.title(), sampleName: picked.sample?.id)
             path = [artwork.id]
         } catch {
             Log.library.error("Couldn't make a print: \(String(describing: error), privacy: .public)")

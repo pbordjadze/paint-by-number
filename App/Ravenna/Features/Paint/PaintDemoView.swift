@@ -17,9 +17,11 @@ import simd
 /// - `paint-setting`: ~40 % set, zoomed 4× onto the paint in hand, then a row of its tiles laid in
 ///   one stroke and slowed thirtyfold, so the shot catches the first raised over their places
 /// - `paint-complete-doors`: the mosaic finished, as laid from the library's Young Woman with a
-///   Gilded Wreath (`PaintingWork`) and still under the name the app gave it: the Finished panel
-///   with its four doors and the name with its pencil (`FinishedDoors`, SideStore and Debug
+///   Gilded Wreath (`PaintingWork`) and named after it, as a library work's always is: the
+///   Finished panel with its four doors, The Original last (`FinishedDoors`, SideStore and Debug
 ///   builds; painting-company row 330), ready once their glimpses have had time to draw
+/// - `paint-complete-unnamed`: the same mosaic as if laid from the painter's own photo, under the
+///   name the app gave it, a date: the name with its pencil, and three doors (no Original)
 /// - `paint-complete-lines`: the finished mosaic with More › Show Lines on, zoomed 2.5× onto the
 ///   middle, the sheet's lines drawn over its tiles (SideStore and Debug builds)
 /// - `paint-mosaic-measure`: a mosaic of about 9,500 tiles (the Pieces slider's top; a jittered
@@ -127,7 +129,7 @@ struct PaintDemoView: View {
             // Titles are the person's own words, which pseudo-localization doesn't lengthen.
             let title = scenario.hasSuffix("-long-text")
                 ? "A Young Woman with a Gilded Wreath, from the Fayum, Painted in Encaustic"
-                : scenario == "paint-complete-doors" ? "November 21"
+                : scenario == "paint-complete-unnamed" ? "November 21"
                 : (template == nil ? "Mosaic" : (book ? "Red Fox" : "Young Woman with a Gilded Wreath"))
             demo = await Demo(
                 scenario: scenario, template: template ?? SyntheticTemplate.make(), mosaic: mosaic, title: title,
@@ -229,8 +231,8 @@ private final class Demo {
     /// Feedback scenarios: what feedback starts with, and where the painting came from.
     var feedback: FeedbackDemo?
     var feedbackSource: FeedbackSource?
-    /// `paint-complete-doors`: the library work it was laid from (The Original's door), and its
-    /// name still the one the app gave it.
+    /// `paint-complete-doors`: the library work it was laid from (The Original's door);
+    /// `paint-complete-unnamed`: its name still the one the app gave it.
     var work: PaintingWork?
     var unnamed = false
     /// `paint-finish`: the area left to paint; `paint-book-moon-dark`: the area its stars pop on.
@@ -297,6 +299,8 @@ private final class Demo {
         case "paint-complete-doors":
             paint(fraction: 1)
             work = PaintingWork(sample: Sample.named("young-woman-gilded-wreath"), makingOf: nil)
+        case "paint-complete-unnamed":
+            paint(fraction: 1)
             unnamed = true
         case "paint-complete-lines":
             paint(fraction: 1)
@@ -457,7 +461,7 @@ private final class Demo {
 
     /// Scenario actions that need the canvas on screen.
     func run() async {
-        if scenario == "paint-complete-doors" {
+        if scenario == "paint-complete-doors" || scenario == "paint-complete-unnamed" {
             // The doors' glimpses (a library work's photo, the close-up of the tiles, the finished
             // picture) are made off the main thread once the panel is up.
             try? await Task.sleep(for: .seconds(2.5))
