@@ -96,8 +96,9 @@ before planning app work).
   - `Watercolor/`: Watercolor (painting-company row 373): `WatercolorSheet` (a template as a
     sheet of paper, the watercolor key), `WatercolorSim` (water and pigment after Curtis et al.
     1997, deterministic on any core count, snapshots), `WatercolorLog` (the taps, read as
-    hostile input) and `WatercolorMakingOf` (the app's Making Of: a tap log laid light to dark
-    and its time-lapse clock); `pbn watercolor` paints a template tap by tap, and with
+    hostile input), `WatercolorStudy` (the Making Of's sheet: the painting's paints tried on paper
+    of its size, never its picture) and `WatercolorMakingOf` (the Making Of's tap log and its
+    time-lapse clock); `pbn watercolor` paints a template tap by tap, and with
     `--making-of` films the Making Of (`tools/watercolor_making_of.py`: contact sheet and mp4).
   - `Edit/`: `TemplateEditor`, the painter's pen, Cell Edge, Merge, Paint Brush, Bend Line and Move Edge (`reshape`), Move Number, eraser, line eraser, fill, Only
     This Area (`paintArea`), Looks and Edit Paint (looks and repaints, `Recolor.swift`) and the
