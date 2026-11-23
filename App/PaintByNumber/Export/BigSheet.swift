@@ -570,7 +570,29 @@ struct BigSheetView: View {
 
     // MARK: Where it goes
 
+    /// Where it goes, one row until it is filled in: the form takes a page of its own, so the
+    /// sheet stays the screen's subject (and Apple Pay's sheet asks for it once it is set up).
     private var shipToSection: some View {
+        Section {
+            NavigationLink {
+                Form { addressFields }
+                    .navigationTitle("Ship To")
+                    .navigationBarTitleDisplayMode(.inline)
+            } label: {
+                LabeledContent {
+                    // The painter's own words, shown as they typed them.
+                    if recipient.isComplete { Text(recipient.name) }
+                } label: {
+                    Text("Ship To")
+                }
+            }
+            .accessibilityIdentifier("big-sheet-ship-to")
+        } footer: {
+            Text("Only this sheet and the address go to the printer, never your photo.")
+        }
+    }
+
+    private var addressFields: some View {
         Section {
             TextField("Name", text: $recipient.name)
                 .textContentType(.name)
@@ -601,8 +623,6 @@ struct BigSheetView: View {
             } label: {
                 Text("Country")
             }
-        } header: {
-            Text("Ship To")
         } footer: {
             Text("Only this sheet and the address go to the printer, never your photo.")
         }
