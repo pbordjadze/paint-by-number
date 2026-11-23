@@ -481,12 +481,13 @@ struct BigSheetView: View {
             HStack(alignment: .bottom, spacing: unit * Self.gap) {
                 VStack(spacing: 8) {
                     Self.paper(picture, width: poster.width * unit, height: poster.height * unit)
-                    Text(sizeText(product))
+                    // Named the way it is drawn, its width first.
+                    Text(sizeText(inches: poster))
                 }
                 .accessibilityElement(children: .combine)
                 VStack(spacing: 8) {
                     Self.paper(pagePicture, width: page.width * unit, height: page.height * unit)
-                    Text(sizeText(inches: CGSize(width: layout.paper.size.width / 72, height: layout.paper.size.height / 72)))
+                    Text(sizeText(inches: page))
                 }
                 .accessibilityHidden(true)
             }
