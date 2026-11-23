@@ -46,7 +46,8 @@ CONTOUR_WEIGHT = 0.85
 DRAWING, CONTOUR, CONTOUR_SHARE, PRESSURE = (0.3, 0.7), (0.62, 0.92), 0.8, 0.2
 COARSE, HALO_RADIUS, HALO_GAIN = 3, 2, 2.0
 SHORTEST, STROKE_FLOOR = 24, 0.1
-PENCIL, EDGE, FRESH, WASH, POINT = 0.95, 0.012, 0.06, 0.5, 0.8
+PENCIL, EDGE, FRESH, WASH, POINT = 0.95, 0.012, 0.06, 0.25, 0.8
+INK_RIDGE, POINT_RIDGE = (0.35, 0.6), (0.12, 0.4)
 CENTRE = (0.5, 0.45)
 
 
@@ -193,8 +194,8 @@ def frames(name, dark, at):
         behind = p - arrival
         reached = np.clip(behind / EDGE, 0, 1)
         tip = np.where((behind >= 0) & (behind < FRESH), 1 - behind / FRESH, 0)
-        a = s * reached * (PENCIL + (1 - PENCIL) * tip)
-        pt = s * reached * tip
+        pt = ramp(s, *POINT_RIDGE) * reached * tip
+        a = np.maximum(ramp(s, *INK_RIDGE) * reached * (PENCIL + (1 - PENCIL) * tip), pt)
         wash = WASH * near * reached * (1 - a)
         lead = ink + (point - ink) * np.where(a > 0, pt / np.maximum(a, 1e-9), 0)[..., None]
         frame = lead * a[..., None] + paper * wash[..., None] + rgb * (1 - a - wash)[..., None]

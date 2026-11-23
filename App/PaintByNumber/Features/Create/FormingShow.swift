@@ -325,7 +325,8 @@ enum GraphiteShader {
         let point = sheet.ink * (1 - GraphiteSketch.pointWarmth) + GraphiteSketch.warm * GraphiteSketch.pointWarmth
         return ShaderLibrary.formingGraphite(
             .float(progress), .color(color(sheet.ink)), .color(color(point)), .color(color(sheet.paper)),
-            .float(GraphiteSketch.pencil), .float(GraphiteSketch.edge), .float(GraphiteSketch.fresh), .float(GraphiteSketch.wash))
+            .float(GraphiteSketch.pencil), .float(GraphiteSketch.edge), .float(GraphiteSketch.fresh), .float(GraphiteSketch.wash),
+            .float(GraphiteSketch.inkFrom), .float(GraphiteSketch.inkTo), .float(GraphiteSketch.pointFrom), .float(GraphiteSketch.pointTo))
     }
 
     static func prepare() async {
@@ -402,7 +403,14 @@ nonisolated enum GraphiteSketch {
     static let pencil = 0.95
     static let edge = 0.012
     static let fresh = 0.06
-    static let wash = 0.5
+    static let wash = 0.25
+    /// The ink takes a stroke's crisp ridge (the map's stroke between `inkFrom` and `inkTo`, the
+    /// map being smaller than the screen and its strokes soft there), the point a little more
+    /// (`pointFrom` to `pointTo`), so it shows as a warm dot at the front.
+    static let inkFrom = 0.35
+    static let inkTo = 0.6
+    static let pointFrom = 0.12
+    static let pointTo = 0.4
     /// The point's warmth, `pointWarmth` of it over the ink, so the moving point shows.
     static let warm = SIMD3<Float>(0.95, 0.60, 0.25)
     static let pointWarmth: Float = 0.8
@@ -642,8 +650,15 @@ nonisolated enum GraphiteSketch {
         let reached = min(max((progress - arrival) / edge, 0), 1)
         let behind = progress - arrival
         let point = behind >= 0 && behind < fresh ? 1 - behind / fresh : 0
+        let pointShare = smooth(stroke, pointFrom, pointTo) * reached * point
         return Shade(
-            ink: stroke * reached * (pencil + (1 - pencil) * point), point: stroke * reached * point, wash: wash * halo * reached)
+            ink: max(smooth(stroke, inkFrom, inkTo) * reached * (pencil + (1 - pencil) * point), pointShare),
+            point: pointShare, wash: wash * halo * reached)
+    }
+
+    private static func smooth(_ v: Double, _ from: Double, _ to: Double) -> Double {
+        let t = min(max((v - from) / (to - from), 0), 1)
+        return t * t * (3 - 2 * t)
     }
 
     /// A binary min-heap of grid cells by distance.
