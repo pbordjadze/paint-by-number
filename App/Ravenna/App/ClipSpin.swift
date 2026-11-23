@@ -12,13 +12,17 @@ enum ClipSpin {
     private static let targets: [Int] = (UserDefaults.standard.string(forKey: "clipSpins") ?? "")
         .split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
     private static var next = 0
-    /// 60ths of a second each step is held: the doors' frame clock, or 1; under 20, or a step would
-    /// outlast the wheel's pull (`EraClock.pull`) and draw it on to an era mid-spin.
-    private static var hold: Int { min(16, max(1, UserDefaults.standard.integer(forKey: "passageFrameClock"))) }
+    /// While a spin turns the wheel, which then neither draws on to an era nor settles.
+    static private(set) var isSpinning = false
+    /// Whether the wheel that just came out was spun (it settles where the spin ended).
+    static private(set) var didSpin = false
+    /// 60ths of a second each step is held: the doors' frame clock, or 1.
+    private static var hold: Int { max(1, UserDefaults.standard.integer(forKey: "passageFrameClock")) }
     /// The spin's length in 60ths (at the frame clock's speed, so 1.4 s once sped back up).
     static let steps = 84
 
     static func spin(from year: Int, rows: [Int], set: (Int) -> Void) async {
+        didSpin = false
         guard next < targets.count, let from = rows.firstIndex(of: year) else { return }
         let target = targets[next]
         next += 1
@@ -28,6 +32,8 @@ enum ClipSpin {
         // A beat before the thumb comes down, as a viewer sees the wheel first.
         try? await Task.sleep(for: tick * 20)
         if Task.isCancelled { return }
+        isSpinning = true
+        defer { isSpinning = false; didSpin = !Task.isCancelled }
         for step in 1...steps {
             let t = Double(step) / Double(steps)
             let eased = 1 - pow(1 - t, 3)

@@ -87,24 +87,37 @@ public struct EraClock: View {
         }
         .onChange(of: year) { _, year in
             settling?.cancel()
-            settling = Task {
-                if !voiceOver, let era = Self.pulled(from: year) {
-                    try? await Task.sleep(for: Self.pull)
-                    guard !Task.isCancelled else { return }
-                    withAnimation(reduceMotion ? nil : .smooth(duration: 0.45)) { self.year = era }
-                    return
-                }
-                try? await Task.sleep(for: voiceOver ? Self.spokenRest : Self.rest)
-                guard !Task.isCancelled else { return }
-                // A rest that lands while the row is closing the wheel leaves the row its own year.
-                if let reading, reading.isOpen { reading.year = year }
-                onSettle(year)
-            }
+            #if DEBUG
+            // A clip's spin rests on a row longer than a thumb would: it settles once, at its end.
+            if ClipSpin.isSpinning { return }
+            #endif
+            settle(year)
         }
         .onDisappear { settling?.cancel() }
         #if DEBUG
-        .task { await ClipSpin.spin(from: year, rows: rows.map(\.year)) { self.year = $0 } }
+        .task {
+            await ClipSpin.spin(from: year, rows: rows.map(\.year)) { self.year = $0 }
+            if ClipSpin.didSpin { settle(year) }
+        }
         #endif
+    }
+
+    /// The wheel come to rest on `year`: drawn on to an era beside it, or, after a rest, handed over.
+    private func settle(_ year: Int) {
+        settling?.cancel()
+        settling = Task {
+            if !voiceOver, let era = Self.pulled(from: year) {
+                try? await Task.sleep(for: Self.pull)
+                guard !Task.isCancelled else { return }
+                withAnimation(reduceMotion ? nil : .smooth(duration: 0.45)) { self.year = era }
+                return
+            }
+            try? await Task.sleep(for: voiceOver ? Self.spokenRest : Self.rest)
+            guard !Task.isCancelled else { return }
+            // A rest that lands while the row is closing the wheel leaves the row its own year.
+            if let reading, reading.isOpen { reading.year = year }
+            onSettle(year)
+        }
     }
 
     /// The wheel, telling `reading` each year it comes to rest on.
