@@ -23,6 +23,7 @@ public struct EraClock: View {
     @State private var settling: Task<Void, Never>?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
+    @Environment(\.eraClockSound) private var sound
 
     /// How long the wheel must rest on a year before it counts: a wheel spun past 0547 isn't a
     /// visit to it.
@@ -86,6 +87,9 @@ public struct EraClock: View {
             return new < old ? .impact(weight: .heavy, intensity: 0.25 + 0.75 * Self.age(of: new)) : nil
         }
         .onChange(of: year) { _, year in
+            if let sound, let row = rows.firstIndex(where: { $0.year == year }) {
+                sound.turned(row, rows.count, rows[row].isLit)
+            }
             settling?.cancel()
             settling = Task {
                 if !voiceOver, let era = Self.pulled(from: year) {
@@ -102,6 +106,18 @@ public struct EraClock: View {
             }
         }
         .onDisappear { settling?.cancel() }
+    }
+
+    /// What the wheel sounds as it turns (SideStore and Debug builds; painting-company row 381):
+    /// Paint by Moonlight's to give, at its root (`EraSounds`), and each Settings' Sounds switch's
+    /// to take away. Nil, the wheel is silent, as the release's is.
+    public struct Sound {
+        /// The wheel came to `row` of `rows` (0 the oldest year), lit when it opens an era.
+        public let turned: (_ row: Int, _ rows: Int, _ lit: Bool) -> Void
+
+        public init(turned: @escaping (_ row: Int, _ rows: Int, _ lit: Bool) -> Void) {
+            self.turned = turned
+        }
     }
 
     /// The wheel, telling `reading` each year it comes to rest on.
@@ -238,7 +254,7 @@ public struct EraClock: View {
 }
 
 /// Which era a year on the clock opens: 547, the year San Vitale in Ravenna was consecrated, is
-/// Byzantium; 1248 Stained Glass, in SideStore and Debug builds; the present (or any later year)
+/// Byzantium; 1248 Stained Glass and 1765 Woodblock, in SideStore and Debug builds; the present (or any later year)
 /// is Paint by Moonlight's own. Every other year opens nothing.
 public enum EraYear {
     public static let byzantium = 547
@@ -253,6 +269,9 @@ public enum EraYear {
     /// and Debug builds; painting-company row 366).
     public static let stainedGlass = 1248
 
+    /// 1765, the year of Harunobu's first prints in full colour from many blocks, registered on
+    /// kentō: Woodblock's (SideStore and Debug builds; painting-company row 375).
+    public static let woodblock = 1765
     /// 1502, the year of Dürer's *Young Hare*, the most famous early watercolor: Watercolor's
     /// (SideStore and Debug builds; painting-company row 373).
     public static let watercolor = 1502
@@ -264,7 +283,7 @@ public enum EraYear {
     /// The years that open an era, oldest first: the ones the wheel lights.
     public static var modes: [Int] {
         #if UNRELEASED
-        return [byzantium, frame, stainedGlass, watercolor]
+        return [byzantium, frame, stainedGlass, watercolor, woodblock]
         #else
         return [byzantium]
         #endif
@@ -272,6 +291,7 @@ public enum EraYear {
 
     public static func opensStainedGlass(_ year: Int) -> Bool { year == stainedGlass && modes.contains(year) }
 
+    public static func opensWoodblock(_ year: Int) -> Bool { year == woodblock && modes.contains(year) }
     public static func opensWatercolor(_ year: Int) -> Bool { year == watercolor && modes.contains(year) }
 
     public static func opensTheFrame(_ year: Int) -> Bool { year == frame && modes.contains(year) }
@@ -280,4 +300,9 @@ public enum EraYear {
 
     /// Whether a wheel left on `year` takes the painter somewhere: an era's year, or the present.
     public static func opensAnEra(_ year: Int) -> Bool { returnsToThePresent(year) || modes.contains(year) }
+}
+
+extension EnvironmentValues {
+    /// The year wheel's sound (`EraClock.Sound`), nil for none.
+    @Entry public var eraClockSound: EraClock.Sound? = nil
 }

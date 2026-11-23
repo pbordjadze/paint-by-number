@@ -52,6 +52,23 @@ struct TemplatePreviewView: View {
     @AppStorage(SettingsKey.playsMakingOf) private var playsMakingOf = SettingsDefault.playsMakingOf
     /// VoiceOver has heard the picture forming's one status.
     @State private var hasAnnouncedForming = false
+    /// The short Making-of over the picture forming (`FormingShow`): the photo's graphite
+    /// drawing and when it began to spread, when the lines' fuse is lit, and where a tap sent it.
+    @State private var graphite: GraphiteSketch.Drawing?
+    @State private var graphiteBegan: Date?
+    /// Counts the waits the graphite was let go after: a template made again draws it anew.
+    @State private var graphiteRound = 0
+    /// The making has outlasted the show's `patience`: the forming's status shows over it.
+    @State private var formingTookLong = false
+    /// The photo the graphite began over: another paper redraws it without starting it again.
+    @State private var graphitePhoto: UUID?
+    /// The graphite's drawing has been tried for these lines, whether or not it could be made.
+    @State private var graphiteTried = false
+    @State private var fuseLit: Date?
+    @State private var fuseDone: Date?
+    @State private var formingSkip: FormingShow.Skip?
+    @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
+    @Environment(\.colorScheme) private var colorScheme
     @FocusState private var titleFocused: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
@@ -59,7 +76,7 @@ struct TemplatePreviewView: View {
 
     // In two parts, which the compiler type-checks apart: as one chain it ran out of time.
     var body: some View {
-        observingTheModel(screen)
+        observingTheModel(playingTheShow(screen))
             .modifier(UnlockOffer(isPresented: $offersUnlock, start: start, declined: leaveIfPaintingNow))
             .alert("Couldn’t Create Painting", isPresented: isShowingStartError) {
                 Button("Try Again", action: start)
@@ -554,7 +571,9 @@ struct TemplatePreviewView: View {
                 compares: false, aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged,
                 lines: forming.lines ? model.preview?.drawing : nil, linesHeld: heldDraw,
                 // The hand-off's lift waits for the lines to be drawn (`FormingPlan.liftWait`).
-                linesBegan: { [pictureProbe] in pictureProbe?.linesBegan = .now })
+                linesBegan: { [pictureProbe] in pictureProbe?.formingDone = ContinuousClock.now + .seconds(FormingPlan.drawIn) },
+                formingShow: playsTheShow && !hasFailed ? formingMoments : nil,
+                tapped: playsTheShow && formingSkip == nil && !hasFailed ? { skipForming() } : nil)
         }
         return CompareView(
             photo: source.preview, after: model.preview?.picture, afterID: model.preview?.id.uuidString ?? "none",
@@ -576,21 +595,184 @@ struct TemplatePreviewView: View {
         FormingPlan.forms(paintsNow: model.paintsNow, isScratch: model.isScratch, isDrawing: model.isDrawing)
     }
 
+    // MARK: The short Making-of
+
+    /// Whether the picture forming plays the short Making-of (`FormingShow`).
+    private var playsTheShow: Bool {
+        FormingShow.plays(forms: isForming, reduceMotion: reduceMotion, playsMakingOf: playsMakingOf, skipped: formingSkip)
+    }
+
+    private var formingMoments: FormingMoments {
+        FormingMoments(
+            graphite: graphite, graphiteBegan: graphiteBegan, fuseLit: fuseLit, fuseDone: fuseDone,
+            heldGraphite: heldGraphite, heldFuse: heldDraw.map { Double($0) })
+    }
+
+    /// What the graphite drawing is made for: this photo's lines on this paper, while the show
+    /// plays. Until its lines are found the photo shows as it is.
+    private struct GraphiteKey: Equatable {
+        var photo: UUID
+        var sheet: FormingPlan.Sheet
+        var round: Int
+    }
+
+    private var graphiteKey: GraphiteKey? {
+        guard playsTheShow, model.linesFound != nil else { return nil }
+        return GraphiteKey(
+            photo: model.photoID, sheet: FormingPlan.sheet(paperAppearance, interfaceIsDark: colorScheme == .dark), round: graphiteRound)
+    }
+
+    /// The show's graphite as the photo shows, and its fuse once the template is made.
+    private func playingTheShow(_ content: some View) -> some View {
+        content
+            .onAppear {
+                if FormingShow.isOn { pictureProbe?.skipsForming = { skipForming() } }
+            }
+            // The probe outlives the preview: what it holds of the preview goes with it.
+            .onDisappear {
+                pictureProbe?.skipsForming = nil
+                pictureProbe?.formingDone = nil
+                pictureProbe?.formingShowed = false
+                graphite = nil
+            }
+            .task(id: graphiteKey) {
+                graphiteTried = false
+                guard let key = graphiteKey, let lines = model.linesFound else { return }
+                async let drawn = GraphiteSketch.draw(lines, sheet: key.sheet)
+                await FrontMasks.prepare()
+                await GraphiteShader.prepare()
+                let sketch = await drawn
+                guard !Task.isCancelled else { return }
+                graphiteTried = true
+                guard let sketch else { return }
+                // Made meanwhile: the fuse burns over the photo itself.
+                guard playsTheShow, !forming.lines, fuseLit == nil else { return }
+                graphite = sketch
+                // Another paper for the same photo carries on where the graphite was.
+                if graphiteBegan == nil || graphitePhoto != key.photo { graphiteBegan = .now }
+                graphitePhoto = key.photo
+            }
+            .onChange(of: forming.lines, initial: true) { _, lines in lightFuse(lines) }
+            // Once the lines have burned in, nothing shows the graphite again: its images go (a
+            // demo holding the fuse part way keeps them).
+            .task(id: fuseDone) {
+                guard let fuseDone, heldDraw == nil else { return }
+                let wait = fuseDone.timeIntervalSinceNow
+                if wait > 0 {
+                    guard (try? await Task.sleep(for: .seconds(wait))) != nil else { return }
+                }
+                graphite = nil
+            }
+            // The show stands for the forming's status, which VoiceOver hears all the same, and
+            // brings it back for a making slower than its patience (a demo's held wait never is).
+            .onChange(of: showsTheWait, initial: true) { _, shows in
+                guard shows, !hasAnnouncedForming else { return }
+                hasAnnouncedForming = true
+                Announcer.announce(String(localized: "Making the painting…"))
+            }
+            .task(id: showsTheWait) {
+                formingTookLong = false
+                guard showsTheWait, heldGraphite == nil else { return }
+                guard (try? await Task.sleep(for: .seconds(FormingShow.patience))) != nil else { return }
+                formingTookLong = true
+            }
+            #if DEBUG
+            // `create-forming` and `-graphite` are ready once the graphite is over the photo.
+            .onChange(of: demoGraphiteReady, initial: true) { _, ready in
+                if ready { DemoMode.markReady() }
+            }
+            #endif
+    }
+
+    #if DEBUG
+    /// The `create-forming` and `-graphite` demos' moment: the template made, and the graphite
+    /// drawn over the photo (where the show plays and the photo has lines to draw).
+    private var demoGraphiteReady: Bool {
+        guard ShellDemo.current?.formingHold?.readyOnGraphite == true else { return false }
+        return model.isFinal && (graphite != nil || graphiteTried || !playsTheShow || model.linesFound == nil)
+    }
+    #endif
+
+    /// The show plays over a template still being made.
+    private var showsTheWait: Bool {
+        playsTheShow && forming.status && !hasFailed
+    }
+
+    /// The template is made (`lines`): its lines' fuse is lit, once the graphite has shown a
+    /// moment (`FormingShow.fuseLit`), and the hand-off told when they will have burned in.
+    private func lightFuse(_ lines: Bool) {
+        guard playsTheShow else { return }
+        guard lines else {
+            // Made again (its lines gone for now): the fuse waits for the new template, and a
+            // graphite already let go is drawn anew.
+            fuseLit = nil
+            fuseDone = nil
+            if formingSkip == .toPainting { formingSkip = nil }
+            if graphite == nil, graphiteBegan != nil {
+                graphiteBegan = nil
+                graphiteRound += 1
+            }
+            return
+        }
+        guard fuseLit == nil else { return }
+        let now = Date.now
+        if formingSkip == .toPainting {
+            fuseLit = now
+            fuseDone = now
+            pictureProbe?.formingDone = ContinuousClock.now
+        } else {
+            let made = now.timeIntervalSinceReferenceDate
+            let lit = FormingShow.fuseLit(madeAt: made, graphiteBegan: graphiteBegan?.timeIntervalSinceReferenceDate)
+            fuseLit = Date(timeIntervalSinceReferenceDate: lit)
+            fuseDone = Date(timeIntervalSinceReferenceDate: FormingShow.done(madeAt: made))
+            pictureProbe?.formingDone = ContinuousClock.now + .seconds(FormingShow.longestTail)
+        }
+        pictureProbe?.formingShowed = true
+    }
+
+    /// A tap on the show (`FormingShow.skip`): once the template is made, its lines are all there
+    /// and the hand-off lifts at once; before, the graphite goes and the plain forming waits.
+    private func skipForming() {
+        guard playsTheShow, formingSkip == nil, !hasFailed else { return }
+        let skip = FormingShow.skip(isMade: forming.lines)
+        switch skip {
+        case .toPainting:
+            formingSkip = skip
+            fuseLit = Date.now
+            fuseDone = Date.now
+            pictureProbe?.formingDone = ContinuousClock.now
+        case .toPlainLines:
+            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.25)) { formingSkip = skip }
+            graphite = nil
+            graphiteBegan = nil
+        }
+    }
+
     private var hasFailed: Bool {
         if case .failed = model.phase { return true }
         return false
     }
 
-    /// The `create-forming` demo holds the wait: its template is made and never shows.
+    /// The `create-forming` and `-graphite` demos hold the wait: the template is made and never shows.
     private var holdsTheWait: Bool {
         #if DEBUG
-        ShellDemo.current?.formingHold == .waiting
+        ShellDemo.current?.formingHold == .waiting || ShellDemo.current?.formingHold == .graphite
         #else
         false
         #endif
     }
 
-    /// How much of the lines the `create-forming-lines` and `-drawing` demos hold drawn.
+    /// How far the graphite has raced in the `create-forming-graphite` demo.
+    private var heldGraphite: Double? {
+        #if DEBUG
+        if ShellDemo.current?.formingHold == .graphite { return 0.38 }
+        if ShellDemo.current?.formingHold == .waiting { return 0.7 }
+        #endif
+        return nil
+    }
+
+    /// How much of the lines the `create-forming-lines` and `-drawing` demos hold drawn (or
+    /// burned in, by the short Making-of's fuse).
     private var heldDraw: CGFloat? {
         #if DEBUG
         if ShellDemo.current?.formingHold == .lines { return 1 }
@@ -609,7 +791,7 @@ struct TemplatePreviewView: View {
     /// The picture forming's one status: the same words from the photo's opening until the
     /// template is made, whatever stage the making is at, and told to VoiceOver once.
     private var formingStatus: some View {
-        let shows = forming.status
+        let shows = forming.status && (!showsTheWait || formingTookLong)
         return Group {
             if shows {
                 StatusCapsule {
@@ -1042,8 +1224,8 @@ struct TemplatePreviewView: View {
     private func startPickedPicture() {
         guard model.source != nil else { return }
         #if DEBUG
-        // `create-forming`, `-drawing` and `-lines` hold the picture forming: nothing starts.
-        if let hold = ShellDemo.current?.formingHold, hold != .page { return }
+        // `create-forming`, `-graphite`, `-drawing` and `-lines` hold the picture forming: nothing starts.
+        if let hold = ShellDemo.current?.formingHold, !hold.starts { return }
         #endif
         start()
     }
@@ -1250,8 +1432,46 @@ final class PreviewPictureProbe {
     private weak var view: UIView?
     private var aspect: CGFloat = 0
     private var canvas: CGSize = .zero
-    /// When the picture forming's lines began to be drawn over the picture (`FormingPlan`).
-    var linesBegan: ContinuousClock.Instant?
+    /// When the picture forming's lines will have been drawn over the picture, or burned in by
+    /// the short Making-of (`FormingShow`): the hand-off's lift waits until then
+    /// (`formingDrawn`). A tap that skips the show makes it now.
+    var formingDone: ContinuousClock.Instant?
+    /// The lift's wait, which a skip cuts short.
+    private var waiting: Task<Void, Never>?
+    /// The short Making-of played on the preview: the photo has dried under its lines there,
+    /// and the page's numbers come out like stars on the way to the painting.
+    var formingShowed = false
+    /// Skips the short Making-of (`TemplatePreviewView`'s), from a tap anywhere on the flow.
+    var skipsForming: (() -> Void)?
+
+    /// A tap during the short Making-of: the preview skips it (`FormingShow.skip`).
+    func skipForming() {
+        guard let skipsForming else { return }
+        skipsForming()
+        // Only a skip the preview took (it says the lines are done now) cuts the wait short.
+        if let formingDone, formingDone <= ContinuousClock.now { waiting?.cancel() }
+    }
+
+    /// Returns once the lines are drawn (`formingDone`), at most `FormingPlan.liftWait` from
+    /// now, or as a skip cuts it short.
+    func formingDrawn() async {
+        let wait = FormingPlan.liftWait(remaining: formingDone.map { Self.seconds($0 - ContinuousClock.now) })
+        guard wait > 0 else { return }
+        let sleep = Task { _ = try? await Task.sleep(for: .seconds(wait)) }
+        waiting = sleep
+        // The hand-off cancelled stops the wait with it.
+        await withTaskCancellationHandler {
+            await sleep.value
+        } onCancel: {
+            sleep.cancel()
+        }
+        waiting = nil
+    }
+
+    private static func seconds(_ duration: Duration) -> Double {
+        let parts = duration.components
+        return Double(parts.seconds) + Double(parts.attoseconds) * 1e-18
+    }
 
     /// `view` has the comparison's frame, and the photo the `aspect`; `canvas` is the space the
     /// comparison sizes its lines by (`CompareView.canvasSize`).

@@ -57,13 +57,13 @@ struct GlassEra: View {
     /// A photo or a library picture, to lead as a window.
     private func lead(_ picked: ModePicture) async {
         guard let picture = picked.cgImage else { return }
-        path.append(.lead(GlassLeadRoute(model: GlassLeadModel(photo: picked.photo, picture: picture))))
+        path.append(.lead(GlassLeadRoute(model: GlassLeadModel(photo: picked.photo, picture: picture), title: picked.work)))
     }
 
     private func start(_ window: GlassWindow.Leaded, from lead: GlassLeadRoute) {
         Task {
             do {
-                let artwork = try await shelf.create(window, photo: lead.model.photo, title: shelf.title())
+                let artwork = try await shelf.create(window, photo: lead.model.photo, title: lead.title ?? shelf.title())
                 path = [.window(artwork.id)]
             } catch {
                 Log.library.error("Couldn't save a window: \(String(describing: error), privacy: .public)")
@@ -87,6 +87,8 @@ enum GlassRoute: Hashable {
 struct GlassLeadRoute: Hashable {
     let id = UUID()
     let model: GlassLeadModel
+    /// The Museum work's name the window takes; nil for a window named by the shelf.
+    var title: String? = nil
 
     static func == (a: Self, b: Self) -> Bool { a.id == b.id }
     func hash(into hasher: inout Hasher) { hasher.combine(id) }

@@ -59,7 +59,7 @@ struct FrameEra: View {
 
     private func openPicture(_ picked: ModePicture) async {
         guard let image = picked.cgImage else { return }
-        let title = picked.sample?.title
+        let title = picked.title
             ?? String(localized: "frame.photo", defaultValue: "Your Photo",
                       comment: "The Frame (a hidden mode that is only the frame every mode shares): the name of a painting started from the painter's own photo")
         path.append(FramePicture(title: title, image: image))

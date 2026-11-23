@@ -16,6 +16,7 @@ struct PaintByNumberApp: App {
         }
         #endif
         Preferences.removeRetiredSettings()
+        EdgeDetector.ModelPool.emptiesWhenMemoryIsNeeded()
         PaintTips.configure()
         Theme.styleNavigationTitles()
     }
@@ -30,6 +31,16 @@ struct PaintByNumberApp: App {
                 .tipImageStyle(Theme.accent)
                 // Where an iPhone Duo folds, for every screen and sheet (`FoldWatch`).
                 .watchesTheFold()
+                // The line-art models loaded once the launch has settled, so the first photo
+                // picked waits no longer than the next (painting-company row 361).
+                .task {
+                    #if DEBUG
+                    // Demo and test launches keep their timings and memory as they were.
+                    if DemoMode.isActive || DemoMode.isTestHost { return }
+                    #endif
+                    try? await Task.sleep(for: .seconds(2))
+                    await EdgeDetector.warmUp()
+                }
         }
         .commands {
             PaintCommands()

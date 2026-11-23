@@ -34,26 +34,38 @@ nonisolated enum LineArtInputs {
         }
     }
 
+    /// What the models drew, handed over before Vision's finds are in (`maps(for:early:)`).
+    typealias Early = @Sendable (_ drawing: EdgeMap, _ contours: EdgeMap) -> Void
+
     /// The inputs `settings` need for `image`: nil for classic line art, which draws from the
-    /// photo alone.
-    static func make(for image: CGImage, settings: LineArtSettings) async throws -> LineArtInput? {
+    /// photo alone. `early` gets the same input without the eyes, subjects and text as soon as
+    /// the models have drawn it (the short Making-of's graphite, `GraphiteSketch`).
+    static func make(
+        for image: CGImage, settings: LineArtSettings, early: (@Sendable (LineArtInput) -> Void)? = nil
+    ) async throws -> LineArtInput? {
         guard settings.style.usesEdgeMap else { return nil }
-        return try await cache.maps(for: image).input(for: settings.detector)
+        return try await cache.maps(for: image, early: early.map { earlyInput(settings.detector, $0) }).input(for: settings.detector)
+    }
+
+    private static func earlyInput(_ detector: LineArtSettings.Detector, _ early: @escaping @Sendable (LineArtInput) -> Void) -> Early {
+        { drawing, contours in early(LineArtInput(drawing: drawing, contours: contours, detector: detector)) }
     }
 
     /// The inputs for a template about to be generated: `make` (or `compute` when not
     /// `cached`, for a one-off template), except that a failure other than cancellation is
     /// logged and gives nil, so a coloring book comes out classic, as the
     /// generator documents, rather than not at all. Nil for classic settings.
-    static func forGeneration(of image: CGImage?, settings: LineArtSettings, cached: Bool) async throws -> LineArtInput? {
+    static func forGeneration(
+        of image: CGImage?, settings: LineArtSettings, cached: Bool, early: (@Sendable (LineArtInput) -> Void)? = nil
+    ) async throws -> LineArtInput? {
         guard settings.style.usesEdgeMap else { return nil }
         guard let image else {
             Log.create.error("Line art without a photo image: generating classic lines")
             return nil
         }
         do {
-            if cached { return try await make(for: image, settings: settings) }
-            return try await compute(for: image, detector: settings.detector)
+            if cached { return try await make(for: image, settings: settings, early: early) }
+            return try await maps(for: image, early: early.map { earlyInput(settings.detector, $0) }).input(for: settings.detector)
         } catch is CancellationError {
             throw CancellationError()
         } catch {
@@ -70,13 +82,15 @@ nonisolated enum LineArtInputs {
     /// Everything found in `image`, computed now, outside `make`'s per-photo cache: both maps
     /// (the models one after the other) and, meanwhile, the eyes, the subjects and the text. Demo and test
     /// launches read and keep them on disk (`LineArtMapsCache`), so a CI run computes each
-    /// picture once.
+    /// picture once. `early` gets the two maps as soon as the models have drawn them, before
+    /// Vision's finds are in.
     @concurrent
-    static func maps(for image: CGImage) async throws -> Maps {
+    static func maps(for image: CGImage, early: Early? = nil) async throws -> Maps {
         #if DEBUG
         TourLog.trace("mark", "maps begin")
         if let cached = LineArtMapsCache.maps(for: image) {
             TourLog.trace("mark", "maps end cached")
+            early?(cached.drawing, cached.contours)
             return cached
         }
         defer { TourLog.trace("mark", "maps end computed") }
@@ -85,6 +99,7 @@ nonisolated enum LineArtInputs {
         async let objects = findObjects(in: image)
         async let writing = findWriting(in: image)
         let maps = try EdgeDetector.maps(for: image)
+        early?(maps.drawing, maps.contours)
         let found = Maps(
             drawing: maps.drawing, contours: maps.contours, eyes: await eyes, objects: await objects, writing: await writing)
         #if DEBUG
@@ -120,14 +135,24 @@ private actor InputCache {
         /// Callers waiting for `task`, and those of them whose own tasks were cancelled.
         var waiting: Set<UUID> = []
         var abandoned: Set<UUID> = []
+        /// The models' maps once drawn, and the callers waiting for them (`LineArtInputs.Early`).
+        var early: (drawing: EdgeMap, contours: EdgeMap)?
+        var earlyWaiting: [UUID: LineArtInputs.Early] = [:]
     }
 
     /// Least recently requested first.
     private var entries: [Entry] = []
 
-    func maps(for image: CGImage) async throws -> LineArtInputs.Maps {
+    func maps(for image: CGImage, early: LineArtInputs.Early? = nil) async throws -> LineArtInputs.Maps {
         let caller = UUID()
         let task = join(image, as: caller)
+        if let early, let index = entries.firstIndex(where: { $0.task == task }) {
+            if let drawn = entries[index].early {
+                early(drawn.drawing, drawn.contours)
+            } else {
+                entries[index].earlyWaiting[caller] = early
+            }
+        }
         defer { leave(task, as: caller) }
         do {
             return try await withTaskCancellationHandler {
@@ -150,7 +175,11 @@ private actor InputCache {
             entry = entries.remove(at: index)
         } else {
             entries.removeAll { $0.image === image }
-            entry = Entry(image: image, task: Task { try await LineArtInputs.maps(for: image) })
+            entry = Entry(image: image, task: Task {
+                try await LineArtInputs.maps(for: image) { drawing, contours in
+                    Task { await self.drawn(drawing, contours, for: image) }
+                }
+            })
         }
         entry.waiting.insert(caller)
         entries.append(entry)
@@ -162,6 +191,16 @@ private actor InputCache {
         guard let index = entries.firstIndex(where: { $0.task == task }) else { return }
         entries[index].waiting.remove(caller)
         entries[index].abandoned.remove(caller)
+        entries[index].earlyWaiting[caller] = nil
+    }
+
+    /// The models' maps for `image` are drawn: kept for later callers, handed to those waiting.
+    private func drawn(_ drawing: EdgeMap, _ contours: EdgeMap, for image: CGImage) {
+        guard let index = entries.firstIndex(where: { $0.image === image }), entries[index].early == nil else { return }
+        entries[index].early = (drawing, contours)
+        let waiting = entries[index].earlyWaiting
+        entries[index].earlyWaiting = [:]
+        for early in waiting.values { early(drawing, contours) }
     }
 
     /// A caller's task was cancelled: the computation stops when nobody else waits for it.

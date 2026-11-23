@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import PaintCore
+import Synchronization
 import Testing
 import Vision
 @testable import PaintByNumber
@@ -133,6 +134,22 @@ struct EdgeDetectorTests {
         // The model's input bound caps any request.
         #expect(size(4000, 3000, 4000) == [1152, 864])
         #expect(size(4000, 3000, 400) == [400, 300])
+    }
+
+    /// The models kept warm (`EdgeDetector.ModelPool`) draw the same maps as models loaded
+    /// afresh, and two photos made at once each get a model of their own.
+    @Test func keptModelsDrawWhatFreshOnesDraw() async throws {
+        let input = RGBAImage(width: 96, height: 64, fill: SIMD4(200, 120, 40, 255))
+        EdgeDetector.ModelPool.empty()
+        let fresh = try EdgeDetector.maps(for: input, cancel: .none)
+        EdgeDetector.ModelPool.empty()
+        await EdgeDetector.warmUp()
+        let kept = try EdgeDetector.maps(for: input, cancel: .none)
+        #expect(kept.drawing == fresh.drawing && kept.contours == fresh.contours)
+        async let first = Task.detached { try EdgeDetector.maps(for: input, cancel: .none) }.value
+        async let second = Task.detached { try EdgeDetector.maps(for: input, cancel: .none) }.value
+        let both = try await [first, second]
+        #expect(both.allSatisfy { $0.drawing == fresh.drawing && $0.contours == fresh.contours })
     }
 
     /// NumPy's "reflect": mirrored at the last pixel without repeating it.
@@ -356,6 +373,23 @@ struct LineArtInputsTests {
         #expect(input?.edges.width == image.width)
     }
 
+    /// The models' drawing reaches `early` before Vision's finds are in (the short Making-of's
+    /// graphite): the input without them, the same maps the finished input has; a request
+    /// joining a computation already past the models gets it at once.
+    @Test func theDrawingComesEarly() async throws {
+        let image = try Self.unseenPhoto("great-wave")
+        let early = EarlyInputs()
+        let input = try #require(try await LineArtInputs.make(for: image, settings: Self.book) { early.add($0) })
+        let again = try await LineArtInputs.make(for: image, settings: Self.book) { early.add($0) }
+        #expect(again == input)
+        let found = early.all
+        #expect(!found.isEmpty)
+        for drawn in found {
+            #expect(drawn.edges == input.edges && drawn.contours == input.contours)
+            #expect(drawn.eyes.isEmpty && drawn.objects.isEmpty && drawn.writing.isEmpty)
+        }
+    }
+
     /// The create flow's line art reaches every candidate, the chosen settings, the draft, its
     /// template and the saved artwork's meta.json; the book computes its inputs once for the photo.
     @Test func createFlowCarriesItsLineArtIntoTheArtwork() async throws {
@@ -411,4 +445,11 @@ struct LineArtInputsTests {
         #expect(library.artwork(with: artwork.id)?.settings == settings)
         #expect(try library.store.readMeta(artwork.id).settings == settings)
     }
+}
+
+/// What `LineArtInputs`' `early` handed over, from whichever thread.
+private final class EarlyInputs: Sendable {
+    private let found = Mutex<[LineArtInput]>([])
+    func add(_ input: LineArtInput) { found.withLock { $0.append(input) } }
+    var all: [LineArtInput] { found.withLock { $0 } }
 }

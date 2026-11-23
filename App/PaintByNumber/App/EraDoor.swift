@@ -14,6 +14,12 @@ enum Era: String {
     /// Stained Glass, at 1248 (SideStore and Debug builds; painting-company row 366): a mode of
     /// the app's own, not a copy of it (`GlassEra`).
     case glass
+    /// The Cave, at 15,000 BC (SideStore and Debug builds; painting-company row 371): no app on
+    /// screen, only a torch-lit rock wall (`CaveEra`).
+    case cave
+    /// Woodblock, at 1765 (SideStore and Debug builds; painting-company row 375): prints carved
+    /// and printed by numbers from the app's own templates (`WoodblockEra`).
+    case woodblock
     /// Watercolor, at 1502 (SideStore and Debug builds; painting-company row 373): real water on
     /// the app's own templates (`WatercolorEra`).
     case watercolor
@@ -26,6 +32,8 @@ enum Era: String {
         if EraYear.opensByzantium(year) { return .byzantium }
         #if UNRELEASED
         if EraYear.opensStainedGlass(year) { return .glass }
+        if year == CaveEra.year { return .cave }
+        if EraYear.opensWoodblock(year) { return .woodblock }
         if EraYear.opensWatercolor(year) { return .watercolor }
         if EraYear.opensTheFrame(year) { return .frame }
         #endif
@@ -61,9 +69,9 @@ final class EraDoor {
         #if UNRELEASED
         shown = era
         #else
-        // Stained Glass, Watercolor and The Frame are SideStore's and Debug's: a release opening
-        // on one opens at home.
-        shown = era == .glass || era == .watercolor || era == .frame ? .moonlight : era
+        // Stained Glass, the Cave, Watercolor, Woodblock and The Frame are SideStore's and Debug's:
+        // a release opening on one opens at home.
+        shown = era == .glass || era == .cave || era == .watercolor || era == .woodblock || era == .frame ? .moonlight : era
         #endif
     }
 
@@ -130,7 +138,7 @@ struct EraPassage: View {
     /// Watercolor's a wash's (`drawWash`); every other passage, The Frame's both ways too, is the
     /// tiles set and lifted.
     static func isWayBack(to destination: Era, from origin: Era? = nil, reduceMotion: Bool) -> Bool {
-        return destination == .moonlight && origin != .glass && origin != .watercolor && origin != .frame && !reduceMotion
+        return destination == .moonlight && origin != .glass && origin != .cave && origin != .watercolor && origin != .frame && !reduceMotion
     }
 
     /// When the screen is wholly covered, so the era can go in beneath, and when the passage is
@@ -167,6 +175,9 @@ struct EraPassage: View {
             .onAppear {
                 start = .now
                 settledCover = false
+                #if UNRELEASED
+                EraSounds.shared.passage(to: destination, from: door.origin, reduceMotion: reduceMotion)
+                #endif
                 #if DEBUG
                 if let hold = Self.demoHold {
                     Task {
@@ -223,6 +234,10 @@ struct EraPassage: View {
             drawNave(in: &graphics, size: size, elapsed: elapsed)
             return
         }
+        if destination == .cave || origin == .cave {
+            drawCave(in: &graphics, size: size, elapsed: elapsed, leaving: origin == .cave)
+            return
+        }
         if (destination == .watercolor || origin == .watercolor) && !reduceMotion {
             drawWash(in: &graphics, size: size, elapsed: elapsed)
             return
@@ -274,6 +289,23 @@ struct EraPassage: View {
             let lifted = max(0, (t - Self.cover - Self.hold) / Self.lift)
             graphics.fill(whole, with: .color(apse.opacity(max(0, 1 - lifted * 1.4))))
         }
+    }
+
+    /// The passages of the Cave: going in, the screen goes wholly dark and lifts on the cave's
+    /// mouth; coming out, the daylight the cave left on the screen fades from white onto the
+    /// gallery. Under Reduce Motion the same fades, which are no motion.
+    private func drawCave(in graphics: inout GraphicsContext, size: CGSize, elapsed: TimeInterval, leaving: Bool) {
+        let t = elapsed - Self.wait
+        let whole = Path(CGRect(origin: .zero, size: size))
+        if leaving {
+            let lifting = t < Self.cover + Self.hold ? 0 : EraWayBack.ease(min(1, (t - Self.cover - Self.hold) / Self.lift))
+            graphics.fill(whole, with: .color(Color(white: 1).opacity(1 - lifting)))
+            return
+        }
+        guard t > 0 else { return }
+        let dark = t < Self.cover ? EraWayBack.ease(min(1, t / (Self.cover * 0.8)))
+            : max(0, 1 - EraWayBack.ease((t - Self.cover - Self.hold) / Self.lift))
+        graphics.fill(whole, with: .color(Color.black.opacity(dark)))
     }
 
     /// Watercolor's passage: water floods the screen from its top-left corner, a ragged front of

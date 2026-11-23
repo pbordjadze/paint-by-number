@@ -11,8 +11,10 @@ import SwiftUI
 /// `about-photograph` are the page about a library picture's real work (`AboutPaintingDemo`),
 /// `print-preview…` Print's preview (`PrintPreviewDemo`). In SideStore and Debug builds Stained Glass
 /// (`GlassEra`) shows while the clock is at 1248, and for its scenarios, `-demo glass-<name>`
-/// (`GlassDemo`); `era-passage-glass` holds the way to it at the rose window's light. Watercolor
-/// (`WatercolorEra`) shows at 1502 and for `-demo watercolor-<name>` (`WatercolorDemo`);
+/// (`GlassDemo`); `era-passage-glass` holds the way to it at the rose window's light. The Cave
+/// (`CaveEra`) shows while the clock is at 15,000 BC, and for its scenarios, `-demo cave-<name>`
+/// (`CaveDemo`). Woodblock (`WoodblockEra`) shows at 1765 and for `-demo woodblock-<name>`
+/// (`WoodblockDemo`). Watercolor (`WatercolorEra`) shows at 1502 and for `-demo watercolor-<name>` (`WatercolorDemo`);
 /// `era-passage-watercolor` holds the way to it as its wash floods in. The Frame (`FrameEra`), the
 /// frame every mode shares with nothing of a mode's own in it, shows at 1000 and for
 /// `-demo frame-<name>`.
@@ -25,6 +27,10 @@ struct RootView: View {
                 RavennaEra(leave: { year in door.go(to: Era.opened(by: year) ?? .moonlight) })
             } else if showsGlass {
                 glass
+            } else if showsCave {
+                cave
+            } else if showsWoodblock {
+                woodblock
             } else if showsWatercolor {
                 watercolor
             } else if showsFrame {
@@ -34,6 +40,12 @@ struct RootView: View {
             }
         }
         .overlay { EraPassage(door: door) }
+        #if UNRELEASED
+        // The year wheel's sound, in every era's Settings (each gates it by its own Sounds).
+        .environment(\.eraClockSound, EraClock.Sound { row, rows, lit in
+            EraSounds.shared.wheelTurned(row: row, of: rows, lit: lit)
+        })
+        #endif
         #if DEBUG
         // `era-passage`: the gallery as the clock is set back, the passage held half laid.
         .task {
@@ -61,10 +73,35 @@ struct RootView: View {
         #endif
     }
 
+    /// Whether the Cave is on screen: its era, or one of its demo scenarios (`cave-…`).
+    private var showsCave: Bool {
+        #if UNRELEASED
+        return door.shown == .cave || CaveEra.isDemoScenario
+        #else
+        return false
+        #endif
+    }
+
+    /// The Cave (SideStore and Debug builds; `CaveEra`).
+    @ViewBuilder private var cave: some View {
+        #if UNRELEASED
+        CaveEra(leave: { year in door.go(to: Era.opened(by: year) ?? .moonlight) })
+        #endif
+    }
+
     /// Stained Glass (SideStore and Debug builds; `GlassEra`).
     @ViewBuilder private var glass: some View {
         #if UNRELEASED
         GlassEra(leave: { year in door.go(to: Era.opened(by: year) ?? .moonlight) })
+        #endif
+    }
+
+    /// Whether Woodblock is on screen: its era, or one of its demo scenarios (`woodblock-…`).
+    private var showsWoodblock: Bool {
+        #if UNRELEASED
+        return door.shown == .woodblock || WoodblockEra.isDemoScenario
+        #else
+        return false
         #endif
     }
 
@@ -74,6 +111,13 @@ struct RootView: View {
         return door.shown == .watercolor || WatercolorEra.isDemoScenario
         #else
         return false
+        #endif
+    }
+
+    /// Woodblock (SideStore and Debug builds; `WoodblockEra`).
+    @ViewBuilder private var woodblock: some View {
+        #if UNRELEASED
+        WoodblockEra(leave: { year in door.go(to: Era.opened(by: year) ?? .moonlight) })
         #endif
     }
 
