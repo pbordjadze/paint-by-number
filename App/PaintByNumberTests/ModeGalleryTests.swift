@@ -49,5 +49,25 @@ struct ModeGalleryTests {
         await again.load()
         #expect(again.painting(artwork.id)?.title == "The Harbour")
     }
+
+    @Test func aRenamedWindowKeepsItsName() async throws {
+        let root = Self.root("ModeGalleryGlass")
+        defer { try? FileManager.default.removeItem(at: root) }
+        var photo = RGBAImage(width: 240, height: 180, fill: SIMD4(120, 140, 110, 255))
+        for y in 0..<180 {
+            for x in 0..<240 where hypot(Float(x - 160), Float(y - 90)) < 50 { photo[x, y] = SIMD4(240, 120, 20, 255) }
+        }
+        let leaded = try GlassWindow.Leading.suggested(photo: photo, width: 240, height: 180, colorSpace: .sRGB).window()
+        let shelf = GlassShelf(root: root)
+        await shelf.load()
+        let artwork = try await shelf.create(leaded, photo: photo, title: "Window")
+        shelf.rename(artwork.id, to: "The Rose")
+        #expect(shelf.window(artwork.id)?.title == "The Rose")
+        let store = shelf.store
+        try await waitUntil { (try? store.readMeta(artwork.id))?.title == "The Rose" }
+        let again = GlassShelf(root: root)
+        await again.load()
+        #expect(again.window(artwork.id)?.title == "The Rose")
+    }
 }
 #endif
