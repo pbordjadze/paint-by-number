@@ -252,13 +252,16 @@ extension StoneBook {
         let facts: [(BookIcon, String)] = [(.ruler, strings.size(widthMM / 10, heightMM / 10)), (.tiles, strings.count(pieces.count)),
                                            (.clock, strings.hoursRange(hours.lowerBound, hours.upperBound)),
                                            (.price, "≈ " + strings.pounds(cost)), (.pages, strings.count(pageCount))]
-        let cw = (pw - 2 * m) / Double(facts.count)
-        for (i, (icon, s)) in facts.enumerated() {
-            // icon and figure centred together in their fifth of the row (a figure about 0.55 em a character)
-            let wide = 8 + 1.5 + Double(s.count) * 4.3 * 0.55
-            let x = m + cw * Double(i) + (cw - wide) / 2
+        // Each icon and figure as wide as they are (a semibold figure about 0.6 em a character),
+        // with the room left shared out evenly round them: in equal fifths the size, the row's
+        // longest, ran up against the tiles' icon.
+        let widths = facts.map { 8 + 1.5 + Double($0.1.count) * 4.3 * 0.6 }
+        let gap = max(2, (pw - 2 * m - widths.reduce(0, +)) / Double(facts.count))
+        var x = m + gap / 2
+        for ((icon, s), wide) in zip(facts, widths) {
             icon.draw(into: &c, x, 262.5, 8)
             c.text(s, x + 9.5, 268.3, 4.3, 600)
+            x += wide + gap
         }
     }
 

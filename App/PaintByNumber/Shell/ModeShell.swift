@@ -7,7 +7,7 @@ import SwiftUI
 import os
 
 /// The frame every mode lives in (painting-company row 379; SideStore and Debug builds). A mode
-/// behind the year wheel (Stained Glass, Watercolor, Woodblock, and The Frame, which is this and
+/// behind the year wheel (Stained Glass, Watercolor, Woodblock, the Cave, and The Frame, which is this and
 /// nothing else) is a `ModeShell` around what is its own. The rules, with no exceptions:
 ///
 /// 1. **A year.** The mode opens from its year on the wheel, and its Settings has About's Year
@@ -15,9 +15,12 @@ import os
 /// 2. **A gallery** under the mode's name, a large navigation title, on the mode's backdrop. What
 ///    a card looks like, and the gallery empty, are the mode's.
 /// 3. **Settings top left**, the gear (`<mode>-settings`).
-/// 4. **New top right**, the + menu, with two ways in and only these: A Photo (the system photo
-///    picker) and The Library (the app's pictures, `ModeLibraryPicker`). Every mode starts from
-///    a picture: "Your photos, ___ by numbers".
+/// 4. **New top right**, the + menu, with the frame's three ways in and only these: A Photo (the
+///    system photo picker), The Library (the app's pictures, `ModeLibraryPicker`) and The Museum
+///    (the works of `MuseumView`, Paint This handing the work's full image back as a picture).
+///    They are the frame's, so every mode offers all three: none leaves one out or keeps a
+///    Library or a Museum of its own. The Museum is part of the frame, not a mode: no year, no
+///    era, no gallery. Every mode starts from a picture: "Your photos, ___ by numbers".
 /// 5. **One accent and the dark.** The mode tints every control with its one accent and is dark.
 /// 6. **The painting screen** is pushed on the gallery: the system's back button, the painting's
 ///    name inline, and the same words while it opens or can't (`ModePaintingFrame`). Its canvas
@@ -66,6 +69,7 @@ struct ModeShell<Gallery: View, Route: Hashable, Destination: View>: View {
     @State private var picking = false
     @State private var picked: PhotosPickerItem?
     @State private var choosingPicture = false
+    @State private var visitingMuseum = false
     @State private var showsSettings: Bool
     @State private var isWorking = false
 
@@ -83,7 +87,7 @@ struct ModeShell<Gallery: View, Route: Hashable, Destination: View>: View {
     }
 
     private var waysIn: ModeWaysIn {
-        ModeWaysIn(photo: { picking = true }, library: { choosingPicture = true })
+        ModeWaysIn(photo: { picking = true }, library: { choosingPicture = true }, museum: { visitingMuseum = true })
     }
 
     var body: some View {
@@ -101,6 +105,7 @@ struct ModeShell<Gallery: View, Route: Hashable, Destination: View>: View {
                         Menu {
                             Button("A Photo", systemImage: "photo") { picking = true }
                             Button("The Library", systemImage: "books.vertical") { choosingPicture = true }
+                            Button("The Museum", systemImage: "building.columns") { visitingMuseum = true }
                         } label: {
                             SwiftUI.Label { look.newTitle } icon: { Image(systemName: "plus") }
                         }
@@ -133,6 +138,12 @@ struct ModeShell<Gallery: View, Route: Hashable, Destination: View>: View {
                 Task { await take(sample) }
             }
         }
+        .fullScreenCover(isPresented: $visitingMuseum) {
+            MuseumView(onPaint: { data, title in
+                visitingMuseum = false
+                Task { await take(data, work: title) }
+            }, onClose: { visitingMuseum = false })
+        }
         .sheet(isPresented: $showsSettings) {
             ModeSettingsView(year: look.year, leave: leave)
         }
@@ -149,6 +160,17 @@ struct ModeShell<Gallery: View, Route: Hashable, Destination: View>: View {
             await make(ModePicture(photo: photo, sample: nil))
         } catch {
             Log.library.error("Couldn't load a photo for \(look.id, privacy: .public): \(String(describing: error), privacy: .public)")
+        }
+    }
+
+    private func take(_ data: Data, work: String) async {
+        isWorking = true
+        defer { isWorking = false }
+        do {
+            let photo = try await Background.run { try PhotoLoader.load(data: data, maxPixelSize: ArtworkStore.sourceMaxPixelSize) }
+            await make(ModePicture(photo: photo, sample: nil, work: work))
+        } catch {
+            Log.library.error("Couldn't load a museum work for \(look.id, privacy: .public): \(String(describing: error), privacy: .public)")
         }
     }
 
@@ -182,19 +204,26 @@ struct ModeLook {
     let id: String
 }
 
-/// A picture picked for a new painting: the painter's photo, or one of the library's.
+/// A picture picked for a new painting: the painter's photo, one of the library's, or a work of
+/// the Museum.
 struct ModePicture {
     let photo: RGBAImage
     /// The library's picture it is, nil for the painter's own photo.
     let sample: Sample?
+    /// The Museum's work it is, by the name a painting of it takes; nil for any other picture.
+    var work: String? = nil
+
+    /// The name the picture gives a painting: the library picture's or the Museum work's.
+    var title: String? { work ?? sample?.title }
 
     var cgImage: CGImage? { PhotoLoader.cgImage(from: photo) }
 }
 
-/// The two ways in, for a gallery's own empty page to offer.
+/// The ways in, for a gallery's own empty page to offer.
 struct ModeWaysIn {
     let photo: () -> Void
     let library: () -> Void
+    let museum: () -> Void
 }
 
 /// A mode's Settings: About's Year, whose wheel leaves the mode.

@@ -1,5 +1,6 @@
 #if UNRELEASED
 import Foundation
+import PaintCore
 import SwiftUI
 import Testing
 @testable import PaintByNumber
@@ -132,6 +133,16 @@ struct MuseumQueryTests {
     @MainActor @Test func aBadAverageColorStillMakesAColor() {
         _ = Color(museumHex: "zz")
         _ = Color(museumHex: "6a8a7c")
+    }
+
+    /// A work picked from a mode's + menu names the painting after itself; any other picture
+    /// keeps the name it had.
+    @MainActor @Test func aWorkPickedInAModeNamesThePainting() throws {
+        let photo = RGBAImage(width: 1, height: 1, pixels: [255, 255, 255, 255])
+        #expect(ModePicture(photo: photo, sample: nil, work: "Water Lilies").title == "Water Lilies")
+        #expect(ModePicture(photo: photo, sample: nil).title == nil)
+        let sample = try #require(Sample.all.first)
+        #expect(ModePicture(photo: photo, sample: sample).title == sample.title)
     }
 }
 #endif
