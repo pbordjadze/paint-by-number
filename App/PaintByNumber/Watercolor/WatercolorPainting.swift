@@ -95,6 +95,7 @@ final class WatercolorPainting {
             lastPaintedAt = sim.paintedAt[r]
             if remaining[color] == 0 { selected = next(after: color) }
         }
+        EraSounds.shared.watercolor(.init(paint: paint, wasLaid: wasLaid, finishes: isComplete))
         onTap?()
         return r
     }

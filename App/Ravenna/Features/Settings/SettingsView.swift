@@ -165,6 +165,7 @@ struct SettingsView: View {
                                 leaveRavenna(for: year)
                             }
                             .reporting(to: clockYear)
+                            .transformEnvironment(\.eraClockSound) { if !sounds { $0 = nil } }
                             .accessibilityIdentifier("era-clock")
                         }
                         NavigationLink(value: Destination.acknowledgements) {
