@@ -328,8 +328,9 @@ struct ModePaintingFrame<Painting: View>: View {
                 ContentUnavailableView {
                     SwiftUI.Label("Needs a Newer Version", systemImage: "arrow.up.circle")
                 } description: {
-                    Text(verbatim: String(localized: "gallery.recovery.newer.untitled", bundle: .era,
+                    Text(verbatim: String(localized: "gallery.recovery.newer.untitled",
                                           defaultValue: "This painting was made with a newer version of Paint by Moonlight. Update the app to keep painting it.",
+                                          bundle: .era,
                                           comment: "Recovery screen text for an untitled painting made by a newer app version"))
                 }
             }
