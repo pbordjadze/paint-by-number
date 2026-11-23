@@ -1401,7 +1401,7 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
 SideStore and Debug builds (`#if UNRELEASED`; painting-company row 379). Every mode behind the
 year wheel is a `ModeShell` around what is its own; `ModeShell`'s doc comment is the rules, with no
 exceptions: a year (opened from the wheel, left from its Settings' Year row, `ModeSettingsView`);
-a gallery under the mode's name on its backdrop; Settings top left; New top right, with the frame's
+a gallery under the mode's name on its backdrop (`ModeGallery`: In Progress then Finished, search, and the card menu's Rename, Share, Print… and Delete, each shelf's `rename` and `picture(of:)`; the Cave, with no template, prints nothing); Settings top left; New top right, with the frame's
 three ways in, which every mode offers and none replaces: A Photo, The Library
 (`ModeLibraryPicker`) and The Museum (`MuseumView` with no `onResume`: no frames or Resume there,
 a mode's paintings being its own; a work painted names the painting, `ModePicture.title`; part

@@ -194,6 +194,26 @@ final class WatercolorShelf {
         paintings.sort { $0.modifiedAt > $1.modifiedAt }
     }
 
+    /// Gives a painting the painter's name for it (the frame's card menu, `ModeGallery`), its meta
+    /// written after the saves before it, which read the name from here.
+    func rename(_ id: UUID, to title: String) {
+        guard var artwork = painting(id), !artwork.needsNewerApp, artwork.title != title else { return }
+        artwork.title = title
+        if artwork.titled != nil { artwork.titled = true }
+        if let i = paintings.firstIndex(where: { $0.id == id }) { paintings[i] = artwork }
+        let previous = saving[id]
+        let store = store
+        saving[id] = Task {
+            await previous?.value
+            guard let saved = painting(id) else { return }
+            do {
+                try await Background.run { try store.writeMeta(saved) }
+            } catch {
+                Log.library.error("Couldn't rename painting \(id.uuidString, privacy: .public): \(String(describing: error), privacy: .public)")
+            }
+        }
+    }
+
     func delete(_ id: UUID) {
         let store = store
         paintings.removeAll { $0.id == id }
@@ -211,6 +231,14 @@ final class WatercolorShelf {
                 Log.library.error("Couldn't delete watercolor \(id.uuidString, privacy: .public)")
             }
         }
+    }
+
+    /// The painting as it stands, as large as the shelf keeps its picture: what the card menu's Share
+    /// shares.
+    func picture(of id: UUID) async -> CGImage? {
+        await saving[id]?.value
+        let store = store
+        return await Background.run { store.thumbnail(id, maxPixelSize: ArtworkStore.thumbnailMaxPixelSize) }
     }
 
     func thumbnail(of artwork: Artwork) async -> CGImage? {

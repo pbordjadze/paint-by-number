@@ -11,8 +11,10 @@ import os
 ///
 /// 1. **A year.** The mode opens from its year on the wheel, and its Settings has About's Year
 ///    row, whose wheel leaves it (`ModeSettingsView`). Nothing else opens or leaves a mode.
-/// 2. **A gallery** under the mode's name, a large navigation title, on the mode's backdrop. What
-///    a card looks like, and the gallery empty, are the mode's.
+/// 2. **A gallery** under the mode's name, a large navigation title, on the mode's backdrop: the
+///    frame's (`ModeGallery`), In Progress then Finished, searched by name, and on every card the
+///    frame's menu, Rename, Share, Print… (a numbered sheet) and Delete. What a card looks like,
+///    and the gallery empty, are the mode's.
 /// 3. **Settings top left**, the gear (`<mode>-settings`).
 /// 4. **New top right**, the + menu, with the frame's three ways in and only these: A Photo (the
 ///    system photo picker), The Library (the app's pictures, `ModeLibraryPicker`) and The Museum
