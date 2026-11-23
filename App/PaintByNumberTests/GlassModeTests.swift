@@ -23,7 +23,10 @@ struct GlassModeTests {
         let glass = t.palette.indices.max { Self.chroma(t.palette[$0]) < Self.chroma(t.palette[$1]) }!
         let r = try #require(t.regions.indices.first { Int(t.regions[$0].colorIndex) == glass })
         let other = try #require(t.regions.indices.first { $0 != r })
+        // The numbers' visibility rides the frame's uniforms as well as `Content.numbers`.
         let uniforms = CanvasSnapshot.uniforms(scene: scene, width: t.width, height: t.height, options: .painting)
+        let numberedUniforms = CanvasSnapshot.uniforms(
+            scene: scene, width: t.width, height: t.height, options: CanvasSnapshot.Options(outlines: false, numbers: true))
 
         func frame(glazed: Bool, framed: Bool = true, outlines: Bool = true, numbers: Bool = false) throws -> CGImage {
             var states = [RegionState](repeating: .settled(painted: false), count: scene.regionCount)
@@ -33,7 +36,7 @@ struct GlassModeTests {
                 states[r].mode = GlassMode.code(glass: glass, replacing: nil)
             }
             return try #require(CanvasSnapshot.image(
-                scene: scene, states: states, uniforms: uniforms,
+                scene: scene, states: states, uniforms: numbers ? numberedUniforms : uniforms,
                 content: RenderContext.Content(outlines: outlines, numbers: numbers, mode: mode),
                 width: t.width, height: t.height, context: context))
         }
