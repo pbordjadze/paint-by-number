@@ -69,7 +69,7 @@ struct GlassEra: View {
                 try GlassWindow.Leading.suggested(photo: photo, width: size.width, height: size.height,
                                                   colorSpace: photo.colorSpace).window()
             }
-            let artwork = try await shelf.create(window, photo: photo, title: shelf.title())
+            let artwork = try await shelf.create(window, photo: photo, title: picked.work ?? shelf.title())
             path = [.window(artwork.id)]
         } catch {
             Log.library.error("Couldn't make a window: \(String(describing: error), privacy: .public)")

@@ -70,7 +70,7 @@ ACCESSIBILITY = ("supportsVoiceover", "supportsVoiceControl", "supportsLargerTex
 FAMILIES = ("IPHONE", "IPAD", "APPLE_TV", "APPLE_WATCH", "MAC", "VISION")
 LEVEL = ("NONE", "INFREQUENT_OR_MILD", "FREQUENT_OR_INTENSE", "INFREQUENT", "FREQUENT")
 # The fields each section may set and what each takes (str, bool, or its values), from the API's
-# update requests (4.5). App Review's contact is left out on purpose.
+# update requests (4.6.1). App Review's contact is left out on purpose.
 FIELDS = {
     "app": {"contentRightsDeclaration": ("DOES_NOT_USE_THIRD_PARTY_CONTENT", "USES_THIRD_PARTY_CONTENT"),
             "accessibilityUrl": str},
@@ -82,9 +82,9 @@ FIELDS = {
         "sexualContentGraphicAndNudity", "sexualContentOrNudity", "violenceCartoonOrFantasy", "violenceRealistic",
         "violenceRealisticProlongedGraphicOrSadistic")},
                   **{k: bool for k in (
-        "advertising", "ageAssurance", "gambling", "healthOrWellnessTopics", "lootBox", "messagingAndChat",
-        "parentalControls", "socialMedia", "socialMediaAgeRestricted", "unrestrictedWebAccess",
-        "userGeneratedContent")}},
+        "advertising", "ageAssurance", "datingAndRelationships", "gambling", "healthOrWellnessTopics", "lootBox",
+        "messagingAndChat", "parentalControls", "sharedLocation", "socialMedia", "socialMediaAgeRestricted",
+        "unrestrictedWebAccess", "userGeneratedContent")}},
     "version": {"copyright": str, "releaseType": ("MANUAL", "AFTER_APPROVAL", "SCHEDULED")},
     "versionLocalization": {"description": str, "keywords": str, "marketingUrl": str, "promotionalText": str,
                             "supportUrl": str, "whatsNew": str},

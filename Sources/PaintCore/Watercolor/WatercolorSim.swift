@@ -41,6 +41,11 @@ public final class WatercolorSim {
 
     public let sheet: WatercolorSheet
     public private(set) var step = 0
+    /// A flood's front follows the slow noise alone, rounded, rather than the paper's fine
+    /// tooth as well, which made a ragged staircase of single cells, a flood-fill rather than
+    /// water (the Making Of's critic, November 22). The Making Of's study sets it; a painter's
+    /// sheet keeps the front its tap logs were painted with, so a log replays as it was.
+    public var roundedFronts = false
     public var time: Float { Float(step) * Self.dt }
 
     /// Water, settled and suspended pigment and the cell's wash properties (`count` each).
@@ -326,7 +331,7 @@ public final class WatercolorSim {
             let g = global(j)
             let lf = sheet.lowFrequency[g], p = sheet.paper[g]
             let df = Float(dist[j])
-            let jitter = lf * 0.07 + (p - 0.5) * 0.1
+            let jitter = roundedFronts ? lf * 0.08 + (p - 0.5) * 0.015 : lf * 0.07 + (p - 0.5) * 0.1
             let arrival = when + duration * pow(max(df / dmax + jitter, 0), 0.75)
             // The drop lands where you touched: more water there pushes the pigment out, so the
             // touch stays a lighter bloom with the color gathered where the front comes to rest.
@@ -356,6 +361,57 @@ public final class WatercolorSim {
         flood.soften = order.map(\.4)
         flood.edge = order.map(\.5)
         floods.append(flood)
+    }
+
+    /// A drop of clean water let fall from the brush onto a wash still damp, at `canvas`, over
+    /// `radius` cells: water only where the wash is still wet (dry paper and dried paint take
+    /// none), most at the middle. The flow does the rest: the drop's water spreads into the damp
+    /// wash around it, carrying the pigment it meets out to where it stalls, so the wash dries
+    /// pale where it fell and dark at its ragged edge (a bloom, a backrun). The first rush of
+    /// the drop, faster than a step's flow can carry, is done here: `push` of the pigment still
+    /// riding the water under it is swept out to where the rush stalls, a ragged ring about
+    /// `radius` out (the paper's slow noise bends it), and the flow and the drying take it from
+    /// there. The Making Of's study shows one (`WatercolorStudy`); a painter's taps lay whole
+    /// washes (`tap`).
+    public func drop(at canvas: SIMD2<Float>, radius: Float, water: Float, push: Float = 0.6) {
+        guard let c = sheet.cell(at: canvas), radius > 1 else { return }
+        let w = sheet.width, h = sheet.height
+        let r = Int((radius * 1.45 + 2).rounded(.up))
+        var swept = SIMD4<Float>(repeating: 0)
+        var ring: [(Int, Float)] = []
+        var ringWeight: Float = 0
+        for y in max(c.y - r, 0)..<min(c.y + r + 1, h) {
+            for x in max(c.x - r, 0)..<min(c.x + r + 1, w) {
+                let i = y * w + x
+                guard W[i] > Self.wetLine else { continue }
+                let dx = Float(x - c.x), dy = Float(y - c.y)
+                let d = (dx * dx + dy * dy).squareRoot()
+                // Where the rush stalls: ragged, as it runs over the paper's tooth.
+                let stall = radius * min(max(1 + 0.35 * sheet.lowFrequency[i] + 0.15 * (sheet.paper[i] - 0.5), 0.6), 1.45)
+                if d < stall {
+                    let u = d / stall
+                    let f = 1 - u * u
+                    W[i] += water * f
+                    let taken = S[i] * (push * f.squareRoot())
+                    S[i] -= taken
+                    swept += taken
+                }
+                let off = abs(d - stall)
+                if off < 2 {
+                    let k = 1 - off / 2
+                    ring.append((i, k))
+                    ringWeight += k
+                }
+            }
+        }
+        if ringWeight > 0 {
+            for (i, k) in ring { S[i] += swept * (k / ringWeight) }
+        } else {
+            // Nowhere wet to stall: what it lifted stays under it.
+            S[c.y * w + c.x] += swept
+        }
+        changedBox = Box(x0: max(c.x - r, 0), y0: max(c.y - r, 0), x1: min(c.x + r + 1, w), y1: min(c.y + r + 1, h))
+            .union(changedBox)
     }
 
     /// Distance from each cell to the nearest seed, 8-neighbour chamfer (1, √2): close to
@@ -545,27 +601,49 @@ public final class WatercolorSim {
     }
 
     private static func blur(_ a: UnsafeMutablePointer<Float>, width w: Int, box b: Box) {
-        // Three boxes of radius 2: a Gaussian of about 2.5 cells, as the spike's.
-        var line = [Float](repeating: 0, count: max(b.x1 - b.x0, b.y1 - b.y0))
+        // Three boxes of radius 2: a Gaussian of about 2.5 cells, as the spike's. Each row, then
+        // each column, is summed whole by one task in the same order on any core count, so the
+        // bands change nothing but the time (half of a step's, serial, on an iPad Air).
+        let bw = b.x1 - b.x0, bh = b.y1 - b.y0
+        guard bw > 0, bh > 0 else { return }
         let r = 2, norm: Float = 1 / 5
         for _ in 0..<3 {
-            let bw = b.x1 - b.x0, bh = b.y1 - b.y0
-            for y in b.y0..<b.y1 {
-                for i in 0..<bw { line[i] = a[y * w + b.x0 + i] }
-                var sum: Float = 0
-                for k in -r...r { sum += line[min(max(k, 0), bw - 1)] }
-                for i in 0..<bw {
-                    a[y * w + b.x0 + i] = sum * norm
-                    sum += line[min(i + r + 1, bw - 1)] - line[max(i - r, 0)]
+            Parallel.forEachBand(bh, minimumBandSize: 16) { band in
+                withUnsafeTemporaryAllocation(of: Float.self, capacity: bw) { line in
+                    for y in (band.lowerBound + b.y0)..<(band.upperBound + b.y0) {
+                        let row = a + y * w + b.x0
+                        line.baseAddress!.update(from: row, count: bw)
+                        var sum: Float = 0
+                        for k in -r...r { sum += line[min(max(k, 0), bw - 1)] }
+                        for i in 0..<bw {
+                            row[i] = sum * norm
+                            sum += line[min(i + r + 1, bw - 1)] - line[max(i - r, 0)]
+                        }
+                    }
                 }
             }
-            for x in b.x0..<b.x1 {
-                for i in 0..<bh { line[i] = a[(b.y0 + i) * w + x] }
-                var sum: Float = 0
-                for k in -r...r { sum += line[min(max(k, 0), bh - 1)] }
-                for i in 0..<bh {
-                    a[(b.y0 + i) * w + x] = sum * norm
-                    sum += line[min(i + r + 1, bh - 1)] - line[max(i - r, 0)]
+            // The columns a band at a time, read a row at a time: a column's running sum takes
+            // the same values in the same order as one walked down alone.
+            Parallel.forEachBand(bw, minimumBandSize: 16) { band in
+                let cw = band.count, x0 = b.x0 + band.lowerBound
+                withUnsafeTemporaryAllocation(of: Float.self, capacity: cw * bh) { block in
+                    withUnsafeTemporaryAllocation(of: Float.self, capacity: cw) { sums in
+                        let t = block.baseAddress!, s = sums.baseAddress!
+                        for i in 0..<bh { (t + i * cw).update(from: a + (b.y0 + i) * w + x0, count: cw) }
+                        s.initialize(repeating: 0, count: cw)
+                        for k in -r...r {
+                            let src = t + min(max(k, 0), bh - 1) * cw
+                            for c in 0..<cw { s[c] += src[c] }
+                        }
+                        for i in 0..<bh {
+                            let out = a + (b.y0 + i) * w + x0
+                            let add = t + min(i + r + 1, bh - 1) * cw, sub = t + max(i - r, 0) * cw
+                            for c in 0..<cw {
+                                out[c] = s[c] * norm
+                                s[c] += add[c] - sub[c]
+                            }
+                        }
+                    }
                 }
             }
         }

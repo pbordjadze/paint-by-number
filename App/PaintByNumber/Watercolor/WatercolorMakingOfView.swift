@@ -9,21 +9,24 @@ import QuartzCore
 import SwiftUI
 import UIKit
 
-/// Watercolor's Making Of (painting-company row 373): a new painting painted once, fast, by the
-/// real simulation, before the painter paints it. PaintCore's `WatercolorMakingOf` is the plan
-/// (light washes first, darks last, a few blooms) and the time-lapse clock; a simulation of its
-/// own steps off the main actor (`WatercolorFilmPlayer`, `WatercolorFilm.produce`), sending what
-/// changed as frames to a renderer of its own that draws with the painting screen's shader
-/// (Watercolor.metal). It ends on the finished painting, held a moment as the camera draws back,
-/// which lifts off its own bare pencilled sheet, at the same place and scale, numbers and all;
-/// that sheet then dissolves into the painting screen opening beneath, the same sheet.
+/// Watercolor's Making Of (painting-company row 373): the painting's paints tried on a study
+/// sheet, fast, by the real simulation, before the painter paints. It shows off the water (a
+/// flood running across dry paper, paints bleeding wet in wet, granulation, blooms, the drying)
+/// and never the painting, which is the painter's to find (PaintCore's `WatercolorStudy`: the
+/// sheet, the painting's size, numbered with its own numbers). PaintCore's `WatercolorMakingOf`
+/// is the plan and the time-lapse clock; a simulation of its own steps off the main actor
+/// (`WatercolorFilmPlayer`, `WatercolorFilm.produce`), sending what changed as frames to a
+/// renderer of its own that draws with the painting screen's shader (Watercolor.metal). It ends
+/// on the dried study, held a moment as the camera draws back, which is then set aside: it rises
+/// and fades off the bare desk, and then the desk fades, uncovering the painting screen opening
+/// beneath, whose bare sheet lies at the same place and scale.
 ///
 /// Short and skippable rather than played over the template's making: the plan needs the
 /// finished template, and the making uses every core. It plays about six seconds once the
 /// template is made (`pbn watercolor --making-of` measures it) and a tap anywhere ends it at
 /// once; the painting screen opens beneath it meanwhile, so it adds no wait. Reduce Motion
-/// shows the bare sheet while the simulation runs unseen, then crossfades to the finished
-/// painting and back. VoiceOver skips it (`WatercolorEra.make`).
+/// shows the study's bare sheet while the simulation runs unseen, then crossfades to the
+/// finished study and away. VoiceOver skips it (`WatercolorEra.make`).
 @MainActor
 @Observable
 final class WatercolorFilm {
@@ -31,7 +34,7 @@ final class WatercolorFilm {
     @ObservationIgnored let renderer: WatercolorFilmRenderer
     @ObservationIgnored private let player: WatercolorFilmPlayer
     @ObservationIgnored private var producing: Task<Void, Never>?
-    /// The finished painting is on screen (all but a few damp patches dry).
+    /// The finished study is on screen (all but a few damp patches dry).
     private(set) var isSettled = false
     /// The demo's held moment is on screen.
     private(set) var isHeld = false
@@ -39,8 +42,8 @@ final class WatercolorFilm {
     private(set) var isDrying = false
     /// Where it pushes in: the first bloom, as a point of the sheet (0…1).
     let focus: UnitPoint
-    /// The bare sheet with its numbers, as a picture: what the painting lifts off (and Reduce
-    /// Motion's crossfade).
+    /// The study's bare sheet with its numbers, as a picture: Reduce Motion's, under the
+    /// crossfade.
     private(set) var bare: CGImage?
     /// A demo's moment to hold, seconds into the Making Of (Debug builds' scenario).
     @ObservationIgnored let hold: Double?
@@ -60,24 +63,28 @@ final class WatercolorFilm {
         }
     }
 
-    /// The sheet the painting is painted on (the painting's own: its seed) and what it is drawn
-    /// with, made off the main actor; nil without Metal.
-    static func prepare(template: Template, seed: UInt64, hold: Double? = nil) async -> WatercolorFilm? {
-        let made = await Background.run {
+    /// The painting's study sheet (`WatercolorStudy`, on paper of the painting's seed) and what
+    /// it is drawn with, made off the main actor; nil without Metal or a study.
+    static func prepare(template painting: Template, seed: UInt64, hold: Double? = nil) async -> WatercolorFilm? {
+        let made: (WatercolorAssets, WatercolorFilmPlayer, WatercolorFilmFrame, Template)? = await Background.run {
+            guard let study = try? WatercolorStudy(painting: painting) else { return nil }
+            let template = study.template
             let sheet = WatercolorSheet(template: template, seed: seed)
-            let player = WatercolorFilmPlayer(template: template, sheet: sheet)
-            return (WatercolorAssets.make(template: template, sheet: sheet), player, player.everything())
+            let player = WatercolorFilmPlayer(study: study, sheet: sheet)
+            return (WatercolorAssets.make(template: template, sheet: sheet), player, player.everything(), template)
         }
-        guard let renderer = WatercolorFilmRenderer(template: template, sheet: made.1.sheet, assets: made.0, first: made.2)
+        guard let made,
+              let renderer = WatercolorFilmRenderer(template: made.3, sheet: made.1.sheet, assets: made.0, first: made.2)
         else { return nil }
-        return WatercolorFilm(template: template, renderer: renderer, player: made.1, hold: hold)
+        return WatercolorFilm(template: made.3, renderer: renderer, player: made.1, hold: hold)
     }
 
     /// Starts the simulation: paced to the time-lapse's clock, or, settling at once (Reduce
     /// Motion), as fast as it goes with only the finished painting sent.
     func start(settlingAtOnce: Bool) {
         guard producing == nil else { return }
-        bare = renderer.picture(maxPixelSize: 2048)
+        // Reduce Motion's alone: the film shows the study over the desk otherwise.
+        if settlingAtOnce { bare = renderer.picture(maxPixelSize: 2048) }
         let mode: WatercolorFilmPlayer.Mode
         if let hold {
             mode = .hold(hold)
@@ -126,6 +133,7 @@ final class WatercolorFilm {
                 let target = player.plan.step(at: shown)
                 // A frame at least every few steps, however far behind a slow device falls.
                 player.play(to: target, most: 8)
+                player.follow(shown: shown)
                 sink.yield(player.frame())
                 if player.sim.step >= target {
                     guard (try? await Task.sleep(for: .milliseconds(12))) != nil else { return }
@@ -170,10 +178,32 @@ nonisolated final class WatercolorFilmPlayer: @unchecked Sendable {
     var sheet: WatercolorSheet { sim.sheet }
     private var cursor = 0
     private var settled = false
+    /// The paced film's clock once the drying began: the seconds shown then, the simulation's
+    /// time then, and the simulation time the clock has reached since (`follow`).
+    private var dryingBegan: (shown: Double, time: Float)?
+    private var clockTime: Float = 0
 
-    init(template: Template, sheet: WatercolorSheet) {
-        plan = WatercolorMakingOf(template: template, sheet: sheet)
+    /// Lets the drying front and the pencil follow the film's clock rather than the simulation,
+    /// from the moment the last tap is laid: a device that can't step the drying as fast as the
+    /// clock asks (an iPad Air managed about 300 steps a second of the 540 asked) sweeps the
+    /// front in the planned time, the simulation's pigment under it catching up as it can. It
+    /// begins where the simulation stands, so a flood that ran late never jumps the front.
+    func follow(shown: Double) {
+        guard plan.isDrying(sim) else { return }
+        let began = dryingBegan ?? (shown, sim.time)
+        dryingBegan = began
+        let steps = plan.step(at: shown) - plan.step(at: began.shown)
+        clockTime = began.time + Float(max(steps, 0)) * WatercolorSim.dt
+    }
+
+    /// The time the front and the pencil are drawn at: the simulation's, or the film's clock
+    /// where it is ahead.
+    private var filmTime: Float { max(sim.time, clockTime) }
+
+    init(study: WatercolorStudy, sheet: WatercolorSheet) {
+        plan = WatercolorMakingOf(study: study, sheet: sheet)
         sim = WatercolorSim(sheet: sheet)
+        sim.roundedFronts = true
     }
 
     /// Steps toward `step`, at most `most` steps.
@@ -183,7 +213,10 @@ nonisolated final class WatercolorFilmPlayer: @unchecked Sendable {
     }
 
     var isSettled: Bool {
-        if !settled { settled = plan.isSettled(sim, cursor: cursor) }
+        if !settled {
+            settled = plan.isSettled(sim, cursor: cursor)
+                || (cursor >= plan.log.taps.count && plan.dryingFront(at: filmTime) >= 1)
+        }
         return settled
     }
 
@@ -205,7 +238,7 @@ nonisolated final class WatercolorFilmPlayer: @unchecked Sendable {
 
     private func pack(box: WatercolorSim.Box?, regions: [Int32]) -> WatercolorFilmFrame {
         var frame = WatercolorFilmFrame(time: sim.time, settled: isSettled, drying: plan.isDrying(sim),
-                                        pencilFade: plan.pencilFade(at: sim.time), front: plan.dryingFront(at: sim.time))
+                                        pencilFade: plan.pencilFade(at: filmTime), front: plan.dryingFront(at: filmTime))
         let w = sheet.width
         if let box, box.x1 > box.x0, box.y1 > box.y0 {
             let bw = box.x1 - box.x0, bh = box.y1 - box.y0
@@ -214,27 +247,14 @@ nonisolated final class WatercolorFilmPlayer: @unchecked Sendable {
             frame.granulation = [Float16](repeating: 0, count: bw * bh)
             frame.density.withUnsafeMutableBufferPointer { out in
                 frame.granulation.withUnsafeMutableBufferPointer { g in
-                    for y in 0..<bh {
-                        for x in 0..<bw {
-                            let i = (box.y0 + y) * w + box.x0 + x
-                            let d = sim.D[i] + 0.9 * sim.S[i]
-                            let o = (y * bw + x) * 4
-                            out[o] = Float16(d.x)
-                            out[o + 1] = Float16(d.y)
-                            out[o + 2] = Float16(d.z)
-                            out[o + 3] = Float16(sim.W[i])
-                            g[y * bw + x] = Float16(sim.G[i])
-                        }
-                    }
+                    WatercolorRenderer.pack(sim, box: box, width: w, density: out.baseAddress!, grain: g.baseAddress!)
                 }
             }
         }
         frame.regions = regions.filter { Int($0) < sheet.regionCount }
-        for r in frame.regions {
-            let target = sim.target(of: Int(r))
-            let at = sim.paintedAt[Int(r)]
-            frame.gains.append(SIMD4(target.gain, at.isFinite ? at : 1e9))
-            frame.aims.append(SIMD4(target.aim, sim.glaze(of: Int(r))))
+        for (_, t) in WatercolorRenderer.targets(sim, of: frame.regions) {
+            frame.gains.append(t.gain)
+            frame.aims.append(t.aim)
         }
         return frame
     }
@@ -468,54 +488,54 @@ struct WatercolorFilmCanvas: UIViewRepresentable {
     func updateUIView(_ view: MTKView, context: Context) {}
 }
 
-/// The Making Of over the painting screen: the sheet on the desk, painted; then held, and lifted
-/// away. A tap anywhere lifts it at once.
+/// The Making Of over the painting screen: the study on the desk, painted; then held, and set
+/// aside onto the painting's own sheet. A tap anywhere sets it aside at once.
 struct WatercolorMakingOfView: View {
     let film: WatercolorFilm
     let onEnd: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// Reduce Motion's finished painting shown over the bare sheet.
+    /// Reduce Motion's finished study shown over its bare sheet.
     @State private var showsFinished = false
-    /// The painting lifted off its bare sheet.
-    @State private var lifted = false
-    /// The bare sheet dissolved into the painting screen beneath.
+    /// The study set aside: risen and faded off the desk.
+    @State private var setAside = false
+    /// Then the bare desk faded, uncovering the painting screen beneath: the two sheets never
+    /// share the frame (critic round 2: the study over the numbered sheet was a muddle).
     @State private var gone = false
     @State private var pushedIn = false
 
-    /// The finished painting held as the camera draws back out, its lift off the bare sheet, and
-    /// the bare sheet's dissolve into the painting screen (`tools/watercolor_making_of.py`
-    /// films the first two).
+    /// The finished study held as the camera draws back out, then set aside
+    /// (`tools/watercolor_making_of.py` films both), and how far it rises as it goes.
     static let hold: Double = 0.5
-    static let lift: Double = 0.7
-    static let dissolve: Double = 0.3
+    static let setAsideSeconds: Double = 0.7
+    static let rise: CGFloat = 90
     /// The push in toward a drying bloom while the drying front sweeps: how far, and how long.
     static let pushIn: CGFloat = 1.15
     static let pushSeconds: Double = 1.4
 
-    private var paintingShown: Bool {
-        reduceMotion ? showsFinished && !lifted : !lifted
-    }
+    private var studyShown: Bool { !reduceMotion || showsFinished }
 
     var body: some View {
         let t = film.template
         ZStack {
             WatercolorEra.desk.ignoresSafeArea()
             ZStack {
-                if let bare = film.bare {
+                if reduceMotion, let bare = film.bare {
                     Image(decorative: bare, scale: 1)
                         .resizable()
                 }
                 WatercolorFilmCanvas(renderer: film.renderer)
-                    .opacity(paintingShown ? 1 : 0)
+                    .opacity(studyShown ? 1 : 0)
             }
             .aspectRatio(CGSize(width: t.width, height: t.height), contentMode: .fit)
             .scaleEffect(pushedIn ? Self.pushIn : 1, anchor: film.focus)
             .clipped()
             .padding(20)
+            .offset(y: setAside && !reduceMotion ? -Self.rise : 0)
+            .opacity(setAside ? 0 : 1)
         }
         .opacity(gone ? 0 : 1)
         .contentShape(.rect)
-        .onTapGesture { end(lift: 0.2, dissolve: 0.25) }
+        .onTapGesture { end(after: 0.3) }
         .accessibilityHidden(true)
         .task {
             film.start(settlingAtOnce: reduceMotion)
@@ -526,11 +546,11 @@ struct WatercolorMakingOfView: View {
             if reduceMotion {
                 withAnimation(.easeInOut(duration: 1)) { showsFinished = true }
                 guard (try? await Task.sleep(for: .seconds(2.2))) != nil else { return }
-                end(lift: 1, dissolve: Self.dissolve)
+                end(after: 1)
             } else {
                 withAnimation(.easeInOut(duration: Self.hold)) { pushedIn = false }
                 guard (try? await Task.sleep(for: .seconds(Self.hold))) != nil else { return }
-                end(lift: Self.lift, dissolve: Self.dissolve)
+                end(after: Self.setAsideSeconds)
             }
         }
         .onChange(of: film.isDrying) { _, drying in
@@ -540,15 +560,16 @@ struct WatercolorMakingOfView: View {
         .onDisappear { film.stop() }
     }
 
-    /// The painting lifts off its bare sheet, which then dissolves into the painting screen.
-    private func end(lift: Double, dissolve: Double) {
-        guard !lifted else { return }
-        withAnimation(.easeInOut(duration: lift)) { lifted = true }
+    /// The study is set aside over `seconds`, then the bare desk fades over `seconds` × 0.6,
+    /// uncovering the painting screen beneath.
+    private func end(after seconds: Double) {
+        guard !setAside else { return }
+        withAnimation(.easeIn(duration: seconds)) { setAside = true }
         Task {
-            try? await Task.sleep(for: .seconds(lift))
-            withAnimation(.easeInOut(duration: dissolve)) { gone = true }
-            try? await Task.sleep(for: .seconds(dissolve))
+            try? await Task.sleep(for: .seconds(seconds))
             film.stop()
+            withAnimation(.easeInOut(duration: seconds * 0.6)) { gone = true }
+            try? await Task.sleep(for: .seconds(seconds * 0.6))
             onEnd()
         }
     }

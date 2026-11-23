@@ -91,7 +91,7 @@ struct EraDoorTests {
         #expect(EraClock.text(of: EraYear.byzantium) == "0547")
         #expect(EraClock.nearest(to: EraYear.present) == EraYear.present)
         #expect(EraClock.nearest(to: 547) == 547)
-        #expect(EraClock.nearest(to: 1750) == 1800, "a tie takes the later year")
+        #expect(EraClock.nearest(to: 1650) == 1700, "a tie takes the later year")
     }
 
     /// Stained Glass (painting-company row 366): 1248 opens it in SideStore and Debug builds, and
@@ -102,9 +102,11 @@ struct EraDoorTests {
         #expect(Era.opened(by: 1600) == nil)
         #if UNRELEASED
         #expect(Era.opened(by: 1248) == .glass)
+        #expect(Era.opened(by: 1765) == .woodblock)
+        #expect(EraClock.isLit(1765) && EraClock.pulled(from: 1700) == 1765 && EraClock.pulled(from: 1800) == 1765)
         #expect(Era.opened(by: 1502) == .watercolor)
         #expect(Era.opened(by: 1000) == .frame)
-        #expect(EraYear.modes == [547, 1000, 1248, 1502])
+        #expect(EraYear.modes == [547, 1000, 1248, 1502, 1765])
         #expect(EraClock.isLit(1502) && EraClock.pulled(from: 1500) == 1502 && EraClock.pulled(from: 1600) == 1502)
         #expect(EraClock.isLit(1248) && EraClock.isLit(547) && !EraClock.isLit(1300))
         #expect(EraClock.pulled(from: 1200) == 1248 && EraClock.pulled(from: 1300) == 1248)
@@ -114,6 +116,7 @@ struct EraDoorTests {
         #expect(EraClock.pulled(from: EraYear.present) == nil)
         #else
         #expect(Era.opened(by: 1248) == nil)
+        #expect(Era.opened(by: 1765) == nil)
         #expect(Era.opened(by: 1502) == nil)
         #expect(Era.opened(by: 1000) == nil)
         #expect(EraYear.modes == [547])
@@ -130,6 +133,17 @@ struct EraDoorTests {
         door.covered()
         door.passed()
         #expect(EraDoor(defaults: defaults).shown == .glass)
+    }
+
+    /// Woodblock (painting-company row 375) is kept across launches as Stained Glass is.
+    @Test func theWoodblockEraOutlivesTheLaunch() throws {
+        let defaults = try freshDefaults()
+        let door = EraDoor(defaults: defaults)
+        door.go(to: .woodblock)
+        #expect(defaults.string(forKey: EraDoor.key) == "woodblock")
+        door.covered()
+        door.passed()
+        #expect(EraDoor(defaults: defaults).shown == .woodblock)
     }
 
     /// Watercolor (painting-company row 373) is kept across launches as Stained Glass is.
