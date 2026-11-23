@@ -1231,7 +1231,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   seconds a painting has to draw: CI's simulators take several to open one, and stall their main
   thread for seconds meanwhile, so a motion of half a second is a frame or two there.
 - The Museum (SideStore and Debug builds, `#if UNRELEASED`; painting-company row 369;
-  `Features/Museum/`): Your Own's Museum tile opens `MuseumView` over the Paint page, the
+  `Features/Museum/`, in `App/Shared` with the frame): Your Own's Museum tile opens `MuseumView` over the Paint page, the
   open-access works of museums (`MuseumCatalog`: one JSON that `tools/museum/catalog.py` writes
   and the `museum` branch serves, kept in the caches folder and fetched again after a day) by
   movement, kind, search and order (`MuseumQuery`, `MuseumQueryTests`; Most Colorful first).
@@ -1396,7 +1396,7 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
 - **The App Review note** for the version that ships it (Guideline 2.3.1):
   `docs/ravenna/app-review-note.md`.
 
-## The frame every mode shares (`Shell/`)
+## The frame every mode shares (`App/Shared/Shell/`)
 
 SideStore and Debug builds (`#if UNRELEASED`; painting-company row 379). Every mode behind the
 year wheel is a `ModeShell` around what is its own; `ModeShell`'s doc comment is the rules, with no
@@ -1423,7 +1423,9 @@ Paint by Mosaic is the bar for how far a mode may go: a mode may be as different
 library of its own look, a build book, its own doors and words) and still be in the frame, which
 widens with optional parts until Mosaic fits; where Mosaic has what every mode should, that becomes
 the frame instead. Until it is moved in, Paint by Mosaic is a copy of the app, not a mode, and
-keeps its own. **The Frame** (`FrameEra`,
+keeps its own. The frame and the Museum are in `App/Shared` so it can move in: each module answers
+`ModeSettingsView` in its own `Shell/` (the app's, About's Year row; Paint by Mosaic's, its whole
+Settings), and the frame's words pass `bundle: .era`. **The Frame** (`FrameEra`,
 year 1000, `Era.frame`) is the frame with nothing of a mode's in it: its gallery, canvas and paints
 are empty places, named (`ModeSlot`), and a picture picked opens on a painting screen and is kept
 nowhere; its passages are the plain tiles both ways. Demos: `frame-gallery`, `frame-settings`,
