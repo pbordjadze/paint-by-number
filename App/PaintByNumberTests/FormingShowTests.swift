@@ -259,6 +259,17 @@ struct FormingShowTests {
         #expect(along.red < across.red)
     }
 
+    /// A speck of stroke (the photo's texture) is left out; a line of the drawing stays whole.
+    @Test func specksAreNotDrawn() {
+        let w = 40, h = 20
+        var stroke = [Float](repeating: 0, count: w * h)
+        for x in 2..<38 { stroke[5 * w + x] = 0.9 }
+        for (x, y) in [(10, 14), (11, 14), (11, 15)] { stroke[y * w + x] = 0.9 }
+        let kept = GraphiteSketch.withoutSpecks(stroke, width: w, height: h)
+        #expect(kept[5 * w + 20] == 0.9)
+        #expect(kept[14 * w + 10] == 0 && kept[15 * w + 11] == 0)
+    }
+
     /// A pixel's red, green and blue (premultiplied), 0…1, in an image.
     private static func pixel(of image: CGImage, x: Int, y: Int) throws -> (red: Double, green: Double, blue: Double) {
         let context = try #require(CGContext(

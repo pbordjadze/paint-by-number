@@ -12,7 +12,8 @@ Draws each as the preview shows it at each progress of `--at` (one row per photo
 - the strokes: the painting's own line drawing, recovered from `LineArtInput.edges` where it
   beat the contours (0.85 × the contour map), ramped between `DRAWING`, and the contours' cores
   ramped between `CONTOUR` at `CONTOUR_SHARE`, so outlines the drawing misses are drawn thin; the
-  pencil's pressure wavers by `PRESSURE` (`wavering`). No filter of the photo;
+  pencil's pressure wavers by `PRESSURE` (`wavering`), and pieces smaller than `SHORTEST` pixels
+  (the photo's texture) are left out (`without_specks`). No filter of the photo;
 - the halo: the strokes box-blurred twice over `HALO_RADIUS`, times `HALO_GAIN`: where the photo's
   color drains;
 - the race: each pixel's arrival is its shortest way from the strongest stroke near the middle,
@@ -39,12 +40,13 @@ ROOT = Path(__file__).resolve().parent.parent
 # CanvasPalette's sheet paper and ink, sRGB (App/PaintByNumber/Canvas/CanvasTypes.swift).
 LIGHT = (np.array([0.957, 0.937, 0.902]), np.array([0.118, 0.102, 0.133]))
 DARK = (np.array([0.137, 0.118, 0.133]), np.array([0.812, 0.780, 0.827]))
-WARM = np.array([0.75, 0.52, 0.30])
+WARM = np.array([0.95, 0.60, 0.25])
 # GraphiteSketch's constants.
 CONTOUR_WEIGHT = 0.85
-DRAWING, CONTOUR, CONTOUR_SHARE, PRESSURE = (0.12, 0.55), (0.62, 0.92), 0.8, 0.2
-COARSE, HALO_RADIUS, HALO_GAIN = 3, 4, 3.0
-PENCIL, EDGE, FRESH, WASH = 0.85, 0.012, 0.04, 0.8
+DRAWING, CONTOUR, CONTOUR_SHARE, PRESSURE = (0.3, 0.7), (0.62, 0.92), 0.8, 0.2
+COARSE, HALO_RADIUS, HALO_GAIN = 3, 2, 2.0
+SHORTEST, STROKE_FLOOR = 24, 0.1
+PENCIL, EDGE, FRESH, WASH, POINT = 0.95, 0.012, 0.06, 0.5, 0.8
 CENTRE = (0.5, 0.45)
 
 
@@ -67,7 +69,34 @@ def strokes(drawing, contours):
     outline = ramp(contours / 255, *CONTOUR) * CONTOUR_SHARE
     s = np.maximum(ramp(drawn, *DRAWING), outline)
     h, w = drawing.shape
-    return s * (1 - PRESSURE + PRESSURE * wavering(w, h))
+    return without_specks(s * (1 - PRESSURE + PRESSURE * wavering(w, h)))
+
+
+def without_specks(s):
+    """`GraphiteSketch.withoutSpecks`: pieces of stroke (above `STROKE_FLOOR`, 8-connected) of
+    fewer than `SHORTEST` pixels are texture, not drawing, and are left out."""
+    h, w = s.shape
+    on = s > STROKE_FLOOR
+    seen = np.zeros_like(on)
+    out = s.copy()
+    for y0, x0 in zip(*np.nonzero(on)):
+        if seen[y0, x0]:
+            continue
+        seen[y0, x0] = True
+        stack, piece = [(y0, x0)], []
+        while stack:
+            y, x = stack.pop()
+            piece.append((y, x))
+            for dy in (-1, 0, 1):
+                for dx in (-1, 0, 1):
+                    ny, nx = y + dy, x + dx
+                    if 0 <= ny < h and 0 <= nx < w and on[ny, nx] and not seen[ny, nx]:
+                        seen[ny, nx] = True
+                        stack.append((ny, nx))
+        if len(piece) < SHORTEST:
+            ys, xs = zip(*piece)
+            out[list(ys), list(xs)] = 0
+    return out
 
 
 def box_blur(a, r):
@@ -154,7 +183,7 @@ def inputs(name):
 def frames(name, dark, at):
     rgb, d, c = inputs(name)
     paper, ink = DARK if dark else LIGHT
-    point = ink * 0.5 + WARM * 0.5
+    point = ink * (1 - POINT) + WARM * POINT
     s = strokes(d, c)
     near, arrival = quantized(halo(s)), quantized(arrivals(s))
     s = quantized(s)

@@ -322,7 +322,7 @@ enum GraphiteShader {
     private static var compiled = false
 
     static func shader(_ sheet: FormingPlan.Sheet, progress: Double) -> Shader {
-        let point = sheet.ink * 0.5 + GraphiteSketch.warm * 0.5
+        let point = sheet.ink * (1 - GraphiteSketch.pointWarmth) + GraphiteSketch.warm * GraphiteSketch.pointWarmth
         return ShaderLibrary.formingGraphite(
             .float(progress), .color(color(sheet.ink)), .color(color(point)), .color(color(sheet.paper)),
             .float(GraphiteSketch.pencil), .float(GraphiteSketch.edge), .float(GraphiteSketch.fresh), .float(GraphiteSketch.wash))
@@ -378,8 +378,8 @@ nonisolated enum GraphiteSketch {
     /// The drawing's strokes: the drawing map (where it wins over the contours in `edges`)
     /// between `drawingFrom` and `drawingTo`, and the contours' cores between `contourFrom` and
     /// `contourTo` at `contourShare`, so the outlines the drawing misses are drawn thin.
-    static let drawingFrom: Float = 0.12
-    static let drawingTo: Float = 0.55
+    static let drawingFrom: Float = 0.3
+    static let drawingTo: Float = 0.7
     static let contourFrom: Float = 0.62
     static let contourTo: Float = 0.92
     static let contourShare: Float = 0.8
@@ -388,18 +388,24 @@ nonisolated enum GraphiteSketch {
     /// The race is worked out on a grid this many times coarser than the map.
     static let coarse = 3
     /// How far around a stroke the color drains (map pixels), and how strongly.
-    static let haloRadius = 4
-    static let haloGain: Float = 3
+    static let haloRadius = 2
+    static let haloGain: Float = 2
+    /// A piece of stroke (above `strokeFloor`, its pixels touching) smaller than this many map
+    /// pixels is the photo's texture rather than its drawing, and is left out (`withoutSpecks`):
+    /// drawn, it read as a filter over a busy area.
+    static let shortest = 24
+    static let strokeFloor: Float = 0.1
 
     /// The shading's constants, the shader's too: the strokes' strongest, how sharply a stroke
     /// comes in, how long a stretch behind the point is fresh, and how much of the photo's color
     /// goes near a stroke.
-    static let pencil = 0.85
+    static let pencil = 0.95
     static let edge = 0.012
-    static let fresh = 0.04
-    static let wash = 0.8
-    /// The point's warmth, mixed half and half with the ink.
-    static let warm = SIMD3<Float>(0.75, 0.52, 0.30)
+    static let fresh = 0.06
+    static let wash = 0.5
+    /// The point's warmth, `pointWarmth` of it over the ink, so the moving point shows.
+    static let warm = SIMD3<Float>(0.95, 0.60, 0.25)
+    static let pointWarmth: Float = 0.8
 
     nonisolated struct Drawing: Sendable {
         /// Red: arrival; green: stroke; blue: halo (sRGB-tagged, read as values).
@@ -456,6 +462,36 @@ nonisolated enum GraphiteSketch {
                 }
                 let s = max(ramp(drawn, drawingFrom, drawingTo), outline)
                 out[i] = s * (1 - pressure + pressure * wavering(x, y))
+            }
+        }
+        return withoutSpecks(out, width: w, height: h)
+    }
+
+    /// The strokes with every piece smaller than `shortest` pixels taken out (8-connected, above
+    /// `strokeFloor`).
+    static func withoutSpecks(_ stroke: [Float], width w: Int, height h: Int) -> [Float] {
+        var out = stroke
+        var seen = [Bool](repeating: false, count: w * h)
+        var stack: [Int] = [], piece: [Int] = []
+        for start in 0..<(w * h) where !seen[start] && stroke[start] > strokeFloor {
+            seen[start] = true
+            stack = [start]
+            piece.removeAll(keepingCapacity: true)
+            while let i = stack.popLast() {
+                piece.append(i)
+                let x = i % w, y = i / w
+                for ny in max(y - 1, 0)...min(y + 1, h - 1) {
+                    for nx in max(x - 1, 0)...min(x + 1, w - 1) {
+                        let n = ny * w + nx
+                        if !seen[n] && stroke[n] > strokeFloor {
+                            seen[n] = true
+                            stack.append(n)
+                        }
+                    }
+                }
+            }
+            if piece.count < shortest {
+                for i in piece { out[i] = 0 }
             }
         }
         return out
