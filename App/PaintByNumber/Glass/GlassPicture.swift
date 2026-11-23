@@ -7,7 +7,8 @@ import SwiftUI
 /// pictures on the shelf alike: its pieces' outlines and its lead in canvas units, and the
 /// colors of glass lit from behind and of glass still unlit. A piece not yet glazed is dark glass
 /// keeping a faint tint of the glass the photo suggests for it (Paul's free glazing: the
-/// suggestion is a hint, never a number); a glazed piece is its glass, lit.
+/// suggestion is a hint, never a number); a glazed piece is its glass, lit. The canvas draws
+/// windows as Liquid Glass lenses (`GlassMode`); this look is the shelf's where there is no Metal.
 nonisolated enum GlassPicture {
     /// The dark room behind the window.
     static let nave = SIMD3<Float>(0.035, 0.035, 0.055)

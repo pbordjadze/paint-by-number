@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import PaintCore
+import Synchronization
 import Testing
 import Vision
 @testable import PaintByNumber
@@ -372,6 +373,23 @@ struct LineArtInputsTests {
         #expect(input?.edges.width == image.width)
     }
 
+    /// The models' drawing reaches `early` before Vision's finds are in (the short Making-of's
+    /// graphite): the input without them, the same maps the finished input has; a request
+    /// joining a computation already past the models gets it at once.
+    @Test func theDrawingComesEarly() async throws {
+        let image = try Self.unseenPhoto("great-wave")
+        let early = EarlyInputs()
+        let input = try #require(try await LineArtInputs.make(for: image, settings: Self.book) { early.add($0) })
+        let again = try await LineArtInputs.make(for: image, settings: Self.book) { early.add($0) }
+        #expect(again == input)
+        let found = early.all
+        #expect(!found.isEmpty)
+        for drawn in found {
+            #expect(drawn.edges == input.edges && drawn.contours == input.contours)
+            #expect(drawn.eyes.isEmpty && drawn.objects.isEmpty && drawn.writing.isEmpty)
+        }
+    }
+
     /// The create flow's line art reaches every candidate, the chosen settings, the draft, its
     /// template and the saved artwork's meta.json; the book computes its inputs once for the photo.
     @Test func createFlowCarriesItsLineArtIntoTheArtwork() async throws {
@@ -427,4 +445,11 @@ struct LineArtInputsTests {
         #expect(library.artwork(with: artwork.id)?.settings == settings)
         #expect(try library.store.readMeta(artwork.id).settings == settings)
     }
+}
+
+/// What `LineArtInputs`' `early` handed over, from whichever thread.
+private final class EarlyInputs: Sendable {
+    private let found = Mutex<[LineArtInput]>([])
+    func add(_ input: LineArtInput) { found.withLock { $0.append(input) } }
+    var all: [LineArtInput] { found.withLock { $0 } }
 }

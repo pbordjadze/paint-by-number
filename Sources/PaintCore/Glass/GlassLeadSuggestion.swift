@@ -137,7 +137,8 @@ public enum GlassLeadSuggestion {
             // The boundary the whole piece shares with each other piece.
             var along: [Int: Float] = [:]
             for member in 0..<n where sets.find(member) == root {
-                for (other, length) in shared[member] {
+                // In key order: a sum in a Dictionary's order differs between launches by an ulp.
+                for (other, length) in shared[member].sorted(by: { $0.key < $1.key }) {
                     let o = sets.find(other)
                     if o != root { along[o, default: 0] += length }
                 }

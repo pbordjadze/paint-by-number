@@ -164,6 +164,67 @@ struct GlassTests {
         #expect(leading.lines.count == 1)
     }
 
+    // MARK: Framing by hand
+
+    /// From the top border down and across to the right border: the top right piece is framed,
+    /// and the left piece, only grazed, isn't.
+    @Test func aStrokeFromTheLeadRoundAChunkFramesItsPieces() throws {
+        let t = try Self.window().template
+        let none = [Bool](repeating: false, count: t.regions.count)
+        let stroke: [SIMD2<Float>] = [SIMD2(100, 0), SIMD2(100, 100), SIMD2(240, 100)]
+        let framed = GlassFraming.framed(by: stroke, in: t, framed: none, reach: 3)
+        #expect(framed == [Self.region(at: 200, 40, in: t)])
+    }
+
+    /// A stroke must leave the leaded part and come back to it, and part something off.
+    @Test func aStrokeThatClosesNothingFramesNothing() throws {
+        let t = try Self.window().template
+        let none = [Bool](repeating: false, count: t.regions.count)
+        // Starting in the middle of the bare window.
+        #expect(GlassFraming.framed(by: [SIMD2(60, 90), SIMD2(100, 100), SIMD2(240, 100)], in: t, framed: none, reach: 3).isEmpty)
+        // Along the border, parting nothing off.
+        #expect(GlassFraming.framed(by: [SIMD2(10, 1), SIMD2(200, 1)], in: t, framed: none, reach: 3).isEmpty)
+    }
+
+    /// Every piece can be framed, the last too: a stroke across the last bare piece frames it,
+    /// though there is nothing left to part it from.
+    @Test func everyPieceCanBeFramedStrokeByStroke() throws {
+        let t = try Self.window().template
+        var framed = [Bool](repeating: false, count: t.regions.count)
+        let topRight = Self.region(at: 200, 40, in: t), bottomRight = Self.region(at: 200, 140, in: t)
+        let left = Self.region(at: 40, 90, in: t)
+        func lay(_ stroke: [SIMD2<Float>]) -> [Int] {
+            let new = GlassFraming.framed(by: stroke, in: t, framed: framed, reach: 3)
+            for r in new { framed[r] = true }
+            return new
+        }
+        #expect(lay([SIMD2(100, 0), SIMD2(100, 100), SIMD2(240, 100)]) == [topRight])
+        #expect(lay([SIMD2(130, 88), SIMD2(110, 120), SIMD2(110, 180)]) == [bottomRight])
+        // The left piece, alone now: from the top border straight down to the bottom one.
+        #expect(lay([SIMD2(40, 0), SIMD2(40, 180)]) == [left])
+        #expect(framed.allSatisfy { $0 })
+    }
+
+    /// A finger dragged past the canvas's edge walls nothing out there.
+    @Test func aStrokePastTheEdgeIsSafe() throws {
+        let t = try Self.window().template
+        let none = [Bool](repeating: false, count: t.regions.count)
+        let stroke: [SIMD2<Float>] = [SIMD2(-20, -20), SIMD2(100, 0), SIMD2(100, 100), SIMD2(260, 100), SIMD2(300, 220)]
+        #expect(GlassFraming.framed(by: stroke, in: t, framed: none, reach: 3) == [Self.region(at: 200, 40, in: t)])
+    }
+
+    /// Pieces already framed are leaded: a stroke may start from them, and they are never framed
+    /// again.
+    @Test func framedPiecesAreLeadToStartFrom() throws {
+        let t = try Self.window().template
+        let topRight = Self.region(at: 200, 40, in: t), bottomRight = Self.region(at: 200, 140, in: t)
+        var framed = [Bool](repeating: false, count: t.regions.count)
+        framed[topRight] = true
+        // From the framed piece's bottom edge round the bottom right piece to the bottom border.
+        let stroke: [SIMD2<Float>] = [SIMD2(130, 88), SIMD2(110, 120), SIMD2(110, 180)]
+        #expect(GlassFraming.framed(by: stroke, in: t, framed: framed, reach: 3) == [bottomRight])
+    }
+
     @Test func noLinesIsOnePiece() throws {
         let w = try Self.window([])
         expectValid(w.template)
@@ -261,6 +322,23 @@ struct GlassTests {
         #expect(try Glazing(encoded: g.encoded() + Data([1, 2, 3]), pieces: 4) == g)
     }
 
+    /// The frames ride at the file's end; a file from before them has its glazed pieces framed.
+    @Test func framesRoundTripAndOlderFilesFrameTheirGlazedPieces() throws {
+        var g = Glazing(pieces: 4, offered: Self.glasses(3))
+        g.glass[2] = 1
+        g.framed[0] = true
+        let data = g.encoded()
+        let back = try Glazing(encoded: data, pieces: 4)
+        #expect(back.framed == [true, false, false, false])
+        #expect((0..<4).map(back.isFramed) == [true, false, true, false])
+        let older = try Glazing(encoded: data.dropLast(4 + 4), pieces: 4)
+        #expect(older.framed == [false, false, true, false])
+        // A frame count that isn't the window's is a corrupt file.
+        var wrong = data.dropLast(4 + 4)
+        withUnsafeBytes(of: UInt32(9)) { wrong.append(contentsOf: $0) }
+        #expect(throws: Glazing.CodingError.corrupt) { try Glazing(encoded: wrong + Data(repeating: 1, count: 9), pieces: 4) }
+    }
+
     @Test func aGlassPastTheOfferedReadsAsNone() throws {
         var g = Glazing(pieces: 3, offered: Self.glasses(3))
         g.glass = [2, 7, -5]
@@ -272,7 +350,10 @@ struct GlassTests {
         var g = Glazing(pieces: 3, offered: Self.glasses(3))
         g.glass = [0, 1, 2]
         let data = g.encoded()
-        for n in 0..<data.count {
+        // Cut anywhere but where the frames begin (a file from before them ends there, and a few
+        // trailing bytes are ignored), it is corrupt.
+        let framesAt = data.count - 4 - 3
+        for n in 0..<data.count where n < framesAt || n >= framesAt + 4 {
             #expect(throws: Glazing.CodingError.self) { try Glazing(encoded: data.prefix(n), pieces: 3) }
         }
         var bad = data

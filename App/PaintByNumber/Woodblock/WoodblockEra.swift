@@ -65,7 +65,7 @@ struct WoodblockEra: View {
         do {
             let (template, settings) = try await WoodblockShelf.template(of: picked.photo)
             let artwork = try await shelf.create(template: template, settings: settings, photo: picked.photo,
-                                                 title: picked.sample?.title ?? shelf.title(), sampleName: picked.sample?.id)
+                                                 title: picked.title ?? shelf.title(), sampleName: picked.sample?.id)
             path = [artwork.id]
         } catch {
             Log.library.error("Couldn't make a print: \(String(describing: error), privacy: .public)")
@@ -78,21 +78,31 @@ struct WoodblockGalleryView: View {
     let shelf: WoodblockShelf
     let waysIn: ModeWaysIn
     let onOpen: (UUID) -> Void
-    @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
         if shelf.isLoaded && shelf.prints.isEmpty {
             empty
         } else {
-            ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: sizeClass == .compact ? 150 : 220), spacing: 22)], spacing: 26) {
-                    ForEach(shelf.prints) { artwork in
-                        WoodblockCard(shelf: shelf, artwork: artwork, onOpen: { onOpen(artwork.id) })
-                    }
+            ModeGallery(items: shelf.prints.map(\.shelfItem), actions: actions, deleteTitle: Text("Delete Print")) { item in
+                if let artwork = shelf.print(item.id) {
+                    WoodblockCard(shelf: shelf, artwork: artwork, onOpen: { onOpen(artwork.id) })
                 }
-                .padding(20)
             }
         }
+    }
+
+    /// The frame's card menu, in Woodblock's words for it: shared as the print stands (its
+    /// picture on the shelf), printed as its numbered sheet.
+    private var actions: ModeCardActions {
+        let shelf = shelf
+        return ModeCardActions(
+            rename: { shelf.rename($0, to: $1) },
+            delete: { shelf.delete($0) },
+            picture: { id in await shelf.picture(of: id) },
+            print: { id in
+                guard let artwork = shelf.print(id) else { throw CocoaError(.fileNoSuchFile) }
+                return try await PrintPreviewRequest.saved(store: shelf.store, artwork: artwork)
+            })
     }
 
     private var empty: some View {
@@ -124,7 +134,6 @@ struct WoodblockCard: View {
     let artwork: Artwork
     let onOpen: () -> Void
     @State private var picture: CGImage?
-    @State private var asksToDelete = false
 
     private var share: Double { Double(artwork.paintedCount) / Double(max(1, artwork.regionCount)) }
 
@@ -160,12 +169,6 @@ struct WoodblockCard: View {
         .accessibilityElement(children: .combine)
         .accessibilityValue(Text(progress))
         .accessibilityIdentifier("woodblock-card")
-        .contextMenu {
-            Button("Delete", systemImage: "trash", role: .destructive) { asksToDelete = true }
-        }
-        .confirmationDialog(Text("Delete Print"), isPresented: $asksToDelete, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) { shelf.delete(artwork.id) }
-        }
         .task(id: artwork.thumbnailVersion) {
             picture = await shelf.thumbnail(of: artwork)
         }

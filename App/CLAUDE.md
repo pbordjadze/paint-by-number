@@ -420,6 +420,17 @@ below name both alike.
   their own (starting either engine blocks its caller). Settings' Sounds, Haptics and Music are read
   live (`SettingsKey.sounds`, `SettingsKey.haptics`, `SettingsKey.sky`); Haptics shows only on
   hardware with haptics (not iPad, not the simulator).
+- The hidden modes' sounds (SideStore and Debug builds, `#if UNRELEASED`; painting-company row
+  381): `EraSounds` (when each plays) and `EraSynth` (what it is: the same kalimba and celesta on
+  the same scales, a music box's tine, a glass tessera, and water made of bubbles after van den
+  Doel's liquid sounds), played by `SoundPlayer` as `Cue.Voice.era`, each passage one buffer timed
+  to its drawing (`EraSynth.Times`, which `EraSoundsTests` holds to `EraPassage` and
+  `EraWayBack`). The year wheel steps and clicks into place (`EraClock.Sound`, the environment's
+  `eraClockSound`, set at `RootView` and taken away by each Settings' own Sounds switch), every
+  passage sounds (`EraPassage`'s appearing), and Watercolor's taps, drying and finish sound
+  (`WatercolorPainting.tap`, `WatercolorCanvas`'s `onActivity`). `tools/sounds/render.sh` renders
+  them on Linux with this synthesis, `tools/sounds/sheet.py` draws them; main painting and Paint by
+  Mosaic's sounds are untouched.
 - Color names: each paint goes by a nickname from `ColorNickname.assign`, seeded by the artwork id
   (`ColorNickname.seed(for:)`; a received painting by its sender's: `Artwork.nicknameSeed`), using the vocabulary version recorded in `Artwork.nicknameVersion`,
   so a painting's names are the same on every open (derived, never
@@ -596,7 +607,8 @@ region states, whose `RegionState.mode` carries its own value per region, set wi
 and numbers, draw light over the picture and keep frames coming (`isAnimating`); its pipelines
 come from `RenderContext.makePipeline`. A mode that paints by its own rules takes the canvas's
 taps and strokes (`CanvasView.touches`, `CanvasTouches`) while pinch, pan and zoom stay the
-canvas's. Stained Glass is the first (`GlassMode`, `GlassModeTests`).
+canvas's; one that draws with the finger (`strokesWithOneFinger`, Stained Glass's lead) gets a
+stroke at once, a flick too, and the picture moves with two fingers. Stained Glass is the first (`GlassMode`, `GlassModeTests`).
 
 ## Line art rendering
 
@@ -828,13 +840,17 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   settings' preview keep what they showed. **The short Making-of** (SideStore and Debug builds only,
   `FormingShow.isOn`; row 361, "graphite and fuse"; the release keeps the forming above) plays over it
   as everyone's wait, with no status over it until the making has taken `FormingShow.patience` (4 s;
-  VoiceOver hears it at once): pencil lines are laid down along the photo's shapes from the middle, a
-  warm glint at their tip, its color draining only behind them (`GraphiteSketch`: a difference of
-  Gaussians on the median-filtered grey, opened, with light hatching in the shadows; its race the lines'
-  shortest ways from a seed, equalized by ink; made once off the main actor as eight cumulative images
-  and their glints, four cross-faded a frame; `tools/graphite_sim.py` makes and lays out the same off
-  the device, light or dark paper). The race nears its end without reaching it while the template is
-  made (`FormingShow.graphiteProgress`), never a still image, and finishes under the fuse; then its lines burn in behind a gold front (`FormingShow.glow`, stroked once off
+  VoiceOver hears it at once): once the making has found the painting's own line drawing
+  (`CreateModel.linesFound`, the `LineArtInput` the template is traced from, handed over the moment
+  the models have drawn it, before Vision's eyes, subjects and text: `LineArtInputs.Early`; no
+  filter of the photo, which stands as it is while the models run), thin pencil strokes travel
+  along it from the middle, a warm point at their fresh tip, the photo's color draining only close
+  around the strokes drawn (`GraphiteSketch`: the drawing map's strokes and the contours' cores, a
+  halo around them, the race their shortest ways from a seed, equalized by ink; made once off the
+  main actor as one image a shader reads at the progress, `FormingGraphite.metal`;
+  `tools/graphite_sim.py` makes and lays out the same off the device from `tools/baseline/lines/`,
+  light or dark paper). The race nears its end without reaching it while the template is
+  made (`FormingShow.graphiteProgress`), never still once it has begun, and finishes under the fuse; then its lines burn in behind a gold front (`FormingShow.glow`, stroked once off
   the main actor, its glow in it; `FormingShow.Front`, a wavering blot drawn as one image scaled about
   its centre, `FrontMasks`, which the numbers share) with the page's paper, done `drawIn` after the making as the plain forming's
   lines are (a graphite shown less than `graphiteAtLeast`, 0.15 s, takes that from the fuse); and during
@@ -1231,7 +1247,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   seconds a painting has to draw: CI's simulators take several to open one, and stall their main
   thread for seconds meanwhile, so a motion of half a second is a frame or two there.
 - The Museum (SideStore and Debug builds, `#if UNRELEASED`; painting-company row 369;
-  `Features/Museum/`): Your Own's Museum tile opens `MuseumView` over the Paint page, the
+  `Features/Museum/`, in `App/Shared` with the frame): Your Own's Museum tile opens `MuseumView` over the Paint page, the
   open-access works of museums (`MuseumCatalog`: one JSON that `tools/museum/catalog.py` writes
   and the `museum` branch serves, kept in the caches folder and fetched again after a day) by
   movement, kind, search and order (`MuseumQuery`, `MuseumQueryTests`; Most Colorful first).
@@ -1240,7 +1256,8 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   (`CreateModel.load(imageData:title:)`, `paintsNow`). A work with a finished painting of it
   hangs in a little frame on the wall, and one with a painting under way says Resume on its
   page, which closes the flow and opens that painting (`MuseumPainted`: by the painting's name,
-  and the ids Paint This records; the shell's `resumePainting`). Pictures go through `MuseumImages`, a
+  and the ids Paint This records; the shell's `resumePainting`). Every mode's + menu opens it
+  too (`ModeShell`, The frame every mode shares). Pictures go through `MuseumImages`, a
   URL cache of their own on disk. Its scenarios are `museum` (with `-dark`), `museum-art-nouveau`
   and `museum-work` (with `-dark`), which need the network; `-demoMuseumPaint YES` paints the
   opened work once it is fetched.
@@ -1379,7 +1396,9 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
   The Original, for a library work, opens `SampleAboutView`. A mosaic still under the name the app
   gave it (a photo's date: `Artwork.titled`, Paint by Moonlight's key) has that name with a pencil
   on the bar, which names it (`ArtworkPaintingView`'s Name Your Mosaic); named, it renames.
-  `-demo ravenna-paint-complete-doors` screenshots it.
+  `-demo ravenna-paint-complete-doors` (a library work, named, four doors) and
+  `ravenna-paint-complete-unnamed` (as from the painter's own photo: the date with its pencil,
+  three doors) screenshot it.
 - **Print… and Show Lines** (painting-company row 330; SideStore and Debug builds, the release
   keeping Share › Print Template…): Print… sits where the app has it, beside Share in a card's
   menu and in More, and opens the app's own Print's preview (`App/Shared`'s
@@ -1393,13 +1412,16 @@ in its texts (the Ground and Sinopia captions) stay Ravenna.
 - **The App Review note** for the version that ships it (Guideline 2.3.1):
   `docs/ravenna/app-review-note.md`.
 
-## The frame every mode shares (`Shell/`)
+## The frame every mode shares (`App/Shared/Shell/`)
 
 SideStore and Debug builds (`#if UNRELEASED`; painting-company row 379). Every mode behind the
 year wheel is a `ModeShell` around what is its own; `ModeShell`'s doc comment is the rules, with no
 exceptions: a year (opened from the wheel, left from its Settings' Year row, `ModeSettingsView`);
-a gallery under the mode's name on its backdrop; Settings top left; New top right, with A Photo
-and The Library and nothing else (`ModeLibraryPicker`); one accent and the dark; the painting
+a gallery under the mode's name on its backdrop (`ModeGallery`: In Progress then Finished, search, and the card menu's Rename, Share, Print… and Delete, each shelf's `rename` and `picture(of:)`; the Cave, with no template, prints nothing); Settings top left; New top right, with the frame's
+three ways in, which every mode offers and none replaces: A Photo, The Library
+(`ModeLibraryPicker`) and The Museum (`MuseumView` with no `onResume`: no frames or Resume there,
+a mode's paintings being its own; a work painted names the painting, `ModePicture.title`; part
+of the frame, not a mode: no year, era or gallery of its own) and nothing else; one accent and the dark; the painting
 screen pushed on the gallery, its name inline, the same words while it opens or can't
 (`ModePaintingFrame`, `ModeOpening`). Every mode also guarantees, inside the frame: it starts from the painter's
 picture and makes the painting from it; the picture is divided into numbered regions, each number
@@ -1417,7 +1439,9 @@ Paint by Mosaic is the bar for how far a mode may go: a mode may be as different
 library of its own look, a build book, its own doors and words) and still be in the frame, which
 widens with optional parts until Mosaic fits; where Mosaic has what every mode should, that becomes
 the frame instead. Until it is moved in, Paint by Mosaic is a copy of the app, not a mode, and
-keeps its own. **The Frame** (`FrameEra`,
+keeps its own. The frame and the Museum are in `App/Shared` so it can move in: each module answers
+`ModeSettingsView` in its own `Shell/` (the app's, About's Year row; Paint by Mosaic's, its whole
+Settings), and the frame's words pass `bundle: .era`. **The Frame** (`FrameEra`,
 year 1000, `Era.frame`) is the frame with nothing of a mode's in it: its gallery, canvas and paints
 are empty places, named (`ModeSlot`), and a picture picked opens on a painting screen and is kept
 nowhere; its passages are the plain tiles both ways. Demos: `frame-gallery`, `frame-settings`,
@@ -1430,28 +1454,31 @@ captions; VoiceOver reads each title).
 SideStore and Debug builds only (`#if UNRELEASED`; painting-company row 366): the first mode built
 on the app's own code rather than a copy of it, as Paint by Mosaic is. `Glass/`: `GlassEra` (the
 era's root, in the shared frame: its gallery `GlassGalleryView` and what a picked picture
-becomes, its lead), `GlassShelf` (an `ArtworkStore` of its own,
+becomes, its window), `GlassShelf` (an `ArtworkStore` of its own,
 `Application Support/StainedGlass/Windows/`, each window a painting's folder plus `glazing.bin`,
-PaintCore's `Glazing`), `GlassLead` (the Lead screen: the photo dimmed under the lead it suggests,
-PaintCore's `GlassLeadSuggestion` laid as the ground of `GlassWindow.Leading.suggested`, or a
-blank window by Start From; the finger's lines laid one by one, ends joined as the Pen joins, the
-pieces a line closes flashing; Erase's tap takes lead away junction to junction, as Edit's Line
-Eraser does; lead that closes nothing stays as drawn, Paul's choice), `GlassGlaze`
-(free glazing on the painting screen's own `CanvasView` in `GlassMode`, Canvas above: any bead's
-glass in any piece, poured from the finger over the glass before it, unlit pieces keeping a
-faint tint of the suggested glass, the sun passing once when it is whole, drawn by
-`glassFillFragment` and `glassLightFragment`; VoiceOver has a piece element each; saves queued
+PaintCore's `Glazing`; New Window cuts the picked photo as it suggests,
+`GlassWindow.Leading.suggested`, and opens it numbered, every piece bare), `GlassGlaze`
+(leading and glazing by number on the painting screen's own `CanvasView` in `GlassMode`, Canvas
+above: each piece cut, thinly outlined and numbered for its glass, the mode's own ink; a stroke
+from the leaded part round bare pieces and back frames them, `GlassFraming`, kept in
+`glazing.bin`; a tap in a framed piece pours the bead of its number from the finger over the
+glass before it, pieces the lead covers whole glazed as the window opens
+(`GlassGlazeModel.hidden`, so none is left unfindable), the sun passing once when
+it is whole, drawn by `glassFillFragment` and `glassLightFragment`: Liquid Glass misused as the
+window's glass, each piece a clear lens over the window's photo, its rim bending the photo and
+catching the light, a poured glass tinting it, the lead heavy came (`GlassMode`; the shelf's
+pictures are drawn by it too, `GlassShelf.picture`); VoiceOver has a piece element each; saves queued
 in order, `GlassShelf.enqueue`), `GlassPicture` (lead and glass colors, and the shelf's
-pictures). How glass looks is PaintCore's `GlassTexture` (lit glass bright deep in a piece and
-streaked, unlit flat and matte: one RGBA buffer a piece repaints for the shelf's pictures, and
-`fields()`, the lead's distance, shade, depth and grain, which the canvas's shader paints from), and the glasses a window suggests are `GlassPalette`'s jewel glasses
+pictures). PaintCore's `GlassTexture` holds `fields()`, the lead's distance, shade, depth and
+grain, which the canvas's shader paints from (its own painted glass is the pictures' look where a
+device has no Metal), and the glasses a window suggests are `GlassPalette`'s jewel glasses
 (never olive, khaki or brown; never near unlit's dark). A window with a taken title gets a number
-(`GlassShelf.title(on:)`). The door: the year wheel (`EraClock`) reaches back to 0001 in these
+(`GlassShelf.title(on:)`). The door: the year wheel (`EraClock`) reaches back to 15,000 BC in these
 builds, lights the eras' years (`EraYear.modes`) and draws a wheel resting beside one on to it
 (`EraClock.pulled`); 1248 opens `Era.glass` (`Era.opened(by:)`), whose passage is a nave's dark
 with a rose window's light (`EraPassage.drawNave`); Paint by Mosaic's wheel reaches it too
-(`LeaveRavenna(for:)`). Demos: `glass-empty`, `glass-gallery`, `glass-lead`, `glass-lead-suggested`, `glass-glaze`,
-`glass-finished` (`GlassDemo`, on the mockup's monarch and lines, `GlassDemoLines`) and
+(`LeaveRavenna(for:)`). Demos: `glass-empty`, `glass-gallery`, `glass-fresh`, `glass-glaze`,
+`glass-finished`, `glass-real-panes-<n>` (`GlassDemo`, on the mockup's monarch and lines, `GlassDemoLines`) and
 `era-passage-glass`; `EraDoorTests`, `SettingsTests.testTheClockOpensWoodblockWatercolorAndStainedGlass`.
 
 ## Watercolor (1502)
@@ -1476,17 +1503,46 @@ wet; the sheet with its margins, `WatercolorRenderer.margins`, fitted above the 
 finished painting signed in pencil in its bottom margin, its title and 1502), `WatercolorPaintView`
 (canvas and paint box, `WatercolorPaintBox`: a tin of half pans lying over the desk, the pan in
 hand lifted, a used-up one scooped to its white, put away when the painting is finished, the
-sheet settling into its room; Reduce Motion settles each wash at once and moves nothing), `WatercolorMakingOfView` (the Making Of: a new
-painting painted once by a simulation of its own stepped off the main actor, PaintCore's
-`WatercolorMakingOf` its plan and clock, drawn with the same shader by `WatercolorFilmRenderer`,
-over the painting screen opening beneath; about six seconds, a tap lifts it away; Reduce Motion
-crossfades the finished painting in and out; VoiceOver skips it). The era
+sheet settling into its room; Reduce Motion settles each wash at once and moves nothing), `WatercolorMakingOfView` (the Making Of: the
+painting's paints tried on a study sheet, never the painting itself, which is the painter's to
+find (PaintCore's `WatercolorStudy`: a chart of its paints, a band laid wet in wet, a granulating
+stripe, discs that bloom, ruled and numbered with the painting's numbers); painted once by a
+simulation of its own stepped off the main actor, PaintCore's `WatercolorMakingOf` its plan and
+clock, drawn with the same shader by `WatercolorFilmRenderer`, over the painting screen opening
+beneath; a few seconds, then set aside onto the painting's bare sheet, and a tap sets it aside at
+once; Reduce Motion crossfades the dried study in and out; VoiceOver skips it). The era
 is dark (`preferredColorScheme`, as Stained Glass), its gallery sheets on the slate
 (`WatercolorCard`, `DeckleEdge`), empty a blank sheet with its two ways in. 1502 opens `Era.watercolor`, whose passage is a
 wash flooding the screen (`EraPassage.drawWash`). `pbn watercolor` paints a template off the
 device. Demos: `watercolor-empty`, `watercolor-paint`, `watercolor-painted`, `watercolor-making-of`
 (held mid-flood) (`WatercolorDemo`) and
 `era-passage-watercolor`.
+
+## The Cave (15,000 BC)
+
+SideStore and Debug builds only (`#if UNRELEASED`; painting-company row 371), in the frame every
+mode shares (`ModeShell`, row 379). `Cave/`: `CaveEra` (the root in `ModeShell`: `CaveGalleryView`,
+each painting a card of its bay lit by a torch, `CaveCard`, drawn on the CPU by `CavePicture` and
+kept as `picture-<fingerprint>.jpg`; with none, the gallery is the cave's mouth itself, alive, whose
+charcoal on the bare rock asks for the first photo; a picked picture drawn through `CaveVision`
+and PaintCore's `CavePlan`, its areas numbered by dots of their pigment; `CavePaintingScreen`,
+pushed, in `ModePaintingFrame`), `CaveWallView` (a `CAMetalLayer` on a display link; each bay's
+maps made off the main thread as the camera nears it; VoiceOver's one element with its custom
+actions), `CaveScene` (the torch, the blow, the hand of four or five fingers; `isSingle`, the
+painting screen's one bay between plain rock, the camera still and no daylight, where the
+empty gallery's mouth walks), `CaveRenderer` and `CaveShader` (compiled at runtime from source,
+so nothing reaches the app's metallib; a soft shadow marched toward the torch through the relief),
+`CaveSound` (synthesized fire, breath and drips in an `AVAudioEnvironmentNode`'s hall; Core
+Haptics; Settings' Sounds and Haptics) and `CaveShelf` (`Application Support/Cave/Wall/`, the
+paintings oldest first, each with its name). Demos: `cave-mouth` (the empty gallery),
+`cave-blowing`, `cave-hand` (a painting's screen), `cave-wall` (the gallery) (`CaveDemo`;
+`-caveAutoPaint YES` has a painting's screen blow itself to Finished); `CaveAppTests`, and
+`CaveUITests`, which paints a library picture to Finished. `CaveFossils`: Liquid Glass misused on
+purpose, the system's controls found as glass in the rock (a cracked "more" pill over a
+painting, the mouth as a back button, the year wheel carved under the mouth), drawn by the
+shader and lit only by the torch and the daylight; none of it is a control. 15,000 BC is the year
+wheel's far end in SideStore and Debug builds (`EraYear.cave`), lit as every era's year is; a
+wheel rested there opens the Cave.
 
 ## Woodblock (1765)
 

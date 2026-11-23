@@ -24,6 +24,7 @@ final class CanvasRenderer {
     private var multisample: (any MTLTexture)?
     private var outlines: (any MTLTexture)?
     private var targetSize = SIMD2<Int>(0, 0)
+    private var targetFormat = RenderContext.colorFormat
 
     init?(scene: CanvasScene, context: RenderContext, states: [RegionState]) {
         precondition(states.count == scene.regionCount)
@@ -68,10 +69,12 @@ final class CanvasRenderer {
         let size = SIMD2(Int(layer.drawableSize.width), Int(layer.drawableSize.height))
         guard size.x > 0, size.y > 0 else { return false }
         guard inFlight.wait(timeout: .now() + .milliseconds(2)) == .success else { return false }
-        if size != targetSize || outlines == nil {
-            multisample = context.makeMultisampleTarget(width: size.x, height: size.y)
+        let format = layer.pixelFormat
+        if size != targetSize || outlines == nil || format != targetFormat {
+            multisample = context.makeMultisampleTarget(width: size.x, height: size.y, format: format)
             outlines = context.makeOutlineTarget(width: size.x, height: size.y)
             targetSize = size
+            targetFormat = format
         }
         guard let outlines else {
             inFlight.signal()

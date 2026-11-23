@@ -100,35 +100,45 @@ func runWatercolor(_ options: Options) throws {
     print(String(format: "replay of the log: %.0f ms", Date().timeIntervalSince(replayed) * 1000))
 }
 
-/// The Making Of as the app plays it (`WatercolorMakingOf`): its own simulation stepped to the
+/// The Making Of as the app plays it (`WatercolorMakingOf` of the painting's `WatercolorStudy`):
+/// its own simulation stepped to the
 /// step each frame shows, drawn wet every 1/`fps` second shown with no numbers and the pencil
 /// going from under painted areas as it dries, as the app's film draws it, on past the moment it
 /// settles for the app's hold and lift (`tail` seconds), as the app steps on while it ends.
-/// Writes bare.ppm (the pencilled sheet the lift leaves, without its numbers) and labels.csv
+/// Writes bare.ppm (the painting's own pencilled sheet the study is set aside onto, without its
+/// numbers) and labels.csv
 /// (each number where the app draws it: x and y as fractions of the sheet, its font size as a
 /// fraction of the sheet's width, `LabelSizing` as the sheet's renderers size it, and the number),
 /// making-of.csv
 /// (per frame: the step, the share of the sheet wet, whether it dries and has settled),
 /// focus.txt (where the film pushes in, fractions of the sheet) and prints the steps' cost: the
 /// app makes them off the main actor as the frames come due.
-func runMakingOf(template: Template, sheet: WatercolorSheet, fps: Double, out: URL, tail: Double = 1.7) throws {
-    let plan = WatercolorMakingOf(template: template, sheet: sheet)
+func runMakingOf(template painting: Template, sheet paintingSheet: WatercolorSheet, fps: Double, out: URL, tail: Double = 1.7) throws {
+    // The film is the painting's study sheet (`WatercolorStudy`), never the painting itself.
+    let study = try WatercolorStudy(painting: painting)
+    let template = study.template
+    let sheet = WatercolorSheet(template: template, seed: paintingSheet.seed)
+    let plan = WatercolorMakingOf(study: study, sheet: sheet)
     let sim = WatercolorSim(sheet: sheet)
+    sim.roundedFronts = true
     let fine = WatercolorSheet.paperHeight(width: sheet.width * 2, height: sheet.height * 2, seed: sheet.seed &+ 11)
     var cursor = 0, frame = 0
     var stepping: Double = 0, worstFrame: Double = 0
     var settledAt: Double?
     var csv = "frame,shown,step,simulated,wet,settled,drying\n"
     let cells = sheet.width * sheet.height
-    try writePPM(watercolorRaster(sim, template: template, fine: fine), "bare.ppm", in: out)
+    // What the study is set aside onto: the painting's own bare sheet, numbered.
+    let paintingFine = WatercolorSheet.paperHeight(width: paintingSheet.width * 2, height: paintingSheet.height * 2,
+                                                   seed: paintingSheet.seed &+ 11)
+    try writePPM(watercolorRaster(WatercolorSim(sheet: paintingSheet), template: painting, fine: paintingFine), "bare.ppm", in: out)
     var labels = "x,y,size,number\n"
-    let maxSize = LabelSizing.sheetMaximumFraction * Float(max(template.width, template.height))
-    for label in template.labels {
-        let number = Int(template.regions[Int(label.region)].colorIndex) + 1
+    let maxSize = LabelSizing.sheetMaximumFraction * Float(max(painting.width, painting.height))
+    for label in painting.labels {
+        let number = Int(painting.regions[Int(label.region)].colorIndex) + 1
         let size = LabelSizing.fontSize(radius: label.radius, digits: LabelSizing.digitCount(of: number), maximum: maxSize,
-                                        detail: template.isDetailRegion(Int(label.region)))
-        labels += String(format: "%.5f,%.5f,%.5f,%d\n", label.position.x / Float(template.width),
-                         label.position.y / Float(template.height), size / Float(template.width), number)
+                                        detail: painting.isDetailRegion(Int(label.region)))
+        labels += String(format: "%.5f,%.5f,%.5f,%d\n", label.position.x / Float(painting.width),
+                         label.position.y / Float(painting.height), size / Float(painting.width), number)
     }
     try labels.write(to: out.appendingPathComponent("labels.csv"), atomically: true, encoding: .utf8)
     let focus = plan.focus ?? SIMD2(Float(template.width), Float(template.height)) / 2
@@ -194,11 +204,24 @@ func watercolorRaster(_ sim: WatercolorSim, template t: Template, fine: [Float]?
                            (cell(x0, y0 + 1), (1 - fx) * fy), (cell(x0 + 1, y0 + 1), fx * fy)]
             var d4 = SIMD4<Float>(repeating: 0), mine = SIMD4<Float>(repeating: 0)
             var mineWeight: Float = 0
-            for (i, wgt) in corners {
-                d4 += dens(i) * wgt
-                if Int(sheet.labels[i]) == r { mine += dens(i) * wgt; mineWeight += wgt }
+            for (i, wgt) in corners { d4 += dens(i) * wgt }
+            // The own area's cells: the film's through a cubic B-spline over the 4×4 around, the
+            // painting screen's bilinear over the 2×2 (the shader's).
+            let taps = front != nil ? 4 : 2, first = front != nil ? -1 : 0
+            func spline(_ t: Float) -> [Float] {
+                guard taps == 4 else { return [1 - t, t] }
+                let t2 = t * t, t3 = t2 * t
+                return [(1 - 3 * t + 3 * t2 - t3) / 6, (3 * t3 - 6 * t2 + 4) / 6, (-3 * t3 + 3 * t2 + 3 * t + 1) / 6, t3 / 6]
             }
-            if mineWeight > 1e-3 { d4 = mine / mineWeight }
+            let bx = spline(fx), by = spline(fy)
+            for j in 0..<taps {
+                for i in 0..<taps {
+                    let k = cell(x0 + i + first, y0 + j + first)
+                    let wgt = bx[i] * by[j]
+                    if Int(sheet.labels[k]) == r { mine += dens(k) * wgt; mineWeight += wgt }
+                }
+            }
+            if mineWeight > 1e-3 { d4 = SIMD4(mine.x, mine.y, mine.z, 0) / mineWeight + SIMD4(0, 0, 0, d4.w) }
             let gr = corners.reduce(Float(0)) { $0 + sim.G[$1.0] * $1.1 }
             let target = targets[r]
             var d = SIMD3(max(d4.x, 0), max(d4.y, 0), max(d4.z, 0)) * target.gain
@@ -229,7 +252,9 @@ func watercolorRaster(_ sim: WatercolorSim, template t: Template, fine: [Float]?
                 let along = (Float(x) + 0.5) / Float(W2) / 2 + (Float(y) + 0.5) / Float(H2) / 2
                 let e = min(max((along - (front - 0.15)) / 0.3, 0), 1)
                 let ahead = e * e * (3 - 2 * e)
-                let painted: Float = sim.paintedAt[r] <= sim.time ? 1 : 0
+                // Only where its pigment has come (the shader's `has`).
+                let k = min(max((d.x + d.y + d.z) / 0.06, 0), 1)
+                let painted: Float = sim.paintedAt[r] <= sim.time ? k * k * (3 - 2 * k) : 0
                 let wetness = max(min(max(water(gx, gy) / 0.6, 0), 1), painted) * ahead
                 if wetness > 0 {
                     let wx = water(gx + 2, gy) - water(gx - 2, gy), wy = water(gx, gy + 2) - water(gx, gy - 2)

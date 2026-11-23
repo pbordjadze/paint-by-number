@@ -9,10 +9,10 @@ import os
 ///
 /// - `glass-empty`: the era with no windows yet.
 /// - `glass-gallery`: three windows, one finished, one half glazed, one not begun.
-/// - `glass-lead`: the Lead screen with the demo's lines drawn on a blank start.
-/// - `glass-lead-suggested`: the Lead screen as it opens, the lead the photo suggests laid.
+/// - `glass-fresh`: a window as it opens: every piece numbered and waiting for its lead.
 /// - `glass-glaze`: a window with its larger pieces glazed in the glasses suggested.
 /// - `glass-finished`: the window glazed whole, the sun held halfway across it.
+/// - `glass-real-panes-<N>`: Apple's Liquid Glass as the glass, N panes (`GlassRealPanes`).
 @MainActor
 enum GlassDemo {
     static var scenario: String? { DemoMode.scenario.flatMap { $0.hasPrefix("glass-") ? $0 : nil } }
@@ -45,26 +45,9 @@ enum GlassDemo {
             switch name {
             case "glass-empty":
                 DemoMode.markReady()
-            case "glass-lead":
-                let photo = try await Background.run { try Self.photo() }
-                guard let picture = PhotoLoader.cgImage(from: photo) else { return }
-                let model = GlassLeadModel(photo: photo, picture: picture, start: .blank)
-                let reach = CGFloat(Self.reach(width: model.width, height: model.height))
-                for line in Self.lines(width: model.width, height: model.height) {
-                    model.add(line.map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) }, reach: reach)
-                }
-                path.wrappedValue = [.lead(GlassLeadRoute(model: model))]
-                _ = await model.make()
-                try? await Task.sleep(for: .seconds(1))
-                DemoMode.markReady()
-            case "glass-lead-suggested":
-                let photo = try await Background.run { try Self.photo() }
-                guard let picture = PhotoLoader.cgImage(from: photo) else { return }
-                let model = GlassLeadModel(photo: photo, picture: picture)
-                path.wrappedValue = [.lead(GlassLeadRoute(model: model))]
-                _ = await model.make()
-                try? await Task.sleep(for: .seconds(1))
-                DemoMode.markReady()
+            case let real where real.hasPrefix("glass-real-panes"):
+                // `GlassRealPanes` lays itself over the era and says when it is ready.
+                break
             case "glass-gallery":
                 for share in [0.0, 0.55, 1.0] {
                     let artwork = try await window(on: shelf)
@@ -100,6 +83,8 @@ enum GlassDemo {
         var glazing = opened.glazing
         let t = opened.template
         let order = t.regions.indices.sorted { t.regions[$0].area > t.regions[$1].area }
+        // Framed a little ahead of the glass, as a painter leads a chunk and then pours it.
+        for r in order.prefix(Int((Double(order.count) * min(1, share + 0.2)).rounded())) { glazing.framed[r] = true }
         for r in order.prefix(Int((Double(order.count) * share).rounded())) {
             glazing.glass[r] = Int16(t.regions[r].colorIndex)
         }
@@ -111,7 +96,7 @@ enum GlassDemo {
         switch scenario {
         case "glass-glaze":
             glaze(model, share: 0.6)
-            model.selected = model.offered.count - 2
+            model.selected = min(1, model.template.palette.count - 1)
         case "glass-finished":
             glaze(model, share: 1)
             model.finish(heldAt: sunHold ?? 0)
@@ -123,6 +108,8 @@ enum GlassDemo {
     private static func glaze(_ model: GlassGlazeModel, share: Double) {
         let t = model.template
         let order = t.regions.indices.sorted { t.regions[$0].area > t.regions[$1].area }
+        // Framed a little ahead of the glass, as a painter leads a chunk and then pours it.
+        model.frame(Array(order.prefix(Int((Double(order.count) * min(1, share + 0.2)).rounded()))))
         for r in order.prefix(Int((Double(order.count) * share).rounded())) {
             model.selected = Int(t.regions[r].colorIndex)
             model.glaze(r, animated: false)
@@ -130,7 +117,7 @@ enum GlassDemo {
     }
 
     static func shown(_ model: GlassGlazeModel) {
-        guard scenario == "glass-glaze" || scenario == "glass-finished" else { return }
+        guard ["glass-fresh", "glass-glaze", "glass-finished"].contains(scenario) else { return }
         Task {
             try? await Task.sleep(for: .seconds(1))
             DemoMode.markReady()

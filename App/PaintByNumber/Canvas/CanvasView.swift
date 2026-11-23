@@ -99,8 +99,13 @@ final class CanvasView: UIView, PaintingCanvas {
     var onPhotoUnavailable: (() -> Void)?
     /// A mode drawing the painting in place of its own look (`CanvasMode`); nil, the painting's.
     var mode: (any CanvasMode)? {
-        didSet { requestRender() }
+        didSet {
+            updateExtendedRange()
+            requestRender()
+        }
     }
+    /// Whether the layer draws past white now (`ExtendedRange`, for a mode that asks).
+    private var drawsExtendedRange = false
     /// A mode that takes the canvas's touches in place of the painting session (`CanvasTouches`;
     /// Stained Glass's free glazing); nil, the session's rules. Pan, pinch and the double tap's
     /// zoom stay the canvas's.
@@ -110,6 +115,7 @@ final class CanvasView: UIView, PaintingCanvas {
             accessibilityCustomActions = touches == nil ? accessibilityActionList : nil
             accessibilityCustomRotors = touches == nil ? [areasRotor] : []
             accessibilityLabel = touches.map { $0.canvasSummary(self).label } ?? PaintSpeech.canvasLabel
+            updateStrokeGestures()
         }
     }
     /// A canvas touch asked to hide the photo.
@@ -162,6 +168,9 @@ final class CanvasView: UIView, PaintingCanvas {
     private let renderer: CanvasRenderer?
     private let scrollView = UIScrollView()
     private let zoomView = UIView()
+    private var pressRecognizer: UILongPressGestureRecognizer?
+    /// A mode's one-finger strokes (`updateStrokeGestures`).
+    private var strokeRecognizer: UIPanGestureRecognizer?
     private var displayLink: CADisplayLink?
     private let epoch = CACurrentMediaTime()
 
@@ -380,6 +389,21 @@ final class CanvasView: UIView, PaintingCanvas {
         backgroundColor = .systemGroupedBackground
     }
 
+    /// Takes the extended range's format and color space while the mode asks and the screen and
+    /// the painter's settings allow (`ExtendedRange`), and the usual ones otherwise: read again as
+    /// the mode changes, the canvas comes on screen and before each frame.
+    private func updateExtendedRange() {
+        let wants = mode?.wantsExtendedRange == true && ExtendedRange.isOffered(on: window?.windowScene?.screen)
+            && RenderContext.shared?.hasExtendedRange == true
+        guard wants != drawsExtendedRange else { return }
+        drawsExtendedRange = wants
+        let layer = metalLayer
+        layer.pixelFormat = wants ? RenderContext.extendedFormat : RenderContext.colorFormat
+        layer.colorspace = CGColorSpace(name: wants ? CGColorSpace.extendedLinearDisplayP3 : CGColorSpace.displayP3)
+        layer.wantsExtendedDynamicRangeContent = wants
+        requestRender()
+    }
+
     private func configureScrollView() {
         scrollView.delegate = self
         scrollView.backgroundColor = .clear
@@ -415,6 +439,7 @@ final class CanvasView: UIView, PaintingCanvas {
         press.allowableMovement = 12
         press.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.direct.rawValue)]
         scrollView.addGestureRecognizer(press)
+        pressRecognizer = press
 
         let pencil = UILongPressGestureRecognizer(target: self, action: #selector(handlePencil(_:)))
         pencil.minimumPressDuration = 0
@@ -532,6 +557,7 @@ final class CanvasView: UIView, PaintingCanvas {
                 displayLink = link
             }
             setNeedsLayout()
+            updateExtendedRange()
             requestRender()
             // First responder so the window's undo manager serves three-finger undo and ⌘Z.
             if !isOutOfSight { Task { self.becomeFirstResponder() } }
@@ -597,7 +623,9 @@ final class CanvasView: UIView, PaintingCanvas {
 
     /// The paper, backdrop and ink the next frame draws with.
     private var canvasPalette: CanvasPalette {
-        .resolve(paperAppearance, interfaceIsDark: traitCollection.userInterfaceStyle == .dark)
+        var palette = CanvasPalette.resolve(paperAppearance, interfaceIsDark: traitCollection.userInterfaceStyle == .dark)
+        if let ink = mode?.ink { palette.ink = ink }
+        return palette
     }
 
     /// The Paper preference or the system appearance changed.
@@ -942,6 +970,7 @@ final class CanvasView: UIView, PaintingCanvas {
         }
         idleTicks = 0
         guard let renderer else { return }
+        updateExtendedRange()
         let palette = canvasPalette
         let uniforms = makeUniforms(time: time, camera: camera, palette: palette)
         let content = RenderContext.Content(
@@ -949,7 +978,8 @@ final class CanvasView: UIView, PaintingCanvas {
             shadowMargin: Float(44 * contentScaleFactor),
             clear: Self.clear(mode?.backdrop ?? palette.background),
             photo: uniforms.photo.x > 0.001 ? photoTexture : nil,
-            mode: mode)
+            mode: mode,
+            headroom: drawsExtendedRange ? ExtendedRange.headroom(on: window?.windowScene?.screen) : 1)
         // The first frame that shows the fitted painting: the one the start of a painting is
         // handed over to, announced once it is on screen.
         var presented: (@Sendable () -> Void)?
@@ -1675,6 +1705,45 @@ final class CanvasView: UIView, PaintingCanvas {
         default: break
         }
         lastTap = (t, view, painted)
+    }
+
+    /// A mode whose strokes are drawn with one finger (`CanvasTouches.strokesWithOneFinger`) gets
+    /// them at once, a flick too, and the picture moves with two fingers; otherwise one finger
+    /// moves it and a stroke waits for the press to hold.
+    private func updateStrokeGestures() {
+        // With Only Draw with Apple Pencil on, the Pencil draws and one finger moves the picture.
+        let strokes = (touches?.strokesWithOneFinger ?? false) && !prefersPencilOnlyDrawing()
+        scrollView.panGestureRecognizer.minimumNumberOfTouches = strokes ? 2 : 1
+        if strokes, strokeRecognizer == nil {
+            let pan = UIPanGestureRecognizer(target: self, action: #selector(handleStroke(_:)))
+            pan.maximumNumberOfTouches = 1
+            pan.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.direct.rawValue)]
+            // A finger that rests first is the press's, as it always was.
+            if let pressRecognizer { pan.require(toFail: pressRecognizer) }
+            scrollView.addGestureRecognizer(pan)
+            strokeRecognizer = pan
+        }
+        strokeRecognizer?.isEnabled = strokes
+    }
+
+    @objc private func handleStroke(_ g: UIPanGestureRecognizer) {
+        guard let touches, !prefersPencilOnlyDrawing() else { return }
+        guard !showsPhoto else {
+            if g.state == .began { onDismissPhoto?() }
+            return
+        }
+        let here = g.location(in: zoomView)
+        switch g.state {
+        case .began:
+            // The pan begins once the finger has moved; the stroke begins where it touched down.
+            let moved = g.translation(in: zoomView)
+            touches.canvas(self, touched: canvasPoint(CGPoint(x: here.x - moved.x, y: here.y - moved.y)), phase: .began)
+            touches.canvas(self, touched: canvasPoint(here), phase: .moved)
+        case .changed:
+            touches.canvas(self, touched: canvasPoint(here), phase: .moved)
+        default:
+            touches.canvas(self, touched: canvasPoint(here), phase: .ended)
+        }
     }
 
     @objc private func handleDragPaint(_ g: UILongPressGestureRecognizer) {
