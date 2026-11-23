@@ -76,7 +76,7 @@ struct CaveEra: View {
             CavePlan.make(photo: photo, subject: found.subject, kind: found.isAnimal ? .animal : .figure, pose: found.pose)
         }
         do {
-            let id = try await shelf.add(plan, title: picked.sample?.title ?? shelf.title())
+            let id = try await shelf.add(plan, title: picked.title ?? shelf.title())
             path = [id]
         } catch {
             Log.library.error("Couldn't draw a picture on the cave wall: \(String(describing: error), privacy: .public)")
