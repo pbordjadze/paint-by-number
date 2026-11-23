@@ -306,6 +306,22 @@ test("with Stripe, an order is charged the agreed price through Apple Pay before
   assert.equal(calls[2].body.currency, "usd");
   assert.equal(calls[2].body["payment_method_data[card][token]"], "tok_1");
   assert.equal(calls[2].body.confirm, "true");
+  assert.equal(calls[2].body["automatic_payment_methods[allow_redirects]"], "never");
+  assert.equal(calls[2].body["payment_method_types[]"], undefined);
+  assert.equal(calls[2].body.receipt_email, "ada@example.com");
+  assert.equal(calls[2].body["shipping[name]"], "Ada Painter");
+  assert.equal(calls[2].body["shipping[address][postal_code]"], "11201");
+  assert.equal(calls[2].body["shipping[address][line2]"], undefined);
+});
+
+test("a restricted test key charges too", async () => {
+  const { calls, fetcher } = prodigi({
+    "/quotes": QUOTE, "/orders": PLACED,
+    "stripe:/tokens": { id: "tok_1" }, "stripe:/payment_intents": { id: "pi_1", status: "succeeded" },
+  });
+  const answer = await handlePrint(await orderRequest({ order: PAID_ORDER }), env({ STRIPE_SECRET_KEY: "rk_test_SECRET" }), { fetch: fetcher });
+  assert.equal(answer.status, 201);
+  assert.equal(calls[1].init.headers.authorization, "Bearer rk_test_SECRET");
 });
 
 test("with Stripe, an order without a payment, or at a price that moved, is not placed", async () => {
@@ -341,8 +357,10 @@ test("a paid order Prodigi refuses is refunded", async () => {
 
 test("a live Stripe key is never used against the sandbox printer", async () => {
   const { calls, fetcher } = prodigi({ "/quotes": QUOTE, "/orders": PLACED });
-  const answer = await handlePrint(await orderRequest({ order: PAID_ORDER }), env({ STRIPE_SECRET_KEY: "sk_live_REAL" }), { fetch: fetcher });
-  assert.equal(answer.status, 503);
+  for (const live of ["sk_live_REAL", "rk_live_REAL"]) {
+    const answer = await handlePrint(await orderRequest({ order: PAID_ORDER }), env({ STRIPE_SECRET_KEY: live }), { fetch: fetcher });
+    assert.equal(answer.status, 503);
+  }
   assert.equal(calls.length, 0);
 });
 

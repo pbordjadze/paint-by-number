@@ -15,8 +15,8 @@ import UIKit
 //
 // What leaves the device, and only when the painter orders: the one-page PDF of the template (its
 // lines, numbers, hints and key as the Layers menu chose them, never the photo) and the address,
-// with an Apple Pay payment once the app has its merchant id (`BigSheetApplePay`). Until then
-// the screen takes the address itself and places a test order, unpaid.
+// with an Apple Pay payment where the build carries Apple Pay (`BigSheetApplePay`; the
+// nightly's). Elsewhere the screen places a test order, unpaid, to a test address.
 
 /// What One Big Sheet prints on: the sizes Prodigi's Enhanced Matte Art Paper comes in that make
 /// a sheet worth sending for, by the id the relay knows them by (`PRODUCTS` in print.js).
@@ -233,10 +233,11 @@ nonisolated struct BigSheetPayment: Sendable, Equatable {
 /// through Stripe.
 @MainActor
 final class BigSheetApplePay: NSObject, PKPaymentAuthorizationControllerDelegate {
-    /// The merchant id registered for the app (Certificates, Identifiers & Profiles › Merchant IDs)
-    /// and in its entitlements, with Stripe's certificate. Nil until it is: then One Big Sheet
-    /// places test orders unpaid, to `BigSheetRecipient.testOrder`.
-    static let merchant: String? = nil
+    /// The merchant id registered for the app (Certificates, Identifiers & Profiles › Merchant IDs),
+    /// with Stripe's certificate, and in the nightly's entitlements (`Config/Nightly.entitlements`).
+    /// Without Apple Pay set up on the device One Big Sheet places test orders unpaid, to
+    /// `BigSheetRecipient.testOrder`.
+    static let merchant: String? = "merchant.com.paulbordjadze.paintbymoonlight"
 
     static let networks: [PKPaymentNetwork] = [.visa, .masterCard, .amex, .discover]
 
@@ -389,6 +390,8 @@ struct BigSheetView: View {
     @State private var orderFailed = false
     @State private var orderPending = false
     @State private var paymentFailed = false
+    /// Apple Pay's sheet couldn't show (a build without the entitlement, SideStore's): test orders.
+    @State private var applePayMissing = false
     /// One order's key for every try of it, until it is placed.
     @State private var orderKey = BigSheetService.newKey()
     @State private var applePay = BigSheetApplePay()
@@ -582,7 +585,7 @@ struct BigSheetView: View {
 
     @ViewBuilder
     private var orderButton: some View {
-        if BigSheetApplePay.isAvailable {
+        if BigSheetApplePay.isAvailable && !applePayMissing {
             PayWithApplePayButton(.order, action: payWithApplePay)
                 .payWithApplePayButtonStyle(.automatic)
                 .frame(height: 50)
@@ -696,8 +699,9 @@ struct BigSheetView: View {
                     return PKPaymentAuthorizationResult(status: .failure, errors: nil)
                 }
             }
-            if !shown || paymentFailed {
-                if !shown { orderPending = false }
+            if !shown {
+                applePayMissing = true
+            } else if paymentFailed {
                 orderFailed = true
             }
         }

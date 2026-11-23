@@ -107,7 +107,7 @@ struct BigSheetTests {
         #expect(BigSheetApplePay.summary(item: "x", quote: BigSheetQuote(product: "", currency: "USD", price: "free", sandbox: nil)) == nil)
     }
 
-    /// Without its merchant id the app takes no payment: the screen's own form and test orders.
+    /// The merchant id is Apple's form of one; without it the app takes no payment, only test orders.
     @Test func applePayWaitsForTheMerchantID() {
         #expect(BigSheetApplePay.merchant == nil || BigSheetApplePay.merchant?.hasPrefix("merchant.") == true)
         if BigSheetApplePay.merchant == nil { #expect(!BigSheetApplePay.isAvailable) }

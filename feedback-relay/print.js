@@ -36,7 +36,8 @@
 //
 // Only the sandbox. PRODIGI_API must be Prodigi's sandbox (https://api.sandbox.prodigi.com/v4.0),
 // which prints nothing and charges nothing, and STRIPE_SECRET_KEY, when set, Stripe's test mode
-// (sk_test_), so no real card is charged for a print that never comes. Going live is Paul's word,
+// (sk_test_, or a restricted rk_test_ key with Tokens, PaymentIntents and Refunds write), so no
+// real card is charged for a print that never comes. Going live is Paul's word,
 // with both keys live and payment required (no order without STRIPE_SECRET_KEY).
 //
 // Privacy: the photo never comes here, only the printed sheet (lines, numbers, the key) and the
@@ -260,7 +261,7 @@ async function order(request, env, deps, provider) {
   let payment = null;
   if (env.STRIPE_SECRET_KEY) {
     // Prodigi's sandbox prints nothing: a live card is never charged for it.
-    if (!env.STRIPE_SECRET_KEY.startsWith("sk_test_")) {
+    if (!/^(sk|rk)_test_/.test(env.STRIPE_SECRET_KEY)) {
       log(`STRIPE_SECRET_KEY is live while ${provider.name} is its sandbox`);
       return bare(503);
     }
@@ -312,7 +313,7 @@ async function order(request, env, deps, provider) {
     // takes it).
     if (!(await mark(stub, claim, { state: "charging" }))) return json(202, { ok: false, pending: true });
     try {
-      charge = await chargeApplePay(env, deps, payment, priced, key);
+      charge = await chargeApplePay(env, deps, payment, priced, key, recipient);
     } catch (error) {
       if (error?.uncertain) {
         // Stripe may have charged: the order stays "charging", so no try charges it again.
@@ -433,7 +434,7 @@ export function minorUnits(price, currency) {
  * does, `pk_token`), then a PaymentIntent confirmed at once. Returns its id once it succeeded;
  * a declined card throws with `declined`.
  */
-async function chargeApplePay(env, deps, payment, priced, key) {
+async function chargeApplePay(env, deps, payment, priced, key, recipient) {
   const pkToken = Buffer.from(payment.data, "base64").toString("utf8");
   const token = await stripe(env, deps, "/tokens", `${key}-token`, {
     pk_token: pkToken,
@@ -446,11 +447,22 @@ async function chargeApplePay(env, deps, payment, priced, key) {
     amount: String(minorUnits(priced.price, priced.currency)),
     currency: priced.currency.toLowerCase(),
     confirm: "true",
-    "payment_method_types[]": "card",
+    // Stripe's default methods, without any that would send the painter to a page: Apple Pay's
+    // sheet is the whole checkout.
+    "automatic_payment_methods[enabled]": "true",
+    "automatic_payment_methods[allow_redirects]": "never",
     "payment_method_data[type]": "card",
     "payment_method_data[card][token]": token.id,
     description: "One Big Sheet",
     "metadata[sheet]": key,
+    receipt_email: recipient.email,
+    "shipping[name]": recipient.name,
+    "shipping[address][line1]": recipient.line1,
+    ...(recipient.line2 ? { "shipping[address][line2]": recipient.line2 } : {}),
+    "shipping[address][city]": recipient.city,
+    ...(recipient.state ? { "shipping[address][state]": recipient.state } : {}),
+    "shipping[address][postal_code]": recipient.zip,
+    "shipping[address][country]": recipient.country,
   });
   if (typeof intent?.id !== "string") throw Object.assign(new Error("Stripe's answer had no payment"), { uncertain: true });
   if (intent.status !== "succeeded") {
