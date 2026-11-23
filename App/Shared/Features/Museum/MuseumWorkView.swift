@@ -192,7 +192,7 @@ struct MuseumWorkView: View {
             }
             #endif
             #if DEBUG
-            if UserDefaults.standard.bool(forKey: "demoMuseumPaint") { wantsToPaint = true }
+            if UserDefaults.era.bool(forKey: "demoMuseumPaint") { wantsToPaint = true }
             #endif
             guard !Task.isCancelled else { return }
             if wantsToPaint {

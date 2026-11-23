@@ -2,7 +2,6 @@
 import CoreGraphics
 import PaintCore
 import PhotosUI
-import Ravenna
 import SwiftUI
 import os
 
@@ -56,6 +55,11 @@ import os
 /// Mosaic has something every mode should have, it becomes the frame and every mode follows it,
 /// not a Mosaic exception. Until Mosaic is moved in, Paint by Mosaic is a copy of the app, not a
 /// mode, and keeps its own.
+///
+/// The frame is in `App/Shared`, compiled into both modules, so Paint by Mosaic can move in.
+/// What differs between the two is asked of the module: its words (`bundle: .era`) and its
+/// Settings (`ModeSettingsView`, each module's own: the app's has About's Year row, Paint by
+/// Mosaic's is its whole Settings, whose Year row leaves the same way).
 struct ModeShell<Gallery: View, Route: Hashable, Destination: View>: View {
     let look: ModeLook
     @Binding var path: [Route]
@@ -226,58 +230,6 @@ struct ModeWaysIn {
     let museum: () -> Void
 }
 
-/// A mode's Settings: About's Year, whose wheel leaves the mode.
-struct ModeSettingsView: View {
-    let year: Int
-    let leave: (Int) -> Void
-    @Environment(\.dismiss) private var dismiss
-    @State private var showsClock = false
-    /// The year the Year row's wheel rests on (`EraClock.Reading`).
-    @State private var clockYear = EraClock.Reading()
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section("About") {
-                    Button {
-                        withAnimation { showsClock.toggle() }
-                        // Closed without opening an era: the row reads its own year again.
-                        clockYear.isOpen = showsClock
-                        if !showsClock { clockYear.year = nil }
-                    } label: {
-                        LabeledContent {
-                            EraClock.Value(clockYear, home: year).foregroundStyle(.tint)
-                        } label: {
-                            SwiftUI.Label {
-                                Text("Year").foregroundStyle(Color.primary)
-                            } icon: {
-                                Image(systemName: "clock")
-                            }
-                        }
-                    }
-                    .accessibilityIdentifier("about-year")
-                    if showsClock {
-                        EraClock(year: year) { chosen in
-                            guard chosen != year, EraYear.opensAnEra(chosen) else { return }
-                            dismiss()
-                            leave(chosen)
-                        }
-                        .reporting(to: clockYear)
-                        .accessibilityIdentifier("era-clock")
-                    }
-                }
-            }
-            .navigationTitle(Text("Settings"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
-            }
-        }
-    }
-}
-
 /// The app's library, to start a painting from: the paintings, then the photographs.
 struct ModeLibraryPicker: View {
     let id: String
@@ -378,6 +330,7 @@ struct ModePaintingFrame<Painting: View>: View {
                 } description: {
                     Text(verbatim: String(localized: "gallery.recovery.newer.untitled",
                                           defaultValue: "This painting was made with a newer version of Paint by Moonlight. Update the app to keep painting it.",
+                                          bundle: .era,
                                           comment: "Recovery screen text for an untitled painting made by a newer app version"))
                 }
             }
