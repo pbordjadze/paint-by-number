@@ -1,0 +1,21 @@
+Application, 0x10843a300, pid: 71200, label: 'Paint by Moonlight' <App element pid: 71200>
+  Window (Main), 0x10843a940, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 4336075776.3>
+    Other, 0x10843bd40, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 4336749056.4>
+      Other, 0x108439e00, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 4381023744.5>
+        Other, 0x10843a1c0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 4336074752.6>
+          Other, 0x10843b980, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 4624797120.7>
+            Other, 0x10843ae40, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 4995873792.6661>
+              NavigationBar, 0x10843b480, {{0.0, 32.0}, {1032.0, 106.0}}, identifier: 'Stained Glass' <AX element pid: 71200, elementOrHash.elementID: 5520978688.6662>
+                Button, 0x10843bc00, {{14.0, 36.0}, {36.0, 36.0}}, identifier: 'glass-settings', label: 'Settings' <AX element pid: 71200, elementOrHash.elementID: 4381029504.6665>
+                Button, 0x10843bac0, {{982.0, 36.0}, {36.0, 36.0}}, identifier: 'glass-new', label: 'New Window' <AX element pid: 71200, elementOrHash.elementID: 4640356096.6666>
+                StaticText, 0x108439cc0, {{20.0, 89.5}, {223.0, 41.0}}, label: 'Stained Glass' <AX element pid: 71200, elementOrHash.elementID: 4693428864.6667>
+              Other, 0x10843be80, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 4693430656.6663>
+                Other, 0x10843b840, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 4693437824.6668>
+                  Other, 0x10843ad00, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 4711303808.6670>
+                    Other, 0x10843b200, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 5166697120.6671>
+                      Image, 0x10843abc0, {{460.0, 612.5}, {112.0, 112.0}}, identifier: 'circle.hexagongrid', label: 'Circle With Circles In A Hexagonal Grid' <AX element pid: 71200, elementOrHash.elementID: 5166700000.6672>
+                      StaticText, 0x108438a00, {{430.8, 744.2}, {170.5, 26.5}}, label: 'No windows yet' <AX element pid: 71200, elementOrHash.elementID: 5166699040.6673>
+                      StaticText, 0x108438b40, {{351.5, 784.8}, {329.0, 42.5}}, label: 'Choose a photo, lead its numbered pieces, and pour each its glass.' <AX element pid: 71200, elementOrHash.elementID: 5166698560.6674>
+                      Button, 0x10843b5c0, {{443.5, 847.5}, {145.0, 34.5}}, identifier: 'glass-choose-photo', label: 'Choose a Photo' <AX element pid: 71200, elementOrHash.elementID: 5166698080.6675>
+              Toolbar, 0x108439f40, {{0.0, 0.0}, {1032.0, 1376.0}}, identifier: 'Toolbar', label: 'Toolbar' <AX element pid: 71200, elementOrHash.elementID: 4995874304.6664>
+                Other, 0x10843a080, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 4713197056.6669>

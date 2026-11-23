@@ -1,0 +1,9 @@
+Attributes: PickerWheel, 0x1122adcc0, {{416.0, 951.0}, {200.0, 176.0}}, value: 2022
+Element subtree:
+ →PickerWheel, 0x1122adcc0, {{416.0, 951.0}, {200.0, 176.0}}, value: 2022
+Path to element:
+ →PickerWheel, 0x1122adcc0, {{416.0, 951.0}, {200.0, 176.0}}, value: 2022
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  ↪︎Find: Descendants matching type PickerWheel
+    ↪︎Find: First Match

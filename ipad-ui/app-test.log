@@ -1,0 +1,847 @@
+Retrying tests on failure. Running tests repeatedly up to 2 times.
+
+Writing result bundle at path:
+	/Users/runner/work/paint-by-number/paint-by-number/build/Tests.xcresult
+
+2026-11-23 19:59:25.536 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 19:59:58.685 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 19:59:58.686 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 19:59:59.117 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:00:31.649 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:00:31.651 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:00:31.656 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:00:32.364 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:00:32.364 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:00:32.542 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:00:51.491 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:00:51.540 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:00:51.550 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:00:52.153 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:00:52.153 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:00:52.346 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:01:11.172 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:01:11.173 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:01:11.175 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:01:11.815 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:01:11.815 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:01:11.993 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:01:52.112 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:01:52.117 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:01:52.122 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:02:02.134 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:02:02.138 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:02:02.613 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:02:19.473 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:02:19.473 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:02:19.521 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:02:26.309 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:02:26.309 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:02:26.525 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:02:44.697 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:02:44.698 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:02:44.701 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:02:45.547 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:02:45.547 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:02:45.656 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:03:39.977 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:03:39.978 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:03:40.006 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:03:40.092 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:03:40.093 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:03:40.265 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:05:42.965 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:05:43.004 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:05:43.028 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:05:43.725 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:05:43.725 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:05:44.733 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:06:25.086 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:06:25.089 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:06:25.237 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:06:25.900 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:06:25.900 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:06:26.192 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:06:55.708 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:06:55.782 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:06:55.798 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:06:56.231 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:06:56.231 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:06:56.374 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:07:13.733 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:07:13.734 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:07:13.736 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:07:14.606 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:07:14.606 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:07:14.748 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:07:51.667 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:07:51.686 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:07:51.689 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:07:52.479 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:07:52.479 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:07:52.732 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:08:13.892 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:08:13.924 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:08:13.961 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:08:14.751 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:08:14.751 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:08:14.940 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:09:23.804 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:09:23.808 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:09:23.827 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:09:24.843 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:09:24.843 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:09:25.033 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:09:53.711 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:09:53.712 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:09:53.714 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:09:54.565 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:09:54.566 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:09:54.723 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:10:20.356 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:10:20.357 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:10:20.422 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:10:20.803 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:10:20.803 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:10:20.969 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:10:43.999 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:10:44.015 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:10:44.132 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:10:44.948 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:10:44.948 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:10:45.122 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:11:47.432 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:11:47.433 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:11:47.766 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:11:47.988 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:11:47.988 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:11:48.180 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:12:05.981 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:12:05.984 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:12:06.096 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:12:06.805 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:12:06.805 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:12:06.976 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:12:19.069 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:12:19.074 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:12:19.076 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:12:20.002 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:12:20.002 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:12:20.190 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:12:30.780 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:12:30.781 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:12:30.782 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:12:31.687 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:12:31.687 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:12:31.777 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:13:15.550 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:13:15.676 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:13:15.713 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:13:15.931 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:13:15.931 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:13:16.075 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:13:33.248 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:13:33.249 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:13:33.251 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:13:34.138 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:13:34.138 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:13:34.262 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:13:56.944 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:13:56.947 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:13:57.025 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:13:57.565 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:13:57.565 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:13:57.727 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:14:21.501 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:14:21.502 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:14:21.503 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:14:22.465 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:14:22.465 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:14:22.532 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:15:28.838 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:15:28.846 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:15:28.859 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:15:29.562 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:15:29.562 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:15:29.985 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:16:26.231 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:16:26.232 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:16:26.234 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:16:26.970 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:16:26.970 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:16:27.093 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:16:52.577 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:16:52.578 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:16:52.580 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:16:53.250 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:16:53.250 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:16:53.552 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:17:17.586 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:17:17.587 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:17:17.588 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:17:18.426 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:17:18.426 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:17:18.665 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:17:42.819 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:17:42.820 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:17:42.846 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:17:43.729 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:17:43.729 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:17:43.901 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:18:20.746 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:18:20.799 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:18:20.802 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:18:20.873 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:18:20.873 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:18:21.156 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:19:00.109 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:19:00.111 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:19:00.327 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:19:00.980 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:19:00.980 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:19:01.280 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:20:14.378 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:20:14.382 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:20:14.386 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:20:15.268 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:20:15.268 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:20:15.426 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:20:54.338 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:20:54.340 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:20:54.342 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:20:55.171 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:20:55.171 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:20:55.446 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:21:43.071 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:21:43.071 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:21:43.076 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:21:43.077 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:21:43.608 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:21:43.771 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:21:58.646 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:21:58.646 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:21:58.648 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:21:59.531 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:21:59.531 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:21:59.738 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:22:38.431 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:22:38.432 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:22:38.455 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:22:38.468 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:22:38.468 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:22:38.604 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:23:11.179 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:23:11.715 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:23:11.717 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:23:12.572 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:23:12.572 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:23:12.673 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:23:26.438 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:23:26.440 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:23:26.441 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:23:27.455 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:23:27.455 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:23:27.647 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:24:12.485 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:24:12.485 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:24:12.492 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:24:13.368 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:24:13.368 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:24:13.575 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:26:57.322 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:26:57.325 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:26:57.330 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:26:58.007 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:26:58.007 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:26:58.222 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:27:36.151 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:27:36.153 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:27:36.156 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:27:36.841 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:27:36.841 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:27:37.065 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:28:52.258 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:28:52.268 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:28:52.335 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:28:52.468 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:28:52.468 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:28:52.758 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:29:16.300 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:29:16.301 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:29:16.302 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:29:16.921 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:29:16.921 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:29:17.121 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:29:33.422 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:29:33.425 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:29:33.428 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:29:34.286 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:29:34.286 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:29:34.426 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:29:58.838 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:29:58.853 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:29:58.923 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:29:59.833 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:29:59.833 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:30:00.042 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:30:42.345 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:30:42.345 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:30:42.351 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:30:43.198 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:30:43.198 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:30:43.349 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:31:10.611 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:31:10.611 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:31:10.612 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:31:11.298 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:31:11.298 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:31:11.646 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:31:35.944 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:31:36.032 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:31:36.035 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:31:36.963 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:31:36.963 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:31:37.057 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:32:03.407 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:32:03.409 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:32:03.410 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:32:04.323 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:32:04.323 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:32:04.471 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:32:31.202 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:32:31.246 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:32:31.359 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:32:31.386 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:32:31.387 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:32:31.603 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:32:57.644 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:32:57.668 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:32:57.669 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:32:58.444 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:32:58.444 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:32:58.595 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:33:19.774 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:33:19.784 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:33:19.787 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:33:20.528 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:33:20.528 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:33:20.767 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:33:52.899 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:33:53.001 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:33:53.061 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:33:53.084 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:33:53.084 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:33:53.220 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:34:26.851 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:34:26.857 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:34:26.905 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:34:27.217 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:34:27.217 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:34:27.389 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:35:21.919 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:35:21.925 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:35:21.932 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:35:22.309 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:35:22.312 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:35:22.611 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:36:04.128 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:36:04.129 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:36:04.135 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:36:04.544 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:36:04.544 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:36:04.817 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:36:43.944 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:36:43.947 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:36:43.954 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:36:44.804 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:36:44.806 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:36:45.056 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:37:20.147 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:37:20.154 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:37:20.155 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:37:20.289 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:37:20.289 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:37:20.499 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:37:52.258 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:37:52.267 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:37:52.273 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:37:52.400 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:37:52.400 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:37:52.625 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:38:05.435 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:38:05.436 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:38:05.439 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:38:06.231 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:38:06.231 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:38:06.349 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:38:33.433 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:38:33.435 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:38:33.441 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:38:39.147 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:38:39.147 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:38:39.312 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:39:04.024 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:39:04.138 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:39:04.142 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:39:05.046 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:39:05.046 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:39:05.340 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:39:29.665 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:39:29.677 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:39:29.890 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:39:30.649 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:39:30.649 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:39:30.828 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:39:53.534 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:39:53.536 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:39:53.537 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:39:54.513 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:39:54.513 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:39:54.755 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:40:10.677 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:40:10.705 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:40:10.714 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:40:12.084 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:40:12.084 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:40:12.276 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:40:39.836 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:40:39.837 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:40:39.839 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:40:43.413 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:40:43.413 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:40:43.642 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:41:05.731 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:41:05.731 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:41:05.739 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:41:06.498 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:41:06.498 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:41:06.679 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:41:19.527 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:41:19.528 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:41:19.530 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:41:20.535 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:41:20.535 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:41:20.654 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:41:38.019 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:41:38.130 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:41:38.189 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:41:38.451 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:41:38.451 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:41:38.603 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:41:55.069 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:41:55.071 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:41:55.075 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:41:56.076 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:41:56.076 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:41:56.223 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:42:10.558 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:42:10.583 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:42:10.588 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:42:11.575 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:42:11.575 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:42:11.708 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:42:54.765 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:42:54.766 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:42:54.770 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:42:55.494 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:42:55.494 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:42:55.726 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:43:33.544 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:43:33.545 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:43:33.548 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:43:34.355 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:43:34.355 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:43:34.554 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:44:02.758 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:44:02.760 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:44:02.794 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:44:03.182 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:44:03.182 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:44:03.349 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:44:16.998 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:44:16.998 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:44:17.005 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:44:17.909 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:44:17.909 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:44:18.034 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:44:32.694 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:44:32.695 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:44:32.699 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:44:36.487 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:44:36.488 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:44:36.627 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:44:56.482 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:44:56.485 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:44:56.489 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:44:57.214 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:44:57.215 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:44:57.387 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:45:23.417 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:45:23.418 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:45:23.419 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:45:23.879 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:45:23.879 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:45:24.029 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:45:47.128 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:45:47.129 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:45:47.133 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:45:48.027 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:45:48.027 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:45:48.137 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:46:08.883 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:46:08.885 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:46:08.887 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:46:10.702 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:46:10.702 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:46:10.811 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:46:35.936 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:46:35.938 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:46:35.940 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:46:36.601 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:46:36.601 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:46:36.816 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:47:01.233 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:47:01.236 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:47:01.240 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:47:02.124 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:47:02.124 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:47:02.303 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:47:24.903 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:47:24.992 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:47:25.008 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:47:25.689 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:47:25.690 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:47:25.812 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:47:47.083 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:47:47.083 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:47:47.090 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:47:47.949 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:47:47.949 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:47:48.044 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:48:08.114 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:48:08.120 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:48:08.121 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:48:08.976 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:48:08.976 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:48:09.064 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:48:30.407 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:48:30.408 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:48:30.415 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:48:31.281 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:48:31.281 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:48:31.358 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:48:56.964 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:48:56.966 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:48:56.968 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:48:57.474 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:48:57.474 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:48:57.636 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:49:20.945 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:49:20.949 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:49:20.959 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:49:22.763 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:49:22.765 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:49:23.036 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:49:53.127 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:49:53.132 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:49:53.142 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:49:53.969 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:49:53.969 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:49:54.110 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:50:15.276 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:50:15.278 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:50:15.281 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:50:16.072 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:50:16.072 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:50:16.210 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:50:31.801 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:50:31.802 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:50:31.828 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:50:32.696 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:50:32.696 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:50:32.875 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:50:53.854 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:50:53.854 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:50:53.859 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:50:54.586 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:50:54.586 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:50:54.743 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:51:18.939 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:51:18.940 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:51:18.942 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:51:19.844 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:51:19.844 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:51:20.000 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:51:40.997 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:51:40.999 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:51:41.002 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:51:41.787 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:51:41.787 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:51:41.890 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:52:00.085 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:52:00.086 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:52:00.214 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:52:00.802 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:52:00.806 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:52:01.220 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:52:34.008 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:52:34.009 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:52:34.014 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:52:34.870 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:52:34.870 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:52:35.005 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:52:59.914 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:52:59.915 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:52:59.918 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:53:00.807 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:53:00.807 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:53:00.962 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:53:33.474 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:53:33.475 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:53:33.476 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:53:34.073 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:53:34.073 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:53:34.291 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:53:57.146 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:53:57.174 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:53:57.182 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:53:58.055 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:53:58.055 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:53:58.209 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:54:32.098 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:54:32.102 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:54:32.123 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:54:32.528 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:54:32.528 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:54:32.720 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:54:56.325 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:54:56.337 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:54:56.366 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:55:01.190 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:55:01.190 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:55:01.378 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:55:32.493 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:55:32.494 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:55:32.496 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:55:33.236 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:55:33.236 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:55:33.351 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:55:50.860 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:55:50.862 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:55:50.932 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:55:51.688 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:55:51.688 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:55:51.974 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:56:09.969 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:56:09.971 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:56:10.348 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:56:10.785 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:56:10.785 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:56:11.026 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:56:44.953 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:56:44.955 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:56:44.975 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:56:45.826 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:56:45.827 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:56:46.019 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:57:06.651 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:57:06.655 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:57:06.657 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:57:07.605 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:57:07.605 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:57:07.762 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:57:32.564 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:57:32.564 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:57:32.565 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:57:33.252 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:57:33.252 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:57:33.334 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:58:33.625 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:58:33.627 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:58:33.631 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:58:34.486 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:58:34.486 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:58:34.678 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:59:20.546 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:59:20.549 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:59:20.582 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 20:59:21.462 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 20:59:21.462 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 20:59:21.712 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:00:21.581 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:00:21.583 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:00:21.724 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:00:22.578 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:00:22.578 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:00:22.775 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:01:19.303 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:01:19.304 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:01:19.307 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:01:20.138 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:01:20.138 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:01:20.342 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:03:05.054 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:03:05.064 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:03:05.067 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:03:05.950 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:03:05.958 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:03:06.309 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:04:11.424 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:04:11.426 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:04:11.432 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:04:12.286 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:04:12.286 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:04:12.459 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:05:43.992 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:05:43.995 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:05:43.998 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:05:44.857 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:05:44.857 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:05:44.973 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:08:08.144 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:08:08.178 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:08:08.184 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:08:09.085 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:08:09.085 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:08:09.286 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:09:08.791 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:09:08.794 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:09:08.819 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:09:09.848 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:09:09.849 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:09:09.965 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:09:50.430 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:09:50.431 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:09:50.432 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:09:51.182 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:09:51.182 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:09:51.641 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:10:39.283 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:10:39.301 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:10:39.302 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:10:40.189 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:10:40.189 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:10:40.457 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:12:50.221 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:12:50.222 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:12:50.874 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:12:51.219 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:12:51.219 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:12:51.506 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:13:16.392 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:13:16.395 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:13:16.401 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:13:17.383 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:13:17.383 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:13:17.498 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:13:39.720 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:13:39.721 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:13:39.723 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:13:41.772 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:13:41.773 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:13:42.069 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:14:06.234 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:14:06.236 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:14:06.345 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:14:08.681 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:14:08.681 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:14:08.846 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:15:43.675 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:15:43.678 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:15:43.695 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:15:44.634 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:15:44.634 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:15:44.781 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:16:38.524 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:16:38.524 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:16:38.527 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:16:39.498 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:16:39.498 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:16:39.741 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:17:03.053 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:17:03.151 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:17:03.155 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:17:04.449 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:17:04.451 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:17:04.611 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:17:49.014 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:17:49.067 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:17:49.074 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:17:49.805 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:17:49.805 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:17:49.987 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:18:21.995 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:18:22.040 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:18:22.042 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:18:22.587 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:18:22.587 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:18:22.927 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:19:05.662 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:19:05.665 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:19:05.670 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:19:06.645 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:19:06.645 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:19:06.708 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:20:10.793 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:20:10.795 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:20:10.800 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:20:11.883 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:20:11.883 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:20:12.041 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:21:00.370 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:21:00.380 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:21:00.403 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:21:01.217 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:21:01.217 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:21:01.360 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:22:46.670 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:22:46.708 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:22:46.813 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:22:47.440 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:22:47.441 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:22:47.788 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:23:43.103 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:23:43.138 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:23:43.498 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:23:43.923 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:23:43.923 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:23:44.469 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:24:39.016 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:24:39.021 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:24:39.051 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:24:39.940 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:24:39.940 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:24:40.185 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:25:03.511 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:25:03.513 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:25:03.525 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:25:04.514 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:25:04.514 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:25:04.729 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:25:26.697 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:25:26.707 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:25:26.709 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:25:27.562 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:25:27.562 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:25:27.686 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:25:59.732 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:25:59.776 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:25:59.837 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:26:00.568 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:26:00.568 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:26:00.710 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:26:24.034 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:26:24.034 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:26:24.036 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:26:24.938 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-23 21:26:24.938 xcodebuild[43534:115244] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-23 21:26:25.130 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:30:09.630 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:30:09.974 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:30:10.101 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:30:10.657 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:30:10.657 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:30:10.721 xcodebuild[43534:115244] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-23 21:30:52.016 xcodebuild[43534:115244] [MT] IDETestOperationsObserverDebug: 5488.676 elapsed -- Testing started completed.
+2026-11-23 21:30:52.016 xcodebuild[43534:115244] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-23 21:30:52.016 xcodebuild[43534:115244] [MT] IDETestOperationsObserverDebug: 5488.676 sec, +5488.676 sec -- end
+Testing started

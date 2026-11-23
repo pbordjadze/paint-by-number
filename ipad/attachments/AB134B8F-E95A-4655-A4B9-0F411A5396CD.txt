@@ -1,0 +1,21 @@
+Application, 0x1122ae6c0, pid: 71200, label: 'Paint by Moonlight' <App element pid: 71200>
+  Window (Main), 0x1122ae080, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 4336075776.3>
+    Other, 0x1122aee40, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 4336749056.4>
+      Other, 0x1122adf40, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 4381023744.5>
+        Other, 0x1122af200, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 4336074752.6>
+          Other, 0x1122ae940, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 4624797120.7>
+            Other, 0x1122ac280, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 5517717504.6179>
+              NavigationBar, 0x1122acf00, {{0.0, 32.0}, {1032.0, 106.0}}, identifier: 'Woodblock' <AX element pid: 71200, elementOrHash.elementID: 4675430912.6180>
+                Button, 0x1122acdc0, {{14.0, 36.0}, {36.0, 36.0}}, identifier: 'woodblock-settings', label: 'Settings' <AX element pid: 71200, elementOrHash.elementID: 5521016064.6183>
+                Button, 0x1122ac000, {{982.0, 36.0}, {36.0, 36.0}}, identifier: 'woodblock-new', label: 'New Print' <AX element pid: 71200, elementOrHash.elementID: 5521026944.6184>
+                StaticText, 0x1122ac8c0, {{20.0, 89.5}, {189.0, 41.0}}, label: 'Woodblock' <AX element pid: 71200, elementOrHash.elementID: 4686573824.6185>
+              Other, 0x1122ae1c0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 4686562176.6181>
+                Other, 0x1122aea80, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 5518134784.6186>
+                  Other, 0x1122af700, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 4711301120.6188>
+                    Other, 0x1122adcc0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 5521105824.6189>
+                      Image, 0x1122ad680, {{481.5, 638.0}, {69.0, 66.5}}, identifier: 'square.stack.3d.up', label: 'Hdr' <AX element pid: 71200, elementOrHash.elementID: 5521099264.6190>
+                      StaticText, 0x1122af0c0, {{446.8, 723.5}, {138.5, 26.5}}, label: 'No prints yet' <AX element pid: 71200, elementOrHash.elementID: 5521105344.6191>
+                      StaticText, 0x1122ade00, {{349.0, 764.0}, {334.0, 42.5}}, label: 'Choose a photo: carve its blocks, then print them by number.' <AX element pid: 71200, elementOrHash.elementID: 5521105504.6192>
+                      Button, 0x1122ac640, {{443.5, 826.5}, {145.0, 34.5}}, identifier: 'woodblock-choose-photo', label: 'Choose a Photo' <AX element pid: 71200, elementOrHash.elementID: 5521105664.6193>
+              Toolbar, 0x1122ad7c0, {{0.0, 0.0}, {1032.0, 1376.0}}, identifier: 'Toolbar', label: 'Toolbar' <AX element pid: 71200, elementOrHash.elementID: 5517718016.6182>
+                Other, 0x1122ae800, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 71200, elementOrHash.elementID: 5517718528.6187>
