@@ -149,6 +149,11 @@ final class CreateModel {
     private var paintingLineArt: LineArtSettings?
     /// What the coloring book draws from, computed once per photo; nil for classic line art.
     @ObservationIgnored private(set) var lineArtInput: LineArtInput?
+    /// The same line art as soon as the models have drawn it (before Vision's eyes, subjects and
+    /// text, which the graphite has no use for), for the short Making-of's graphite, which draws
+    /// the painting's own lines while the rest is still being made (`GraphiteSketch`); nil while
+    /// the show is off.
+    private(set) var linesFound: LineArtInput?
     /// The photo is a line drawing on paper (Start from a Drawing, painting-company row 190):
     /// its sheet was cleaned on the way in (`DrawingScan.clean`, the cleaned sheet is the
     /// photo the flow holds), nothing is suggested, the sliders are off, and the painting is
@@ -799,6 +804,7 @@ final class CreateModel {
         stats = nil
         importance = nil
         lineArtInput = nil
+        linesFound = nil
         draftImage = nil
         decision = nil
         suggested = nil
@@ -907,11 +913,17 @@ final class CreateModel {
                 phase = .analyzing
                 // Made ahead, it was analyzed and its settings chosen then, as they would be now.
                 let prepared: Prepared
-                if let early { prepared = early.prepared } else { prepared = try await Self.prepare(decoded, lineArt: lineArt) }
+                if let early {
+                    prepared = early.prepared
+                } else {
+                    let found = FormingShow.isOn ? Self.linesFoundHandler(for: self, load: load) : nil
+                    prepared = try await Self.prepare(decoded, lineArt: lineArt, found: found)
+                }
                 try Task.checkCancellation()
                 trace("Analyzed")
                 importance = prepared.importance
                 lineArtInput = prepared.lineArt
+                if FormingShow.isOn, linesFound == nil { linesFound = prepared.lineArt }
                 draftImage = prepared.draft
                 if suggests { phase = .suggesting }
                 let chosen: AutoDecision?
@@ -1157,6 +1169,13 @@ final class CreateModel {
     private func showFirstDraft(_ draft: Preview, load: Int) {
         guard load == loadID, loadTask?.isCancelled == false, phase == .suggesting, preview == nil else { return }
         withAnimation(.easeInOut(duration: 0.18)) { preview = draft }
+    }
+
+    /// The line art, found while the photo is still being analyzed (its drawing first, before
+    /// the eyes, subjects and text): kept unless the photo changed.
+    private func showLinesFound(_ lines: LineArtInput, load: Int) {
+        guard load == loadID, loadTask?.isCancelled == false, linesFound == nil else { return }
+        linesFound = lines
     }
 
     private func requestDraft() {
@@ -1834,13 +1853,26 @@ final class CreateModel {
     }
 
     /// Subject importance and hints, and for a coloring book the edge map and eyes (once per
-    /// photo, side by side), and the reduced photo for drafts and suggestions.
+    /// photo, side by side), and the reduced photo for drafts and suggestions. `found` gets the
+    /// line art the moment it is found, before the rest is.
     @concurrent
-    private static func prepare(_ decoded: Decoded, lineArt: LineArtSettings) async throws -> Prepared {
-        async let input = LineArtInputs.forGeneration(of: decoded.preview, settings: lineArt, cached: true)
+    private static func prepare(
+        _ decoded: Decoded, lineArt: LineArtSettings, found: (@Sendable (LineArtInput) -> Void)? = nil
+    ) async throws -> Prepared {
+        async let input = Self.findLineArt(of: decoded, settings: lineArt, found: found)
         let subject = await SubjectImportance.analyze(decoded.preview)
         let draft = AutoSettings.draftImage(from: decoded.image)
         return Prepared(importance: subject.map, hints: subject.hints, draft: draft, lineArt: try await input)
+    }
+
+    @concurrent
+    private static func findLineArt(
+        of decoded: Decoded, settings: LineArtSettings, found: (@Sendable (LineArtInput) -> Void)?
+    ) async throws -> LineArtInput? {
+        // The models' drawing goes to `found` before Vision's finds are in, the whole input after.
+        let input = try await LineArtInputs.forGeneration(of: decoded.preview, settings: settings, cached: true, early: found)
+        if let input { found?(input) }
+        return input
     }
 
     /// Chooses settings for the photo on its draft. `sourceSize` is the photo's own size: it
@@ -1887,6 +1919,13 @@ final class CreateModel {
     nonisolated private static func firstDraftHandler(for model: CreateModel, load: Int) -> @Sendable (Preview) -> Void {
         { preview in
             Task { @MainActor in model.showFirstDraft(preview, load: load) }
+        }
+    }
+
+    /// Hands the line art found to the main actor, as `firstDraftHandler` does a draft.
+    nonisolated private static func linesFoundHandler(for model: CreateModel, load: Int) -> @Sendable (LineArtInput) -> Void {
+        { lines in
+            Task { @MainActor in model.showLinesFound(lines, load: load) }
         }
     }
 
