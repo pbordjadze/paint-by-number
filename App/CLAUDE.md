@@ -1525,9 +1525,9 @@ paintings oldest first, each with its name). Demos: `cave-mouth` (the empty gall
 `CaveUITests`, which paints a library picture to Finished. `CaveFossils`: Liquid Glass misused on
 purpose, the system's controls found as glass in the rock (a cracked "more" pill over a
 painting, the mouth as a back button, the year wheel carved under the mouth), drawn by the
-shader and lit only by the torch and the daylight; none of it is a control. Not on the year
-wheel yet: 15,000 BC is lit once the wheel reaches back before year 1 (`EraClock`, Stained
-Glass's work); until then only the demos open the Cave.
+shader and lit only by the torch and the daylight; none of it is a control. 15,000 BC is the year
+wheel's far end in SideStore and Debug builds (`EraYear.cave`), lit as every era's year is; a
+wheel rested there opens the Cave.
 
 ## Woodblock (1765)
 

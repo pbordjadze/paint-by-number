@@ -256,6 +256,18 @@ final class SettingsTests: XCTestCase {
         XCTAssertTrue(clock.waitForExistence(timeout: 5), "The Year row brought out no year setter")
         roll(app, to: 547)
         attachScreenshot(of: app, named: "clock-at-547")
+        // A flick down past 0547 can rest at the wheel's far end, 15,000 BC, the Cave's year (in
+        // SideStore and Debug builds): the Cave's own Year row takes the wheel up from there.
+        let cave = app.buttons["cave-settings"]
+        if !app.buttons["New Mosaic"].waitForExistence(timeout: 15), cave.exists {
+            cave.tap()
+            let caveYear = app.descendants(matching: .any)["about-year"]
+            XCTAssertTrue(caveYear.waitForExistence(timeout: 10), "The Cave's Settings has no Year row")
+            scroll(app, to: caveYear)
+            caveYear.tap()
+            XCTAssertTrue(clock.waitForExistence(timeout: 5), "The Cave's Year row brought out no clock")
+            roll(app, to: 547)
+        }
         XCTAssertTrue(app.buttons["New Mosaic"].waitForExistence(timeout: 30), "547 didn't open Ravenna")
         attachScreenshot(of: app, named: "ravenna-through-the-door")
 
@@ -334,7 +346,7 @@ final class SettingsTests: XCTestCase {
                 // and Debug builds reach back to 15,000 BC, a century a row): drag up several
                 // rows at a time with no momentum, so the wheel stops where the finger does,
                 // short of 0001, and the rows one at a time do the rest.
-                let rows = min(8, max(1, -shown / 100))
+                let rows = min(4, max(1, -shown / 100))
                 let center = wheel.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
                 center.press(forDuration: 0.1, thenDragTo: center.withOffset(CGVector(dx: 0, dy: -CGFloat(rows) * Self.row)),
                              withVelocity: .slow, thenHoldForDuration: 0.3)

@@ -261,8 +261,9 @@ public enum EraYear {
     public static let byzantium = 547
 
     /// 15,000 BC, the wheel's far end in SideStore and Debug builds: the age of the cave
-    /// paintings (painting-company row 371), whose year lights only once its era is built.
+    /// paintings, the Cave's year (painting-company row 371).
     public static let farthest = -15000
+    public static let cave = farthest
 
     /// The present year, by the Gregorian calendar whatever the device's (547 is a Gregorian
     /// year; the Japanese calendar's present would be a single digit).
@@ -288,7 +289,7 @@ public enum EraYear {
     /// The years that open an era, oldest first: the ones the wheel lights.
     public static var modes: [Int] {
         #if UNRELEASED
-        return [byzantium, frame, stainedGlass, watercolor, woodblock]
+        return [cave, byzantium, frame, stainedGlass, watercolor, woodblock]
         #else
         return [byzantium]
         #endif
