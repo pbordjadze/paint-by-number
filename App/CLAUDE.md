@@ -1458,7 +1458,7 @@ pictures). PaintCore's `GlassTexture` holds `fields()`, the lead's distance, sha
 grain, which the canvas's shader paints from (its own painted glass is the pictures' look where a
 device has no Metal), and the glasses a window suggests are `GlassPalette`'s jewel glasses
 (never olive, khaki or brown; never near unlit's dark). A window with a taken title gets a number
-(`GlassShelf.title(on:)`). The door: the year wheel (`EraClock`) reaches back to 0001 in these
+(`GlassShelf.title(on:)`). The door: the year wheel (`EraClock`) reaches back to 15,000 BC in these
 builds, lights the eras' years (`EraYear.modes`) and draws a wheel resting beside one on to it
 (`EraClock.pulled`); 1248 opens `Era.glass` (`Era.opened(by:)`), whose passage is a nave's dark
 with a rose window's light (`EraPassage.drawNave`); Paint by Mosaic's wheel reaches it too
