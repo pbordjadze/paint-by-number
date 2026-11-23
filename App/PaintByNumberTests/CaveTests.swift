@@ -49,6 +49,26 @@ struct CaveAppTests {
         #expect(third.paintings.isEmpty)
     }
 
+    /// The frame's card menu renames a painting: its name on the wall at once, and kept.
+    @Test func aRenamedPaintingKeepsItsName() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("CaveTests-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let plan = await Background.run {
+            let sample = CaveSample.horse()
+            return CavePlan.make(photo: sample.photo, subject: sample.subject, kind: .animal)
+        }
+        let shelf = CaveShelf(root: root)
+        await shelf.load()
+        let id = try await shelf.add(plan, title: "Horse")
+        shelf.rename(id, to: "Lascaux")
+        #expect(shelf.painting(id)?.title == "Lascaux")
+        #expect(shelf.paintings.map(\.shelfItem) == [ModeShelfItem(id: id, title: "Lascaux", isComplete: false)])
+        await shelf.flush()
+        let again = CaveShelf(root: root)
+        await again.load()
+        #expect(again.painting(id)?.title == "Lascaux")
+    }
+
     /// The frame's painting screen: one painting's bay, the camera still on it, plain rock round it
     /// and no mouth, its pigments on the ledge until it is finished.
     @Test func onePaintingStandsAloneInTheDark() async {

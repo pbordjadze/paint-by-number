@@ -195,7 +195,13 @@ final class WoodblockShelf {
             Log.library.error("Couldn't save print \(id.uuidString, privacy: .public): \(String(describing: error), privacy: .public)")
             return
         }
-        if let i = prints.firstIndex(where: { $0.id == id }) { prints[i] = saved }
+        if let i = prints.firstIndex(where: { $0.id == id }) {
+            // A name given while this was written stays: the rename queued after it writes it.
+            var kept = saved
+            kept.title = prints[i].title
+            kept.titled = prints[i].titled
+            prints[i] = kept
+        }
         prints.sort { $0.modifiedAt > $1.modifiedAt }
     }
 
@@ -204,6 +210,26 @@ final class WoodblockShelf {
         var image = bench.print()
         image.colorSpace = space
         return PhotoLoader.cgImage(from: image)
+    }
+
+    /// Gives a print the painter's name for it (the frame's card menu, `ModeGallery`), its meta
+    /// written after the saves before it (which keep the name it holds here when they land).
+    func rename(_ id: UUID, to title: String) {
+        guard var artwork = print(id), !artwork.needsNewerApp, artwork.title != title else { return }
+        artwork.title = title
+        if artwork.titled != nil { artwork.titled = true }
+        if let i = prints.firstIndex(where: { $0.id == id }) { prints[i] = artwork }
+        let previous = saving[id]
+        let store = store
+        saving[id] = Task {
+            await previous?.value
+            guard let saved = print(id) else { return }
+            do {
+                try await Background.run { try store.writeMeta(saved) }
+            } catch {
+                Log.library.error("Couldn't rename print \(id.uuidString, privacy: .public): \(String(describing: error), privacy: .public)")
+            }
+        }
     }
 
     func delete(_ id: UUID) {
@@ -216,6 +242,14 @@ final class WoodblockShelf {
                 Log.library.error("Couldn't delete print \(id.uuidString, privacy: .public)")
             }
         }
+    }
+
+    /// The print as it stands, as large as the shelf keeps its picture: what the card menu's Share
+    /// shares.
+    func picture(of id: UUID) async -> CGImage? {
+        await saving[id]?.value
+        let store = store
+        return await Background.run { store.thumbnail(id, maxPixelSize: ArtworkStore.thumbnailMaxPixelSize) }
     }
 
     func thumbnail(of artwork: Artwork) async -> CGImage? {

@@ -175,6 +175,9 @@ struct EraPassage: View {
             .onAppear {
                 start = .now
                 settledCover = false
+                #if UNRELEASED
+                EraSounds.shared.passage(to: destination, from: door.origin, reduceMotion: reduceMotion)
+                #endif
                 #if DEBUG
                 if let hold = Self.demoHold {
                     Task {

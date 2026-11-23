@@ -7,8 +7,8 @@ nonisolated struct Acknowledgement: Identifiable, Hashable, Sendable {
     let credit: String
     /// What the app uses it for.
     let usage: String
-    /// The copyright line of ported code; nil for published methods and for models whose
-    /// source states none.
+    /// The copyright line of ported code and of a model's license (MIT requires it); nil for
+    /// published methods and for models whose source states none.
     var copyright: String?
     /// The license ported code or model weights are distributed under; nil for published methods.
     var license: License?
@@ -68,6 +68,7 @@ nonisolated enum Acknowledgements {
             usage: String(
                 localized: "acknowledgements.lineArtModel.usage", defaultValue: "Draws a photo’s lines, fur, petals and glass, for coloring books.",
                 comment: "What a credited machine-learning model is used for (the Informative Drawings line-drawing generator); shown in Settings under Acknowledgements"),
+            copyright: "Copyright (c) 2022 Caroline Chan",
             license: .mit),
     ]
 

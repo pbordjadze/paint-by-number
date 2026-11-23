@@ -193,6 +193,24 @@ final class CaveShelf {
         }
     }
 
+    /// Gives a painting the painter's name for it (the frame's card menu, `ModeGallery`), after
+    /// the saves before it.
+    func rename(_ id: UUID, to title: String) {
+        guard let i = paintings.firstIndex(where: { $0.id == id }), paintings[i].title != title else { return }
+        paintings[i].title = title
+        paintings[i].revision += 1
+        let file = root.appending(path: id.uuidString, directoryHint: .isDirectory).appending(path: Self.titleFile)
+        let previous = saving
+        saving = Task {
+            await previous?.value
+            do {
+                try await Background.run { try Data(title.utf8).write(to: file, options: .atomic) }
+            } catch {
+                Log.library.error("Couldn't rename cave painting \(id.uuidString, privacy: .public): \(String(describing: error), privacy: .public)")
+            }
+        }
+    }
+
     /// Takes a painting off the wall for good, after the saves before it (the painter confirmed it).
     func delete(_ id: UUID) {
         guard paintings.contains(where: { $0.id == id }) else { return }

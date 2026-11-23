@@ -123,7 +123,7 @@ struct FormingShowTests {
     /// demos hold either, and nothing moves past their ends.
     @Test func theMomentsFollowTheClock() throws {
         let image = try #require(Self.image())
-        let drawing = GraphiteSketch.Drawing(stages: [image], glints: [image])
+        let drawing = GraphiteSketch.Drawing(map: image, sheet: FormingPlan.Sheet(paper: SIMD3(1, 1, 1), ink: SIMD3(0, 0, 0)))
         let began = Date(timeIntervalSinceReferenceDate: 1000)
         var moments = FormingMoments(graphite: drawing, graphiteBegan: began)
         #expect(moments.graphiteProgress(at: began) == 0)
@@ -211,59 +211,75 @@ struct FormingShowTests {
         #expect(GraphiteSketch.arrivals([0, 1], width: 3, height: 1).isEmpty)
     }
 
-    /// The race's images: none before it begins, each stage whole once passed and the next
-    /// fading in (its glint with it), every stroke at the end and no tip left.
-    @Test func theGraphiteStagesFollowTheRace() {
-        let start = GraphiteSketch.shown(at: 0, stages: 8)
-        #expect(start.whole == nil && start.fading?.stage == 0 && start.fading?.opacity == 0)
-        let early = GraphiteSketch.shown(at: 0.05, stages: 8)
-        #expect(early.whole == nil && early.fading?.stage == 0)
-        #expect(abs((early.fading?.opacity ?? 0) - 0.4) < 1e-9)
-        // The `create-forming-graphite` hold: a little past a third.
-        let held = GraphiteSketch.shown(at: 0.38, stages: 8)
-        #expect(held.whole == 2 && held.fading?.stage == 3)
-        let end = GraphiteSketch.shown(at: 1, stages: 8)
-        #expect(end.whole == 7 && end.fading == nil)
+    /// A pixel as the shader draws it: nothing before the race reaches it, then its stroke with
+    /// the warm point fresh behind the race's front and gone a little later; the photo's color
+    /// drains only near a stroke, and only once reached.
+    @Test func theGraphiteDrawsBehindAMovingPoint() {
+        let before = GraphiteSketch.shade(arrival: 0.4, stroke: 1, halo: 1, progress: 0.39)
+        #expect(before == GraphiteSketch.Shade(ink: 0, point: 0, wash: 0))
+        // Just reached: the point, at full pressure.
+        let fresh = GraphiteSketch.shade(arrival: 0.4, stroke: 1, halo: 1, progress: 0.4 + GraphiteSketch.edge)
+        #expect(fresh.point > 0.6 && fresh.ink > fresh.point && fresh.ink <= 1)
+        #expect(abs(fresh.wash - GraphiteSketch.wash) < 1e-9)
+        // Long passed: the pencil's own grey, no point left.
+        let passed = GraphiteSketch.shade(arrival: 0.4, stroke: 1, halo: 1, progress: 0.4 + 2 * GraphiteSketch.fresh)
+        #expect(passed.point == 0 && abs(passed.ink - GraphiteSketch.pencil) < 1e-9)
+        // A faint stroke is faint; bare paper far from any stroke keeps the photo.
+        #expect(GraphiteSketch.shade(arrival: 0.1, stroke: 0.3, halo: 1, progress: 1).ink < 0.3)
+        #expect(GraphiteSketch.shade(arrival: 0.1, stroke: 0, halo: 0, progress: 1) == GraphiteSketch.Shade(ink: 0, point: 0, wash: 0))
     }
 
-    /// The graphite is a real pencil drawing: a line along a photo's edge and bare paper where it
-    /// is flat, in the sheet's ink; and the race's first stage leaves the photo's far corner to
-    /// the photo.
-    @Test func theGraphiteDrawsPencilStrokes() async throws {
-        // A light photo with a dark square in it.
-        let size = 120
-        let context = try #require(CGContext(
-            data: nil, width: size, height: size, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB)!,
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
-        context.setFillColor(CGColor(srgbRed: 0.9, green: 0.85, blue: 0.8, alpha: 1))
-        context.fill(CGRect(x: 0, y: 0, width: size, height: size))
-        context.setFillColor(CGColor(srgbRed: 0.2, green: 0.25, blue: 0.3, alpha: 1))
-        context.fill(CGRect(x: 40, y: 40, width: 40, height: 40))
-        let photo = try #require(context.makeImage())
+    /// The graphite is the painting's own line drawing: a line of the drawing map is a stroke and
+    /// its neighbourhood drains, bare paper far from it keeps the photo; a contour the drawing
+    /// misses is drawn too, thinner; and the race reaches every pixel, along the lines first.
+    @Test func theGraphiteDrawsTheLinesFound() async throws {
+        let w = 96, h = 64
+        var drawing = [UInt8](repeating: 0, count: w * h), contours = [UInt8](repeating: 0, count: w * h)
+        // The drawing: a line along row 30. The contours: a line down column 70.
+        for x in 0..<w { drawing[30 * w + x] = 230 }
+        for y in 0..<h { contours[y * w + 70] = 255 }
+        let lines = LineArtInput(
+            drawing: EdgeMap(width: w, height: h, values: drawing), contours: EdgeMap(width: w, height: h, values: contours),
+            detector: .drawingAndContours)
+        let strokes = GraphiteSketch.strokes(lines)
+        #expect(strokes[30 * w + 20] > 0.7)
+        #expect(strokes[10 * w + 70] > 0.5 && strokes[10 * w + 70] < strokes[30 * w + 20] + 0.2)
+        #expect(strokes[10 * w + 20] == 0)
+        let halo = GraphiteSketch.halo(strokes, width: w, height: h)
+        #expect(halo[30 * w + 20] > 0.2 && halo[32 * w + 20] > 0.1 && halo[10 * w + 20] < 0.01)
+
         let sheet = FormingPlan.Sheet(paper: SIMD3(0.95, 0.94, 0.9), ink: SIMD3(0.1, 0.1, 0.12))
-        let drawing = try #require(await GraphiteSketch.draw(photo, sheet: sheet))
-        #expect(drawing.stages.count == GraphiteSketch.stages && drawing.glints.count == GraphiteSketch.stages)
-        let last = try #require(drawing.stages.last), first = try #require(drawing.stages.first)
-        #expect(last.width == size && last.height == size)
-        // All of it drawn: the line just inside the square's edge, bare paper outside it and
-        // little more than hatching in the square's middle.
-        let edge = try Self.pixel(of: last, x: 43, y: 60), paper = try Self.pixel(of: last, x: 10, y: 10)
-        let middle = try Self.pixel(of: last, x: 60, y: 60)
-        #expect(edge.alpha > 0.99 && edge.red < 0.4)
-        #expect(paper.alpha > 0.99 && paper.red > 0.85)
-        #expect(middle.red > 0.7)
-        #expect(try Self.pixel(of: first, x: 2, y: 2).alpha < 0.05)
+        let made = try #require(await GraphiteSketch.draw(lines, sheet: sheet))
+        #expect(made.map.width == w && made.map.height == h)
+        let line = try Self.pixel(of: made.map, x: 20, y: 30), paper = try Self.pixel(of: made.map, x: 20, y: 10)
+        #expect(line.green > 0.6 && line.blue > 0.2)
+        #expect(paper.green < 0.01 && paper.blue < 0.01)
+        // Along the drawn line the race comes sooner than across the paper as far away.
+        let along = try Self.pixel(of: made.map, x: 90, y: 30), across = try Self.pixel(of: made.map, x: 20, y: 2)
+        #expect(along.red < across.red)
     }
 
-    /// A pixel's red (premultiplied) and alpha, 0…1, in an image.
-    private static func pixel(of image: CGImage, x: Int, y: Int) throws -> (red: Double, alpha: Double) {
+    /// A speck of stroke (the photo's texture) is left out; a line of the drawing stays whole.
+    @Test func specksAreNotDrawn() {
+        let w = 40, h = 20
+        var stroke = [Float](repeating: 0, count: w * h)
+        for x in 2..<38 { stroke[5 * w + x] = 0.9 }
+        for (x, y) in [(10, 14), (11, 14), (11, 15)] { stroke[y * w + x] = 0.9 }
+        let kept = GraphiteSketch.withoutSpecks(stroke, width: w, height: h)
+        #expect(kept[5 * w + 20] == 0.9)
+        #expect(kept[14 * w + 10] == 0 && kept[15 * w + 11] == 0)
+    }
+
+    /// A pixel's red, green and blue (premultiplied), 0…1, in an image.
+    private static func pixel(of image: CGImage, x: Int, y: Int) throws -> (red: Double, green: Double, blue: Double) {
         let context = try #require(CGContext(
             data: nil, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB)!,
             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
         // The one pixel is the image's (x, y), y from the top.
         context.draw(image, in: CGRect(x: -x, y: y + 1 - image.height, width: image.width, height: image.height))
         let data = try #require(context.data)
-        return (Double(data.load(fromByteOffset: 0, as: UInt8.self)) / 255, Double(data.load(fromByteOffset: 3, as: UInt8.self)) / 255)
+        func channel(_ k: Int) -> Double { Double(data.load(fromByteOffset: k, as: UInt8.self)) / 255 }
+        return (channel(0), channel(1), channel(2))
     }
 
     /// The numbers' twinkles: one per label up to the limit, spread over the page, each lit only
