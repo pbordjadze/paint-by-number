@@ -93,7 +93,7 @@ struct EraSoundsTests {
         rig.sounds.wheelTurned(row: 20, of: 40, lit: true) // an era's year is never swallowed
         #expect(rig.played == [.tick(step: 11), .tick(step: 10), .lit(step: 6)])
         let volumes = rig.player.played().map(\.volume)
-        #expect(volumes == [0.11, 0.06, 1])
+        #expect(volumes == [0.44, 0.24, 1])
     }
 
     @Test func watercolorTapsSoundAsWhatTheyDo() {

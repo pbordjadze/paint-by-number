@@ -74,7 +74,7 @@ final class EraSounds {
         let step = step(row: row, of: rows)
         if lit { return (.lit(step: step), 1) }
         let quick = since.map { $0 < brisk } ?? false
-        return (.tick(step: step), quick ? 0.06 : 0.11)
+        return (.tick(step: step), quick ? 0.24 : 0.44)
     }
 
     // MARK: Passages

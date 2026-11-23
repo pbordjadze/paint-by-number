@@ -96,7 +96,8 @@ nonisolated enum EraSynth {
 
     private static func tick(step: Int, sr: Double) -> [Float] {
         var mix = Mix(seconds: 0.3, sr: sr)
-        mix.add(tine(frequency: moonScale[step], sr: sr, seed: UInt64(step)), at: 0, gain: 1)
+        // A quarter of the tine's full scale; the wheel's volumes (`EraSounds.wheelCue`) set its level.
+        mix.add(tine(frequency: moonScale[step], sr: sr, seed: UInt64(step)), at: 0, gain: 0.25)
         return mix.samples
     }
 
