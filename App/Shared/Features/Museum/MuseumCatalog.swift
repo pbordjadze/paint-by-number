@@ -136,11 +136,11 @@ nonisolated enum MuseumPainted {
         return recorded.contains(work.id) || !shared.contains(name)
     }
 
-    static func recorded(in defaults: UserDefaults = .standard) -> Set<String> {
+    static func recorded(in defaults: UserDefaults = .era) -> Set<String> {
         Set(defaults.stringArray(forKey: defaultsKey) ?? [])
     }
 
-    static func record(_ id: String, in defaults: UserDefaults = .standard) {
+    static func record(_ id: String, in defaults: UserDefaults = .era) {
         var ids = recorded(in: defaults)
         guard ids.insert(id).inserted else { return }
         defaults.set(ids.sorted(), forKey: defaultsKey)
