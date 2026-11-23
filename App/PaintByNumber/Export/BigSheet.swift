@@ -73,6 +73,12 @@ nonisolated struct BigSheetRecipient: Codable, Equatable, Sendable {
         let needed = [name, line1, city, zip, country].map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
         return !needed.contains("") && email.contains("@") && email.contains(".")
     }
+
+    /// Where a test order goes before Apple Pay is set up: the sandbox prints and sends nothing,
+    /// and the painter types nothing (Apple Pay's sheet gives a real order its address).
+    static let testOrder = BigSheetRecipient(
+        name: "Test Order", email: "test@example.com", line1: "1 Test Street",
+        city: "New York", state: "NY", zip: "10001", country: "US")
 }
 
 /// The countries One Big Sheet offers to send to: where Prodigi prints near (the US, the UK,
@@ -85,11 +91,6 @@ nonisolated enum BigSheetCountries {
     static func `default`(for region: Locale.Region?) -> String {
         let code = region?.identifier ?? "US"
         return codes.contains(code) ? code : "US"
-    }
-
-    /// A country's name as the painter's language says it.
-    static func name(_ code: String) -> String {
-        Locale.current.localizedString(forRegionCode: code) ?? code
     }
 }
 
@@ -372,7 +373,8 @@ struct BigSheetView: View {
     @State private var product: BigSheetProduct = .paper18x24
     @State private var quote: BigSheetQuote?
     @State private var quoteFailed = false
-    @State private var recipient = BigSheetRecipient()
+    /// Priced for the painter's own country; Apple Pay's sheet prices it again for where it goes.
+    private let country = BigSheetCountries.default(for: Locale.current.region)
     @State private var picture: UIImage?
     @State private var pagePicture: UIImage?
     @State private var placing = false
@@ -392,11 +394,10 @@ struct BigSheetView: View {
 
     @State private var attempt = 0
 
-    /// `recipient` and `placed` open it on another view (the demo scenarios').
-    init(request: PrintPreviewRequest, layout: PDFExporter.Layout, recipient: BigSheetRecipient = BigSheetRecipient(), placed: String? = nil) {
+    /// `placed` opens it on its confirmation (a demo scenario's).
+    init(request: PrintPreviewRequest, layout: PDFExporter.Layout, placed: String? = nil) {
         self.request = request
         self.layout = layout
-        _recipient = State(initialValue: recipient)
         _placed = State(initialValue: placed)
     }
 
@@ -405,9 +406,8 @@ struct BigSheetView: View {
             if let placed {
                 confirmation(placed)
             } else {
+                // Apple Pay's sheet asks who it is for and where it goes: nothing to type here.
                 sheetSection
-                // Apple Pay's sheet asks where it goes.
-                if !BigSheetApplePay.isAvailable { shipToSection }
             }
         }
         .navigationTitle("One Big Sheet")
@@ -416,7 +416,7 @@ struct BigSheetView: View {
             if placed == nil { orderButton }
         }
         .task(id: product) { await draw() }
-        .task(id: QuoteKey(product: product, country: recipient.country, attempt: attempt)) { await fetchQuote() }
+        .task(id: QuoteKey(product: product, country: country, attempt: attempt)) { await fetchQuote() }
         .alert("Couldn’t Place the Order", isPresented: $orderFailed) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -465,6 +465,7 @@ struct BigSheetView: View {
                     Text(String(localized: "bigSheet.testPrice", defaultValue: "Test price: the print costs \(cost), and \(cut) is yours.",
                                 comment: "One Big Sheet, under the price while orders are only tests: what the print service charges and what the developer keeps; the arguments are amounts of money"))
                 }
+                Text("Only this sheet and the address go to the printer, never your photo.")
             }
         }
     }
@@ -568,66 +569,6 @@ struct BigSheetView: View {
                       comment: "Print's Size choice: how big the picture prints, width by height; the arguments are lengths like 21 in or 53 cm")
     }
 
-    // MARK: Where it goes
-
-    /// Where it goes, one row until it is filled in: the form takes a page of its own, so the
-    /// sheet stays the screen's subject (and Apple Pay's sheet asks for it once it is set up).
-    private var shipToSection: some View {
-        Section {
-            NavigationLink {
-                Form { addressFields }
-                    .navigationTitle("Ship To")
-                    .navigationBarTitleDisplayMode(.inline)
-            } label: {
-                LabeledContent {
-                    // The painter's own words, shown as they typed them.
-                    if recipient.isComplete { Text(recipient.name) }
-                } label: {
-                    Text("Ship To")
-                }
-            }
-            .accessibilityIdentifier("big-sheet-ship-to")
-        } footer: {
-            Text("Only this sheet and the address go to the printer, never your photo.")
-        }
-    }
-
-    private var addressFields: some View {
-        Section {
-            TextField("Name", text: $recipient.name)
-                .textContentType(.name)
-                .accessibilityIdentifier("big-sheet-name")
-            TextField("Email", text: $recipient.email)
-                .textContentType(.emailAddress)
-                .keyboardType(.emailAddress)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .accessibilityIdentifier("big-sheet-email")
-            TextField("Address", text: $recipient.line1)
-                .textContentType(.streetAddressLine1)
-                .accessibilityIdentifier("big-sheet-line1")
-            TextField("Apartment or Suite (Optional)", text: $recipient.line2)
-                .textContentType(.streetAddressLine2)
-            TextField("City", text: $recipient.city)
-                .textContentType(.addressCity)
-                .accessibilityIdentifier("big-sheet-city")
-            TextField("State or Region", text: $recipient.state)
-                .textContentType(.addressState)
-            TextField("Postal Code", text: $recipient.zip)
-                .textContentType(.postalCode)
-                .accessibilityIdentifier("big-sheet-zip")
-            Picker(selection: $recipient.country) {
-                ForEach(BigSheetCountries.codes, id: \.self) { code in
-                    Text(BigSheetCountries.name(code)).tag(code)
-                }
-            } label: {
-                Text("Country")
-            }
-        } footer: {
-            Text("Only this sheet and the address go to the printer, never your photo.")
-        }
-    }
-
     // MARK: The order
 
     @ViewBuilder
@@ -658,7 +599,7 @@ struct BigSheetView: View {
         .controlSize(.large)
         .padding(.horizontal, 20)
         .padding(.bottom, 8)
-        .disabled(placing || !recipient.isComplete || quote?.product != product.rawValue)
+        .disabled(placing || quote?.product != product.rawValue)
         .accessibilityIdentifier("big-sheet-order")
     }
 
@@ -703,12 +644,12 @@ struct BigSheetView: View {
     private func placeOrder() {
         guard !placing else { return }
         placing = true
-        let request = request, layout = layout, product = product, recipient = recipient, service = service, key = orderKey
+        let request = request, layout = layout, product = product, service = service, key = orderKey
         Task {
             defer { placing = false }
             do {
                 let sheet = await Self.sheetPDF(request, layout: layout, product: product)
-                placed = try await service.order(sheet, product, recipient, nil, key)
+                placed = try await service.order(sheet, product, .testOrder, nil, key)
             } catch {
                 failed(error)
             }
@@ -787,7 +728,7 @@ struct BigSheetView: View {
     private func fetchQuote() async {
         quoteFailed = false
         do {
-            let fetched = try await service.quote(product, recipient.country)
+            let fetched = try await service.quote(product, country)
             guard !Task.isCancelled else { return }
             quote = fetched
         } catch {

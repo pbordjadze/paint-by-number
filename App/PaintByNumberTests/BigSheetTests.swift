@@ -135,6 +135,8 @@ struct BigSheetTests {
         recipient.email = "ada@example.com"
         recipient.zip = "  "
         #expect(!recipient.isComplete)
+        // A test order, with no form to fill, goes to an address the relay takes.
+        #expect(BigSheetRecipient.testOrder.isComplete)
         #expect(BigSheetCountries.default(for: Locale.Region("ZZ")) == "US")
         #expect(BigSheetCountries.default(for: Locale.Region("DE")) == "DE")
     }

@@ -8,8 +8,8 @@ import SwiftUI
 /// next size up, on several sheets), and two of the layers' (painting-company row 370):
 /// `print-preview-no-numbers` (a coloring page) and `print-preview-hints` (Color Hints on).
 /// In SideStore and Debug builds One Big Sheet (painting-company row 380) as Print's preview
-/// pushes it, on the stub's sandbox price: `print-big-sheet` (with `-dark`, `-long-text`), its
-/// address filled in (`-filled`) and its test order placed (`-placed`).
+/// pushes it, on the stub's sandbox price: `print-big-sheet` (with `-dark`, `-long-text`) and
+/// its test order placed (`-placed`).
 struct PrintPreviewDemo: View {
     let scenario: String
     @State private var request: PrintPreviewRequest?
@@ -22,7 +22,6 @@ struct PrintPreviewDemo: View {
                     NavigationStack {
                         BigSheetView(
                             request: request, layout: PDFExporter.Layout(paper: .default(for: Locale.current.region)),
-                            recipient: scenario.hasPrefix("print-big-sheet-filled") ? Self.recipient : BigSheetRecipient(),
                             placed: scenario.hasPrefix("print-big-sheet-placed") ? "ord_828417" : nil)
                     }
                     .pageSizedOnPad()
@@ -49,11 +48,5 @@ struct PrintPreviewDemo: View {
             colorHints: scenario.hasPrefix("print-preview-hints"))
             .pageSizedOnPad()
     }
-
-    #if UNRELEASED
-    /// The filled form's address: no one's.
-    private static let recipient = BigSheetRecipient(
-        name: "Ada Moon", email: "ada@example.com", line1: "1 Lantern Lane", line2: "", city: "Brooklyn", state: "NY", zip: "11201", country: "US")
-    #endif
 }
 #endif
