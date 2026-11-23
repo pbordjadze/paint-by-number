@@ -356,17 +356,33 @@ nonisolated enum PDFExporter {
     }
 
     /// The smallest number `sheet(for:title:layout:size:nicknames:)` prints on `size`, in
-    /// points, or nil without numbers: what One Big Sheet checks against `minimumNumberSize`.
+    /// points (an ordinary area's, or a detail area's where there are only those), or nil without
+    /// numbers.
     static func smallestNumberOnSheet(_ t: Template, layout: Layout, size: CGSize) -> CGFloat? {
-        guard layout.numbers, let smallest = smallestNumberSize(t, detail: false) ?? smallestNumberSize(t, detail: true) else { return nil }
+        guard layout.numbers, let scale = sheetPictureScale(t, layout: layout, size: size),
+              let smallest = smallestNumberSize(t, detail: false) ?? smallestNumberSize(t, detail: true) else { return nil }
+        return smallest * scale
+    }
+
+    /// Whether any number prints on `size` under its legible floor: an ordinary area's under
+    /// `minimumNumberSize`, a detail area's under `minimumDetailNumberSize`. What One Big Sheet warns of.
+    static func sheetPrintsSmallNumbers(_ t: Template, layout: Layout, size: CGSize) -> Bool {
+        guard layout.numbers, let scale = sheetPictureScale(t, layout: layout, size: size) else { return false }
+        if let usual = smallestNumberSize(t, detail: false), usual * scale < minimumNumberSize { return true }
+        if let detail = smallestNumberSize(t, detail: true), detail * scale < minimumDetailNumberSize { return true }
+        return false
+    }
+
+    /// Points on the sheet per template unit, at least: the page body less the key's most, at the
+    /// sheet's scale (a floor on the picture's size).
+    private static func sheetPictureScale(_ t: Template, layout: Layout, size: CGSize) -> CGFloat? {
         let short = min(size.width, size.height), long = max(size.width, size.height)
+        guard short > 0 else { return nil }
         let page = t.width > t.height ? CGSize(width: long, height: short) : CGSize(width: short, height: long)
         let factor = sheetScale(short: short)
-        // The page body, less the key's most, at the sheet's scale: a floor on the picture's size.
         let body = bodyRect(CGRect(x: 0, y: 0, width: page.width / factor, height: page.height / factor))
         let height = layout.colorKey ? body.height * 0.6 - keyGap * 2 : body.height
-        let scale = min(body.width / CGFloat(max(t.width, 1)), height / CGFloat(max(t.height, 1))) * factor
-        return smallest * scale
+        return min(body.width / CGFloat(max(t.width, 1)), height / CGFloat(max(t.height, 1))) * factor
     }
 
     /// How much larger than on a page `sheet` draws its type, key and margins on a sheet whose

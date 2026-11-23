@@ -548,8 +548,7 @@ struct BigSheetView: View {
 
     /// Whether the template's smallest number prints under the legible size on this sheet.
     private var printsSmallNumbers: Bool {
-        guard let smallest = PDFExporter.smallestNumberOnSheet(request.template, layout: layout, size: product.points) else { return false }
-        return smallest < PDFExporter.minimumNumberSize
+        PDFExporter.sheetPrintsSmallNumbers(request.template, layout: layout, size: product.points)
     }
 
     private func sizeText(_ product: BigSheetProduct) -> String {
@@ -721,7 +720,7 @@ struct BigSheetView: View {
                     // A price that moved since it was shown is fetched again for the painter to see.
                     if case BigSheetService.ServiceError.refused(409) = error { attempt += 1 }
                     // Said once Apple Pay's sheet has gone, which an alert can't show over.
-                    orderPending = error as? BigSheetService.ServiceError == .pending
+                    settle(error)
                     paymentFailed = true
                     return PKPaymentAuthorizationResult(status: .failure, errors: nil)
                 }
@@ -735,8 +734,16 @@ struct BigSheetView: View {
 
     private func failed(_ error: Error) {
         Log.library.error("Placing a big sheet's order failed: \(String(describing: error), privacy: .public)")
-        orderPending = error as? BigSheetService.ServiceError == .pending
+        settle(error)
         orderFailed = true
+    }
+
+    /// After a try that failed: only one the relay refused (it gave the order up) takes a new
+    /// key; one that may be under way, or whose answer never came, keeps it, so trying again can't
+    /// order it twice.
+    private func settle(_ error: Error) {
+        orderPending = error as? BigSheetService.ServiceError == .pending
+        if case .refused = error as? BigSheetService.ServiceError { orderKey = BigSheetService.newKey() }
     }
 
     // MARK: Drawing and pricing

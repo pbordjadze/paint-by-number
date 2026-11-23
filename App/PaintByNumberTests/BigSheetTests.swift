@@ -45,6 +45,10 @@ struct BigSheetTests {
         var coloringPage = layout
         coloringPage.numbers = false
         #expect(PDFExporter.smallestNumberOnSheet(t, layout: coloringPage, size: BigSheetProduct.paper18x24.points) == nil)
+        #expect(!PDFExporter.sheetPrintsSmallNumbers(t, layout: coloringPage, size: BigSheetProduct.paper18x24.points))
+        // The sample's numbers read on the larger sheet whatever they do on the smaller.
+        #expect(!PDFExporter.sheetPrintsSmallNumbers(t, layout: layout, size: BigSheetProduct.paper24x36.points)
+                || PDFExporter.sheetPrintsSmallNumbers(t, layout: layout, size: BigSheetProduct.paper18x24.points))
     }
 
     /// The order is the PDF and the JSON print.js reads, each a part of its own.

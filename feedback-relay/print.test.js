@@ -404,7 +404,9 @@ test("Prodigi failing in a way that may have placed it refunds nothing, keeps th
     "stripe:/tokens": { id: "tok_1" }, "stripe:/payment_intents": { id: "pi_1", status: "succeeded" },
   });
   const e = env(STRIPE_ENV);
-  assert.equal((await handlePrint(await orderRequest({ order: PAID_ORDER }), e, { fetch: fetcher })).status, 502);
+  const first = await handlePrint(await orderRequest({ order: PAID_ORDER }), e, { fetch: fetcher });
+  assert.equal(first.status, 202);
+  assert.deepEqual(await first.json(), { ok: false, pending: true });
   assert.ok(!calls.some((c) => c.url === `${STRIPE}/refunds`));
   const data = e.PRINT_SHEETS.get(ID).storage.data;
   assert.equal(data.get("state"), "placing");
@@ -422,7 +424,7 @@ test("Stripe not answering leaves the order charging, never charged twice", asyn
     "stripe:/payment_intents": () => { throw new TypeError("network connection lost"); },
   });
   const e = env(STRIPE_ENV);
-  assert.equal((await handlePrint(await orderRequest({ order: PAID_ORDER }), e, { fetch: fetcher })).status, 502);
+  assert.equal((await handlePrint(await orderRequest({ order: PAID_ORDER }), e, { fetch: fetcher })).status, 202);
   assert.equal(e.PRINT_SHEETS.get(ID).storage.data.get("state"), "charging");
   assert.ok(!calls.some((c) => c.url === `${SANDBOX}/orders`));
   assert.equal((await handlePrint(await orderRequest({ order: PAID_ORDER }), e, { fetch: fetcher })).status, 202);

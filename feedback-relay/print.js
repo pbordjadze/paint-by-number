@@ -311,7 +311,7 @@ async function order(request, env, deps, provider) {
       if (error?.uncertain) {
         // Stripe may have charged: the order stays "charging", so no try charges it again.
         log(`Stripe may have charged order ${key}: look it up by metadata[sheet]`, error);
-        return bare(502);
+        return json(202, { ok: false, pending: true });
       }
       log("Charging the order failed", error);
       await drop(stub);
@@ -331,7 +331,7 @@ async function order(request, env, deps, provider) {
     if (error?.uncertain) {
       // The service may have taken it: the sheet and the payment stay, the log has them for a look by hand.
       log(`${provider.name} may hold order ${key} (payment ${charge ?? "none"})`, error);
-      return bare(502);
+      return json(202, { ok: false, pending: true });
     }
     log("Placing the order failed", error);
     await drop(stub);
@@ -531,11 +531,13 @@ export class PrintSheet {
     if (pathname === "/begin" && request.method === "POST") {
       const days = Number(request.headers.get("x-days"));
       if (!(days > 0)) return bare(400);
+      // The body first: storage calls hold the object's input gate, so between the look and the
+      // write below no other try of the order runs; reading a request body doesn't.
+      const bytes = new Uint8Array(await request.arrayBuffer());
       const kept = await this.storage.get(["token", "state", "charge", "order"]);
       if (kept.get("token")) {
         return json(200, { token: kept.get("token"), state: kept.get("state"), charge: kept.get("charge"), order: kept.get("order") });
       }
-      const bytes = new Uint8Array(await request.arrayBuffer());
       const token = randomHex();
       const chunks = Math.ceil(bytes.byteLength / CHUNK);
       // A put takes at most 128 keys: a sheet is at most 25 chunks.
@@ -599,7 +601,12 @@ async function prodigiCall(env, deps, method, path, body) {
     throw Object.assign(new Error(`Prodigi ${method} ${path}: ${error?.message ?? error}`), { uncertain: true });
   }
   if (!response.ok) {
-    const error = new Error(`Prodigi ${method} ${path}: HTTP ${response.status} ${text.slice(0, 300)}`);
+    // Its outcome alone: the body may echo the address, which is kept nowhere here.
+    let outcome = "";
+    try {
+      outcome = String(JSON.parse(text)?.outcome ?? "").slice(0, 60);
+    } catch {}
+    const error = new Error(`Prodigi ${method} ${path}: HTTP ${response.status} ${outcome}`);
     throw Object.assign(error, { uncertain: response.status >= 500 });
   }
   try {

@@ -11,7 +11,9 @@ name: Feedback relay
 #   PRODIGI_API_KEY        optional: Prodigi's sandbox API key, for One Big Sheet (print.js);
 #                          set, it becomes the Worker's secret too
 #   STRIPE_SECRET_KEY      optional: Stripe's test secret key (sk_test_), with which One Big
-#                          Sheet's orders are paid for with Apple Pay; set, the Worker's secret too
+#                          Sheet's orders are paid for with Apple Pay; set, the Worker's secret too.
+#                          Set it only once the app has its Apple Pay merchant id
+#                          (BigSheetApplePay.merchant): with it, an order without a payment is refused
 # This repository is public, so its logs are too: nothing below prints a secret, and the steps
 # that hold one run without `set -x`.
 #
