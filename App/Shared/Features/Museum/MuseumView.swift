@@ -105,7 +105,7 @@ struct MuseumView: View {
         shown = query.works(of: catalog)
         counts = query.counts(of: catalog)
         #if DEBUG
-        guard ShellDemo.current == .museum, !demoIsReady else { return }
+        guard DemoMode.scenario?.hasPrefix("museum") == true, !demoIsReady else { return }
         demoIsReady = true
         if Self.demoOpensWork, let first = shown.first {
             path = [first]
