@@ -413,6 +413,8 @@ Draws a photo’s lines, fur, petals and glass, for coloring books.
 
 Caroline Chan, Frédo Durand and Phillip Isola, Informative Drawings: sk_model.pth (contour style) from lllyasviel/Annotators
 
+Copyright (c) 2022 Caroline Chan
+
 MIT License
 
 ## Apache License, Version 2.0

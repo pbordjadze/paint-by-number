@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Builds the Museum's catalog (painting-company row 369): every open-access painting, print,
-drawing and watercolor two museums offer that the app can paint, one record each, with the
+drawing and watercolor three museums offer that the app can paint, one record each, with the
 movement it belongs to and how colorful it is.
 
     tools/museum/catalog.py wikidata
-    tools/museum/catalog.py gather --out DIR [--sources aic,cma] [--limit N]
+    tools/museum/catalog.py gather --out DIR [--sources aic,cma,nga] [--limit N]
     tools/museum/catalog.py measure --out DIR [--workers 12]
     tools/museum/catalog.py write --out DIR
 
@@ -18,6 +18,10 @@ puts the catalog the app downloads in DIR/museum.json (and .json.gz), whose shap
 Sources, each read through the museum's own public-domain flag, which is the license (CC0):
   aic  The Art Institute of Chicago, `is_public_domain`; images through its IIIF server
   cma  The Cleveland Museum of Art, `share_license_status` CC0; images from its open-access CDN
+  nga  The National Gallery of Art, Washington: its open data (github.com/NationalGalleryOfArt/
+       opendata, CC0), a work whose primary image is `openaccess`; images through its IIIF server.
+       Its medieval miniatures and the Index of American Design's watercolors (folk art drawn in
+       the 1930s, the catalog's Folk Art) are what the other two lack.
 The Met's image CDN refuses cloud fetches (painting-company row 368), so it is not a source yet.
 
 The rules are lighter than Tonight's Picture's (tools/nights/catalog.py, a picture everyone gets):
@@ -204,7 +208,89 @@ def cma_record(r):
     }
 
 
-SOURCES = {"aic": (aic_raw, aic_record), "cma": (cma_raw, cma_record)}
+# ---- The National Gallery of Art -------------------------------------------------------------
+
+NGA = "https://raw.githubusercontent.com/NationalGalleryOfArt/opendata/main/data/"
+NGA_CLASSES = {"Painting": "painting", "Print": "print", "Drawing": "drawing", "Index of American Design": "drawing"}
+
+
+def nga_raw(limit):
+    """The open data's tables joined, one row a work with an open-access primary image."""
+    import csv
+    csv.field_size_limit(1 << 30)
+
+    def table(name):
+        body = fetch(NGA + name + ".csv", raw=True, tries=4, timeout=600, pause=0)
+        return csv.DictReader(io.StringIO(body.decode("utf-8")))
+
+    images = {r["depictstmsobjectid"]: r for r in table("published_images")
+              if r["viewtype"] == "primary" and r["openaccess"] == "1"}
+    rows = {r["objectid"]: r for r in table("objects")
+            if r["objectid"] in images and r["classification"] in NGA_CLASSES}
+    artists = {}
+    for r in table("objects_constituents"):
+        if r["objectid"] in rows and r["roletype"] == "artist":
+            artists.setdefault(r["objectid"], []).append((int(r["displayorder"] or 0), r["constituentid"]))
+    nations = {r["constituentid"]: r["nationality"] for r in table("constituents")}
+    terms = {}
+    for r in table("objects_terms"):
+        if r["objectid"] in rows and r["termtype"] in ("Style", "School", "Place Executed"):
+            terms.setdefault(r["objectid"], {}).setdefault(r["termtype"], []).append(r["term"])
+    out = []
+    for oid, r in rows.items():
+        first = min(artists.get(oid, [(0, "")]))[1]
+        i = images[oid]
+        out.append({k: r[k] for k in ("objectid", "title", "displaydate", "beginyear", "endyear", "medium",
+                                      "attribution", "classification", "subclassification", "departmentabbr")}
+                   | {"iiif": i["iiifurl"], "width": i["width"], "height": i["height"], "maxpixels": i["maxpixels"],
+                      "nationality": nations.get(first, ""), "terms": terms.get(oid, {})})
+        if limit and len(out) >= limit:
+            break
+    print(f"nga: {len(out)} works", file=sys.stderr, flush=True)
+    return out
+
+
+def nga_record(r):
+    w, h = int(r.get("width") or 0), int(r.get("height") or 0)
+    if r.get("maxpixels") and w and h:
+        # The server gives at most `maxpixels` on the long side for some works.
+        cap = int(r["maxpixels"])
+        if max(w, h) > cap:
+            w, h = (cap, round(h * cap / w)) if w >= h else (round(w * cap / h), cap)
+    try:
+        date = int(r.get("endyear")) if r.get("endyear") else None
+    except ValueError:
+        date = None
+    terms = r.get("terms") or {}
+    index = r["classification"] == "Index of American Design"
+    artist = re.sub(r"^(Attributed to|Probably|Possibly|Workshop of|Follower of|Circle of|Style of)\s+", "",
+                    r.get("attribution") or "").strip()
+    iiif = r["iiif"]
+    return {
+        "id": f"nga-{r['objectid']}", "source": "nga", "kind": NGA_CLASSES[r["classification"]],
+        "title": r.get("title") or "", "artist": artist, "artist_display": r.get("nationality") or "",
+        "year": r.get("displaydate") or "", "date": date,
+        "styles": ["folk art"] if index else [NGA_STYLES.get(t, t) for t in terms.get("Style", [])],
+        "place": ", ".join(terms.get("School", []) + terms.get("Place Executed", [])),
+        "image": f"{iiif}/full/!3000,3000/0/default.jpg", "thumb": f"{iiif}/full/!600,600/0/default.jpg",
+        "probe": f"{iiif}/full/!120,120/0/default.jpg",
+        "page": f"https://www.nga.gov/collection/art-object-page.{r['objectid']}.html",
+        "width": w, "height": h, "medium": r.get("medium") or "",
+        "terms": [r["classification"], r.get("subclassification") or ""],
+        "department": r.get("departmentabbr") or "",
+    }
+
+
+# The gallery's style words onto the ones `STYLE_WORDS` reads.
+NGA_STYLES = {"Impressionist": "impressionism", "Post-Impressionist": "post-impressionism", "Realist": "realism",
+              "Romantic": "romanticism", "Neoclassic": "neoclassicism", "German Expressionist": "expressionism",
+              "Austrian Expressionist": "expressionism", "Fauve": "fauvism", "Cubist": "cubism",
+              "Symbolist": "symbolism", "Naive": "folk art", "Gothic": "gothic", "Futurist": "futurism",
+              "Orientalist": "orientalism", "Academic": "academic art", "Pennsylvania German": "folk art",
+              "Shaker": "folk art", "Spanish Southwest": "folk art", "Ukiyo-e": "ukiyo-e"}
+
+
+SOURCES = {"aic": (aic_raw, aic_record), "cma": (cma_raw, cma_record), "nga": (nga_raw, nga_record)}
 
 
 def rules(c):
@@ -294,6 +380,7 @@ STYLE_WORDS = {
     "barbizon school": "Barbizon School", "hudson river school": "Hudson River School",
     "tonalism": "Tonalism", "ashcan school": "Ashcan School", "nabis": "Nabis", "les nabis": "Nabis",
     "modernism": "Modernism", "american impressionism": "American Impressionism",
+    "orientalism": "Orientalism", "academic art": "Academic Art",
     "folk art": "Folk Art", "mughal": "Indian Painting", "rajput": "Indian Painting", "pahari": "Indian Painting",
     "edo period": None, "meiji period": None,
 }
@@ -601,7 +688,8 @@ def write(a):
     works = [w for w in works if w["movement"] in movements]
     catalog = {
         "version": 1, "made": time.strftime("%Y-%m-%d"),
-        "museums": {"aic": "The Art Institute of Chicago", "cma": "The Cleveland Museum of Art"},
+        "museums": {"aic": "The Art Institute of Chicago", "cma": "The Cleveland Museum of Art",
+                    "nga": "National Gallery of Art, Washington"},
         "movements": movements, "works": works,
     }
     body = json.dumps(catalog, ensure_ascii=False, separators=(",", ":")).encode()
@@ -619,7 +707,7 @@ def main():
         s = sub.add_parser(name)
         s.add_argument("--out", required=True, type=Path)
         if name == "gather":
-            s.add_argument("--sources", default="aic,cma")
+            s.add_argument("--sources", default="aic,cma,nga")
             s.add_argument("--limit", type=int, default=0)
         if name == "measure":
             s.add_argument("--workers", type=int, default=12)

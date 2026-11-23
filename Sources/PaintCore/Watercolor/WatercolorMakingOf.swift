@@ -144,6 +144,19 @@ public struct WatercolorMakingOf: Sendable {
         lastTapStep = taps.last?.step ?? 0
         self.focus = focus
         self.signatures = signatures
+        drops = nil
+    }
+
+    /// A tap of water alone is a drop (`WatercolorSim.drop`) of this radius in cells and this
+    /// much water, rather than a wash of clean water over the whole area: the study's blooms.
+    let drops: (radius: Float, water: Float)?
+
+    init(log: WatercolorLog, focus: SIMD2<Float>?, signatures: [Int], drops: (radius: Float, water: Float)?) {
+        self.log = log
+        self.drops = drops
+        lastTapStep = log.taps.last?.step ?? 0
+        self.focus = focus
+        self.signatures = signatures
     }
 
     /// Whether every tap is laid: from here the film is the drying.
@@ -170,7 +183,11 @@ public struct WatercolorMakingOf: Sendable {
         while sim.step < step {
             while cursor < log.taps.count, log.taps[cursor].step <= sim.step {
                 let tap = log.taps[cursor]
-                sim.tap(region: tap.region, at: SIMD2(tap.x, tap.y), paint: tap.paint)
+                if !tap.paint, let drops {
+                    sim.drop(at: SIMD2(tap.x, tap.y), radius: drops.radius, water: drops.water)
+                } else {
+                    sim.tap(region: tap.region, at: SIMD2(tap.x, tap.y), paint: tap.paint)
+                }
                 cursor += 1
             }
             if sim.isActive || cursor < log.taps.count {

@@ -210,14 +210,14 @@ nonisolated final class WoodblockMode: CanvasMode, @unchecked Sendable {
         let s = state.withLockUnchecked { $0 }
         let scene = frame.scene
         guard s.printNumbers, scene.glyphCount > 0, let glyphs = mirroredGlyphs(of: scene),
-              let pipelines = context.pipelines(for: frame.format) else { return }
+              let glyph = context.pipelines(for: frame.format)?.glyph else { return }
         var u = frame.uniforms
         u.numbers.x *= 0.6
         u.numbers.y = u.numbers.x
         u.outline.w = 1
         u.selected.w = 0
         let size = MemoryLayout<CanvasUniforms>.stride
-        encoder.setRenderPipelineState(pipelines.glyph)
+        encoder.setRenderPipelineState(glyph)
         encoder.setVertexBuffer(glyphs, offset: 0, index: 0)
         encoder.setVertexBuffer(scene.digitRects, offset: 0, index: 1)
         encoder.setVertexBuffer(scene.digitUVs, offset: 0, index: 2)

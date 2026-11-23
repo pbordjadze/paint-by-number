@@ -69,7 +69,7 @@ struct GlassEra: View {
                 try GlassWindow.Leading.suggested(photo: photo, width: size.width, height: size.height,
                                                   colorSpace: photo.colorSpace).window()
             }
-            let artwork = try await shelf.create(window, photo: photo, title: shelf.title())
+            let artwork = try await shelf.create(window, photo: photo, title: picked.work ?? shelf.title())
             path = [.window(artwork.id)]
         } catch {
             Log.library.error("Couldn't make a window: \(String(describing: error), privacy: .public)")
@@ -114,7 +114,7 @@ struct GlassGalleryView: View {
                 .font(.system(size: 56))
                 .foregroundStyle(GlassEra.gold)
                 .frame(width: 112, height: 112)
-                .glassEffect(.regular.tint(GlassEra.gold.opacity(0.12)).interactive(), in: .circle)
+                .glassEffect(.regular.tint(GlassEra.gold.opacity(0.12)), in: .circle)
                 .padding(.bottom, 6)
                 .accessibilityHidden(true)
             Text("No windows yet")

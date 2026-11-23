@@ -256,6 +256,18 @@ final class SettingsTests: XCTestCase {
         XCTAssertTrue(clock.waitForExistence(timeout: 5), "The Year row brought out no year setter")
         roll(app, to: 547)
         attachScreenshot(of: app, named: "clock-at-547")
+        // A flick down past 0547 can rest at the wheel's far end, 15,000 BC, the Cave's year (in
+        // SideStore and Debug builds): the Cave's own Year row takes the wheel up from there.
+        let cave = app.buttons["cave-settings"]
+        if !app.buttons["New Mosaic"].waitForExistence(timeout: 15), cave.exists {
+            cave.tap()
+            let caveYear = app.descendants(matching: .any)["about-year"]
+            XCTAssertTrue(caveYear.waitForExistence(timeout: 10), "The Cave's Settings has no Year row")
+            scroll(app, to: caveYear)
+            caveYear.tap()
+            XCTAssertTrue(clock.waitForExistence(timeout: 5), "The Cave's Year row brought out no clock")
+            roll(app, to: 547)
+        }
         XCTAssertTrue(app.buttons["New Mosaic"].waitForExistence(timeout: 30), "547 didn't open Ravenna")
         attachScreenshot(of: app, named: "ravenna-through-the-door")
 
@@ -321,12 +333,25 @@ final class SettingsTests: XCTestCase {
         // A flick returns while the wheel still turns, and the year counts once it has rested
         // (`EraClock.rest`, 0.7 s): each flick waits for the wheel to go before the next.
         var stepped: Int?
-        for _ in 0..<80 where wheels.count > 0 {
+        for _ in 0..<120 where wheels.count > 0 {
             let wheel = wheels.firstMatch
-            guard let shown = (wheel.value as? String).flatMap({ Int($0.prefix(4)) }) else { break }
+            guard let shown = (wheel.value as? String).flatMap(Self.year(read:)) else { break }
             print("SettingsTests.roll: the wheel shows \(shown), on the way to \(year)")
             if shown == year {
                 _ = wheel.waitForNonExistence(timeout: 3)
+                continue
+            }
+            if shown < 1 && year >= 1 {
+                // A flick down past 0547 can land among the centuries before Christ (SideStore
+                // and Debug builds reach back to 15,000 BC, a century a row): drag up several
+                // rows at a time with no momentum, so the wheel stops where the finger does,
+                // short of 0001, and the rows one at a time do the rest.
+                let rows = min(4, max(1, -shown / 100))
+                let center = wheel.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                center.press(forDuration: 0.1, thenDragTo: center.withOffset(CGVector(dx: 0, dy: -CGFloat(rows) * Self.row)),
+                             withVelocity: .slow, thenHoldForDuration: 0.3)
+                stepped = nil
+                _ = wheel.waitForNonExistence(timeout: 2.5)
                 continue
             }
             if (year == 547 && shown < year) || (year != present && year != 547 && !Self.eras.contains(shown)) {
@@ -371,6 +396,16 @@ final class SettingsTests: XCTestCase {
             if shown > year { wheel.swipeDown(velocity: velocity) } else { wheel.swipeUp(velocity: velocity) }
             _ = wheel.waitForNonExistence(timeout: 2.5)
         }
+    }
+
+    /// The year a wheel's value reads: "0547", or a year before Christ ("15,000 BC") as a
+    /// negative one, as `EraClock.text(of:)` writes them in English.
+    private static func year(read value: String) -> Int? {
+        if value.contains("BC") {
+            let digits = value.filter(\.isNumber)
+            return Int(digits).map { -$0 }
+        }
+        return Int(value.prefix(4))
     }
 
     /// The years that open an era on the wheel (`EraYear.modes` in SideStore and Debug builds).
