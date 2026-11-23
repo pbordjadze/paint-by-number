@@ -22,7 +22,7 @@ name: TestFlight
 # The nightly: the SideStore build (`UNRELEASED`, as ci.yml's `ipa` job archives it) uploaded as
 # the same app under version 99.0, a train of its own that no release takes, for the internal
 # group Team alone: no Beta App Review, never Friends & Family, never submitted (ci/testflight_testers.py
-# refuses a 99.0 build to them however it is run). Every night at 08:00 UTC (3 AM ET in winter)
+# refuses a 99.0 build to them however it is run). Every night at 08:17 UTC (3:17 AM ET in winter; again at 10:47 UTC)
 # it uploads `main` if `main` moved since the last nightly; Run workflow with "Nightly" and
 # "Upload" ticked does the same on request, and a push to a
 # `claude/testflight-dryrun*nightly*` branch is its dry run. Installing it replaces the App Store
@@ -47,7 +47,11 @@ on:
         type: boolean
         default: false
   schedule:
-    - cron: '0 8 * * *'
+    # GitHub starts scheduled runs late on busy hours, hours late or not at all (Nov 22: 8 h;
+    # Nov 23: none by 13:00 UTC): an odd minute, and a second try that `bundled` skips when the
+    # first already uploaded this commit.
+    - cron: '17 8 * * *'
+    - cron: '47 10 * * *'
   push:
     branches: ['claude/testflight-dryrun*', 'main']
 
@@ -82,8 +86,11 @@ jobs:
             # The nightly uploads only when main moved since the last one.
             last=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/testflight.yml/runs?event=schedule&status=success&per_page=1" \
               --jq '.workflow_runs[0].head_sha // empty' 2>/dev/null || true)
-            echo "last nightly: ${last:-none}"
-            echo "run=$([ "$last" != "$GITHUB_SHA" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"; exit 0
+            # An earlier nightly of this commit still waiting for a runner counts too (the second try defers to the first, never the reverse).
+            busy=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/testflight.yml/runs?event=schedule&head_sha=$GITHUB_SHA&per_page=10" \
+              --jq "[.workflow_runs[] | select(.id < $GITHUB_RUN_ID and .status != \"completed\")] | length" 2>/dev/null || echo 0)
+            echo "last nightly: ${last:-none}; this commit's nightlies still running: $busy"
+            echo "run=$([ "$last" != "$GITHUB_SHA" ] && [ "$busy" = 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"; exit 0
           fi
           if [ "$GITHUB_REF_NAME" != main ] || [ "$GITHUB_EVENT_NAME" != push ]; then
             echo "run=true" >> "$GITHUB_OUTPUT"; exit 0
