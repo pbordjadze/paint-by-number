@@ -2,6 +2,8 @@ import Foundation
 
 #if canImport(Darwin)
 import Darwin
+#elseif canImport(Android)
+import Android
 #else
 import Glibc
 #endif
