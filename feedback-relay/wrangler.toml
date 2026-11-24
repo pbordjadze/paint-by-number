@@ -18,6 +18,9 @@ NIGHTS_URL = "https://raw.githubusercontent.com/pbordjadze/paint-by-number/night
 PRODIGI_API = "https://api.prodigi.com/v5"
 # What the painter pays over Prodigi's cost, shipping included: 0.4 is 40%.
 MARKUP = "0.4"
+# Stripe Tax (print.js, recordTax): "inclusive" records the tax inside each price once Paul has
+# turned Stripe Tax on and registered where he must; unset, no tax is recorded.
+# STRIPE_TAX = "inclusive"
 
 # A flood brake per IP address: a limiter's period is 10 or 60 seconds, so this is 3 a minute, not
 # a limit per hour. Counted per Cloudflare location, approximately.

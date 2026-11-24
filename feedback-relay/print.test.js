@@ -6,7 +6,7 @@ import { Buffer } from "node:buffer";
 import { webcrypto } from "node:crypto";
 import { test } from "node:test";
 
-import { cleanPayment, cleanRecipient, handlePrint, minorUnits, priceFor, PrintSheet, PRODUCTS, reconcilePrints } from "./print.js";
+import { cleanPayment, cleanRecipient, handlePrint, minorUnits, priceFor, PrintSheet, PRODUCTS, receiptLine, reconcilePrints } from "./print.js";
 import { handle } from "./worker.js";
 
 globalThis.crypto ??= webcrypto;
@@ -1027,4 +1027,64 @@ test("a sheet replaced while its check runs is checked anew at once", async () =
   await object.alarm();
   assert.equal(object.storage.data.get("check"), "done");
   assert.equal(object.storage.data.get("verdict").verdict, "pass");
+});
+
+// MARK: Receipts and tax
+
+test("the receipt names the sheet and the order", async () => {
+  assert.equal(receiptLine("canvas-24x36", "sheet-0123456789ab"), "One Big Sheet, canvas 24 × 36 in, order sheet-0123456789ab");
+  const { e, calls, deps } = world(PAID, STRIPE_ENV);
+  await handlePrint(await orderRequest({ order: PAID_ORDER }), e, deps);
+  const intent = calls.find((call) => call.url === `${STRIPE}/payment_intents`);
+  assert.equal(intent.body.description, `One Big Sheet, canvas 16 × 24 in, order sheet-${ID.slice(0, 12)}`);
+  assert.equal(intent.body.receipt_email, "ada@example.com");
+});
+
+const TAXED = { ...PAID, "stripe:/tax/calculations": { id: "taxcalc_1" }, "stripe:/tax/transactions/create_from_calculation": { id: "tax_1" }, "stripe:/tax/transactions/create_reversal": { id: "tax_2" } };
+
+test("with Stripe Tax on, the tax in the price is recorded at the address before the order is placed", async () => {
+  const { e, c, calls, deps } = world(TAXED, { ...STRIPE_ENV, STRIPE_TAX: "inclusive" });
+  assert.equal((await handlePrint(await orderRequest({ order: PAID_ORDER }), e, deps)).status, 201);
+  assert.equal(await settle(e, c), "accepted");
+  const calc = calls.find((call) => call.url === `${STRIPE}/tax/calculations`);
+  assert.equal(calc.body["line_items[0][amount]"], "3300");
+  assert.equal(calc.body["line_items[0][tax_behavior]"], "inclusive");
+  assert.equal(calc.body["customer_details[address][postal_code]"], "11201");
+  const record = calls.find((call) => call.url === `${STRIPE}/tax/transactions/create_from_calculation`);
+  assert.equal(record.body.calculation, "taxcalc_1");
+  const urls = calls.map((call) => call.url);
+  assert.ok(urls.indexOf(`${STRIPE}/tax/transactions/create_from_calculation`) < urls.indexOf(`${SANDBOX}/orders`));
+  assert.equal(e.PRINT_SHEETS.get(ID).storage.data.get("taxed"), "tax_1");
+});
+
+test("tax that can't be recorded holds no print up, and a refused order's tax is reversed", async () => {
+  {
+    const { e, c, calls, deps } = world({ ...PAID, "stripe:/tax/calculations": () => new Response('{"error":{"code":"stripe_tax_inactive"}}', { status: 400 }) }, { ...STRIPE_ENV, STRIPE_TAX: "inclusive" });
+    await handlePrint(await orderRequest({ order: PAID_ORDER }), e, deps);
+    assert.equal(await settle(e, c), "accepted");
+    assert.ok(calls.some((call) => call.url.startsWith("https://api.github.com") && /tax wasn/.test(call.body.title)));
+  }
+  {
+    const refused = { data: { id: "ord_123456", status: "cancelled", issues: [] } };
+    const { e, c, calls, deps } = world({ ...TAXED, "/orders/ord_123456": refused }, { ...STRIPE_ENV, STRIPE_TAX: "inclusive" });
+    await handlePrint(await orderRequest({ order: PAID_ORDER }), e, deps);
+    assert.equal(await settle(e, c), "refused");
+    const reversal = calls.find((call) => call.url === `${STRIPE}/tax/transactions/create_reversal`);
+    assert.equal(reversal.body.original_transaction, "tax_1");
+    assert.equal(reversal.body.mode, "full");
+  }
+});
+
+test("without STRIPE_TAX nothing is sent to Stripe Tax", async () => {
+  const { e, c, calls, deps } = world(TAXED, STRIPE_ENV);
+  await handlePrint(await orderRequest({ order: PAID_ORDER }), e, deps);
+  await settle(e, c);
+  assert.equal(calls.some((call) => call.url.includes("/tax/")), false);
+});
+
+test("a sandbox quote says which country's lab the sheet ships from", async () => {
+  const quoted = { data: { ...QUOTE.data, shipments: [{ carrier: { name: "USPS" }, fulfillmentLocation: { countryCode: "US", labCode: "us1" } }] } };
+  const { e, deps } = world({ "/quotes/order": quoted });
+  const answer = await handlePrint(quoteRequest({ product: "canvas-16x24", country: "US" }), e, deps);
+  assert.equal((await answer.json()).sandbox.from, "US");
 });

@@ -584,6 +584,14 @@ struct BigSheetView: View {
             } else {
                 // Apple Pay's sheet asks who it is for and where it goes: nothing to type here.
                 sheetSection
+                Section {
+                    NavigationLink {
+                        BigSheetTermsView()
+                    } label: {
+                        Text("Terms of Sale")
+                    }
+                    .accessibilityIdentifier("big-sheet-terms")
+                }
             }
         }
         .navigationTitle("One Big Sheet")
