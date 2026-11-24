@@ -791,7 +791,6 @@ final class Library {
         return document
     }
 
-    #if UNRELEASED
     /// What a Painting Length's cut made ahead is made of (`LengthPrecuts`): the photo `recut`
     /// cuts and the refinements `regenerate` lays, read off the main actor once the painting's
     /// queued writes are in. Nothing is written.
@@ -803,7 +802,6 @@ final class Library {
             (try ArtworkFactory.sourcePhoto(of: artwork, in: store), try store.readRefinements(id))
         }
     }
-    #endif
 
     /// Cuts the painting again with the painter's own `settings`, from the length chip's
     /// Fine-Tune (painting-company row 352): what the create flow's sliders did before a picked

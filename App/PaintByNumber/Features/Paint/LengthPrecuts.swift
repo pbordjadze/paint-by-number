@@ -1,4 +1,3 @@
-#if UNRELEASED
 import Foundation
 import Observation
 import os
@@ -14,7 +13,7 @@ import PaintCore
 /// picked while its cut is still under way waits for that cut (`claim`), raised to the
 /// painter's priority, rather than starting again. It all stops when the painter begins, a re-cut
 /// or ✎ Change starts, or the screen goes; the analysis is let go when the painting is begun or
-/// closed (`forget`). SideStore and Debug builds: the release cuts a length when it is picked.
+/// closed (`forget`). Every build from 1.5.
 @MainActor
 @Observable
 final class LengthPrecuts {
@@ -214,4 +213,3 @@ final class LengthPrecuts {
         private static func fraction(_ value: Float) -> Double { 0.95 * Double(value) }
     }
 }
-#endif

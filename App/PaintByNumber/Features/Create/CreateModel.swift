@@ -297,11 +297,9 @@ final class CreateModel {
 
     /// The picture made ahead that the photo being loaded takes (`load(sample:)`, `begin`).
     @ObservationIgnored private var madeAhead: MadeAhead?
-    #if UNRELEASED
     /// Where Tonight's Picture made ahead is taken from: `TonightAhead.shared` when nil (a test
     /// gives its own).
     @ObservationIgnored var ahead: TonightAhead?
-    #endif
 
     private struct Made {
         let settings: GenerationSettings
@@ -584,6 +582,7 @@ final class CreateModel {
             }
             return
         }
+        #endif
         // Tonight's Picture made ahead of its pick, of this very picture, length and line art
         // (`TonightAhead`): what follows takes it in place of making it.
         if let key = TonightAhead.key(for: sample, paintingLength: paintingLength, lineArt: baseLineArt),
@@ -592,7 +591,6 @@ final class CreateModel {
             begin(defaultTitle: sample.title, sampleName: sample.id) { made.decoded }
             return
         }
-        #endif
         begin(defaultTitle: sample.title, sampleName: sample.id) { try await Self.decode(url: url) }
     }
 
@@ -2127,7 +2125,6 @@ final class CreateModel {
     }
 }
 
-#if UNRELEASED
 // MARK: Made ahead
 
 extension CreateModel {
@@ -2168,4 +2165,3 @@ extension CreateModel {
         ).normalized
     }
 }
-#endif

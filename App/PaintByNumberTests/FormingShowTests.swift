@@ -9,14 +9,8 @@ import Testing
 /// a tap skips, and Reduce Motion and The Making-of switched on bring none of it.
 @MainActor
 struct FormingShowTests {
-    /// SideStore and Debug builds play it; the release keeps the plain forming.
+    /// Every build plays it (from 1.5) wherever the picture forms with lines.
     @Test func itPlaysOnlyWhereThePictureFormsWithLines() {
-        #if UNRELEASED
-        #expect(FormingShow.isOn)
-        #else
-        #expect(!FormingShow.isOn)
-        #endif
-        guard FormingShow.isOn else { return }
         #expect(FormingShow.plays(forms: true, reduceMotion: false, playsMakingOf: false, skipped: nil))
         #expect(FormingShow.plays(forms: true, reduceMotion: false, playsMakingOf: false, skipped: .toPainting))
         // A tap before the template was made sends it to the plain forming.

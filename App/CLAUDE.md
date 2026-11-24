@@ -785,8 +785,8 @@ resized, as a rotation. Only the iOS 27.1 SDK runs edge to edge there (root `CLA
   `ArtworkFactory.suggested`, Auto at that length with its line art, mix and tuning, then
   `regenerate`; the canvas takes no touches meanwhile; the menu gives each length's time, a band narrowed
 by the cuts made so far for one not cut yet, `LengthChip.expectedTimes`, and
-a length already cut while the painting is open is made again as it was, `cuts`). In SideStore and
-  Debug builds (`#if UNRELEASED`, painting-company row 361) the other lengths are cut ahead once the
+a length already cut while the painting is open is made again as it was, `cuts`). From 1.5
+  (painting-company row 361) the other lengths are cut ahead once the
   painting has settled (`LengthPrecuts`: nearest first, one at a time at utility priority, the photo's
   analysis found once, `ArtworkFactory.cut`, byte for byte `recut`'s; kept in memory into `cuts`, so
   the menu gives their own times and a pick is put in by `restoreCut`), stopping when the painter
@@ -806,7 +806,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   with the palette staying (the tools are full screen), one undo across paint and edits, the
   preview's sliders on this path, and a refined painting's kept base (its first ✎ makes the
   base again). Demos opening on a preview, drafts and drawings resumed keep the preview.
-  `PaintNowTests`. In SideStore and Debug builds (`#if UNRELEASED`, painting-company row 361) Tonight's
+  `PaintNowTests`. From 1.5 (painting-company row 361) Tonight's
   Picture is made before it is picked (`TonightAhead`): 3 s after the app settles with no painting open
   (`TonightAhead.Preparing` on `AppShellView`; never in demo or test launches), at background priority,
   `CreateModel.makeAhead` decodes, analyzes, suggests and makes its base as the pick would, kept in
@@ -814,7 +814,7 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   version); `load(sample:)` takes it on an exact match (`begin` uses it, `adopt` lays the base with no
   draft first, so the forming lines draw at once) and otherwise makes it as ever, stopping the making
   ahead. A painting opened stops it, a memory warning lets it go. `TonightAheadTests`.
-- **The picture forming** (SideStore and Debug builds, `#if UNRELEASED`; painting-company row 293;
+- **The picture forming** (from 1.3; painting-company row 293;
   `FormingPlan`, `Features/Create/Forming.swift`): a picture picked on the Paint page waits as its
   photo alone, with no draft, painted picture or divider over it (`CompareView` with no `after`),
   under one status that keeps its words whatever stage the making is at ("Making the painting…",
@@ -837,8 +837,8 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   lift on, the release's durations and marks. Reduce Motion: no lines or wash, and
   the photo stays where it was (`staying`) and fades as the page fades in at its place. With The
   Making-of on: the wait is the same photo under the one status, no lines, and the show takes the photo as ever. A page from scratch, a drawing and the
-  settings' preview keep what they showed. **The short Making-of** (SideStore and Debug builds only,
-  `FormingShow.isOn`; row 361, "graphite and fuse"; the release keeps the forming above) plays over it
+  settings' preview keep what they showed. **The short Making-of** (from 1.5,
+  `FormingShow.isOn`; row 361, "graphite and fuse") plays over it
   as everyone's wait, with no status over it until the making has taken `FormingShow.patience` (4 s;
   VoiceOver hears it at once): once the making has found the painting's own line drawing
   (`CreateModel.linesFound`, the `LineArtInput` the template is traced from, handed over the moment

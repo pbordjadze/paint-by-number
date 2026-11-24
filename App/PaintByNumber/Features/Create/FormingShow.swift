@@ -4,8 +4,8 @@ import os
 import PaintCore
 import SwiftUI
 
-/// The short Making-of as everyone's wait, "graphite and fuse" (painting-company row 361; SideStore
-/// and Debug builds, `UNRELEASED`: the release keeps the picture forming as it is). It grows out of
+/// The short Making-of as everyone's wait, "graphite and fuse" (painting-company row 361; every
+/// build from 1.5). It grows out of
 /// the picture forming (`FormingPlan`) and keeps its rule: it adds nothing to the making, and it
 /// ends on exactly the page the painting will show.
 ///
@@ -36,11 +36,7 @@ import SwiftUI
 /// lines an image with their glow in it (`FormingShow.glow`), the ink lines the forming's own,
 /// stroked once.
 nonisolated enum FormingShow {
-    #if UNRELEASED
     static let isOn = true
-    #else
-    static let isOn = false
-    #endif
 
     /// Whether the picture forming plays the show: it forms with lines, and no tap has sent it to
     /// the plain forming.
