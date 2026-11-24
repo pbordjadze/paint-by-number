@@ -5,7 +5,7 @@
 //   POST /v1/print/quotes          {"product": "<id>", "country": "US"[, "city", "state", "zip"]},
 //                                  application/json, at most 1 KB; the city, state and postal code
 //                                  are the Apple Pay sheet's, once it shares them. 200 {"product",
-//                                  "currency", "price"[, "sandbox": {"cost", "cut"}]}: the price the
+//                                  "currency", "price"[, "sandbox": {"cost", "cut", "from"?}]}: the price the
 //                                  painter pays there, shipping and Prodigi's tax included (its cost
 //                                  with MARKUP, rounded up to a whole unit); "sandbox" says, while
 //                                  the relay talks to the sandbox, what the order costs and what is
@@ -77,8 +77,10 @@
 // The print service is one object (`prodigi` below; PRINT_PROVIDER names another), so it can be
 // replaced without touching the rest. Secrets PRODIGI_API_KEY (Prodigi's sandbox dashboard › API; never a live_ key) and, optional,
 // STRIPE_SECRET_KEY (Stripe's dashboard › Developers › API keys; the test key) and
-// ANTHROPIC_API_KEY (the check). Variables PRODIGI_API, MARKUP and, optional, CHECK_MODEL and
-// CHECK_DAILY_LIMIT (wrangler.toml).
+// ANTHROPIC_API_KEY (the check). Variables PRODIGI_API, MARKUP and, optional, CHECK_MODEL,
+// CHECK_DAILY_LIMIT and STRIPE_TAX ("inclusive": Stripe Tax records the tax in each price,
+// `recordTax`; the restricted key then needs Tax Calculations and Transactions write too)
+// (wrangler.toml).
 
 import { Buffer } from "node:buffer";
 
@@ -106,6 +108,23 @@ const HEX = /^[0-9a-f]{32}$/;
 const COUNTRY = /^[A-Z]{2}$/;
 
 // MARK: The print service
+
+/** The country of the lab a quote's sheet ships from, wherever the quote names it, or undefined. */
+function fulfilledFrom(answer) {
+  const seen = new Set();
+  const walk = (value, depth) => {
+    if (!value || typeof value !== "object" || depth > 6 || seen.has(value)) return undefined;
+    seen.add(value);
+    const country = value.fulfillmentLocation?.countryCode;
+    if (typeof country === "string") return country.slice(0, 2);
+    for (const child of Object.values(value)) {
+      const found = walk(child, depth + 1);
+      if (found) return found;
+    }
+    return undefined;
+  };
+  return walk(answer, 0);
+}
 
 /**
  * A print service is one object (PRINT_PROVIDER picks it, Prodigi by default), so another (Gelato,
@@ -158,7 +177,7 @@ export const prodigi = {
     if (!Number.isFinite(cost) || cost <= 0 || typeof total?.currency !== "string") {
       throw new Error("Prodigi's quote had no total");
     }
-    return { cost, currency: total.currency };
+    return { cost, currency: total.currency, from: fulfilledFrom(answer) };
   },
 
   async place(env, deps, { reference, key, code, recipient, sheetUrl }) {
@@ -273,7 +292,7 @@ async function quote(request, env, deps, provider) {
   }
   return json(200, {
     product: body.product, currency: priced.currency, price: money(priced.price),
-    sandbox: { cost: money(priced.cost), cut: money(priced.price - priced.cost) },
+    sandbox: { cost: money(priced.cost), cut: money(priced.price - priced.cost), ...(priced.from ? { from: priced.from } : {}) },
   });
 }
 
@@ -294,7 +313,7 @@ async function priceOf(env, deps, provider, code, place) {
       cache.set(name, quoted);
     }
   }
-  return { cost: quoted.cost, currency: quoted.currency, price: priceFor(quoted.cost, env.MARKUP) };
+  return { cost: quoted.cost, currency: quoted.currency, from: quoted.from, price: priceFor(quoted.cost, env.MARKUP) };
 }
 
 const QUOTE_MS = 10 * 60_000;
@@ -403,7 +422,7 @@ async function order(request, env, deps, provider) {
   }
 
   const now = (deps.now ?? Date.now)();
-  const job = { key, code, recipient, reference, provider: provider.name, origin: new URL(request.url).origin, since: now, tries: 0 };
+  const job = { key, code, product: body.product, recipient, reference, provider: provider.name, origin: new URL(request.url).origin, since: now, tries: 0 };
   if (!payment) {
     // Leaving "new" is the gate: unrecorded, nothing is placed (the claim lapses, a later try takes it).
     if (!(await mark(stub, claim, { state: "queued", job, alarmIn: 0 }))) return json(202, { ok: false, pending: true });
@@ -423,12 +442,14 @@ async function order(request, env, deps, provider) {
     await drop(stub, claim);
     return bare(409);
   }
+  job.amount = minorUnits(priced.price, priced.currency);
+  job.currency = priced.currency;
   // The order's object takes it from "charging" on: should this try go away mid charge, its alarm
   // finds out from Stripe whether the payment was taken, and places the order or lets it go.
   if (!(await mark(stub, claim, { state: "charging", job, alarmIn: CHARGE_SETTLE_MS }))) return json(202, { ok: false, pending: true });
   let charge;
   try {
-    charge = await chargeApplePay(env, deps, payment, priced, key, recipient);
+    charge = await chargeApplePay(env, deps, payment, priced, key, recipient, receiptLine(body.product, reference));
   } catch (error) {
     if (error?.uncertain) {
       log(`Stripe may have charged order ${key}: its alarm looks it up`, error);
@@ -640,6 +661,21 @@ export async function advance(env, deps, storage, standing) {
     }
   }
 
+  if (state === "charged" && env.STRIPE_TAX === "inclusive" && charge && !standing.taxed) {
+    // A failure here never holds the print up: Paul is told, and records it by hand.
+    let taxed = "failed";
+    try {
+      taxed = await recordTax(env, deps, job, charge);
+    } catch (error) {
+      // No answer may have recorded it: asked again under the same keys, which can't record twice.
+      if (error?.uncertain && (job.tries ?? 0) < 2) return retry(storage, job, `Recording order ${key}'s tax`, error);
+      log(`Recording order ${key}'s tax failed`, error);
+      await alert(env, deps, storage, "tax", "an order's tax wasn't recorded", facts,
+        `Stripe Tax didn't record this order's tax (${error.message}). ${error?.uncertain ? `It may be recorded after all: look for reference ${job.reference} in Stripe's dashboard (Tax > Transactions) first. ` : ""}Record it there or tell the accountant; the order goes on.`);
+    }
+    await storage.put({ taxed });
+  }
+
   if (state === "queued" || state === "charged" || state === "placing") {
     await storage.put({ state: "placing" });
     try {
@@ -702,6 +738,9 @@ function stripped(job) {
 /** The order refused for good: the payment given back, and Paul told. */
 async function refuse(env, deps, storage, job, facts, what) {
   const refunded = await refund(env, deps, facts.charge, facts.key);
+  if (refunded && !(await reverseTax(env, deps, await storage.get("taxed"), facts.key))) {
+    what += " Its tax transaction wasn't reversed: reverse it in Stripe (Tax > Transactions).";
+  }
   await storage.put({ state: "refused", refunded: Boolean(facts.charge) && refunded, job: stripped(job) });
   await alert(env, deps, storage, "refused", refunded || !facts.charge ? "an order was refused" : "a refund failed", { ...facts, refunded: facts.charge ? String(refunded) : "nothing was charged" },
     `${what} ${facts.charge ? (refunded ? "The payment was refunded." : "Refunding the payment FAILED: refund it by hand in Stripe.") : ""}`);
@@ -832,7 +871,7 @@ export function minorUnits(price, currency) {
  * does, `pk_token`), then a PaymentIntent confirmed at once. Returns its id once it succeeded;
  * a declined card throws with `declined`.
  */
-async function chargeApplePay(env, deps, payment, priced, key, recipient) {
+async function chargeApplePay(env, deps, payment, priced, key, recipient, description) {
   const pkToken = Buffer.from(payment.data, "base64").toString("utf8");
   const token = await stripe(env, deps, "/tokens", `${key}-token`, {
     pk_token: pkToken,
@@ -851,7 +890,8 @@ async function chargeApplePay(env, deps, payment, priced, key, recipient) {
     "automatic_payment_methods[allow_redirects]": "never",
     "payment_method_data[type]": "card",
     "payment_method_data[card][token]": token.id,
-    description: "One Big Sheet",
+    // Stripe's receipt to the painter (live mode emails it; test mode only on asking) says this.
+    description,
     "metadata[sheet]": key,
     receipt_email: recipient.email,
     "shipping[name]": recipient.name,
@@ -868,6 +908,58 @@ async function chargeApplePay(env, deps, payment, priced, key, recipient) {
     throw Object.assign(new Error(`Stripe's payment is ${intent.status}`), { declined: true });
   }
   return intent.id;
+}
+
+/** What the receipt calls the order: "One Big Sheet, canvas 24 × 36 in, order sheet-…". */
+export function receiptLine(product, reference) {
+  const match = /^([a-z]+)-(\d+)x(\d+)$/.exec(product ?? "");
+  const what = match ? `${match[1]} ${match[2]} × ${match[3]} in` : product;
+  return `One Big Sheet, ${what}, order ${reference}`;
+}
+
+/**
+ * Stripe Tax, with STRIPE_TAX = "inclusive" (off otherwise, until Paul has turned Stripe Tax on
+ * and registered): the tax in the price the painter paid, worked out at the address it goes to
+ * and recorded as a tax transaction, so Stripe's reports carry it. The price never changes:
+ * the tax is carved out of it. Answers the transaction's id.
+ */
+async function recordTax(env, deps, job, charge) {
+  const r = job.recipient;
+  const calculation = await stripe(env, deps, "/tax/calculations", `${job.key}-tax`, {
+    currency: job.currency.toLowerCase(),
+    "line_items[0][amount]": String(job.amount),
+    "line_items[0][reference]": job.product ?? job.code,
+    "line_items[0][tax_behavior]": "inclusive",
+    // Stripe's code for a print (a tangible good with no code of its own) and its shipping.
+    "line_items[0][tax_code]": env.STRIPE_TAX_CODE || "txcd_99999999",
+    "customer_details[address][line1]": r.line1,
+    "customer_details[address][city]": r.city,
+    // Only a subdivision's code ("NY"): Apple Pay can give the name, which Stripe refuses.
+    ...(/^[A-Za-z0-9]{1,3}$/.test(r.state ?? "") ? { "customer_details[address][state]": r.state } : {}),
+    "customer_details[address][postal_code]": r.zip,
+    "customer_details[address][country]": r.country,
+    "customer_details[address_source]": "shipping",
+  });
+  if (typeof calculation?.id !== "string") throw new Error("Stripe made no tax calculation");
+  const transaction = await stripe(env, deps, "/tax/transactions/create_from_calculation", `${job.key}-tax-record`, {
+    calculation: calculation.id,
+    reference: job.reference,
+    "metadata[payment_intent]": charge,
+  });
+  if (typeof transaction?.id !== "string") throw new Error("Stripe recorded no tax transaction");
+  return transaction.id;
+}
+
+/** A refunded order's tax given back in Stripe's records too; says whether it was. */
+async function reverseTax(env, deps, taxed, key) {
+  if (!taxed || taxed === "failed") return true;
+  try {
+    await stripe(env, deps, "/tax/transactions/create_reversal", `${key}-tax-reversal`, { mode: "full", original_transaction: taxed, reference: `${key.slice(0, 12)}-refund` });
+    return true;
+  } catch (error) {
+    log(`Reversing tax ${taxed} failed`, error);
+    return false;
+  }
 }
 
 /** Gives a payment back (an order the print service refused); says whether it did. */
@@ -1307,7 +1399,7 @@ export class PrintSheet {
         return;
       }
     }
-    const names = ["state", "job", "charge", "order", "token", "expires", "check", "verdict", "review", "reviewToken", "heldAt", "released"];
+    const names = ["state", "job", "charge", "order", "token", "expires", "check", "verdict", "review", "reviewToken", "heldAt", "released", "taxed"];
     const kept = await this.storage.get(names);
     const standing = Object.fromEntries(names.map((name) => [name, kept.get(name)]));
     if (standing.job && ACTIVE.has(standing.state)) {
