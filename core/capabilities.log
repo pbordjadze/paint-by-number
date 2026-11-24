@@ -1,0 +1,5 @@
+capabilities self-test passed
+::warning title=Developer site::App/Config/Nightly.entitlements asks for com.apple.developer.group-session = True, which ci/developer-site.json doesn't list: the developer site needs it before the next TestFlight upload (Xcode's Apple ID on the Mac, or by hand), then add it there
+::warning title=Developer site::App/Config/Nightly.entitlements asks for com.apple.developer.in-app-payments = merchant.com.paulbordjadze.paintbymoonlight, which ci/developer-site.json doesn't list: the developer site needs it before the next TestFlight upload (Xcode's Apple ID on the Mac, or by hand), then add it there
+::warning title=Developer site::App/Config/Nightly.entitlements asks for com.apple.security.application-groups = group.com.pbordjadze.paintbynumber, which ci/developer-site.json doesn't list: the developer site needs it before the next TestFlight upload (Xcode's Apple ID on the Mac, or by hand), then add it there
+3 of 6 entitlements not yet on the developer site
