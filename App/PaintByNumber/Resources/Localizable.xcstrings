@@ -64488,6 +64488,150 @@
           }
         }
       }
+    },
+    "bigSheet.offer" : {
+      "comment" : "Print's preview, under One Big Sheet: the template printed on one canvas and mailed; the argument is the price with shipping, like $37.00",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ganz auf Leinwand gedruckt, %@ inklusive Versand"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Printed whole on canvas, %@ delivered"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impreso entero en lienzo, %@ con envío"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imprimé en entier sur toile, %@ livraison comprise"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stampato intero su tela, %@ spedizione inclusa"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャンバスに丸ごと印刷、送料込み%@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "캔버스 한 장에 통째로 인쇄, 배송비 포함 %@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In zijn geheel op canvas gedrukt, %@ inclusief verzending"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impresso inteiro em tela, %@ com frete incluso"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "整幅印在画布上，含运费 %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "整幅印在畫布上，含運費 %@"
+          }
+        }
+      }
+    },
+    "bigSheet.christmas" : {
+      "comment" : "One Big Sheet, from mid November: the last day an order arrives before Christmas; the argument is a date like December 10",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bis %@ bestellen, damit es zu Weihnachten da ist"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Order by %@ to have it for Christmas"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pide antes del %@ para tenerlo en Navidad"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commandez avant le %@ pour l’avoir à Noël"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordina entro il %@ per averlo a Natale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クリスマスに間に合わせるには%@までにご注文ください"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "크리스마스 전에 받으려면 %@까지 주문하세요"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bestel vóór %@ om het met Kerst te hebben"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peça até %@ para receber antes do Natal"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请在%@前下单，圣诞节前送达"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請在%@前下單，聖誕節前送達"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
