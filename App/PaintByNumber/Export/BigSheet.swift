@@ -372,6 +372,13 @@ final class BigSheetApplePay: NSObject, PKPaymentAuthorizationControllerDelegate
 struct BigSheetSection: View {
     let request: PrintPreviewRequest
     let layout: PDFExporter.Layout
+    var service: BigSheetService = BigSheetServices.current
+
+    /// The offer's sheet: canvas, the default, at its smaller size.
+    private static let offered = BigSheetProduct.canvas16x24
+    private let country = BigSheetCountries.default(for: Locale.current.region)
+    @State private var picture: UIImage?
+    @State private var quote: BigSheetQuote?
 
     init(request: PrintPreviewRequest, layout: PDFExporter.Layout) {
         self.request = request
@@ -383,15 +390,84 @@ struct BigSheetSection: View {
             NavigationLink {
                 BigSheetView(request: request, layout: layout)
             } label: {
-                Label {
-                    Text("One Big Sheet")
-                    Text("Printed full size and mailed to you")
-                } icon: {
-                    Image(systemName: "photo.artframe")
+                HStack(spacing: 14) {
+                    thumbnail
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("One Big Sheet")
+                        Group {
+                            if let quote {
+                                let price = quote.money(quote.price)
+                                Text(String(localized: "bigSheet.offer", defaultValue: "Printed whole on canvas, \(price) delivered",
+                                            comment: "Print's preview, under One Big Sheet: the template printed on one canvas and mailed; the argument is the price with shipping, like $37.00"))
+                            } else {
+                                Text("Printed full size and mailed to you")
+                            }
+                            if let season = BigSheetSeason.cutoff(country: country, on: .now) {
+                                BigSheetSeason.text(season)
+                            }
+                        }
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    }
                 }
+                .accessibilityElement(children: .combine)
             }
             .accessibilityIdentifier("print-big-sheet")
         }
+        .task(id: layout) { await draw() }
+        .task { quote = try? await service.quote(Self.offered, country) }
+    }
+
+    /// The canvas as it will print, small and white whatever the screen's appearance.
+    private var thumbnail: some View {
+        let size = Self.offered.inches
+        return ZStack {
+            Color.white
+            if let picture { Image(uiImage: picture).resizable().scaledToFit() }
+        }
+        .frame(width: 56 * size.width / size.height, height: 56)
+        .clipShape(.rect(cornerRadius: 2))
+        .shadow(color: .black.opacity(0.18), radius: 2, y: 1)
+        .accessibilityHidden(true)
+    }
+
+    private func draw() async {
+        let data = await BigSheetView.sheetPDF(request, layout: layout, product: Self.offered)
+        let image = await Self.render(data)
+        guard !Task.isCancelled else { return }
+        picture = image.map { UIImage(cgImage: $0) }
+    }
+
+    @concurrent
+    private static func render(_ data: Data) async -> CGImage? {
+        PrintPages.images(of: data, longSide: 200).first
+    }
+}
+
+/// Christmas's last day to order a sheet that arrives for it, by where it goes: a few days before
+/// the print service's own order-by dates for standard shipping (painting-company row 380), so a
+/// late post still makes it. Shown from November 15 until the day passes; nothing elsewhere.
+nonisolated enum BigSheetSeason {
+    /// The December day by country; one country's from its neighbour's where none is published.
+    static let decemberCutoffs: [String: Int] = [
+        "US": 10, "GB": 14, "IE": 9, "CA": 8, "AU": 10, "NZ": 8,
+        "DE": 9, "FR": 9, "ES": 9, "IT": 9, "NL": 9, "BE": 9, "AT": 9, "CH": 8, "SE": 8, "NO": 8, "DK": 9, "FI": 8, "PT": 8,
+    ]
+
+    /// The day to order by, while it is the season to say so.
+    static func cutoff(country: String, on date: Date, calendar: Calendar = .current) -> Date? {
+        guard let day = decemberCutoffs[country] else { return nil }
+        let year = calendar.component(.year, from: date)
+        guard let start = calendar.date(from: DateComponents(year: year, month: 11, day: 15)),
+              let cutoff = calendar.date(from: DateComponents(year: year, month: 12, day: day)) else { return nil }
+        let today = calendar.startOfDay(for: date)
+        return today >= start && today <= cutoff ? cutoff : nil
+    }
+
+    static func text(_ cutoff: Date) -> Text {
+        let day = cutoff.formatted(.dateTime.month(.wide).day())
+        return Text(String(localized: "bigSheet.christmas", defaultValue: "Order by \(day) to have it for Christmas",
+                           comment: "One Big Sheet, from mid November: the last day an order arrives before Christmas; the argument is a date like December 10"))
     }
 }
 
@@ -507,6 +583,9 @@ struct BigSheetView: View {
                     Text("Cotton canvas for acrylic paint. It comes rolled: lay it flat under something heavy for a day before painting.")
                 case .watercolorPaper:
                     Text("Cotton watercolor paper with a soft texture. It comes rolled: lay it flat under something heavy for a day before painting.")
+                }
+                if let season = BigSheetSeason.cutoff(country: country, on: .now) {
+                    BigSheetSeason.text(season)
                 }
                 if printsSmallNumbers {
                     Text("Some numbers print small at this size: the larger sheet reads more easily.")

@@ -149,6 +149,22 @@ struct BigSheetTests {
         #expect(BigSheetCountries.default(for: Locale.Region("DE")) == "DE")
     }
 
+    /// Christmas's order-by day shows from November 15 until it passes, where a day is known.
+    @Test func christmasCutoffHasItsSeason() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "America/New_York"))
+        func day(_ month: Int, _ day: Int) throws -> Date {
+            try #require(calendar.date(from: DateComponents(year: 2026, month: month, day: day, hour: 15)))
+        }
+        let cutoff = try #require(BigSheetSeason.cutoff(country: "US", on: try day(11, 24), calendar: calendar))
+        #expect(calendar.dateComponents([.month, .day], from: cutoff) == DateComponents(month: 12, day: 10))
+        #expect(BigSheetSeason.cutoff(country: "US", on: try day(12, 10), calendar: calendar) != nil)
+        #expect(BigSheetSeason.cutoff(country: "US", on: try day(12, 11), calendar: calendar) == nil)
+        #expect(BigSheetSeason.cutoff(country: "US", on: try day(11, 14), calendar: calendar) == nil)
+        #expect(BigSheetSeason.cutoff(country: "JP", on: try day(11, 24), calendar: calendar) == nil)
+        #expect(BigSheetCountries.codes.filter { $0 != "JP" }.allSatisfy { BigSheetSeason.decemberCutoffs[$0] != nil })
+    }
+
     /// The print paths sit beside Give Feedback's on the relay.
     @Test func theRelayIsGiveFeedbacks() {
         #expect(BigSheetService.endpoint("/v1/print/quotes").absoluteString == "https://moonlight-feedback.paul-bordjadze.workers.dev/v1/print/quotes")
