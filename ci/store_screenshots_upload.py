@@ -3,6 +3,7 @@
 Connect API.
 
     ASC_KEY_ID=… ASC_ISSUER_ID=… ASC_KEY_P8=… python3 ci/store_screenshots_upload.py SLIDES [--upload]
+        [--replace APP_IPHONE_61,APP_IPAD_PRO_3GEN_129 | --replace all]
 
 SLIDES holds one folder per screenshot display type, named for it (APP_IPHONE_61, APP_IPHONE_67,
 APP_IPAD_PRO_3GEN_129, …), each with 1.png … 10.png in App Store order: what
@@ -22,7 +23,13 @@ in an editable state (Prepare for Submission, or rejected) and that version's LO
 localization. Without --upload it stops there and lists the screenshot sets the version has, the
 folders SLIDES has and any problem with them, changing nothing (a missing SLIDES is fine then).
 With --upload, for each folder it replaces that display type's set, unless the set already holds
-these files in this order (their MD5s): deletes the screenshots in it, reserves each file, sends
+these files in this order (their MD5s). A set the version already has with other screenshots is
+replaced only when --replace names its display type (or says `all`); otherwise the run stops
+before changing anything and names it. A new version starts with the screenshots of the one
+before, so a slides branch that kept an older set would quietly put it back over the live one
+(November 22, 2026: the launch set over 1.1's on the iPad and the 6.1-inch iPhone, painting-company
+row 318); the dry run says, per set, new, unchanged or replaced, and how many screenshots each side
+holds. Replacing: deletes the screenshots in it, reserves each file, sends
 its parts where App Store Connect says, commits it with its MD5, puts the set in file order. Then
 it waits for App Store Connect to process the images and fails naming any it refused. A creative
 asset goes to the app's Asset Library (its reference name carrying its MD5, which is how a re-run
@@ -173,6 +180,31 @@ def send_parts(operations, data):
                 response.read()
         except urllib.error.HTTPError as error:
             raise APIError(f"sending a part of {length} bytes: {error.code} {error.reason}") from None
+
+
+def plan(client, sets, found):
+    """{display type: "new" | "unchanged" | "differs"} for each screenshot folder, and
+    {display type: screenshots the version's set holds now}."""
+    plans, counts = {}, {}
+    for kind, files in found.items():
+        if kind not in SIZES:
+            continue
+        if kind not in sets:
+            plans[kind] = "new"
+            continue
+        set_id = sets[kind]["id"]
+        counts[kind] = len(client.call("GET", f"/appScreenshotSets/{set_id}/appScreenshots",
+                                       query={"limit": "50"})["data"])
+        plans[kind] = "unchanged" if unchanged(client, set_id, files) else "differs"
+    return plans, counts
+
+
+def refused_replacements(plans, replace):
+    """The display types whose set on the version differs from the slides and that --replace
+    doesn't name: the run changes nothing while there are any."""
+    if "all" in replace:
+        return []
+    return sorted(kind for kind, state in plans.items() if state == "differs" and kind not in replace)
 
 
 def replace_set(client, localization_id, sets, kind, files):
@@ -391,7 +423,12 @@ def main():
     parser.add_argument("slides", type=Path)
     parser.add_argument("--upload", action="store_true", help="replace the sets (otherwise only list them)")
     parser.add_argument("--locale", default="en-US")
+    parser.add_argument("--replace", default="",
+                        help="display types whose existing, different set may be replaced (comma-separated), or all")
     args = parser.parse_args()
+    replace = {k.strip() for k in args.replace.split(",") if k.strip()}
+    if unknown := sorted(replace - set(SIZES) - {"all"}):
+        sys.exit(f"--replace names {', '.join(unknown)}, not a display type ({', '.join(SIZES)}) or all")
     for name in ("ASC_KEY_ID", "ASC_ISSUER_ID", "ASC_KEY_P8"):
         if not os.environ.get(name):
             sys.exit(f"{name} is not set")
@@ -411,6 +448,16 @@ def main():
     print(f"Slides: {', '.join(f'{k} ({len(v)})' for k, v in found.items()) or 'none found'}.")
     for problem in wrong:
         print(f"Problem: {problem}")
+    plans, counts = plan(client, sets, found)
+    held = []
+    for kind, state in plans.items():
+        side = f"slides {len(found[kind])}" + (f", version {counts[kind]}" if kind in counts else "")
+        verb = {"new": "new set", "unchanged": "unchanged",
+                "differs": "replaces the version's set" if "all" in replace or kind in replace
+                else "HELD: differs from the version's set and --replace doesn't name it"}[state]
+        held.append(f"{kind}: {verb} ({side}).")
+        print(held[-1])
+    refused = refused_replacements(plans, replace)
     if not args.upload:
         specs = creative_specs(client)
         for line in specs:
@@ -419,6 +466,7 @@ def main():
                    f"Screenshot sets now: {', '.join(sorted(sets)) or 'none'}."]
                   + [f"{kind} now: {', '.join(now) or 'none'}." for kind, now in placed.items()]
                   + [f"Slides found: {', '.join(f'{k} ({len(v)})' for k, v in found.items()) or 'none'}."]
+                  + [f"- {line}" for line in held]
                   + [f"- Problem: {p}" for p in wrong] + [f"- {line}" for line in specs])
         if wrong:
             sys.exit(f"{len(wrong)} problems with the slides")
@@ -427,6 +475,11 @@ def main():
         sys.exit(f"No slides under {args.slides}: one folder per display type, each with 1.png, 2.png, …")
     if wrong:
         sys.exit(f"{len(wrong)} problems with the slides, nothing changed")
+    if refused:
+        summarize([f"### Version {name}, {args.locale}: nothing changed"] + [f"- {line}" for line in held])
+        sys.exit(f"Nothing changed: the version's {', '.join(refused)} set differs from these slides. "
+                 "If these slides are the newer ones, run again naming it in Replace (or all); if not, "
+                 "this slides branch is stale")
     ids_by_kind = {kind: replace_set(client, target["id"], sets, kind, files)
                    for kind, files in found.items() if kind in SIZES}
     placed = {kind: replace_creative(client, app["id"], target["id"], kind, files[0])
