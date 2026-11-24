@@ -106,8 +106,9 @@ export const prodigi = {
   isSandbox: (env) => env.PRODIGI_API === SANDBOX && prodigiKey(env) !== null,
 
   async cost(env, deps, code, country) {
-    // A quote wants a whole address, and the price depends on the country alone: a stand-in
-    // street there (the order is priced again at its real address).
+    // A quote wants a whole address: a stand-in street in the country, the order's price too.
+    // Prodigi's total carries tax, so a painter elsewhere in the country may pay the stand-in's
+    // sales tax, not their own (before live sales: Stripe Tax, painting-company row 380).
     const answer = await prodigiCall(env, deps, "POST", "/quotes/order", {
       shippingMethod: SHIPPING,
       shippingAddress: { line1: "1 Main Street", townOrCity: "City", postalOrZipCode: POSTCODES[country] ?? "1000", countryCode: country },
