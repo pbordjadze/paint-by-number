@@ -537,9 +537,6 @@ const CHARGE_LOST_MS = 30 * 60_000;
 const GIVE_UP_MS = 2 * 24 * 3600_000;
 const HOUR = 3600_000;
 const ACCEPTED = new Set(["submitted", "in_production", "partially_shipped", "shipped", "completed", "paused"]);
-/** An order's states the daily check leaves alone: accepted, alerted, or still in hand. */
-const SETTLED_OR_WATCHED = new Set(["accepted", "stuck", "refused", "charging", "queued", "charged", "placing", "placed"]);
-
 /** A payment intent's statuses that took no money and never will. */
 const UNTAKEN = new Set(["requires_payment_method", "canceled"]);
 
@@ -558,7 +555,7 @@ export async function advance(env, deps, storage, standing) {
   const facts = { key, reference: job.reference, charge, order: standing.order, state };
   if (now - job.since > GIVE_UP_MS) {
     await alert(env, deps, storage, "stuck", `stopped trying an order still ${state}`, facts,
-      "The relay tried this order for two days. Look it up in Prodigi's and Stripe's dashboards and place or refund it by hand.");
+      "The relay tried this order for two days. Look it up in Prodigi's and Stripe's dashboards and place or refund it by hand (the address is on the Stripe payment's shipping; the relay keeps none).");
     await storage.put({ state: "stuck", job: stripped(job) });
     return null;
   }
@@ -576,6 +573,8 @@ export async function advance(env, deps, storage, standing) {
     }
     // Still settling at Stripe; a declined or cancelled one took nothing.
     if (found && !UNTAKEN.has(found.status)) return 5 * 60_000;
+    // Search can lag: the payment itself, read directly, says it took nothing.
+    if (found && !UNTAKEN.has((await stripeGet(env, deps, `/payment_intents/${encodeURIComponent(found.id)}`))?.status)) return 5 * 60_000;
     if (!found && now - job.since < CHARGE_LOST_MS) return 5 * 60_000;
     // Nothing taken: the order is the painter's to try again.
     log(`Order ${key} was never charged: let go`);
@@ -589,11 +588,15 @@ export async function advance(env, deps, storage, standing) {
     try {
       const sheetUrl = `${job.origin}${SHEETS}${key}/${standing.token}.pdf`;
       const id = await provider.place(env, deps, { reference: job.reference, key, code: job.code, recipient: job.recipient, sheetUrl });
-      await storage.put({ state: "placed", order: id, job: { ...job, tries: 0 } });
+      await storage.put({ state: "placed", order: id, job: { ...job, tries: 0, unanswered: false } });
       return 20_000;
     } catch (error) {
-      if (error?.uncertain) return retry(storage, job, `Placing order ${key}`, error);
-      if ((job.tries ?? 0) > 0) {
+      if (error?.uncertain) {
+        // Only no answer, or a 5xx, leaves it open whether Prodigi made the order.
+        const unanswered = job.unanswered || !error.status || error.status >= 500;
+        return retry(storage, { ...job, unanswered }, `Placing order ${key}`, error);
+      }
+      if (job.unanswered) {
         // An earlier try may have placed it: refunding could give back an order being printed.
         await alert(env, deps, storage, "unsure", "an order may or may not be placed", facts,
           `${provider.name} refused the order (${error.message}) after an earlier try went unanswered. Look it up in its dashboard by its reference: if it isn't there, refund the payment in Stripe.`);
@@ -695,8 +698,8 @@ export async function fileIssue(env, deps, title, facts, what) {
 /**
  * Once a day (worker.js's `scheduled`): every payment for a sheet in the last three days, taken
  * and not refunded, should belong to an order the print service accepted. One that doesn't, an
- * hour on, is an issue for Paul, unless its order is still being worked on (it alerts by itself
- * should it stop) or already alerted (stuck, refused).
+ * hour on, is an issue for Paul, unless its order is refunded, already alerted (stuck,
+ * refused), or still being worked on and young enough that its alarm will alert should it stop.
  */
 export async function reconcilePrints(env, deps = {}) {
   if (!env.STRIPE_SECRET_KEY || !env.PRINT_SHEETS) return 0;
@@ -726,7 +729,11 @@ export async function reconcilePrints(env, deps = {}) {
       const answer = await sheetStub(env, key).fetch("https://sheet/status");
       standing = answer.ok ? await answer.json() : null;
     } catch {}
-    if (SETTLED_OR_WATCHED.has(standing?.state)) continue;
+    if (standing?.state === "accepted" || standing?.refunded) continue;
+    // Paul has the issue already.
+    if ((standing?.state === "stuck" || standing?.state === "refused") && standing.alerted) continue;
+    // Still in hand: its alarm alerts should it stop, within GIVE_UP_MS; past that, it has died.
+    if (ACTIVE.has(standing?.state) && now / 1000 - intent.created < (GIVE_UP_MS + HOUR) / 1000) continue;
     // Refunded already (the restricted key reads refunds, not charges).
     try {
       const refunds = await stripeGet(env, deps, `/refunds?payment_intent=${encodeURIComponent(intent.id)}&limit=1`);
@@ -984,9 +991,10 @@ export class PrintSheet {
       return new Response(new Blob(parts), { status: 200, headers: { "content-type": "application/pdf" } });
     }
     if (pathname === "/status" && request.method === "GET") {
-      const kept = await this.storage.get(["state", "order", "charge"]);
+      const kept = await this.storage.get(["state", "order", "charge", "refunded", "alerted-stuck", "alerted-refused", "alerted-unsure"]);
       if (!kept.get("state")) return bare(404);
-      return json(200, { state: kept.get("state"), order: kept.get("order"), charge: kept.get("charge") });
+      const alerted = ["stuck", "refused", "unsure"].some((kind) => kept.get(`alerted-${kind}`) === true);
+      return json(200, { state: kept.get("state"), order: kept.get("order"), charge: kept.get("charge"), refunded: kept.get("refunded") === true, alerted });
     }
     return bare(404);
   }

@@ -735,6 +735,7 @@ test("a charge that went unanswered and was declined lets the order go at once",
     ...PAID,
     "stripe:/payment_intents": () => { throw new TypeError("network connection lost"); },
     "stripe:/payment_intents/search": { data: [{ id: "pi_7", status: "requires_payment_method" }] },
+    "stripe:/payment_intents/pi_7": { id: "pi_7", status: "requires_payment_method" },
   }, STRIPE_ENV);
   await handlePrint(await orderRequest({ order: PAID_ORDER }), e, deps);
   const start = c.t;
@@ -794,4 +795,52 @@ test("the daily check leaves alone an order already alerted, and reads every pag
   assert.equal(await reconcilePrints(e, { fetch: fetcher, now: c.now }), 1);
   assert.match(checked.find((call) => call.url.endsWith("/issues")).body.body, /pi_2/);
   assert.match(checked[1].url, /starting_after=pi_1/);
+});
+
+test("a declined payment the search shows is read directly before the order is let go", async () => {
+  const { e, c, deps } = world({
+    ...PAID,
+    "stripe:/payment_intents": () => { throw new TypeError("network connection lost"); },
+    "stripe:/payment_intents/search": { data: [{ id: "pi_7", status: "requires_payment_method" }] },
+    "stripe:/payment_intents/pi_7": { id: "pi_7", status: "succeeded" },
+  }, STRIPE_ENV);
+  await handlePrint(await orderRequest({ order: PAID_ORDER }), e, deps);
+  const object = e.PRINT_SHEETS.get(ID);
+  c.t = object.storage.alarm;
+  await object.alarm();
+  assert.equal(object.storage.data.get("state"), "charging");
+});
+
+test("a refusal after Prodigi said it was busy is refunded as any refusal", async () => {
+  let first = true;
+  const { e, c, calls, deps } = world({
+    ...PAID, "/orders": () => (first ? (first = false, new Response("{}", { status: 429 })) : new Response("{}", { status: 400 })),
+  }, STRIPE_ENV);
+  await handlePrint(await orderRequest({ order: PAID_ORDER }), e, deps);
+  assert.equal(await settle(e, c), "refused");
+  assert.ok(calls.some((call) => call.url.endsWith("/refunds")));
+});
+
+test("the daily check flags a given-up order whose issue never got filed", async () => {
+  const { e, c, deps } = world({
+    ...PAID, "/orders": () => new Response("{}", { status: 503 }),
+    "github:/repos/owner/feedback/issues": () => new Response("{}", { status: 503 }),
+  }, STRIPE_ENV);
+  await handlePrint(await orderRequest({ order: PAID_ORDER }), e, deps);
+  assert.equal(await settle(e, c, 80), "stuck");
+  const listed = { data: [{ id: "pi_1", status: "succeeded", created: Math.floor(c.t / 1000) - 7200, metadata: { sheet: ID } }] };
+  const { fetcher } = prodigi({ "stripe:/payment_intents": listed, "stripe:/refunds": { data: [] } });
+  assert.equal(await reconcilePrints(e, { fetch: fetcher, now: c.now }), 1);
+});
+
+test("the daily check flags an order whose alarm died in hand, once it is past giving up", async () => {
+  const { e, c, deps } = world(PAID, STRIPE_ENV);
+  await handlePrint(await orderRequest({ order: PAID_ORDER }), e, deps);
+  const object = e.PRINT_SHEETS.get(ID);
+  assert.equal(object.storage.data.get("state"), "charged");
+  const at = (age) => ({ data: [{ id: "pi_1", status: "succeeded", created: Math.floor(c.t / 1000) - age, metadata: { sheet: ID } }] });
+  const young = prodigi({ "stripe:/payment_intents": at(7200), "stripe:/refunds": { data: [] } });
+  assert.equal(await reconcilePrints(e, { fetch: young.fetcher, now: c.now }), 0);
+  const old = prodigi({ "stripe:/payment_intents": at(50 * 3600), "stripe:/refunds": { data: [] } });
+  assert.equal(await reconcilePrints(e, { fetch: old.fetcher, now: c.now }), 1);
 });
