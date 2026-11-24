@@ -414,25 +414,36 @@ struct BigSheetSection: View {
             }
             .accessibilityIdentifier("print-big-sheet")
         }
-        .task(id: layout) { await draw() }
+        .task(id: sheetLayout) { await draw() }
         .task { quote = try? await service.quote(Self.offered, country) }
     }
 
-    /// The canvas as it will print, small and white whatever the screen's appearance.
+    /// The canvas as it will print, turned the picture's way, small and white whatever the
+    /// screen's appearance.
     private var thumbnail: some View {
         let size = Self.offered.inches
+        let short = 56 * min(size.width, size.height) / max(size.width, size.height)
+        let wide = request.template.width > request.template.height
         return ZStack {
             Color.white
             if let picture { Image(uiImage: picture).resizable().scaledToFit() }
         }
-        .frame(width: 56 * size.width / size.height, height: 56)
+        .frame(width: wide ? 56 : short, height: wide ? short : 56)
         .clipShape(.rect(cornerRadius: 2))
         .shadow(color: .black.opacity(0.18), radius: 2, y: 1)
         .accessibilityHidden(true)
     }
 
+    /// What the sheet draws of Print's choices: its blank layers, not the page's size or the preview's paint.
+    private var sheetLayout: PDFExporter.Layout {
+        var blank = layout
+        blank.painted = false
+        blank.across = nil
+        return blank
+    }
+
     private func draw() async {
-        let data = await BigSheetView.sheetPDF(request, layout: layout, product: Self.offered)
+        let data = await BigSheetView.sheetPDF(request, layout: sheetLayout, product: Self.offered)
         let image = await Self.render(data)
         guard !Task.isCancelled else { return }
         picture = image.map { UIImage(cgImage: $0) }
