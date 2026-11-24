@@ -79,6 +79,11 @@ class_name = "PrintSheet"
 tag = "v2"
 new_sqlite_classes = ["PrintSheet"]
 
+# Once a day, 7:17 AM ET in winter: One Big Sheet's payments in Stripe checked against the orders
+# the print service accepted (print.js, reconcilePrints); a payment with no print is an issue.
+[triggers]
+crons = ["17 12 * * *"]
+
 # Only what the worker logs itself (errors), not every request.
 [observability]
 enabled = true

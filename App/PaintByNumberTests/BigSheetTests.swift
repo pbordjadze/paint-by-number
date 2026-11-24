@@ -59,43 +59,49 @@ struct BigSheetTests {
         #expect(BigSheetProduct.Surface.allCases.flatMap(\.products).count == BigSheetProduct.allCases.count)
     }
 
-    /// The order is the PDF and the JSON print.js reads, each a part of its own.
-    @Test func theOrderCarriesTheSheetAndTheAddress() throws {
+    /// The order is the JSON print.js reads; the sheet went up before it, by the order's key.
+    @Test func theOrderCarriesTheAddress() throws {
         let recipient = BigSheetRecipient(
             name: "Ada", email: "ada@example.com", line1: "1 Lane", line2: "", city: "Brooklyn", state: "NY", zip: "11201", country: "US")
-        let sheet = Data("%PDF-1.7 sheet".utf8)
         let key = BigSheetService.newKey()
-        let body = BigSheetService.orderBody(sheet: sheet, product: .canvas24x36, recipient: recipient, key: key, boundary: "b")
-        let text = String(decoding: body, as: UTF8.self)
-        #expect(text.contains("name=\"sheet\"; filename=\"sheet.pdf\"\r\nContent-Type: application/pdf\r\n\r\n%PDF-1.7 sheet\r\n"))
-        #expect(text.contains("name=\"order\""))
-        let json = try #require(text.components(separatedBy: "Content-Type: application/json\r\n\r\n").last?.components(separatedBy: "\r\n--b--").first)
-        let order = try #require(JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: Any])
+        let body = BigSheetService.orderJSON(product: .canvas24x36, recipient: recipient, key: key)
+        let order = try #require(JSONSerialization.jsonObject(with: body) as? [String: Any])
         #expect(order["product"] as? String == "canvas-24x36")
         #expect(order["key"] as? String == key)
+        #expect(order["payment"] == nil)
         let sent = try #require(order["recipient"] as? [String: String])
         #expect(sent["zip"] == "11201")
         #expect(sent["country"] == "US")
         #expect(sent["line1"] == "1 Lane")
     }
 
-    /// A paid order carries the price the painter agreed to and Apple Pay's token beside the address.
+    /// A paid order carries the price the painter agreed to, where it was quoted, and Apple Pay's token.
     @Test func aPaidOrderCarriesThePriceAndTheToken() throws {
         let recipient = BigSheetRecipient(
             name: "Ada", email: "ada@example.com", line1: "1 Lane", line2: "", city: "Brooklyn", state: "NY", zip: "11201", country: "US")
         let payment = BigSheetPayment(
             price: "33.00", currency: "USD",
-            token: .init(data: Data("{}".utf8).base64EncodedString(), network: "Visa", transactionId: "t1", instrument: "Visa 4242"))
-        let body = BigSheetService.orderBody(sheet: Data("%PDF-".utf8), product: .canvas16x24, recipient: recipient, payment: payment, key: BigSheetService.newKey(), boundary: "b")
-        let text = String(decoding: body, as: UTF8.self)
-        let json = try #require(text.components(separatedBy: "Content-Type: application/json\r\n\r\n").last?.components(separatedBy: "\r\n--b--").first)
-        let order = try #require(JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: Any])
+            token: .init(data: Data("{}".utf8).base64EncodedString(), network: "Visa", transactionId: "t1", instrument: "Visa 4242"),
+            place: BigSheetPlace(country: "US", city: "Brooklyn", state: "NY", zip: "11201"))
+        let body = BigSheetService.orderJSON(product: .canvas16x24, recipient: recipient, payment: payment, key: BigSheetService.newKey())
+        let order = try #require(JSONSerialization.jsonObject(with: body) as? [String: Any])
         #expect(order["price"] as? String == "33.00")
         #expect(order["currency"] as? String == "USD")
         let token = try #require(order["payment"] as? [String: String])
         #expect(token["data"] == "e30=")
         #expect(token["network"] == "Visa")
         #expect(token["transactionId"] == "t1")
+        let quoted = try #require(order["quotedAt"] as? [String: String])
+        #expect(quoted == ["country": "US", "city": "Brooklyn", "state": "NY", "zip": "11201"])
+    }
+
+    /// A quote says where it is for as far as it is known: the country alone until Apple Pay shares more.
+    @Test func aQuoteSaysWhereItIsFor() throws {
+        let bare = try #require(JSONSerialization.jsonObject(with: BigSheetService.quoteBody(product: .canvas16x24, place: BigSheetPlace(country: "GB"))) as? [String: String])
+        #expect(bare == ["product": "canvas-16x24", "country": "GB"])
+        let full = try #require(JSONSerialization.jsonObject(with: BigSheetService.quoteBody(
+            product: .canvas16x24, place: BigSheetPlace(country: "US", city: "Anchorage", state: "AK", zip: "99501"))) as? [String: String])
+        #expect(full == ["product": "canvas-16x24", "country": "US", "city": "Anchorage", "state": "AK", "zip": "99501"])
     }
 
     /// An order's key is what the relay keeps it under: 32 hex digits, new for each order.
@@ -129,7 +135,7 @@ struct BigSheetTests {
         #expect(quote.money("33.00") == Decimal(33).formatted(.currency(code: "USD")))
         let live = try JSONDecoder().decode(BigSheetQuote.self, from: Data(#"{"product":"canvas-16x24","currency":"GBP","price":"28.00"}"#.utf8))
         #expect(live.sandbox == nil)
-        #expect(try BigSheetService.placedOrder(Data(#"{"ok":true,"order":"ord_1","sandbox":true}"#.utf8)) == "ord_1")
+        #expect(try BigSheetService.placedOrder(Data(#"{"ok":true,"order":"sheet-0123456789ab","sandbox":true,"paid":true}"#.utf8)) == "sheet-0123456789ab")
         #expect(throws: BigSheetService.ServiceError.malformed) { try BigSheetService.placedOrder(Data("{}".utf8)) }
     }
 

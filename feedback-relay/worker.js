@@ -44,7 +44,7 @@
 
 import { Buffer } from "node:buffer";
 
-import { handlePrint, routesPrint } from "./print.js";
+import { handlePrint, reconcilePrints, routesPrint } from "./print.js";
 import { handleVotes, routesVotes } from "./votes.js";
 
 export { PrintSheet } from "./print.js";
@@ -68,6 +68,11 @@ export default {
       log(env, "Unexpected failure", error);
       return reject(500);
     }
+  },
+
+  // Once a day (wrangler.toml's cron): One Big Sheet's payments checked against its orders.
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(reconcilePrints(env));
   },
 };
 
