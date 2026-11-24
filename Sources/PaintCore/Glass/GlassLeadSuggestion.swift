@@ -1,7 +1,11 @@
 #if canImport(CoreGraphics)
 import CoreGraphics
 #endif
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The lead a photo suggests for a Stained Glass window (painting-company row 366; Paul's pick,
 /// November 20, 2026: a suggested lead the painter can edit). The photo is made into a classic

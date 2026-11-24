@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Separable Gaussian filtering and its derivatives, with clamped borders (like
 /// `scipy.ndimage.gaussian_filter(mode="nearest")`, truncated at 4 σ).

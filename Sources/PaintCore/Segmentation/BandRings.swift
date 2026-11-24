@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Counts the rings a smooth gradient was posterized into: a quality metric of the
 /// pipeline's output (`pbn generate` reports it as `bandRings`), not a pipeline stage. It is

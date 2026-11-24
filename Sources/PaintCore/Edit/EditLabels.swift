@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 extension TemplateEditor {
     /// The number Move Number (`Edit.moveLabel`) grabs at `point` (canvas units): the label

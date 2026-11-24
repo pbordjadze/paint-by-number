@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Edge-preserving smoothing with the recursive-filter domain transform (Gastal & Oliveira,
 /// "Domain Transform for Edge-Aware Image and Video Processing", 2011).

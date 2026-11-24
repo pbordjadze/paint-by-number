@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The Cave (painting-company row 371): a hidden mode at 15,000 BC on the year wheel, where the
 /// whole screen is a torch-lit rock wall and a painting is blown onto it in four earth pigments.

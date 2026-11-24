@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Records wall-clock timings of pipeline stages. Sub-stages use dotted names
 /// ("segment.smooth") so reports can nest them; only top-level names count toward totals.
@@ -11,7 +15,7 @@ public final class StageClock: @unchecked Sendable {
         public var description: String { "\(name): \(String(format: "%.1f", seconds * 1000)) ms" }
     }
 
-    private let lock = NSLock()
+    private let lock = Lock()
     private var _timings: [Timing] = []
     private let clock = ContinuousClock()
     private let origin: ContinuousClock.Instant

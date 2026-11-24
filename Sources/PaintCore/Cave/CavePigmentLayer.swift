@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The pigment blown onto one bay of the cave wall (painting-company row 371), a pixel a wall
 /// point: how thickly it lies (`coverage`, up to a little over 1) and its color. Blowing is

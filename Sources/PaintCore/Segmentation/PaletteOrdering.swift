@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Orders paints the way a kit would: hue families around the color wheel starting at red,
 /// each from light to dark, followed by the neutrals from white to black. Vivid and muted

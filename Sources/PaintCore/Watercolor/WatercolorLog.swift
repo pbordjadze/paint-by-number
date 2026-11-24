@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// A watercolor painting as its painter made it (painting-company row 373): the painting's seed
 /// and every tap, where, when (the simulation's step) and whether it carried paint. Replayed by

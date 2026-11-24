@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Which glass is in each piece of a Stained Glass window (painting-company row 366): free
 /// glazing, any glass in any piece (Paul, November 20, 2026), so the choice is the painter's and

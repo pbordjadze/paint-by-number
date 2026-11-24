@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// A drawing on paper → a coloring book whose areas the drawn lines bound
 /// (`GenerationSettings.drawing`; `TemplateGenerator.generate` comes here).

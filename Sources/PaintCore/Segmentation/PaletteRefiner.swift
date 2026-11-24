@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Final palette polish once regions are settled: paints are refitted to the pixels they
 /// actually cover, each region takes the paint closest to its own mean color, paints that a

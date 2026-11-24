@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Repeated box blur (≈ Gaussian after 2–3 passes) with edge-normalized windows, O(1) per
 /// pixel in the radius. Rows run in parallel; columns in parallel bands of whole rows so

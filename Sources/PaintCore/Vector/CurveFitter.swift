@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Fits a smooth curve to a lattice chain and flattens it into a `DenseCurve`.
 ///

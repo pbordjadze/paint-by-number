@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Per-pixel importance (0...1) at working resolution. Important areas get paint budget,
 /// smaller regions and gentler smoothing.

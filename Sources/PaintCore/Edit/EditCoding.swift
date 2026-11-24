@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// How an edit is kept in a file (the app's `refinements.json` lists them as `edits`), and the
 /// shape `pbn edit` reads for the kinds both know: an object with a `kind` and its `points`, in

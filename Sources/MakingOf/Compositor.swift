@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import PaintCore
 
 /// The picture of the show at a moment, one pixel at a time: a pure CPU reference of what each

@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Why an edit could not be made. `TemplateEditor` turns these into a declined edit: the
 /// template it was asked about is returned as it was.

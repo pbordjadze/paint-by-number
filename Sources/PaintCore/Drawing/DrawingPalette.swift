@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The paints of a template made from a drawing (`DrawingSettings`): a palette set, laid over
 /// the areas so that no two neighbours share a paint.

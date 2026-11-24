@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 extension EditWork {
     /// The shape under `p` made one area of its own, painted `color` (OKLab): the closed shape

@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The making-of show's spec: `making-of.json`, which the Lamp edits. Decoding is strict (version
 /// 1, the six steps in order, known poses, no unknown key at any level, every duration and length

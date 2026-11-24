@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Framing a window's pieces by hand (painting-company row 366, Paul's interface of November 22,
 /// 2026): the pieces are cut, outlined thinly and numbered from the start, and the painter leads

@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Tells structure from texture, per pixel and axis, with relative total variation (Xu et al.,
 /// "Structure Extraction from Texture via Relative Total Variation", 2012).

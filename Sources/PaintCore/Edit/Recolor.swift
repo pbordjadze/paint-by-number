@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 extension TemplateEditor {
     /// A look laid over a whole painting's paints (Refine's Looks): each is a fixed function of

@@ -1,7 +1,11 @@
 #if canImport(CoreGraphics)
 import CoreGraphics  // CGRect's geometry on Apple platforms; Foundation has it on Linux.
 #endif
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The shapes Refine's Shapes tool draws (`ShapePath`): a straight line from where a drag starts
 /// to where it ends, a rectangle, an oval, a hexagon or a five-pointed star across it, and a

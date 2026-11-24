@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Turns a per-pixel palette labelling into paintable regions: every region is big enough
 /// to tap and to hold a number, and has no hair-thin parts. Once the palette is final,

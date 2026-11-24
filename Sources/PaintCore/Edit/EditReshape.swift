@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 extension TemplateEditor {
     /// What a reshape (`Edit.reshape`) grabbed at `from` would lay with its grabbed point at

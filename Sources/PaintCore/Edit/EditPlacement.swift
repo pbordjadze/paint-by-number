@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Edits carried onto a base made again (the app's re-makes: a slider moved, the text corrected,
 /// a draft resumed): the painter's edits are where and what they were on the base they were

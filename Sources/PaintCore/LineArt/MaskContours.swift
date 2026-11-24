@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The outlines of the shapes in a mask (a subject mask from the app's Vision request, a PGM
 /// handed to `pbn --objects`), as the closed polygons `LineArtInput.objects` takes.

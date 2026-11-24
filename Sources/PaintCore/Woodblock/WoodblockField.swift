@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// What stays of one block, on the print's grid (`WoodblockGrid`): the wood that must stand to
 /// print, as a signed distance (`shape`, in cells: negative inside what stays, clamped to ±`band`)

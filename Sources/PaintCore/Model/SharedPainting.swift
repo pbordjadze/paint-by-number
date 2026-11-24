@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// A painting one painter sends another to paint: its template exactly as it is (the painter's
 /// refinements are in it), its title and the settings that made it, and the photo it was made

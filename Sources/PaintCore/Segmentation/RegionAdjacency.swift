@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Shared border lengths (4-neighbour pixel pairs) of adjacent regions.
 struct RegionAdjacency: Sendable {

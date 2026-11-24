@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// A template the generator made with the painter's manual edits laid on it, in order
 /// (`TemplateEditor`): what the app's Refine shows, and the way an edit list is put on a template

@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// One page of the stone book as a list of things to draw, in millimetres on an A4 page (origin
 /// top-left, +y down), in order: what the app draws into a PDF or an image, and `svg` into SVG.

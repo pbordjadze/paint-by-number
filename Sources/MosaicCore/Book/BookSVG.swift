@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 extension BookPage {
     /// The page as SVG, in millimetres: for a look at the book off the device (`mosaic book`). The

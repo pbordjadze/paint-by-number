@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Renders a template as SVG for headless evaluation (pbn writes it, `tools/eval.py`
 /// rasterizes it). The app prints and shares through CoreGraphics (`PDFExporter`,

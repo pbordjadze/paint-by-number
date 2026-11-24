@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Plane geometry for the stone book (`StoneBook`): polygons as corner lists, in canvas units.
 enum BookGeometry {

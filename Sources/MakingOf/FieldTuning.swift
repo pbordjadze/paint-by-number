@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The numbers the field show is tuned by, one block as in `making_of_fields.py` (change the two
 /// together and write `fields-small.json` again, see `FieldShow`). Times are seconds, lengths pixels

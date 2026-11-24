@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The Paint Brush's footprint: every point within `radius` of the polyline `path` (a disc for a
 /// single point), all on the lattice, and its outline.

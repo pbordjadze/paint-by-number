@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The cave's stick figure (Paul's choice, November 20, 2026: animals done properly, any other
 /// subject comical): a child's first try on the wall, with a big round head, a wobbly body, one

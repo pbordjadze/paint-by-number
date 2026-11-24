@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The paper a watercolor painting is laid on (painting-company row 373): a template's regions on
 /// the simulation's grid, each region's paint as an optical density, the paper's tooth and the

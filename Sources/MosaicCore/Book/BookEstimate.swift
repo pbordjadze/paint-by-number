@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The cover's two estimates, as ranges and round numbers: they are a guide, not a quote.
 extension StoneBook {

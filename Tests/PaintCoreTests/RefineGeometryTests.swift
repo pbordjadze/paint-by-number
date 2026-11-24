@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials  // PaintCore's CGFloat and CGPoint here, not Foundation's (PaintCore's Geometry.swift)
+#else
 import Foundation
+#endif
 import Testing
 @testable import PaintCore
 

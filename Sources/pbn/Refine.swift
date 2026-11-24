@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials  // PaintCore's CGFloat and CGPoint here, not Foundation's (PaintCore's Geometry.swift)
+#else
 import Foundation
+#endif
 import PaintCore
 
 /// `pbn refine`'s gestures.json: Refine's gestures as a painter makes them, points normalized to

@@ -1,7 +1,11 @@
 #if canImport(CoreGraphics)
 import CoreGraphics  // CGRect's geometry on Apple platforms; Foundation has it on Linux.
 #endif
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The pen's line as Refine keeps it: a finger's samples, steadied when the painter asks
 /// (`steadied`), smoothed into curves (quadratics through the midpoints between samples, so the

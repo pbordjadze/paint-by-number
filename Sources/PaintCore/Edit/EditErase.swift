@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The eraser's reach: everything within `radius` of a path (a stadium on each of its steps, a
 /// disc for a dab), in canvas units.

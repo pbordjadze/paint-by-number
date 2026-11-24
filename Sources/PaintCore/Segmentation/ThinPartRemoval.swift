@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Removal of hair-thin region parts (tendrils, necks, 1-px slivers along edges) and of
 /// sharp pixel corners.

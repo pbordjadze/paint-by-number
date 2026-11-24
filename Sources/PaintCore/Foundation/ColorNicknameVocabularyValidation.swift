@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 extension ColorNickname {
     /// A frozen built-in vocabulary, or a proposed table for the color-name taste loop.

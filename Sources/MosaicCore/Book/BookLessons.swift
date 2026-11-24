@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The book's lessons: wordless pages for someone who has never held nippers, each a grid of
 /// panels, a ✓ or ✗ on the ones that show a right and a wrong way. They came from a newcomer's

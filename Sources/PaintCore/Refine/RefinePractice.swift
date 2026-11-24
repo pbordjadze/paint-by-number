@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The practice picture of Refine's Tool Guide: a moonlit evening (a sky deepening upward, a moon,
 /// far hills, a near hill with a tree on it and a cottage with a lit window), drawn here as a photo

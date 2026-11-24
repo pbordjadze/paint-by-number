@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import PaintCore
 
 /// The look of the show's pictures: every number the layers and the `Compositor` use that the

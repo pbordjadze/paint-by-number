@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// A ring where a k-means++ seed of the paints step landed: popping in, then fading once its paint
 /// has spread. The view draws it at (`x`, `y`) as a circle of `radius` in ink, `lineWidth` wide,

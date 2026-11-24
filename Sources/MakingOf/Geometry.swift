@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// A spot in the picture, in pixels of the working image (origin top-left, +y down).
 public struct Point: Sendable, Equatable {

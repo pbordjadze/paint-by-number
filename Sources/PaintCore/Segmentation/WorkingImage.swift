@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Per-pixel inputs of the segmentation stage at working resolution.
 enum WorkingImage {

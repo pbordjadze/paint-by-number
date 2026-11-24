@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import MosaicKit
 
 /// Set in Stone (painting-company row 367): the book for setting a mosaic of the app's in real

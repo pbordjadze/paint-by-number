@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Minimal binary PPM (P6) / PGM (P5) reader & writer. Used by the headless `pbn` tool
 /// and tests so the core stays free of platform image codecs.

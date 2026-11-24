@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// A change the painter made to the drawing before painting (the app's Refine screen): a line
 /// drawn with the pen, the eraser dragged along a path, a line tapped away, or a shape filled.

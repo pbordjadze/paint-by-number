@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// What each per-pixel accumulator of `PhotoAnalyzer.analyze` sums, one lane each.
 private enum Lane: Int, CaseIterable {

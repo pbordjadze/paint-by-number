@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Exact Euclidean distance transforms (Felzenszwalb & Huttenlocher, 2012), O(n).
 public enum DistanceTransform {

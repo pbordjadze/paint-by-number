@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Chooses the paint colors: weighted k-means++ in OKLab over a color histogram.
 ///

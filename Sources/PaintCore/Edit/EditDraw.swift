@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 extension EditWork {
     /// A line the painter drew, as the polyline it is (`TemplateEditor.Edit.draw`). Parts off the

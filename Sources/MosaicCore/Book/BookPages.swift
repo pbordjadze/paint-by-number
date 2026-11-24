@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The few words the book has (the stone list) and how it writes numbers and units, in the
 /// painter's language: the app fills them from its catalog; the defaults are English.

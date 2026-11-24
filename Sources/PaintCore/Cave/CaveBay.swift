@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// One bay of the cave wall, made for the renderer (painting-company row 371): its relief, a
 /// height a map pixel, and its rock, an RGBA color a map pixel with the daylight in alpha. Made

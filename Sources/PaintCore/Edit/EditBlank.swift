@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 extension TemplateEditor {
     /// Refine's Blank start: the photo as one area, which the painter cuts with the Pen, each

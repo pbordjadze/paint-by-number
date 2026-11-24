@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The pixel-exact region map (`Template.regionMap`) of an edited template. The generator makes
 /// the map first and the outlines after, smoothing them: a pixel may lie a little outside its

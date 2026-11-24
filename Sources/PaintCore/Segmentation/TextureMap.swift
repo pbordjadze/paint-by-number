@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// How busy the labelling is around each pixel. Texture (knit, foliage, gravel, fur)
 /// shows up as a dense scatter of label changes; smooth areas and clean contours as few.

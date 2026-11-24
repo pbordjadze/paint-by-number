@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import PaintCore
 
 /// The pictures of one generation the show is made from, all at the snapshots' own size (at most

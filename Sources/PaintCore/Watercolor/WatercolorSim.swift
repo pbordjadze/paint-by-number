@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Water and pigment moving over a `WatercolorSheet` (painting-company row 373): every tap floods
 /// its area from the finger, the wash carries its pigment to the rim, bleeds into a neighbour still

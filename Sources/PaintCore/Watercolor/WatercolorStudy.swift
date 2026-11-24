@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Watercolor's Making Of as a study sheet (painting-company row 373): before a painting, a
 /// watercolorist tries their paints on a scrap of the same paper. The Making Of shows that, not

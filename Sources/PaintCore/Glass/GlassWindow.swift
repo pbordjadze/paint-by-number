@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// A Stained Glass window (painting-company row 366): the photo leaded by the painter's own
 /// lines, each closed piece a region. A line stays as the finger drew it; only an end that stops

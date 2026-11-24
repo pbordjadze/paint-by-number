@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Watercolor's Making Of (painting-company row 373): a new painting painted once by the real
 /// simulation, fast, before the painter paints it themselves. It is a tap log like a painter's

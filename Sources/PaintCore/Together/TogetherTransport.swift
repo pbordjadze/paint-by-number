@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Carries encoded `TogetherMessage`s to the other painters (the app's SharePlay messenger).
 /// Reliable messages arrive, perhaps late; unreliable ones (presence, ripples) may not.

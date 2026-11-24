@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The 4-connected regions of a paint map in run-length form: every row is a sequence of
 /// horizontal runs, each labelled with its region. Label maps in this stage consist of long

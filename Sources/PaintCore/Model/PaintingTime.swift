@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// How long a template takes to paint. One estimate for the app's summaries and for Auto's
 /// painting-time bands.

@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import PaintCore
 
 /// What `FieldShow` keeps of its build: when each step's change reaches each pixel, the lines' fuse

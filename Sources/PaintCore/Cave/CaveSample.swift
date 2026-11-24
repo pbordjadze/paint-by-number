@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// A horse drawn from shapes, standing in for a photo and its subject mask where there is no
 /// photo or no Vision: the cave's demo scenarios and tests. A dark mane, legs and muzzle, a mid

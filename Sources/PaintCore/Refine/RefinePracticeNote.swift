@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The Tool Guide's practice picture for Writing (`RefinePractice` is every other page's): a
 /// note on a wooden table beside a jar of honey. The note says "Back at six" and "Soup is hot" in

@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Internal knobs of the segmentation pipeline, derived from the user-facing settings and
 /// the canvas size. Spatial quantities scale with the canvas so a template's look depends

@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 extension TemplateEditor {
     /// How far the photo's color of a piece a drawn line cut may be from a paint for the piece to

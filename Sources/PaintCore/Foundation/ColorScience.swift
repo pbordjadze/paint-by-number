@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// RGB primaries a buffer is encoded in. Both use the sRGB transfer function.
 public enum RGBColorSpace: UInt8, Sendable, Hashable {

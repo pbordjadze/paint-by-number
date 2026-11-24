@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// A point on the template's coordinate grid, in units of `Template.coordinateQuantum`.
 typealias LatticePoint = SIMD2<Int64>

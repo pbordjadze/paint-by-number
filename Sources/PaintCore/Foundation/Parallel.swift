@@ -1,5 +1,9 @@
 import Dispatch
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Lightweight data-parallel helpers used throughout the pipeline.
 ///
@@ -167,7 +171,7 @@ public enum Parallel {
 
 /// `Parallel.withBandCount`'s setting, read by every thread that splits work.
 private final class ForcedBands: @unchecked Sendable {
-    private let lock = NSLock()
+    private let lock = Lock()
     private var value: Int?
 
     var count: Int? {
@@ -211,7 +215,7 @@ public struct CancellationCheck: Sendable {
 /// `withTaskCancellationHandler` or by the first check that sees the cancellation
 /// (`AutoSettings.choose`).
 public final class CancellationFlag: @unchecked Sendable {
-    private let lock = NSLock()
+    private let lock = Lock()
     private var cancelled = false
 
     public init() {}

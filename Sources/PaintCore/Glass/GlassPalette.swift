@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Stained Glass's glasses (painting-company row 366): the colors the photo suggests for the
 /// pieces of a window the painter leaded (`GlassWindow`), and the few every glazier keeps.

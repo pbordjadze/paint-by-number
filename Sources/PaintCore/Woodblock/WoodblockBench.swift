@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// A print in progress on the bench (painting-company row 375): which block is being worked,
 /// how far, and the sheet as printed so far. Every array is on the plan's grid, in the block's

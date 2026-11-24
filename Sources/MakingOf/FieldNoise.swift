@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import PaintCore
 
 /// Value noise on wrapping lattices drawn from the field show's noise stream, its octaves summed

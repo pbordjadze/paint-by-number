@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// One cave painting's drawing (painting-company row 371): the subject's shape on the wall, its
 /// areas, the earth pigment of each, and the few inner lines the photo insists on (an eye, a mane,

@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Manual editing of a coloring-book template, for the app's Refine screen: the `Edit`s below, made
 /// by Refine's tools (the Pen and Shapes a draw, Cell Edge a cell edge, Merge a merge, the Paint

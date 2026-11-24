@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// A deterministic, structured color name ("dark grayish green") derived from OKLab; `english`
 /// renders it for the CLI and the app localizes the same structure.

@@ -769,6 +769,12 @@ him itself, with a push notification once he has gone quiet.
   photo's): `GenerationSettings.workingSize`); origin top-left, +y down.
 - Keep `PaintCore` free of Apple-only frameworks (guard any Accelerate/Metal use with
   `#if canImport(...)` and keep a portable path).
+- Off Apple platforms the library modules (PaintCore, MakingOf, the Mosaic ones) import
+  FoundationEssentials, not Foundation (`#if canImport(FoundationEssentials) && !canImport(Darwin)`
+  at each import), so the Android port ships without Foundation and ICU: what Foundation alone has
+  goes in the module's `Portability.swift`, made as Foundation makes it, and PaintCore's
+  `Foundation/Geometry.swift` has CGFloat, CGPoint, CGSize and CGRect; a file beside PaintCore
+  that speaks them imports FoundationEssentials there too (`pbn`'s Refine.swift).
 - Deterministic output for identical inputs + settings (seeded `SplitMix64`), on every device:
   parallel floating-point reductions must not depend on the core count: fixed-size chunks summed in
   chunk order (`RegionAdjacency.boundarySteps`: 32-row chunks), or each output computed whole by one

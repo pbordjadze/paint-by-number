@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// A photo of a drawing on paper → the drawing's ink, as a map the line art traces
 /// (`EdgeMap`), and the sheet cleaned: white paper, the ink alone, square to the picture.

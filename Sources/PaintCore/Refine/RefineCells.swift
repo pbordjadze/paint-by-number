@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Refine's cells for VoiceOver (the app's elements over the picture while a cell tool is
 /// picked, painting-company row 143): where each cell is found, which cells it borders, and the

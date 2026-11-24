@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials) && !canImport(Darwin)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Whimsical names for palette colors ("Harbor Fog", "Apricot Jam"): each paint is matched to
 /// hand-written vocabulary entries whose anchor colors lie near it, and the pick varies with the
