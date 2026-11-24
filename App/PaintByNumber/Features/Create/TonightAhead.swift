@@ -1,4 +1,3 @@
-#if UNRELEASED
 import Combine
 import Foundation
 import os
@@ -17,8 +16,8 @@ import UIKit
 /// stops it, so the two never run side by side.
 ///
 /// What is kept is let go once taken, when another night's picture comes, and on a memory
-/// warning; a painting opened stops what is being made. SideStore and Debug builds
-/// (`UNRELEASED`); never in demo or test launches (`Preparing`), whose timings it would move.
+/// warning; a painting opened stops what is being made. Every build from 1.5; never in demo or
+/// test launches (`Preparing`), whose timings it would move.
 final class TonightAhead {
     static let shared = TonightAhead()
 
@@ -142,7 +141,11 @@ final class TonightAhead {
         }
 
         private var moment: Moment {
+            #if UNRELEASED
             Moment(isSettled: scenePhase == .active && !isPainting, paintingLength: paintingLength, nights: Nights.revision.value)
+            #else
+            Moment(isSettled: scenePhase == .active && !isPainting, paintingLength: paintingLength, nights: 0)
+            #endif
         }
 
         func body(content: Content) -> some View {
@@ -172,4 +175,3 @@ final class TonightAhead {
         }
     }
 }
-#endif

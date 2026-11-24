@@ -46,17 +46,12 @@
   "versionLocalization": {
     "promotionalText": "Your own paint by numbers from any photo, made right on your iPhone or iPad. Paint it here, redraw it by hand, or print it and paint with real brushes.",
     "whatsNew": [
-      "Paint with a friend, print your way, and keep a painting on your Home Screen.",
-      "• Paint Together: on a FaceTime call, choose Paint Together in a painting’s More menu and paint the same picture with a friend, every fill on both screens.",
-      "• Widgets: your painting in progress on the Home Screen, with Paint One Area right there, or on the Lock Screen, and a finished painting a day in StandBy.",
-      "• Stickers: your finished paintings, ready to send in Messages.",
-      "• Print shows the pages before they print. Choose the size, and turn Numbers, Color Hints and the Color Key on or off, down to a plain coloring page.",
-      "• Brighter paints: new paintings come out livelier, with warm lights and cool shadows.",
-      "• When a painting is finished: Another One, On Paper or Send It, and for a picture from The Library, The Original, about the work it came from.",
-      "• Fine-Tune… in the length chip’s menu changes a painting’s colors, detail and lines before you begin.",
-      "• Watch the drawing form as your painting is made, and see a finished one with or without its lines.",
-      "• Refine and Change are now one thing: Edit.",
-      "• Many smaller touches and fixes."
+      "Instant: your painting starts the moment you pick a picture.",
+      "• A short Making-of fills the wait: a pencil sketches your picture, its lines burn in, and the numbers come out like stars. Tap to skip it.",
+      "• Tonight’s Picture is made before you tap it, so it opens right away.",
+      "• Change a new painting’s Painting Length and it changes at once: the other lengths are made while you look.",
+      "• Pictures start sooner: the models that draw the lines stay ready.",
+      "• Smaller touches and fixes."
     ],
     "keywords": "custom,creator,maker,make,pet,dog,cat,portrait,picture,printable,coloring,color,kit,diy,canvas,gift",
     "supportUrl": "https://paulbordjadze.com/paint-by-moonlight/",
@@ -112,9 +107,9 @@
       "",
       "Everything runs on the device, including the on-device models that draw the lines. The app makes no network requests of its own except when someone taps Send in Give Feedback (the More menu on a painting): that uploads the report they reviewed to the developers.",
       "",
-      "New in 1.3, Paint Together (SharePlay): during a FaceTime call, open a painting that isn't finished and choose More (the ⋯ button) > Paint Together; the other person joins from the SharePlay prompt and receives the same painting, and each one's fills appear on both screens. The painting and the fills travel only between the people on the call, through Apple's SharePlay; nothing goes to us, and there are no accounts or chat. Testing it needs two devices signed in to different Apple Accounts.",
+      "New in 1.5, speed: after a picture is picked on the New Painting screen, a short animation plays while the painting is made (a pencil sketch of the picture, its lines burning in, the numbers appearing); a tap skips it. Tonight's Picture is prepared in the background on the device before it is tapped, and on a painting not yet begun the other Painting Lengths (the time chip under the painting) are prepared while it is open, so switching is immediate. All of it runs on the device; nothing new is sent or downloaded.",
       "",
-      "Also new in 1.3: a widget of the painting in progress for the Home Screen and the Lock Screen (on the Home Screen, its Paint One Area button paints the next area; the app applies it when next opened), a widget of finished paintings for the Home Screen and StandBy, and an iMessage sticker pack of finished paintings. Both read pictures the app saves in its own app group on the device; they make no network requests. Print (More > Print…) now opens a preview of the pages before the system's print dialog.",
+      "Paint Together (SharePlay, from 1.3): during a FaceTime call, open a painting that isn't finished and choose More (the ⋯ button) > Paint Together; the other person joins from the SharePlay prompt and receives the same painting, and each one's fills appear on both screens. The painting and the fills travel only between the people on the call; nothing goes to us. Widgets and the iMessage sticker pack (from 1.3) read pictures the app saves in its own app group; they make no network requests.",
       "",
       "Optional: Settings > The Making-of plays an animation of the painting being made after Start Painting. On iPad, the menu bar's Paint menu has keyboard shortcuts.",
       "",
@@ -166,17 +161,12 @@
       "keywords": "eigenes,personalisiert,Haustier,Hund,Katze,Porträt,Vorlage,drucken,ausmalen,Leinwand,Geschenk,DIY",
       "promotionalText": "Dein eigenes Malen nach Zahlen aus jedem Foto, direkt auf deinem iPhone oder iPad. Male es hier, zeichne es von Hand neu oder druck es aus und male mit echten Pinseln.",
       "whatsNew": [
-        "Male mit Freunden, drucke, wie du willst, und hol dir dein Bild auf den Home-Bildschirm.",
-        "• Gemeinsam malen: Wähle während eines FaceTime-Anrufs im Menü „Mehr“ eines Bildes „Gemeinsam malen“ und male mit einem Freund am selben Bild, jede Fläche auf beiden Bildschirmen.",
-        "• Widgets: dein Bild in Arbeit auf dem Home-Bildschirm, mit „Eine Fläche malen“ direkt dort, oder auf dem Sperrbildschirm, und jeden Tag ein fertiges Bild im StandBy.",
-        "• Sticker: deine fertigen Bilder, bereit zum Verschicken in Nachrichten.",
-        "• Drucken zeigt die Seiten, bevor sie gedruckt werden. Wähle die Größe und schalte Zahlen, Farbhauch und Farbschlüssel ein oder aus, bis hin zur schlichten Malvorlage.",
-        "• Kräftigere Farben: Neue Bilder werden lebendiger, mit warmen Lichtern und kühlen Schatten.",
-        "• Wenn ein Bild fertig ist: Noch eins, Auf Papier oder Verschicken, und bei einem Bild aus der Bibliothek „Das Original“ über das Werk dahinter.",
-        "• „Feinabstimmung …“ unter der Dauer ändert Farben, Details und Linien eines Bildes, bevor du anfängst.",
-        "• Sieh zu, wie die Zeichnung entsteht, während dein Bild gemacht wird, und zeig ein fertiges Bild mit oder ohne Linien.",
-        "• Verfeinern und Ändern sind jetzt eins: Bearbeiten.",
-        "• Viele kleinere Verbesserungen und Fehlerbehebungen."
+        "Sofort: Dein Bild beginnt in dem Moment, in dem du es auswählst.",
+        "• Ein kurzes Making-of füllt das Warten: Ein Bleistift skizziert dein Bild, seine Linien brennen sich ein, und die Zahlen erscheinen wie Sterne. Tippe, um es zu überspringen.",
+        "• Das Bild des Abends ist fertig, bevor du darauf tippst, und öffnet sich sofort.",
+        "• Ändere die Maldauer eines neuen Bildes, und es ändert sich sofort: Die anderen Dauern entstehen, während du schaust.",
+        "• Bilder starten schneller: Die Modelle, die die Linien zeichnen, bleiben bereit.",
+        "• Kleinere Verbesserungen und Fehlerbehebungen."
       ],
       "description": [
         "Verwandle jedes Foto in dein eigenes Malen nach Zahlen. Dein iPhone oder iPad zeichnet deinen Hund, deinen Garten oder deine Familie wie ein Malbuch, mit klaren Linien, nummerierten Flächen und Farben, die aus dem Foto selbst gemischt sind.",
@@ -225,17 +215,12 @@
       "keywords": "personalizado,arte,mascota,perro,gato,retrato,imprimir,colorear,pintura,lienzo,regalo,kit,cuadro,diy",
       "promotionalText": "Tu propio cuadro para pintar por números a partir de cualquier foto, hecho en tu iPhone o iPad. Píntalo aquí, redibújalo a mano o imprímelo y píntalo con pinceles reales.",
       "whatsNew": [
-        "Pinta con un amigo, imprime a tu manera y lleva tu cuadro a la pantalla de inicio.",
-        "• Pintar juntos: en una llamada de FaceTime, elige Pintar juntos en el menú Más de un cuadro y pinta la misma imagen con un amigo, cada zona en las dos pantallas.",
-        "• Widgets: tu cuadro en curso en la pantalla de inicio, con Pintar una zona ahí mismo, o en la pantalla bloqueada, y un cuadro terminado cada día en StandBy.",
-        "• Stickers: tus cuadros terminados, listos para enviar en Mensajes.",
-        "• Imprimir muestra las páginas antes de imprimirlas. Elige el tamaño y activa o desactiva Números, Toques de color y Leyenda de colores, hasta una simple página para colorear.",
-        "• Colores más vivos: los cuadros nuevos salen más alegres, con luces cálidas y sombras frías.",
-        "• Al terminar un cuadro: Otro más, En papel o Envíalo, y con una imagen de la Biblioteca, El original, sobre la obra de la que viene.",
-        "• Ajustar…, bajo la duración, cambia los colores, el detalle y las líneas de un cuadro antes de empezar.",
-        "• Mira cómo se forma el dibujo mientras se hace tu cuadro, y ve uno terminado con o sin sus líneas.",
-        "• Refinar y Cambiar ahora son una sola cosa: Editar.",
-        "• Muchos otros detalles y correcciones."
+        "Al instante: tu cuadro empieza en cuanto eliges una imagen.",
+        "• Un breve Cómo se hizo llena la espera: un lápiz esboza tu imagen, sus líneas se encienden y los números salen como estrellas. Toca para saltarlo.",
+        "• La imagen de esta noche se prepara antes de que la toques, así que se abre al momento.",
+        "• Cambia la Duración del cuadro de una pintura nueva y cambia al instante: las otras duraciones se preparan mientras miras.",
+        "• Las imágenes empiezan antes: los modelos que dibujan las líneas siguen listos.",
+        "• Pequeños detalles y correcciones."
       ],
       "description": [
         "Convierte cualquier foto en tu propio cuadro para pintar por números. Tu iPhone o iPad dibuja a tu perro, tu jardín o tu familia como un libro para colorear, con líneas limpias, zonas numeradas y pinturas mezcladas a partir de la propia foto.",
@@ -287,17 +272,12 @@
       "keywords": "personnalisé,coloriage,couleur,chien,chat,animal,portrait,imprimable,kit,toile,cadeau,dessin,créer",
       "promotionalText": "Votre propre peinture par numéros à partir de n’importe quelle photo, créée sur votre iPhone ou iPad. Peignez-la ici, redessinez-la, ou imprimez-la.",
       "whatsNew": [
-        "Peignez à deux, imprimez à votre façon et gardez votre tableau sur l’écran d’accueil.",
-        "• Peindre ensemble : pendant un appel FaceTime, choisissez Peindre ensemble dans le menu Plus d’un tableau et peignez la même image avec un ami, chaque zone sur les deux écrans.",
-        "• Widgets : votre tableau en cours sur l’écran d’accueil, avec Peindre une zone à portée de doigt, ou sur l’écran verrouillé, et un tableau terminé par jour en mode En veille.",
-        "• Autocollants : vos tableaux terminés, prêts à envoyer dans Messages.",
-        "• Imprimer montre les pages avant l’impression. Choisissez la taille et activez ou non Numéros, Touches de couleur et Légende des couleurs, jusqu’à une simple page de coloriage.",
-        "• Des couleurs plus vives : les nouveaux tableaux sont plus gais, avec des lumières chaudes et des ombres froides.",
-        "• Une fois un tableau terminé : Un autre, Sur papier ou L’envoyer, et pour une image de la Bibliothèque, L’original, sur l’œuvre dont elle vient.",
-        "• Ajuster…, sous la durée, change les couleurs, le détail et les traits d’un tableau avant de commencer.",
-        "• Regardez le dessin se former pendant que votre tableau se prépare, et affichez un tableau terminé avec ou sans ses traits.",
-        "• Affiner et Changer ne font plus qu’un : Modifier.",
-        "• Beaucoup d’autres retouches et corrections."
+        "Instantané : votre tableau commence dès que vous choisissez une image.",
+        "• Un court making-of remplit l’attente : un crayon esquisse votre image, ses traits s’embrasent et les numéros apparaissent comme des étoiles. Touchez pour le passer.",
+        "• L’image du soir est prête avant même que vous la touchiez, et s’ouvre aussitôt.",
+        "• Changez la Durée du tableau d’une nouvelle peinture et elle change aussitôt : les autres durées se préparent pendant que vous regardez.",
+        "• Les images démarrent plus vite : les modèles qui tracent les lignes restent prêts.",
+        "• Petites retouches et corrections."
       ],
       "description": [
         "Transformez n’importe quelle photo en votre propre peinture par numéros. Votre iPhone ou votre iPad dessine votre chien, votre jardin ou votre famille comme un coloriage, avec des traits nets, des zones numérotées et des peintures mélangées à partir de la photo elle-même.",
@@ -349,17 +329,12 @@
       "keywords": "personalizzato,crea,ritratto,cane,gatto,animali,stampabile,colorare,regalo,kit,fai da te,tela,quadro",
       "promotionalText": "Il tuo quadro da dipingere con i numeri, da qualsiasi foto, creato su iPhone o iPad. Dipingilo qui, ridisegnalo a mano, o stampalo e usa pennelli veri.",
       "whatsNew": [
-        "Dipingi con un amico, stampa a modo tuo e tieni il tuo quadro nella schermata Home.",
-        "• Dipingi insieme: durante una chiamata FaceTime, scegli Dipingi insieme nel menu Altro di un quadro e dipingi la stessa immagine con un amico, ogni area su entrambi gli schermi.",
-        "• Widget: il quadro che stai dipingendo nella schermata Home, con Dipingi un’area a portata di mano, o nella schermata di blocco, e un quadro finito al giorno in StandBy.",
-        "• Adesivi: i tuoi quadri finiti, pronti da inviare in Messaggi.",
-        "• Stampa mostra le pagine prima di stamparle. Scegli la dimensione e attiva o disattiva Numeri, Tocchi di colore e Legenda dei colori, fino a una semplice pagina da colorare.",
-        "• Colori più vivaci: i nuovi quadri sono più allegri, con luci calde e ombre fredde.",
-        "• A quadro finito: Un altro, Su carta o Invialo, e per un’immagine della Libreria, L’originale, sull’opera da cui viene.",
-        "• Regola…, sotto la durata, cambia colori, dettaglio e linee di un quadro prima di iniziare.",
-        "• Guarda il disegno prendere forma mentre il quadro viene creato, e vedi un quadro finito con o senza le sue linee.",
-        "• Rifinisci e Cambia ora sono una cosa sola: Modifica.",
-        "• Tanti altri ritocchi e correzioni."
+        "Istantaneo: il tuo quadro inizia nel momento in cui scegli un’immagine.",
+        "• Un breve making-of riempie l’attesa: una matita abbozza la tua immagine, le sue linee si accendono e i numeri spuntano come stelle. Tocca per saltarlo.",
+        "• L’immagine di stasera è pronta prima che tu la tocchi, e si apre subito.",
+        "• Cambia la Durata di un nuovo quadro e cambia subito: le altre durate si preparano mentre guardi.",
+        "• Le immagini partono prima: i modelli che disegnano le linee restano pronti.",
+        "• Piccoli ritocchi e correzioni."
       ],
       "description": [
         "Trasforma qualsiasi foto in un quadro da dipingere con i numeri, tutto tuo. Il tuo iPhone o iPad disegna il tuo cane, il tuo giardino o la tua famiglia come un album da colorare, con linee pulite, aree numerate e colori mescolati dalla foto stessa.",
@@ -408,17 +383,12 @@
       "keywords": "ぬりえ,ペイント,ナンバー,オリジナル,作成,ペット,犬,猫,似顔絵,ポートレート,印刷,プリント,キット,手作り,キャンバス,ギフト,プレゼント,イラスト,絵画,絵の具,色塗り,大人,癒し,線画",
       "promotionalText": "どんな写真からも、自分だけの数字塗り絵を。iPhoneやiPadの中で作れます。ここで塗っても、手で描き直しても、印刷して本物の絵筆で塗っても。",
       "whatsNew": [
-        "友だちといっしょに塗ったり、好きなように印刷したり、ホーム画面に絵を飾ったりできるようになりました。",
-        "• いっしょに塗る：FaceTime通話中に、絵の「その他」メニューから「いっしょに塗る」を選ぶと、友だちと同じ絵を塗れます。塗ったエリアは両方の画面に表示されます。",
-        "• ウィジェット：塗っている途中の絵をホーム画面やロック画面に。ホーム画面では「ひとつ塗る」でその場で塗れます。スタンバイには完成した絵を毎日ひとつ。",
-        "• ステッカー：完成した絵を、メッセージでステッカーとして送れます。",
-        "• 印刷する前にページを確認できるようになりました。サイズを選び、番号・色のヒント・色の一覧をオン／オフして、シンプルなぬり絵にもできます。",
-        "• より明るい絵の具：新しい絵は、あたたかい光とひんやりした影で、いきいきとした仕上がりに。",
-        "• 絵が完成したら：「もう1枚」「紙に」「送る」。ライブラリの絵なら「オリジナル」で元の作品について読めます。",
-        "• 長さのチップの「微調整…」で、塗り始める前に色・細かさ・線を変えられます。",
-        "• 絵ができあがるあいだに線が描かれていく様子を見られます。完成した絵は線あり・線なしで表示できます。",
-        "• 「仕上げ」と「描き変える」はひとつになり、「編集」になりました。",
-        "• そのほか、細かな改善と修正。"
+        "すぐに：絵を選んだ瞬間に、あなたの絵が始まります。",
+        "• 待ち時間には短いメイキング：鉛筆があなたの絵をスケッチし、線が焼き付き、番号が星のように現れます。タップでスキップできます。",
+        "• 今夜の絵はタップする前に用意されているので、すぐに開きます。",
+        "• 新しい絵の塗る時間を変えると、すぐに切り替わります。ほかの時間は見ているあいだに用意されます。",
+        "• 絵がもっと早く始まります。線を描くモデルがいつでも準備できています。",
+        "• そのほか細かな改善と修正。"
       ],
       "description": [
         "どんな写真も、自分だけの数字塗り絵に。iPhoneやiPadが、愛犬や庭、家族の写真を、すっきりした線と番号つきのエリア、写真そのものから混ぜた絵の具で、塗り絵に描き起こします。",
@@ -467,17 +437,12 @@
       "keywords": "컬러링북,컬러링,색칠공부,색칠놀이,명화,도안,인쇄,반려동물,강아지,고양이,펫,초상화,가족,선물,DIY,캔버스,키트,페인팅,그림,유화,힐링,커스텀,맞춤,피포",
       "promotionalText": "어떤 사진이든 iPhone이나 iPad에서 바로 나만의 숫자 색칠 도안으로. 앱에서 칠하거나, 손으로 다시 그리거나, 인쇄해서 진짜 붓으로 칠해 보세요.",
       "whatsNew": [
-        "친구와 함께 칠하고, 원하는 대로 인쇄하고, 홈 화면에 그림을 두세요.",
-        "• 함께 칠하기: FaceTime 통화 중에 그림의 더 보기 메뉴에서 함께 칠하기를 고르면 친구와 같은 그림을 칠할 수 있어요. 칠한 영역은 두 화면 모두에 나타나요.",
-        "• 위젯: 칠하고 있는 그림을 홈 화면이나 잠금 화면에 둘 수 있고, 홈 화면에서는 바로 한 영역 칠하기를 할 수 있어요. 스탠바이에는 완성한 그림이 매일 하나씩.",
-        "• 스티커: 완성한 그림을 메시지에서 스티커로 보낼 수 있어요.",
-        "• 인쇄 전에 페이지를 미리 볼 수 있어요. 크기를 고르고 숫자, 색 힌트, 색 목록을 켜거나 끄면 간단한 색칠 공부 페이지도 돼요.",
-        "• 더 밝은 물감: 새 그림이 따뜻한 빛과 시원한 그림자로 더 생기 있게 나와요.",
-        "• 그림을 완성하면: 하나 더, 종이에, 보내기. 라이브러리 그림이라면 원본에서 원작 이야기도 볼 수 있어요.",
-        "• 길이 칩의 미세 조정…으로 칠하기 전에 색, 디테일, 선을 바꿀 수 있어요.",
-        "• 그림이 만들어지는 동안 선이 그려지는 모습을 보고, 완성한 그림을 선과 함께 또는 선 없이 볼 수 있어요.",
-        "• 다듬기와 바꾸기가 하나로 합쳐져 편집이 되었어요.",
-        "• 그 밖의 여러 개선과 수정."
+        "바로: 사진을 고르는 순간 그림이 시작돼요.",
+        "• 기다리는 동안 짧은 메이킹: 연필이 그림을 스케치하고, 선이 타오르듯 새겨지고, 숫자가 별처럼 나타나요. 탭하면 건너뛸 수 있어요.",
+        "• 오늘 밤의 그림은 탭하기 전에 미리 준비되어 바로 열려요.",
+        "• 새 그림의 그리는 시간을 바꾸면 바로 바뀌어요. 다른 시간은 보는 동안 미리 만들어져요.",
+        "• 그림이 더 빨리 시작돼요. 선을 그리는 모델이 늘 준비되어 있어요.",
+        "• 그 밖의 작은 개선과 수정."
       ],
       "description": [
         "어떤 사진이든 나만의 숫자 색칠 그림으로 바꿔 보세요. iPhone이나 iPad가 강아지, 정원, 가족 사진을 컬러링북처럼 그려 줘요. 깔끔한 선, 숫자가 적힌 영역, 그리고 사진에서 섞어 낸 물감이 준비돼요.",
@@ -526,17 +491,12 @@
       "keywords": "number,eigen,persoonlijk,maken,huisdier,hond,kat,portret,printen,kleurplaat,kleuren,doek,cadeau,diy",
       "promotionalText": "Je eigen schilderen op nummer van elke foto, gemaakt op je iPhone of iPad. Schilder het hier, teken het met de hand opnieuw, of print het en schilder met echte penselen.",
       "whatsNew": [
-        "Schilder samen, print zoals jij wilt en zet je schilderij op je beginscherm.",
-        "• Samen schilderen: kies tijdens een FaceTime-gesprek Samen schilderen in het menu Meer van een schilderij en schilder samen met een vriend aan hetzelfde plaatje, elk vlak op beide schermen.",
-        "• Widgets: je schilderij in wording op het beginscherm, met Schilder één vlak er meteen bij, of op het toegangsscherm, en elke dag een voltooid schilderij in Stand-by.",
-        "• Stickers: je afgemaakte schilderijen, klaar om te versturen in Berichten.",
-        "• Printen toont de pagina’s voordat ze geprint worden. Kies het formaat en zet Nummers, Kleurtinten en Kleurenlegenda aan of uit, tot een eenvoudige kleurplaat aan toe.",
-        "• Fellere verf: nieuwe schilderijen worden levendiger, met warme lichten en koele schaduwen.",
-        "• Als een schilderij af is: Nog eentje, Op papier of Stuur het, en bij een plaatje uit de Bibliotheek Het origineel, over het werk waar het vandaan komt.",
-        "• Verfijnen… onder de duur verandert de kleuren, details en lijnen van een schilderij voordat je begint.",
-        "• Kijk hoe de tekening ontstaat terwijl je schilderij gemaakt wordt, en bekijk een voltooid schilderij met of zonder lijnen.",
-        "• Verfijnen (tekenen) en Wijzig zijn nu één: Bewerken.",
-        "• Veel kleinere verbeteringen en reparaties."
+        "Direct: je schilderij begint op het moment dat je een plaatje kiest.",
+        "• Een korte making-of vult het wachten: een potlood schetst je plaatje, de lijnen branden in en de nummers verschijnen als sterren. Tik om over te slaan.",
+        "• Het plaatje van vanavond is al klaar voordat je erop tikt, en opent meteen.",
+        "• Verander de Schilderduur van een nieuw schilderij en het verandert meteen: de andere duren worden gemaakt terwijl je kijkt.",
+        "• Plaatjes beginnen sneller: de modellen die de lijnen tekenen blijven klaarstaan.",
+        "• Kleine verbeteringen en reparaties."
       ],
       "description": [
         "Maak van elke foto je eigen schilderen op nummer. Je iPhone of iPad tekent je hond, je tuin of je familie als een kleurplaat, met strakke lijnen, genummerde vlakken en verven die uit de foto zelf zijn gemengd.",
@@ -585,17 +545,12 @@
       "keywords": "personalizado,criar,pintar,colorir,pet,cachorro,gato,retrato,imprimir,kit,tela,presente,diy,desenho",
       "promotionalText": "Sua própria pintura por números a partir de qualquer foto, feita no seu iPhone ou iPad. Pinte aqui, redesenhe à mão ou imprima e pinte com pincéis de verdade.",
       "whatsNew": [
-        "Pinte com um amigo, imprima do seu jeito e leve sua pintura para a Tela de Início.",
-        "• Pintar juntos: numa ligação do FaceTime, escolha Pintar juntos no menu Mais de uma pintura e pinte a mesma imagem com um amigo, cada área nas duas telas.",
-        "• Widgets: sua pintura em andamento na Tela de Início, com Pintar uma área ali mesmo, ou na Tela Bloqueada, e uma pintura pronta por dia no Modo Mesa.",
-        "• Figurinhas: suas pinturas prontas, para enviar no Mensagens.",
-        "• Imprimir mostra as páginas antes de imprimir. Escolha o tamanho e ligue ou desligue Números, Toques de cor e Legenda de cores, até virar uma simples página de colorir.",
-        "• Cores mais vivas: as novas pinturas saem mais alegres, com luzes quentes e sombras frias.",
-        "• Ao terminar uma pintura: Mais uma, No papel ou Enviar, e numa imagem da Biblioteca, O original, sobre a obra de onde ela veio.",
-        "• Ajustar…, abaixo da duração, muda as cores, o detalhe e as linhas de uma pintura antes de começar.",
-        "• Veja o desenho se formar enquanto sua pintura é feita, e veja uma pintura pronta com ou sem as linhas.",
-        "• Refinar e Mudar agora são uma coisa só: Editar.",
-        "• Muitos outros ajustes e correções."
+        "Na hora: sua pintura começa no momento em que você escolhe uma imagem.",
+        "• Um making-of curto preenche a espera: um lápis esboça sua imagem, as linhas se acendem e os números surgem como estrelas. Toque para pular.",
+        "• A Imagem da noite fica pronta antes de você tocar nela e abre na hora.",
+        "• Mude a Duração da pintura de um quadro novo e ela muda na hora: as outras durações são feitas enquanto você olha.",
+        "• As imagens começam mais rápido: os modelos que desenham as linhas ficam prontos.",
+        "• Pequenos ajustes e correções."
       ],
       "description": [
         "Transforme qualquer foto na sua própria pintura por números. Seu iPhone ou iPad desenha o seu cachorro, o seu jardim ou a sua família como um livro de colorir, com linhas limpas, áreas numeradas e tintas misturadas a partir da própria foto.",
@@ -644,17 +599,12 @@
       "keywords": "定制,自制,私人订制,宠物,狗,猫,肖像,人像,头像,图片,填色,涂色,涂色本,画画,绘画,手绘,线稿,打印,礼物,画布,DIY,解压,放松,治愈,生成器,风景",
       "promotionalText": "用任意一张照片，在 iPhone 或 iPad 上做出你自己的数字油画。在这里涂色，亲手重画线条，或者打印出来，拿起真正的画笔。",
       "whatsNew": [
-        "和朋友一起涂色，按你的方式打印，把画放到主屏幕上。",
-        "• 一起涂色：在 FaceTime 通话中，从画作的“更多”菜单选择“一起涂色”，就能和朋友涂同一幅画，每一块都会出现在两边的屏幕上。",
-        "• 小组件：把正在涂的画放到主屏幕或锁定屏幕，在主屏幕上直接“涂一个区域”；待机显示每天展示一幅完成的画。",
-        "• 贴纸：完成的画可以在“信息”里作为贴纸发送。",
-        "• 打印前可以先看到每一页。选择尺寸，开关数字、颜色提示和颜色索引，甚至只留一张简单的涂色页。",
-        "• 颜色更明亮：新画作更生动，亮处偏暖，暗处偏冷。",
-        "• 画完以后：再来一幅、画在纸上或发出去；来自图库的画还能在“原作”里了解它的出处。",
-        "• 时长标签里的“微调…”可以在开始前调整一幅画的颜色、细节和线条。",
-        "• 画作生成时可以看着线条慢慢画出来；完成的画可以显示或隐藏线条。",
-        "• “精修”和“修改”合而为一：编辑。",
-        "• 还有许多细节改进和修复。"
+        "即刻：选好图片的那一刻，你的画就开始了。",
+        "• 等待时有一段简短的制作过程：铅笔勾勒出你的图片，线条如引线般燃亮，数字像星星一样出现。轻点即可跳过。",
+        "• 今晚的画会在你点开之前准备好，一点就开。",
+        "• 更改新画的绘画时长，立刻就会变：其他时长在你观看时已在准备。",
+        "• 图片开始得更快：绘制线条的模型随时待命。",
+        "• 其他细节改进与修复。"
       ],
       "description": [
         "把任意一张照片变成你自己的数字油画。你的 iPhone 或 iPad 会把你的狗、你的花园或你的家人画成一本涂色画，线条干净，区域编好数字，颜料从照片本身调出。",
@@ -703,17 +653,12 @@
       "keywords": "填色,著色,塗色,客製,訂製,自製,寵物,狗,貓,肖像,人像,列印,禮物,材料包,DIY,畫布,彩繪,手繪,名畫,畫畫,紓壓,療癒,圖片,照片轉畫,著色本,填色本,藝術,手作,放鬆,繪圖",
       "promotionalText": "用任何照片，在你的 iPhone 或 iPad 上做出專屬的數字油畫。在 App 裡上色、親手重畫，或印出來用真正的畫筆來畫。",
       "whatsNew": [
-        "和朋友一起塗色、照你的方式列印，把畫放到主畫面上。",
-        "• 一起塗色：在 FaceTime 通話中，從畫作的「更多」選單選擇「一起塗色」，就能和朋友塗同一幅畫，每一塊都會出現在兩邊的螢幕上。",
-        "• 小工具：把正在塗的畫放到主畫面或鎖定畫面，在主畫面上直接「為一個區塊上色」；待機模式每天展示一幅完成的畫。",
-        "• 貼圖：完成的畫可以在「訊息」裡當作貼圖傳送。",
-        "• 列印前可以先看到每一頁。選擇尺寸，開關數字、顏色提示和顏色對照表，甚至只留一張簡單的著色頁。",
-        "• 顏色更明亮：新畫作更生動，亮處偏暖，暗處偏冷。",
-        "• 畫完以後：再畫一幅、印在紙上或送出；來自圖庫的畫還能在「原作」裡了解它的出處。",
-        "• 時長標籤裡的「微調…」可以在開始前調整一幅畫的顏色、細節和線條。",
-        "• 畫作產生時可以看著線條慢慢畫出來；完成的畫可以顯示或隱藏線條。",
-        "• 「細修」和「修改」合而為一：編輯。",
-        "• 還有許多細節改進和修正。"
+        "即刻：選好圖片的那一刻，你的畫就開始了。",
+        "• 等待時有一段簡短的幕後花絮：鉛筆勾勒出你的圖片，線條如引線般燃亮，數字像星星一樣出現。輕點即可略過。",
+        "• 今晚的畫會在你點開之前準備好，一點就開。",
+        "• 更改新畫的作畫時長，立刻就會變：其他時長在你觀看時已在準備。",
+        "• 圖片開始得更快：繪製線條的模型隨時待命。",
+        "• 其他細節改進與修正。"
       ],
       "description": [
         "把任何照片變成你專屬的數字油畫。你的 iPhone 或 iPad 會把你的狗、你的花園或你的家人畫成一本著色本：線條乾淨、區塊都標上數字，顏料則從照片本身調出來。",
@@ -764,18 +709,16 @@
     }
   },
   "nomination": {
-    "name": "Paint by Moonlight 1.3: Paint Together",
+    "name": "Paint by Moonlight 1.5: Instant",
     "type": "APP_ENHANCEMENTS",
     "description": [
-      "Paint by Moonlight turns a photo into a paint-by-numbers painting entirely on the device, with no AI image generation: its own pipeline draws the photo as a coloring book and mixes its paints, and the painter fills it in one calm tap at a time.",
+      "Paint by Moonlight turns any photo into a paint-by-numbers painting entirely on the device, with no AI image generation: its own pipeline draws the photo as a coloring book and mixes its paints, and the painter fills it in one calm tap at a time.",
       "",
-      "Version 1.3 makes it something to share. With Paint Together, over SharePlay, two people on a FaceTime call paint the same picture, each fill landing on both screens. We know of no other paint-by-numbers app that paints together over FaceTime.",
+      "Version 1.5 removes the wait. While the painting is made, a short Making-of plays: a pencil sketches the photo along its real lines, those lines burn in like a fuse, and the numbers come out as stars, ending on exactly the page you paint. It is the actual work, shown as it happens on Apple silicon, not a loading screen, and a tap skips it. Tonight's Picture is made before it is tapped, and every Painting Length is cut ahead while you look, so switching is instant.",
       "",
-      "The painting also leaves the app: a widget keeps it on the Home Screen, where Paint One Area fills the next area without opening the app, and on the Lock Screen; StandBy shows a finished painting a day; finished paintings become stickers in Messages. Print previews its pages, down to a plain coloring page for real brushes.",
-      "",
-      "It is made by one developer, in eleven languages, with VoiceOver painting area by area, Dynamic Type and Reduce Motion, no ads and no tracking."
+      "Paint Together (SharePlay), widgets and Messages stickers came in 1.3. Made by one developer, in eleven languages, with VoiceOver, Dynamic Type and Reduce Motion, no ads and no tracking."
     ],
-    "publishStartDate": "2026-11-26T00:00:00Z",
+    "publishStartDate": "2026-11-28T00:00:00Z",
     "deviceFamilies": [
       "IPHONE",
       "IPAD"
@@ -789,6 +732,6 @@
     "hasInAppEvents": false,
     "launchInSelectMarketsFirst": false,
     "preOrderEnabled": false,
-    "submit": true
+    "submit": false
   }
 }

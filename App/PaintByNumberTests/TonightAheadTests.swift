@@ -1,4 +1,3 @@
-#if UNRELEASED
 import Foundation
 import PaintCore
 import Testing
@@ -22,6 +21,7 @@ struct TonightAheadTests {
         #expect(key.pipelineVersion == TemplateGenerator.pipelineVersion)
         #expect(key.paintMix == CreateModel.newPaintMix && key.tuning == CreateModel.newTuning)
         #expect(key.candidates == CreateModel.maxCandidates)
+        #if UNRELEASED
         // A night's picture whose full picture hasn't come can't be made yet.
         let folder = Fixtures.temporaryDirectory()
         let thumbnail = folder.appending(path: "thumb.jpg")
@@ -33,6 +33,7 @@ struct TonightAheadTests {
                 sha256: String(repeating: "0", count: 64)),
             file: folder.appending(path: "missing.jpg"), thumbnail: thumbnail)
         #expect(TonightAhead.key(for: night, paintingLength: .quick, lineArt: lineArt) == nil)
+        #endif
     }
 
     /// Made ahead, then picked: the flow shows the final painting with no draft before it, and it
@@ -97,4 +98,3 @@ struct TonightAheadTests {
         #expect(model.decision?.preference == .relaxed)
     }
 }
-#endif

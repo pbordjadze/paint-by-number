@@ -187,9 +187,9 @@ struct AppShellView: View {
         .onChange(of: scenePhase, initial: true) { _, phase in
             if phase == .active { Task { await Nights.shared.refresh() } }
         }
+        #endif
         // Tonight's Picture made before it is picked, while no painting is open (`TonightAhead`).
         .modifier(TonightAhead.Preparing(isPainting: !path.isEmpty))
-        #endif
         // Someone started painting a picture together: it is added as a painting they sent and
         // opens straight away, as an opened `.moonlight` file does.
         .onChange(of: TogetherLink.shared.arrived?.data) { _, data in

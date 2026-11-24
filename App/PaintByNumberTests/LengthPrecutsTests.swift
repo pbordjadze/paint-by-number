@@ -1,4 +1,3 @@
-#if UNRELEASED
 import CoreGraphics
 import Foundation
 import PaintCore
@@ -109,4 +108,3 @@ struct LengthPrecutsTests {
         }
     }
 }
-#endif
