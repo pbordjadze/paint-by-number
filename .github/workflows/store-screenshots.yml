@@ -6,7 +6,9 @@ name: Store screenshots
 # slides show the painter's own photos, which never go in this public repository: they are read
 # from a branch of the private feedback repository (default `store-slides`), laid out as the
 # script's docstring says, under `store-slides/`.
-# Actions › Store screenshots › Run workflow from `main` with Upload ticked replaces the sets;
+# Actions › Store screenshots › Run workflow from `main` with Upload ticked replaces the sets (a
+# set the version already has with other screenshots only when Replace names it: the script's
+# docstring says why);
 # without it, or on a push to a `claude/store-screenshots*` branch (which ci.yml ignores), it is a
 # dry run: it lists the version's sets and the slides it found, changing nothing.
 # Secrets: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8 (as the TestFlight workflow's) and
@@ -24,6 +26,10 @@ on:
         description: 'Branch of the private feedback repository holding store-slides/'
         required: false
         default: 'store-slides'
+      replace:
+        description: 'Screenshot sets the version already has that may be replaced (e.g. APP_IPHONE_61,APP_IPAD_PRO_3GEN_129, or all); others must match or be new'
+        required: false
+        default: ''
   push:
     branches: ['claude/store-screenshots*']
 
@@ -71,4 +77,5 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
           UPLOAD: ${{ github.event_name == 'workflow_dispatch' && inputs.upload && '--upload' || '' }}
-        run: '"$RUNNER_TEMP/venv/bin/python" ci/store_screenshots_upload.py feedback/store-slides $UPLOAD'
+          REPLACE: ${{ inputs.replace }}
+        run: '"$RUNNER_TEMP/venv/bin/python" ci/store_screenshots_upload.py feedback/store-slides $UPLOAD --replace "$REPLACE"'
