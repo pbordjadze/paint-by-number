@@ -100,6 +100,10 @@ export const prodigi = {
     // Rolled canvas, 400 gsm cotton, for acrylic (painting-company row 380): not yet in the app.
     "canvas-16x24": "GLOBAL-CAN-ROL-SC-16X24",
     "canvas-24x36": "GLOBAL-CAN-ROL-SC-24X36",
+    // Cold press watercolour paper, 315 gsm cotton rag, for watercolor.
+    "watercolor-18x24": "ART-FAP-CPWP-18X24",
+    "watercolor-24x36": "ART-FAP-CPWP-24X36",
+    "watercolor-16x24": "ART-FAP-CPWP-16X24",
   },
 
   configured: (env) => Boolean(env.PRODIGI_API_KEY && env.PRODIGI_API),
