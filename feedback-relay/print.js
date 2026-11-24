@@ -2,50 +2,64 @@
 // the painter chose to print to Prodigi's print API, which prints it as one full-size sheet and
 // mails it. worker.js routes /v1/print/ here; tested by `node --test feedback-relay/print.test.js`.
 //
-//   POST /v1/print/quotes          {"product": "<id>", "country": "US"}, application/json, at most
-//                                  1 KB. 200 {"product", "currency", "price"[, "sandbox": {"cost",
-//                                  "cut"}]}: the price the painter pays, shipping included (Prodigi's
-//                                  cost, items and standard shipping, with MARKUP and rounded up to a
-//                                  whole unit); "sandbox" says, while the relay talks to the sandbox,
-//                                  what the order costs and what is kept.
-//   POST /v1/print/orders          multipart/form-data, at most 25 MB: `sheet`, the one-page PDF
-//                                  (checked by `%PDF-`), and `order`, JSON (a field or a file part,
-//                                  at most 32 KB) {"key", "product", "recipient": {"name", "email",
-//                                  "line1", "line2"?, "city", "state"?, "zip", "country"}[, "price",
-//                                  "currency", "payment": {"data", "network", "transactionId",
-//                                  "instrument"}]}. `key` (32 hex digits) is the app's for this
-//                                  order, the same on every try of it: the sheet and where the order
-//                                  stands are kept under it, so an order is charged and placed once.
-//                                  With STRIPE_SECRET_KEY set the order is paid first: the price is
-//                                  quoted again and must be the one the painter agreed to (409 if it
-//                                  moved), and the Apple Pay payment (PKPaymentToken's paymentData,
-//                                  base64) is charged through Stripe (402 declined or missing). Then
-//                                  the order is placed with the sheet's URL (below); a payment whose
-//                                  order surely failed is refunded. 201 {"ok": true, "order":
-//                                  "<Prodigi's id>", "sandbox": true|false, "paid": true|false}, also
-//                                  for a try of an order placed already; 202 {"ok": false, "pending":
-//                                  true} for one still under way, or left uncertain (Stripe or
-//                                  Prodigi gave no clear answer: the log names it for a look by hand).
+//   POST /v1/print/quotes          {"product": "<id>", "country": "US"[, "city", "state", "zip"]},
+//                                  application/json, at most 1 KB; the city, state and postal code
+//                                  are the Apple Pay sheet's, once it shares them. 200 {"product",
+//                                  "currency", "price"[, "sandbox": {"cost", "cut"}]}: the price the
+//                                  painter pays there, shipping and Prodigi's tax included (its cost
+//                                  with MARKUP, rounded up to a whole unit); "sandbox" says, while
+//                                  the relay talks to the sandbox, what the order costs and what is
+//                                  kept. The same quote is kept ten minutes (`priceOf`).
+//   PUT  /v1/print/sheets/<key>    application/pdf, at most 25 MB: the order's one-page sheet,
+//                                  kept under the order's key before it is paid for, so the Apple
+//                                  Pay sheet waits on the charge alone. 200 {"ok": true}. A sheet
+//                                  sent again replaces it until the order is taken.
+//   POST /v1/print/orders          application/json, at most 32 KB: {"key", "product", "recipient":
+//                                  {"name", "email", "line1", "line2"?, "city", "state"?, "zip",
+//                                  "country"}[, "price", "currency", "payment": {"data", "network",
+//                                  "transactionId", "instrument"}, "quotedAt": {"country", "city",
+//                                  "state", "zip"}]}; 412 when no sheet is kept under
+//                                  the key. Or, from an older app, multipart/form-data with `sheet`
+//                                  (the PDF) and `order` (that JSON, a field or a file part). `key`
+//                                  (32 hex digits) is the app's for this order, the same on every
+//                                  try: an order is charged and placed once. With STRIPE_SECRET_KEY
+//                                  set the order is paid first: the price is quoted again at the
+//                                  recipient's city, state and postal code and must be the one the
+//                                  painter agreed to (409 if it moved), and the Apple Pay payment
+//                                  (PKPaymentToken's paymentData, base64) is charged through Stripe
+//                                  (402 declined or missing). Then the order is the relay's: 201
+//                                  {"ok": true, "order": "sheet-<first 12 of key>", "sandbox",
+//                                  "paid"}, also for any later try of it, and its Durable Object's
+//                                  alarm places it with the sheet's URL (below), checks Prodigi took
+//                                  it and refunds the payment if not, filing an issue in
+//                                  FEEDBACK_REPO for anything that needs Paul. 202 {"ok": false,
+//                                  "pending": true} while a try of it is under way or Stripe gave
+//                                  no clear answer (the alarm asks Stripe); 410 {"ok": false,
+//                                  "refused": true, "refunded"} for one Prodigi refused.
 //   GET  /v1/print/sheets/<id>/<token>.pdf
 //                                  the kept sheet, for Prodigi's printer: 404 for anything else.
+// Once a day (worker.js's scheduled, wrangler.toml's cron) `reconcilePrints` matches Stripe's
+// payments for sheets against the orders Prodigi accepted, and files an issue for one that isn't.
 //
 // Failures are a bare status (the log has the detail): 400 a malformed body or an unknown product,
 // 404 another path, 405 another method, 411 no Content-Length, 413 too large, 415 not JSON or
-// multipart, or a sheet that is no PDF, 429 over the rate limit (PRINT_LIMITER), 500 misconfigured,
-// 502 Prodigi or Stripe refused, 503 live printing or charging, which this relay doesn't do (below).
+// multipart, or a sheet that is no PDF, 429 over the rate limit (PRINT_LIMITER, counted at each
+// Cloudflare location apart), 500 misconfigured, 502 Prodigi or Stripe refused, 503 live printing
+// or charging, which this relay doesn't do (below).
 //
 // Only the sandbox. PRODIGI_API must be Prodigi's v5 API (https://api.prodigi.com/v5) and its key the
 // sandbox dashboard's (https://sandbox-beta-dashboard.pwinty.com), sent as `sandbox_<key>`, which
 // prints nothing and charges nothing, and STRIPE_SECRET_KEY, when set, Stripe's test mode
 // (sk_test_, or a restricted rk_test_ key with Tokens, PaymentIntents and Refunds write), so no
 // real card is charged for a print that never comes. Going live is Paul's word,
-// with both keys live and payment required (no order without STRIPE_SECRET_KEY).
+// with both keys live and payment required: a live print service never takes an unpaid order.
 //
-// Privacy: the photo never comes here, only the printed sheet (lines, numbers, the key) and the
-// address it goes to. The sheet lives in its own Durable Object (PrintSheet, SQLite-backed, named by
-// the order's random key) under a random token, and deletes itself SHEET_DAYS after it was kept, by an alarm;
-// the address goes to Prodigi (and with a payment, the name, email and address to Stripe, for
-// its receipt and shipping record) and is kept nowhere here.
+// Privacy: the photo never comes here, only the printed sheet (lines traced from it, numbers, the
+// key) and the address it goes to. The sheet lives in its own Durable Object (PrintSheet,
+// SQLite-backed, named by the order's random key) under a random token, and deletes itself
+// SHEET_DAYS after it was kept, by an alarm; the name, email and address go to Prodigi (and with a
+// payment to Stripe, for its receipt and shipping record), and are kept in the order's object only
+// until Prodigi has accepted the order (or two days, when it is given up on). Issues name no one.
 //
 // The print service is one object (`prodigi` below; PRINT_PROVIDER names another), so it can be
 // replaced without touching the rest. Secrets PRODIGI_API_KEY (Prodigi's sandbox dashboard › API; never a live_ key) and, optional,
@@ -84,10 +98,14 @@ const COUNTRY = /^[A-Z]{2}$/;
  *   products              the app's product ids → the service's own product codes
  *   configured(env)       whether its secrets and settings are there
  *   isSandbox(env)        whether it is talking to its test system, which prints nothing
- *   cost(env, deps, code, country)   → {cost, currency}: one sheet sent there, shipping included
+ *   cost(env, deps, code, {country, city, state, zip})   → {cost, currency}: one sheet sent
+ *                         there, shipping included (city, state and zip may be "")
  *   place(env, deps, {reference, key, code, recipient, sheetUrl})   → the service's order id; the
  *                         same key placed again must not make a second order, and an error that
  *                         leaves it unknown whether one was made carries `uncertain`
+ *   status(env, deps, id) → {status, issues}: the service's word on the order, in Prodigi's terms
+ *                         (`ACCEPTED`; "cancelled", "failed", or "draft" with "fulfilment_issue"
+ *                         refused it; "on_hold" needs Paul)
  */
 export const prodigi = {
   name: "Prodigi",
@@ -105,13 +123,19 @@ export const prodigi = {
 
   isSandbox: (env) => env.PRODIGI_API === SANDBOX && prodigiKey(env) !== null,
 
-  async cost(env, deps, code, country) {
-    // A quote wants a whole address: a stand-in street in the country, the order's price too.
-    // Prodigi's total carries tax, so a painter elsewhere in the country may pay the stand-in's
-    // sales tax, not their own (before live sales: Stripe Tax, painting-company row 380).
+  async cost(env, deps, code, place) {
+    // A quote wants a whole address: the city, state and postal code where the painter's Apple Pay
+    // sheet has shared them (the order's price is the same, from its own), a stand-in street, and
+    // a stand-in postcode in the country before that. Prodigi's total carries the tax it charges.
     const answer = await prodigiCall(env, deps, "POST", "/quotes/order", {
       shippingMethod: SHIPPING,
-      shippingAddress: { line1: "1 Main Street", townOrCity: "City", postalOrZipCode: POSTCODES[country] ?? "1000", countryCode: country },
+      shippingAddress: {
+        line1: "1 Main Street",
+        townOrCity: place.city || "City",
+        ...(place.state ? { stateOrCounty: place.state } : {}),
+        postalOrZipCode: place.zip || (POSTCODES[place.country] ?? "1000"),
+        countryCode: place.country,
+      },
       items: [{ catalogueVariantId: code, quantity: 1 }],
     });
     const total = answer?.data?.total;
@@ -152,6 +176,15 @@ export const prodigi = {
     if (typeof id !== "string") throw Object.assign(new Error("Prodigi's answer had no order id"), { uncertain: true });
     return id;
   },
+
+  async status(env, deps, id) {
+    // Accepted with 202 isn't taken: the submission runs after, and may refuse it.
+    const answer = await prodigiCall(env, deps, "GET", `/orders/${encodeURIComponent(id)}`);
+    const status = answer?.data?.status;
+    if (typeof status !== "string") throw Object.assign(new Error("Prodigi's order had no status"), { uncertain: true });
+    const issues = (answer?.data?.issues ?? []).map((issue) => String(issue?.code ?? "")).filter(Boolean);
+    return { status, issues };
+  },
 };
 
 const PROVIDERS = { prodigi };
@@ -169,12 +202,18 @@ export function routesPrint(pathname) {
 
 export async function handlePrint(request, env, deps = {}) {
   const url = new URL(request.url);
-  if (url.pathname.startsWith(SHEETS)) {
+  const upload = url.pathname.startsWith(SHEETS) ? /^([0-9a-f]{32})$/.exec(url.pathname.slice(SHEETS.length)) : null;
+  if (url.pathname.startsWith(SHEETS) && !upload) {
     if (request.method !== "GET" && request.method !== "HEAD") return bare(405, { allow: "GET" });
     return sheet(url.pathname.slice(SHEETS.length), env);
   }
-  if (url.pathname !== QUOTES && url.pathname !== ORDERS) return bare(404);
-  if (request.method !== "POST") return bare(405, { allow: "POST" });
+  if (upload) {
+    if (request.method !== "PUT") return bare(405, { allow: "PUT" });
+  } else if (url.pathname !== QUOTES && url.pathname !== ORDERS) {
+    return bare(404);
+  } else if (request.method !== "POST") {
+    return bare(405, { allow: "POST" });
+  }
   const provider = providerOf(env);
   if (!provider || !provider.configured(env) || !env.PRINT_SHEETS) {
     log("The print service, its secrets or PRINT_SHEETS are missing");
@@ -185,6 +224,7 @@ export async function handlePrint(request, env, deps = {}) {
     return bare(503);
   }
   if (!(await allowed(env.PRINT_LIMITER, request.headers.get("cf-connecting-ip") ?? "unknown"))) return bare(429);
+  if (upload) return putSheet(request, env, upload[1]);
   return url.pathname === QUOTES ? quote(request, env, deps, provider) : order(request, env, deps, provider);
 }
 
@@ -206,9 +246,11 @@ async function quote(request, env, deps, provider) {
   if (typeof body?.product !== "string" || !code || typeof body?.country !== "string" || !COUNTRY.test(body.country)) {
     return bare(400);
   }
+  const place = { country: body.country, city: cleanField(body.city, false), state: cleanField(body.state, false), zip: cleanField(body.zip, false) };
+  if (place.city === null || place.state === null || place.zip === null) return bare(400);
   let priced;
   try {
-    priced = await priceOf(env, deps, provider, code, body.country);
+    priced = await priceOf(env, deps, provider, code, place);
   } catch (error) {
     log("Quoting failed", error);
     return bare(502);
@@ -219,11 +261,28 @@ async function quote(request, env, deps, provider) {
   });
 }
 
-/** The service's cost of one sheet sent to `country`, shipping included, and the painter's price. */
-async function priceOf(env, deps, provider, code, country) {
-  const { cost, currency } = await provider.cost(env, deps, code, country);
-  return { cost, currency, price: priceFor(cost, env.MARKUP) };
+/**
+ * The service's cost of one sheet sent to `place`, shipping included, and the painter's price.
+ * The same quote is kept QUOTE_MS in this isolate (best effort: a quote and its order, a minute
+ * apart, ask Prodigi once). Tests that hand in their own fetch keep none, unless they pass a cache.
+ */
+async function priceOf(env, deps, provider, code, place) {
+  const cache = deps.quoteCache ?? (deps.fetch ? null : QUOTE_CACHE);
+  const now = (deps.now ?? Date.now)();
+  const name = JSON.stringify([provider.name, code, place.country, place.city, place.state, place.zip]);
+  let quoted = cache?.get(name);
+  if (!quoted || now - quoted.at > QUOTE_MS) {
+    quoted = { ...(await provider.cost(env, deps, code, place)), at: now };
+    if (cache) {
+      if (cache.size >= 500) cache.clear();
+      cache.set(name, quoted);
+    }
+  }
+  return { cost: quoted.cost, currency: quoted.currency, price: priceFor(quoted.cost, env.MARKUP) };
 }
+
+const QUOTE_MS = 10 * 60_000;
+const QUOTE_CACHE = new Map();
 
 /** What the painter pays for `cost`: the markup laid on, rounded up to a whole unit. */
 export function priceFor(cost, markup) {
@@ -238,22 +297,38 @@ function money(value) {
 
 // MARK: Orders
 
+/**
+ * Takes an order: the sheet kept (with it, from an older app, or by PUT before), the price checked
+ * at the address it goes to, the payment charged, and the order handed to its own Durable Object,
+ * whose alarm places it with the print service, checks the service took it and refunds the payment
+ * if it didn't (`advance`). The painter waits on the charge alone: nothing the phone does after it
+ * (a lost signal, the app put away) can leave a payment with no print, or no refund.
+ */
 async function order(request, env, deps, provider) {
   const length = request.headers.get("content-length");
   if (length === null || !/^\d+$/.test(length)) return bare(411);
   if (Number(length) > MAX_ORDER) return bare(413);
-  if (!/^multipart\/form-data\s*;/i.test(request.headers.get("content-type") ?? "")) return bare(415);
-  let form;
-  try {
-    form = await request.formData();
-  } catch {
-    return bare(400);
+  const type = request.headers.get("content-type") ?? "";
+  let orderText, file = null;
+  if (/^application\/json\b/i.test(type)) {
+    if (Number(length) > MAX_ORDER_JSON) return bare(413);
+    orderText = await readCapped(request, MAX_ORDER_JSON);
+    if (orderText === null) return bare(413);
+  } else if (/^multipart\/form-data\s*;/i.test(type)) {
+    let form;
+    try {
+      form = await request.formData();
+    } catch {
+      return bare(400);
+    }
+    file = form.get("sheet");
+    orderText = await partText(form.get("order"), MAX_ORDER_JSON);
+    if (!isBlob(file) || file.size === 0 || orderText === null) return bare(400);
+    if (file.size > MAX_ORDER) return bare(413);
+    if (!(await startsWith(file, PDF))) return bare(415);
+  } else {
+    return bare(415);
   }
-  const file = form.get("sheet");
-  const orderText = await partText(form.get("order"), MAX_ORDER_JSON);
-  if (!isBlob(file) || file.size === 0 || orderText === null) return bare(400);
-  if (file.size > MAX_ORDER) return bare(413);
-  if (!(await startsWith(file, PDF))) return bare(415);
   let body;
   try {
     body = JSON.parse(orderText);
@@ -269,32 +344,34 @@ async function order(request, env, deps, provider) {
   let payment = null;
   if (env.STRIPE_SECRET_KEY) {
     // Prodigi's sandbox prints nothing: a live card is never charged for it.
-    if (!/^(sk|rk)_test_/.test(env.STRIPE_SECRET_KEY)) {
+    if (provider.isSandbox(env) && !/^(sk|rk)_test_/.test(env.STRIPE_SECRET_KEY)) {
       log(`STRIPE_SECRET_KEY is live while ${provider.name} is its sandbox`);
       return bare(503);
     }
     payment = cleanPayment(body?.payment);
     if (!payment) return bare(402);
+  } else if (!provider.isSandbox(env)) {
+    // A real print is never sent unpaid, whatever else is set.
+    log(`${provider.name} is live without STRIPE_SECRET_KEY: no order is taken unpaid`);
+    return bare(402);
   }
 
-  // The order's Durable Object keeps the sheet and where the order stands: a try of an order
-  // already placed gets its answer again, and one still under way (or left uncertain) is charged
-  // and placed no second time.
   const stub = sheetStub(env, key);
+  if (file && !(await keep(stub, await file.arrayBuffer()))) return bare(502);
   let begun;
   try {
-    const answer = await stub.fetch("https://sheet/begin", {
-      method: "POST",
-      headers: { "x-days": String(SHEET_DAYS) },
-      body: await file.arrayBuffer(),
-    });
+    const answer = await stub.fetch("https://sheet/begin", { method: "POST" });
+    // No sheet kept under the key: the app sends it (PUT) and tries again.
+    if (answer.status === 404) return bare(412);
     if (!answer.ok) throw new Error(`HTTP ${answer.status}`);
     begun = await answer.json();
   } catch (error) {
-    log("Keeping the sheet failed", error);
+    log("Beginning the order failed", error);
     return bare(502);
   }
-  if (begun.state === "placed") return placedAnswer(env, provider, begun.order, begun.charge);
+  const reference = referenceOf(key);
+  if (TAKEN.has(begun.state)) return takenAnswer(env, provider, reference, begun.charge);
+  if (begun.state === "refused") return json(410, { ok: false, refused: true, refunded: begun.refunded === true });
   // Only the try holding the order's claim goes on: another try of it under way at once waits.
   const claim = begun.claim;
   if (!claim) {
@@ -302,64 +379,82 @@ async function order(request, env, deps, provider) {
     return json(202, { ok: false, pending: true });
   }
 
-  let charge = null;
-  if (payment) {
-    let priced;
-    try {
-      priced = await priceOf(env, deps, provider, code, recipient.country);
-    } catch (error) {
-      log("Pricing the order failed", error);
-      await drop(stub, claim);
-      return bare(502);
-    }
-    // The painter agreed to the price on screen: a price that moved since is asked again.
-    if (money(priced.price) !== body.price || priced.currency !== body.currency) {
-      await drop(stub, claim);
-      return bare(409);
-    }
-    // Leaving "new" is the gate: unrecorded, nothing is charged (the claim lapses, and a later try
-    // takes it).
-    if (!(await mark(stub, claim, { state: "charging" }))) return json(202, { ok: false, pending: true });
-    try {
-      charge = await chargeApplePay(env, deps, payment, priced, key, recipient);
-    } catch (error) {
-      if (error?.uncertain) {
-        // Stripe may have charged: the order stays "charging", so no try charges it again.
-        log(`Stripe may have charged order ${key}: look it up by metadata[sheet]`, error);
-        return json(202, { ok: false, pending: true });
-      }
-      log("Charging the order failed", error);
-      await drop(stub, claim);
-      return bare(error?.declined ? 402 : 502);
-    }
-    await mark(stub, claim, { state: "charged", charge });
+  const now = (deps.now ?? Date.now)();
+  const job = { key, code, recipient, reference, provider: provider.name, origin: new URL(request.url).origin, since: now, tries: 0 };
+  if (!payment) {
+    // Leaving "new" is the gate: unrecorded, nothing is placed (the claim lapses, a later try takes it).
+    if (!(await mark(stub, claim, { state: "queued", job, alarmIn: 0 }))) return json(202, { ok: false, pending: true });
+    return takenAnswer(env, provider, reference, null);
   }
 
-  const origin = new URL(request.url).origin;
-  // An unpaid order leaves "new" here, the same gate.
-  if (!(await mark(stub, claim, { state: "placing", charge })) && !charge) return json(202, { ok: false, pending: true });
-  let orderId;
+  let priced;
   try {
-    orderId = await provider.place(env, deps, {
-      reference: `sheet-${key.slice(0, 12)}`, key, code, recipient, sheetUrl: `${origin}${SHEETS}${key}/${begun.token}.pdf`,
-    });
+    priced = await priceOf(env, deps, provider, code, quotedPlace(body?.quotedAt, recipient));
   } catch (error) {
-    if (error?.uncertain) {
-      // The service may have taken it: the sheet and the payment stay, the log has them for a look by hand.
-      log(`${provider.name} may hold order ${key} (payment ${charge ?? "none"})`, error);
-      return json(202, { ok: false, pending: true });
-    }
-    log("Placing the order failed", error);
+    log("Pricing the order failed", error);
     await drop(stub, claim);
-    await refund(env, deps, charge, key);
     return bare(502);
   }
-  await mark(stub, claim, { state: "placed", charge, order: orderId });
-  return placedAnswer(env, provider, orderId, charge);
+  // The painter agreed to the price on screen: a price that moved since is asked again.
+  if (money(priced.price) !== body.price || priced.currency !== body.currency) {
+    await drop(stub, claim);
+    return bare(409);
+  }
+  // The order's object takes it from "charging" on: should this try go away mid charge, its alarm
+  // finds out from Stripe whether the payment was taken, and places the order or lets it go.
+  if (!(await mark(stub, claim, { state: "charging", job, alarmIn: CHARGE_SETTLE_MS }))) return json(202, { ok: false, pending: true });
+  let charge;
+  try {
+    charge = await chargeApplePay(env, deps, payment, priced, key, recipient);
+  } catch (error) {
+    if (error?.uncertain) {
+      log(`Stripe may have charged order ${key}: its alarm looks it up`, error);
+      return json(202, { ok: false, pending: true });
+    }
+    log("Charging the order failed", error);
+    await drop(stub, claim);
+    return bare(error?.declined ? 402 : 502);
+  }
+  // Charged: the object's alarm places it now. Should this mark fail, the alarm set at "charging"
+  // finds the payment in Stripe and places it all the same.
+  await mark(stub, claim, { state: "charged", charge, alarmIn: 0 });
+  return takenAnswer(env, provider, reference, charge);
 }
 
-function placedAnswer(env, provider, orderId, charge) {
-  return json(201, { ok: true, order: orderId, sandbox: provider.isSandbox(env), paid: Boolean(charge) });
+/** States in which the order is the relay's to place: an answer of 201 for any try of it. */
+const TAKEN = new Set(["queued", "charged", "placing", "placed", "accepted"]);
+
+/** The order's name with the print service and the painter: what the app shows as its number. */
+function referenceOf(key) {
+  return `sheet-${key.slice(0, 12)}`;
+}
+
+function takenAnswer(env, provider, reference, charge) {
+  return json(201, { ok: true, order: reference, sandbox: provider.isSandbox(env), paid: Boolean(charge) });
+}
+
+/** Keeps a sheet under its order's key (`keep` of PrintSheet); says whether it did. */
+async function keep(stub, bytes) {
+  try {
+    const answer = await stub.fetch("https://sheet/keep", { method: "POST", headers: { "x-days": String(SHEET_DAYS) }, body: bytes });
+    if (!answer.ok) throw new Error(`HTTP ${answer.status}`);
+    return true;
+  } catch (error) {
+    log("Keeping the sheet failed", error);
+    return false;
+  }
+}
+
+/** PUT /v1/print/sheets/<key>: the sheet kept before the order, so paying waits on nothing else. */
+async function putSheet(request, env, key) {
+  const length = request.headers.get("content-length");
+  if (length === null || !/^\d+$/.test(length)) return bare(411);
+  if (Number(length) > MAX_ORDER) return bare(413);
+  if (!/^application\/pdf\b/i.test(request.headers.get("content-type") ?? "")) return bare(415);
+  const text = await readBytesCapped(request, MAX_ORDER);
+  if (text === null) return bare(413);
+  if (text.byteLength < PDF.length || !PDF.every((byte, i) => text[i] === byte)) return bare(415);
+  return (await keep(sheetStub(env, key), text)) ? json(200, { ok: true }) : bare(502);
 }
 
 /**
@@ -377,12 +472,12 @@ async function mark(stub, claim, state) {
   }
 }
 
-/** Deletes an order that surely failed, only for the try holding its claim. */
+/** Lets go of an order that surely failed (its sheet stays), only for the try holding its claim. */
 async function drop(stub, claim) {
   try {
     await stub.fetch("https://sheet/drop", { method: "POST", headers: { "x-claim": claim } });
   } catch (error) {
-    log("Dropping a sheet failed", error);
+    log("Dropping an order failed", error);
   }
 }
 
@@ -396,14 +491,7 @@ async function partText(part, limit) {
 /** The recipient with every field a trimmed string of sensible length, or null. */
 export function cleanRecipient(value) {
   if (!value || typeof value !== "object") return null;
-  const field = (name, required) => {
-    const raw = value[name];
-    if (raw === undefined || raw === null || raw === "") return required ? null : "";
-    if (typeof raw !== "string") return null;
-    const text = raw.replace(/[\u0000-\u001f\u007f]/g, " ").trim();
-    if (text.length > MAX_FIELD || (required && text === "")) return null;
-    return text;
-  };
+  const field = (name, required) => cleanField(value[name], required);
   const cleaned = {
     name: field("name", true), email: field("email", true), line1: field("line1", true), line2: field("line2", false),
     city: field("city", true), state: field("state", false), zip: field("zip", true), country: field("country", true),
@@ -411,6 +499,251 @@ export function cleanRecipient(value) {
   if (Object.values(cleaned).some((v) => v === null)) return null;
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(cleaned.email) || !COUNTRY.test(cleaned.country)) return null;
   return cleaned;
+}
+
+function cleanField(raw, required) {
+  if (raw === undefined || raw === null || raw === "") return required ? null : "";
+  if (typeof raw !== "string") return null;
+  const text = raw.replace(/[\u0000-\u001f\u007f]/g, " ").trim();
+  if (text.length > MAX_FIELD || (required && text === "")) return null;
+  return text;
+}
+
+/**
+ * Where the order is priced: where the app was quoted, which Apple Pay's sheet told it before the
+ * painter paid (its postal code may be cut short there, so the full one could price differently
+ * and turn the painter's price back), when that is in the recipient's country; else the recipient's.
+ */
+function quotedPlace(value, recipient) {
+  if (value && typeof value === "object") {
+    const place = { country: recipient.country, city: cleanField(value.city, false), state: cleanField(value.state, false), zip: cleanField(value.zip, false) };
+    if (value.country === recipient.country && place.city !== null && place.state !== null && place.zip !== null) return place;
+  }
+  return placeOf(recipient);
+}
+
+/** Where a price is for: the country, and the city, state and postal code where known. */
+function placeOf(address) {
+  return { country: address.country, city: address.city ?? "", state: address.state ?? "", zip: address.zip ?? "" };
+}
+
+// MARK: Placing, checking, refunding (the order's alarm)
+
+/** How long an order stays "charging" before its alarm asks Stripe whether it was paid. */
+const CHARGE_SETTLE_MS = 5 * 60_000;
+/** How long Stripe is asked about a payment it can't find before the order is let go, unpaid. */
+const CHARGE_LOST_MS = 30 * 60_000;
+/** How long the alarm keeps at an order before it says so and stops. */
+const GIVE_UP_MS = 2 * 24 * 3600_000;
+const HOUR = 3600_000;
+const ACCEPTED = new Set(["submitted", "in_production", "partially_shipped", "shipped", "completed", "paused"]);
+/** A payment intent's statuses that took no money and never will. */
+const UNTAKEN = new Set(["requires_payment_method", "canceled"]);
+
+const ACTIVE = new Set(["charging", "queued", "charged", "placing", "placed"]);
+
+/**
+ * One step of an order the relay has taken, by where it stands; answers how long until the next
+ * step, or null once it is settled. Every change is stored before the next call goes out, so an
+ * alarm cut off midway is taken up again by the next one (each call is idempotent: Stripe's and
+ * Prodigi's under the order's keys).
+ */
+export async function advance(env, deps, storage, standing) {
+  const now = (deps.now ?? Date.now)();
+  const { state, job, charge, key } = standing;
+  const provider = PROVIDERS[job.provider === prodigi.name ? "prodigi" : env.PRINT_PROVIDER ?? "prodigi"] ?? prodigi;
+  const facts = { key, reference: job.reference, charge, order: standing.order, state };
+  if (now - job.since > GIVE_UP_MS) {
+    await alert(env, deps, storage, "stuck", `stopped trying an order still ${state}`, facts,
+      "The relay tried this order for two days. Look it up in Prodigi's and Stripe's dashboards and place or refund it by hand (the address is on the Stripe payment's shipping; the relay keeps none).");
+    await storage.put({ state: "stuck", job: stripped(job) });
+    return null;
+  }
+  if (!provider.isSandbox(env)) {
+    log(`${provider.name} is not its sandbox: order ${key} waits for live printing`);
+    return HOUR;
+  }
+
+  if (state === "charging") {
+    if (now - job.since < CHARGE_SETTLE_MS) return job.since + CHARGE_SETTLE_MS - now;
+    const found = await paymentOf(env, deps, key);
+    if (found?.status === "succeeded") {
+      await storage.put({ state: "charged", charge: found.id });
+      return 0;
+    }
+    // Still settling at Stripe; a declined or cancelled one took nothing.
+    if (found && !UNTAKEN.has(found.status)) return 5 * 60_000;
+    // Search can lag: the payment itself, read directly, says it took nothing.
+    if (found && !UNTAKEN.has((await stripeGet(env, deps, `/payment_intents/${encodeURIComponent(found.id)}`))?.status)) return 5 * 60_000;
+    if (!found && now - job.since < CHARGE_LOST_MS) return 5 * 60_000;
+    // Nothing taken: the order is the painter's to try again.
+    log(`Order ${key} was never charged: let go`);
+    await storage.put({ state: "new", claimedAt: 0 });
+    await storage.delete?.("job");
+    return null;
+  }
+
+  if (state === "queued" || state === "charged" || state === "placing") {
+    await storage.put({ state: "placing" });
+    try {
+      const sheetUrl = `${job.origin}${SHEETS}${key}/${standing.token}.pdf`;
+      const id = await provider.place(env, deps, { reference: job.reference, key, code: job.code, recipient: job.recipient, sheetUrl });
+      await storage.put({ state: "placed", order: id, job: { ...job, tries: 0, unanswered: false } });
+      return 20_000;
+    } catch (error) {
+      if (error?.uncertain) {
+        // Only no answer, or a 5xx, leaves it open whether Prodigi made the order.
+        const unanswered = job.unanswered || !error.status || error.status >= 500;
+        return retry(storage, { ...job, unanswered }, `Placing order ${key}`, error);
+      }
+      if (job.unanswered) {
+        // An earlier try may have placed it: refunding could give back an order being printed.
+        await alert(env, deps, storage, "unsure", "an order may or may not be placed", facts,
+          `${provider.name} refused the order (${error.message}) after an earlier try went unanswered. Look it up in its dashboard by its reference: if it isn't there, refund the payment in Stripe.`);
+        await storage.put({ state: "stuck", job: stripped(job) });
+        return null;
+      }
+      log(`${provider.name} refused order ${key}`, error);
+      return await refuse(env, deps, storage, job, facts, `${provider.name} refused the order when it was placed (${error.message}).`);
+    }
+  }
+
+  if (state === "placed") {
+    let status;
+    try {
+      status = await provider.status(env, deps, standing.order);
+    } catch (error) {
+      // A new order may not be readable for a few seconds.
+      if (error?.uncertain || error?.status === 404) return retry(storage, job, `Checking order ${key}`, error);
+      throw error;
+    }
+    if (ACCEPTED.has(status.status)) {
+      // Taken: the address leaves the relay.
+      await storage.put({ state: "accepted", job: stripped(job) });
+      return null;
+    }
+    const refused = status.status === "cancelled" || status.status === "failed" || (status.status === "draft" && status.issues.includes("fulfilment_issue"));
+    if (refused) {
+      return await refuse(env, deps, storage, job, { ...facts, prodigiStatus: status.status, issues: status.issues.join(", ") },
+        `${provider.name} turned the order down after it was placed (${status.status}).`);
+    }
+    if (status.status === "on_hold") {
+      await alert(env, deps, storage, "on-hold", "an order is on hold", { ...facts, issues: status.issues.join(", ") },
+        `${provider.name} holds the order (${status.issues.join(", ") || "no reason given"}): payment_required means it couldn't bill your account. Fix it in its dashboard and the order goes on; the painter has paid.`);
+      return HOUR;
+    }
+    return retry(storage, job, null);
+  }
+  return null;
+}
+
+/** The job without the painter's name and address, which leave the relay once it is settled. */
+function stripped(job) {
+  return { key: job.key, reference: job.reference, provider: job.provider, since: job.since };
+}
+
+/** The order refused for good: the payment given back, and Paul told. */
+async function refuse(env, deps, storage, job, facts, what) {
+  const refunded = await refund(env, deps, facts.charge, facts.key);
+  await storage.put({ state: "refused", refunded: Boolean(facts.charge) && refunded, job: stripped(job) });
+  await alert(env, deps, storage, "refused", refunded || !facts.charge ? "an order was refused" : "a refund failed", { ...facts, refunded: facts.charge ? String(refunded) : "nothing was charged" },
+    `${what} ${facts.charge ? (refunded ? "The payment was refunded." : "Refunding the payment FAILED: refund it by hand in Stripe.") : ""}`);
+  return null;
+}
+
+/** The next try after a step that didn't settle: a minute, doubling to an hour. */
+async function retry(storage, job, what, error) {
+  if (what) log(what, error);
+  const tries = (job.tries ?? 0) + 1;
+  await storage.put({ job: { ...job, tries } });
+  return Math.min(60_000 * 2 ** Math.min(tries - 1, 6), HOUR);
+}
+
+/**
+ * Files an issue in the feedback repository (FEEDBACK_REPO, with FEEDBACK_GITHUB_TOKEN) for money
+ * or an order that needs Paul: once per order and kind. The painter's name and address stay out.
+ */
+async function alert(env, deps, storage, kind, title, facts, what) {
+  if (storage && (await storage.get(`alerted-${kind}`))) return;
+  const sent = await fileIssue(env, deps, title, facts, what);
+  if (sent && storage) await storage.put({ [`alerted-${kind}`]: true });
+}
+
+export async function fileIssue(env, deps, title, facts, what) {
+  log(`One Big Sheet: ${title} (${facts.reference ?? facts.key ?? ""})`);
+  if (!env.FEEDBACK_REPO || !env.FEEDBACK_GITHUB_TOKEN) return false;
+  const test = /^(sk|rk)_test_/.test(env.STRIPE_SECRET_KEY ?? "") ? "test/" : "";
+  const lines = Object.entries(facts).filter(([, v]) => v !== undefined && v !== null && v !== "").map(([k, v]) => `- ${k}: \`${String(v)}\``);
+  if (facts.charge) lines.push(`- Stripe: https://dashboard.stripe.com/${test}payments/${facts.charge}`);
+  try {
+    const response = await (deps.fetch ?? fetch)(`https://api.github.com/repos/${env.FEEDBACK_REPO}/issues`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${env.FEEDBACK_GITHUB_TOKEN}`,
+        accept: "application/vnd.github+json",
+        "x-github-api-version": "2022-11-28",
+        "user-agent": "moonlight-feedback-relay",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ title: `One Big Sheet: ${title}`, body: `${what}\n\n${lines.join("\n")}\n` }),
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return true;
+  } catch (error) {
+    log("Filing the issue failed", error);
+    return false;
+  }
+}
+
+/**
+ * Once a day (worker.js's `scheduled`): every payment for a sheet in the last three days, taken
+ * and not refunded, should belong to an order the print service accepted. One that doesn't, an
+ * hour on, is an issue for Paul, unless its order is refunded, already alerted (stuck,
+ * refused), or still being worked on and young enough that its alarm will alert should it stop.
+ */
+export async function reconcilePrints(env, deps = {}) {
+  if (!env.STRIPE_SECRET_KEY || !env.PRINT_SHEETS) return 0;
+  const now = (deps.now ?? Date.now)();
+  const since = Math.floor((now - 3 * 24 * HOUR) / 1000);
+  const intents = [];
+  try {
+    let after = "";
+    for (let page = 0; page < 10; page++) {
+      const listed = await stripeGet(env, deps, `/payment_intents?limit=100&created[gte]=${since}${after}`);
+      const data = listed?.data ?? [];
+      intents.push(...data);
+      if (!listed?.has_more || data.length === 0) break;
+      after = `&starting_after=${encodeURIComponent(data[data.length - 1].id)}`;
+    }
+  } catch (error) {
+    log("Reconciling: listing payments failed", error);
+    if (intents.length === 0) return 0;
+  }
+  let flagged = 0;
+  for (const intent of intents) {
+    const key = intent?.metadata?.sheet;
+    if (typeof key !== "string" || !HEX.test(key) || intent.status !== "succeeded") continue;
+    if (now / 1000 - intent.created < 3600) continue;
+    let standing = null;
+    try {
+      const answer = await sheetStub(env, key).fetch("https://sheet/status");
+      standing = answer.ok ? await answer.json() : null;
+    } catch {}
+    if (standing?.state === "accepted" || standing?.refunded) continue;
+    // Paul has the issue already.
+    if ((standing?.state === "stuck" || standing?.state === "refused") && standing.alerted) continue;
+    // Still in hand: its alarm alerts should it stop, within GIVE_UP_MS; past that, it has died.
+    if (ACTIVE.has(standing?.state) && now / 1000 - intent.created < (GIVE_UP_MS + HOUR) / 1000) continue;
+    // Refunded already (the restricted key reads refunds, not charges).
+    try {
+      const refunds = await stripeGet(env, deps, `/refunds?payment_intent=${encodeURIComponent(intent.id)}&limit=1`);
+      if ((refunds?.data ?? []).some((r) => r.status === "succeeded" || r.status === "pending")) continue;
+    } catch {}
+    flagged++;
+    await fileIssue(env, deps, "a payment with no print", { key, reference: referenceOf(key), charge: intent.id, state: standing?.state ?? "no record", order: standing?.order },
+      "The daily check found a payment for a sheet whose order the print service hasn't accepted. Look the order up in Prodigi's dashboard; place it or refund the payment.");
+  }
+  return flagged;
 }
 
 // MARK: Payment
@@ -480,14 +813,34 @@ async function chargeApplePay(env, deps, payment, priced, key, recipient) {
   return intent.id;
 }
 
-/** Gives a payment back (an order that couldn't be placed after it); logs what it can't. */
+/** Gives a payment back (an order the print service refused); says whether it did. */
 async function refund(env, deps, charge, key) {
-  if (!charge) return;
+  if (!charge) return false;
   try {
     await stripe(env, deps, "/refunds", `${key}-refund`, { payment_intent: charge });
+    return true;
   } catch (error) {
     log(`Refunding ${charge} failed`, error);
+    return false;
   }
+}
+
+/** The payment Stripe holds for an order, by its metadata (`chargeApplePay`), or null. */
+async function paymentOf(env, deps, key) {
+  const query = encodeURIComponent(`metadata['sheet']:'${key}'`);
+  const found = await stripeGet(env, deps, `/payment_intents/search?query=${query}`);
+  const intents = found?.data ?? [];
+  return intents.find((intent) => intent.status === "succeeded") ?? intents[0] ?? null;
+}
+
+/** A read of Stripe's API; any failure throws (the caller tries again later). */
+async function stripeGet(env, deps, path) {
+  const response = await (deps.fetch ?? fetch)(`${STRIPE}${path}`, {
+    method: "GET",
+    headers: { authorization: `Bearer ${env.STRIPE_SECRET_KEY}` },
+  });
+  if (!response.ok) throw new Error(`Stripe GET ${path.split("?")[0]}: HTTP ${response.status}`);
+  return await response.json();
 }
 
 /**
@@ -545,50 +898,66 @@ function sheetStub(env, id) {
 
 /**
  * One order's sheet and where the order stands, a Durable Object named by the app's key for the
- * order: the PDF in chunks (a stored value is at most 2 MB), its random token, the state ("new",
- * "charging", "charged", "placing", "placed") with the payment and order ids, and an alarm that
- * deletes it all.
- *   POST https://sheet/begin  the PDF as the body; x-days. Keeps it, unless the order is kept
- *                             already: answers {state, token, charge?, order?, claim?}. The claim
- *                             goes to the one try that may take the order on: the one that kept
- *                             it, or one coming after a claim left "new" for CLAIM_MS (its try
- *                             gone). Every other try gets none.
- *   POST https://sheet/mark   x-claim; {state, charge?, order?}
+ * order: the PDF in chunks (a stored value is at most 2 MB), its random token, the state, the
+ * payment and order ids, the job (what to place and where; the address only until the print
+ * service has accepted it), and one alarm, which works the order (`advance`) and, once it is
+ * settled, deletes it all SHEET_DAYS after the sheet was kept.
+ *   States: "new" (kept, not ordered), "charging", "charged" or "queued" (unpaid, the sandbox's),
+ *   "placing", "placed" (the service has it, not yet seen accepted), "accepted", "refused"
+ *   (refunded), "stuck" (given up on, an issue filed).
+ *   POST https://sheet/keep   the PDF as the body; x-days. Keeps it, or replaces it while the order
+ *                             is "new" and no try holds it; after that the order's sheet stays.
+ *   POST https://sheet/begin  {state, token, charge?, order?, claim?}, or 404 with no sheet. The
+ *                             claim goes to the one try that may take the order on: the first, or
+ *                             one coming after a claim left "new" for CLAIM_MS (its try gone).
+ *   POST https://sheet/mark   x-claim; {state, charge?, order?, job?, alarmIn?}
+ *   POST https://sheet/drop   x-claim; the order back to "new", free (it surely failed)
  *   GET  https://sheet/read   x-token; the PDF, or 404
- *   POST https://sheet/drop   x-claim; deletes it now (an order that surely failed)
+ *   GET  https://sheet/status {state, order?, charge?}, or 404
  */
 export class PrintSheet {
-  constructor(state) {
+  constructor(state, env, deps = {}) {
     this.storage = state.storage;
+    this.env = env ?? {};
+    this.deps = deps;
+  }
+
+  now() {
+    return (this.deps.now ?? Date.now)();
   }
 
   async fetch(request) {
     const { pathname } = new URL(request.url);
-    if (pathname === "/begin" && request.method === "POST") {
+    if (pathname === "/keep" && request.method === "POST") {
       const days = Number(request.headers.get("x-days"));
       if (!(days > 0)) return bare(400);
       // The body first: storage calls hold the object's input gate, so between the look and the
       // write below no other try of the order runs; reading a request body doesn't.
       const bytes = new Uint8Array(await request.arrayBuffer());
-      const kept = await this.storage.get(["token", "state", "charge", "order", "claimedAt"]);
-      if (kept.get("token")) {
-        const answer = { token: kept.get("token"), state: kept.get("state"), charge: kept.get("charge"), order: kept.get("order") };
-        if (kept.get("state") === "new" && Date.now() - (kept.get("claimedAt") ?? 0) > CLAIM_MS) {
-          answer.claim = randomHex();
-          await this.storage.put({ claim: answer.claim, claimedAt: Date.now() });
-        }
-        return json(200, answer);
-      }
-      const token = randomHex(), claim = randomHex();
+      const kept = await this.storage.get(["token", "state", "claimedAt", "chunks"]);
+      const free = kept.get("state") === "new" && this.now() - (kept.get("claimedAt") ?? 0) > CLAIM_MS;
+      if (kept.get("token") && !free) return json(200, { kept: true });
       const chunks = Math.ceil(bytes.byteLength / CHUNK);
       // A put takes at most 128 keys: a sheet is at most 25 chunks.
       const entries = { chunks };
       for (let i = 0; i < chunks; i++) entries[`chunk-${i}`] = bytes.slice(i * CHUNK, (i + 1) * CHUNK);
+      for (let i = chunks; i < (kept.get("chunks") ?? 0); i++) await this.storage.delete?.(`chunk-${i}`);
       await this.storage.put(entries);
       // The token last: a sheet with a token is whole.
-      await this.storage.put({ token, state: "new", claim, claimedAt: Date.now() });
-      await this.storage.setAlarm(Date.now() + days * 24 * 3600 * 1000);
-      return json(201, { token, state: "new", claim });
+      const expires = this.now() + days * 24 * HOUR;
+      await this.storage.put({ token: kept.get("token") ?? randomHex(), state: "new", claimedAt: 0, expires });
+      await this.storage.setAlarm(expires);
+      return json(201, { kept: true });
+    }
+    if (pathname === "/begin" && request.method === "POST") {
+      const kept = await this.storage.get(["token", "state", "charge", "order", "claimedAt", "refunded"]);
+      if (!kept.get("token")) return bare(404);
+      const answer = { token: kept.get("token"), state: kept.get("state"), charge: kept.get("charge"), order: kept.get("order"), refunded: kept.get("refunded") === true };
+      if (kept.get("state") === "new" && this.now() - (kept.get("claimedAt") ?? 0) > CLAIM_MS) {
+        answer.claim = randomHex();
+        await this.storage.put({ claim: answer.claim, claimedAt: this.now() });
+      }
+      return json(200, answer);
     }
     if (pathname === "/mark" && request.method === "POST") {
       let next;
@@ -602,7 +971,15 @@ export class PrintSheet {
       const entries = { state: next.state };
       if (typeof next.charge === "string") entries.charge = next.charge;
       if (typeof next.order === "string") entries.order = next.order;
+      if (next.job && typeof next.job === "object") entries.job = next.job;
       await this.storage.put(entries);
+      if (typeof next.alarmIn === "number") await this.storage.setAlarm(this.now() + Math.max(0, next.alarmIn));
+      return json(200, { ok: true });
+    }
+    if (pathname === "/drop" && request.method === "POST") {
+      if ((await this.storage.get("claim")) !== request.headers.get("x-claim")) return bare(409);
+      await this.storage.put({ state: "new", claimedAt: 0 });
+      await this.storage.delete?.("job");
       return json(200, { ok: true });
     }
     if (pathname === "/read" && request.method === "GET") {
@@ -613,17 +990,40 @@ export class PrintSheet {
       for (let i = 0; i < chunks; i++) parts.push(await this.storage.get(`chunk-${i}`));
       return new Response(new Blob(parts), { status: 200, headers: { "content-type": "application/pdf" } });
     }
-    if (pathname === "/drop" && request.method === "POST") {
-      if ((await this.storage.get("claim")) !== request.headers.get("x-claim")) return bare(409);
-      await this.storage.deleteAll();
-      await this.storage.deleteAlarm?.();
-      return json(200, { ok: true });
+    if (pathname === "/status" && request.method === "GET") {
+      const kept = await this.storage.get(["state", "order", "charge", "refunded", "alerted-stuck", "alerted-refused", "alerted-unsure"]);
+      if (!kept.get("state")) return bare(404);
+      const alerted = ["stuck", "refused", "unsure"].some((kind) => kept.get(`alerted-${kind}`) === true);
+      return json(200, { state: kept.get("state"), order: kept.get("order"), charge: kept.get("charge"), refunded: kept.get("refunded") === true, alerted });
     }
     return bare(404);
   }
 
+  /** Works the order a step on while one is under way; otherwise deletes it all once it is due. */
   async alarm() {
-    await this.storage.deleteAll();
+    const names = ["state", "job", "charge", "order", "token", "expires"];
+    const kept = await this.storage.get(names);
+    const standing = Object.fromEntries(names.map((name) => [name, kept.get(name)]));
+    if (standing.job && ACTIVE.has(standing.state)) {
+      standing.key = standing.job.key;
+      let next;
+      try {
+        next = await advance(this.env, this.deps, this.storage, standing);
+      } catch (error) {
+        log(`Working order ${standing.job.reference} failed`, error);
+        next = await retry(this.storage, standing.job, null);
+      }
+      if (next !== null) {
+        await this.storage.setAlarm(this.now() + next);
+        return;
+      }
+    }
+    const expires = (await this.storage.get("expires")) ?? 0;
+    if (this.now() >= expires) {
+      await this.storage.deleteAll();
+      return;
+    }
+    await this.storage.setAlarm(expires);
   }
 }
 
@@ -636,8 +1036,8 @@ async function prodigiCall(env, deps, method, path, body, headers = {}) {
   try {
     response = await fetcher(`${env.PRODIGI_API}${path}`, {
       method,
-      headers: { "x-api-key": prodigiKey(env), "content-type": "application/json", ...headers },
-      body: JSON.stringify(body),
+      headers: { "x-api-key": prodigiKey(env), ...(body === undefined ? {} : { "content-type": "application/json" }), ...headers },
+      body: body === undefined ? undefined : JSON.stringify(body),
     });
     text = await response.text();
   } catch (error) {
@@ -650,7 +1050,9 @@ async function prodigiCall(env, deps, method, path, body, headers = {}) {
       outcome = String(JSON.parse(text)?.type ?? "").slice(0, 60);
     } catch {}
     const error = new Error(`Prodigi ${method} ${path}: HTTP ${response.status} ${outcome}`);
-    throw Object.assign(error, { uncertain: response.status >= 500 });
+    // Busy, a conflict, a timeout or our own key refused: tried again, never taken as a refusal.
+    const uncertain = response.status >= 500 || [401, 403, 408, 409, 429].includes(response.status);
+    throw Object.assign(error, { uncertain, status: response.status });
   }
   try {
     return JSON.parse(text);
@@ -694,6 +1096,24 @@ async function readCapped(request, limit) {
     chunks.push(value);
   }
   return new TextDecoder().decode(await new Blob(chunks).arrayBuffer());
+}
+
+async function readBytesCapped(request, limit) {
+  if (!request.body) return new Uint8Array(0);
+  const reader = request.body.getReader();
+  const chunks = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > limit) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  return new Uint8Array(await new Blob(chunks).arrayBuffer());
 }
 
 async function allowed(limiter, key) {

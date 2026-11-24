@@ -15,6 +15,12 @@ name: Feedback relay
 #                          Sheet's orders are paid for with Apple Pay; set, the Worker's secret too.
 #                          Set it only once the app has its Apple Pay merchant id
 #                          (BigSheetApplePay.merchant): with it, an order without a payment is refused
+#
+# Live keys wait for Paul (painting-company row 380): while either key is live (a Stripe sk_live_ or
+# rk_live_ key, a Prodigi live_ key), the deploy runs in the environment print-live, which must
+# have Paul as a required reviewer (Settings > Environments > print-live > Required reviewers), so
+# no merge to main puts the code that takes real money live without his approval; without that
+# rule the run stops before deploying. With test keys it deploys as before.
 # This repository is public, so its logs are too: nothing below prints a secret, and the steps
 # that hold one run without `set -x`.
 #
@@ -37,8 +43,46 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  keys:
+    name: Live keys?
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      environment: ${{ steps.check.outputs.environment }}
+    steps:
+      - name: Check the keys and the approval they need
+        id: check
+        shell: bash
+        env:
+          PRODIGI_API_KEY: ${{ secrets.PRODIGI_API_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          live=no
+          [[ $STRIPE_SECRET_KEY == sk_live_* || $STRIPE_SECRET_KEY == rk_live_* ]] && live=yes
+          [[ $PRODIGI_API_KEY == live_* ]] && live=yes
+          if [[ $live == no ]]; then
+            echo "environment=relay" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          rules=$(curl --silent --fail --header "Authorization: Bearer $GH_TOKEN" --header 'Accept: application/vnd.github+json' \
+            "https://api.github.com/repos/$REPO/environments/print-live" | jq '[.protection_rules[]? | select(.type == "required_reviewers")] | length') ||
+            { echo "::error::A print service key is live, and the environment print-live could not be read (missing, or no access)."; exit 1; }
+          if [[ ${rules:-0} -lt 1 ]]; then
+            echo "::error::A print service key is live: the environment print-live needs Paul as a required reviewer before the relay deploys."
+            exit 1
+          fi
+          echo "environment=print-live" >> "$GITHUB_OUTPUT"
+
   deploy:
     name: Deploy the relay
+    needs: keys
+    environment: ${{ needs.keys.outputs.environment }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
