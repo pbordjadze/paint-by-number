@@ -195,7 +195,9 @@ def plan(client, sets, found):
         set_id = sets[kind]["id"]
         counts[kind] = len(client.call("GET", f"/appScreenshotSets/{set_id}/appScreenshots",
                                        query={"limit": "50"})["data"])
-        plans[kind] = "unchanged" if unchanged(client, set_id, files) else "differs"
+        # An empty set (a run cut off after its deletes) has nothing live to lose.
+        plans[kind] = ("new" if counts[kind] == 0 else
+                       "unchanged" if unchanged(client, set_id, files) else "differs")
     return plans, counts
 
 
@@ -449,14 +451,14 @@ def main():
     for problem in wrong:
         print(f"Problem: {problem}")
     plans, counts = plan(client, sets, found)
-    held = []
+    lines_by_set = []
     for kind, state in plans.items():
         side = f"slides {len(found[kind])}" + (f", version {counts[kind]}" if kind in counts else "")
         verb = {"new": "new set", "unchanged": "unchanged",
                 "differs": "replaces the version's set" if "all" in replace or kind in replace
                 else "HELD: differs from the version's set and --replace doesn't name it"}[state]
-        held.append(f"{kind}: {verb} ({side}).")
-        print(held[-1])
+        lines_by_set.append(f"{kind}: {verb} ({side}).")
+        print(lines_by_set[-1])
     refused = refused_replacements(plans, replace)
     if not args.upload:
         specs = creative_specs(client)
@@ -466,7 +468,7 @@ def main():
                    f"Screenshot sets now: {', '.join(sorted(sets)) or 'none'}."]
                   + [f"{kind} now: {', '.join(now) or 'none'}." for kind, now in placed.items()]
                   + [f"Slides found: {', '.join(f'{k} ({len(v)})' for k, v in found.items()) or 'none'}."]
-                  + [f"- {line}" for line in held]
+                  + [f"- {line}" for line in lines_by_set]
                   + [f"- Problem: {p}" for p in wrong] + [f"- {line}" for line in specs])
         if wrong:
             sys.exit(f"{len(wrong)} problems with the slides")
@@ -476,7 +478,7 @@ def main():
     if wrong:
         sys.exit(f"{len(wrong)} problems with the slides, nothing changed")
     if refused:
-        summarize([f"### Version {name}, {args.locale}: nothing changed"] + [f"- {line}" for line in held])
+        summarize([f"### Version {name}, {args.locale}: nothing changed"] + [f"- {line}" for line in lines_by_set])
         sys.exit(f"Nothing changed: the version's {', '.join(refused)} set differs from these slides. "
                  "If these slides are the newer ones, run again naming it in Replace (or all); if not, "
                  "this slides branch is stale")
