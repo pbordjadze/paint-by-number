@@ -36,8 +36,21 @@
 //                                  "pending": true} while a try of it is under way or Stripe gave
 //                                  no clear answer (the alarm asks Stripe); 410 {"ok": false,
 //                                  "refused": true, "refunded"} for one Prodigi refused.
+//                                  451 {"ok": false, "declined": true}, nothing charged, for a
+//                                  sheet the check (below) won't print.
 //   GET  /v1/print/sheets/<id>/<token>.pdf
 //                                  the kept sheet, for Prodigi's printer: 404 for anything else.
+//   GET, POST /v1/print/review/<id>/<token>
+//                                  Paul's page for an order the check held: the sheet, the reason,
+//                                  and Print it or Refund it (a form, so a link preview can't act).
+// The check (with ANTHROPIC_API_KEY set; `checkSheet`): a kept sheet is shown to Claude (CHECK_MODEL,
+// by the sheet's URL, never its photo, which the relay never has) as soon as it is kept, so its
+// answer is usually in before the painter has paid. A sheet that blatantly can't be printed (a
+// famous character or logo, someone else's artwork in copyright, sexual or illegal content) is
+// declined before the charge, or refunded should the answer come after it; one it isn't sure
+// of is held, an issue filed with the review page's link, and refunded if Paul hasn't decided
+// within HOLD_MS. No answer, or more checks today than CHECK_DAILY_LIMIT, holds it too. The painter
+// is told only that the picture can't be printed.
 // Once a day (worker.js's scheduled, wrangler.toml's cron) `reconcilePrints` matches Stripe's
 // payments for sheets against the orders Prodigi accepted, and files an issue for one that isn't.
 //
@@ -57,14 +70,15 @@
 // Privacy: the photo never comes here, only the printed sheet (lines traced from it, numbers, the
 // key) and the address it goes to. The sheet lives in its own Durable Object (PrintSheet,
 // SQLite-backed, named by the order's random key) under a random token, and deletes itself
-// SHEET_DAYS after it was kept, by an alarm; the name, email and address go to Prodigi (and with a
+// SHEET_DAYS after it was kept, by an alarm; the sheet's URL goes to Anthropic for the check; the name, email and address go to Prodigi (and with a
 // payment to Stripe, for its receipt and shipping record), and are kept in the order's object only
 // until Prodigi has accepted the order (or two days, when it is given up on). Issues name no one.
 //
 // The print service is one object (`prodigi` below; PRINT_PROVIDER names another), so it can be
 // replaced without touching the rest. Secrets PRODIGI_API_KEY (Prodigi's sandbox dashboard › API; never a live_ key) and, optional,
-// STRIPE_SECRET_KEY (Stripe's dashboard › Developers › API keys; the test key). Variables
-// PRODIGI_API and MARKUP (wrangler.toml).
+// STRIPE_SECRET_KEY (Stripe's dashboard › Developers › API keys; the test key) and
+// ANTHROPIC_API_KEY (the check). Variables PRODIGI_API, MARKUP and, optional, CHECK_MODEL and
+// CHECK_DAILY_LIMIT (wrangler.toml).
 
 import { Buffer } from "node:buffer";
 
@@ -87,6 +101,7 @@ const SHEET_DAYS = 14;
 const CLAIM_MS = 120_000;
 const SHIPPING = "standard";
 const PDF = [0x25, 0x50, 0x44, 0x46, 0x2d];
+const REVIEW = "/v1/print/review/";
 const HEX = /^[0-9a-f]{32}$/;
 const COUNTRY = /^[A-Z]{2}$/;
 
@@ -202,6 +217,7 @@ export function routesPrint(pathname) {
 
 export async function handlePrint(request, env, deps = {}) {
   const url = new URL(request.url);
+  if (url.pathname.startsWith(REVIEW)) return review(request, env, url.pathname.slice(REVIEW.length));
   const upload = url.pathname.startsWith(SHEETS) ? /^([0-9a-f]{32})$/.exec(url.pathname.slice(SHEETS.length)) : null;
   if (url.pathname.startsWith(SHEETS) && !upload) {
     if (request.method !== "GET" && request.method !== "HEAD") return bare(405, { allow: "GET" });
@@ -357,7 +373,7 @@ async function order(request, env, deps, provider) {
   }
 
   const stub = sheetStub(env, key);
-  if (file && !(await keep(stub, await file.arrayBuffer()))) return bare(502);
+  if (file && !(await keep(stub, await file.arrayBuffer(), new URL(request.url).origin, key))) return bare(502);
   let begun;
   try {
     const answer = await stub.fetch("https://sheet/begin", { method: "POST" });
@@ -377,6 +393,13 @@ async function order(request, env, deps, provider) {
   if (!claim) {
     log(`Order ${key} is ${begun.state} already (payment ${begun.charge ?? "none"})`);
     return json(202, { ok: false, pending: true });
+  }
+  // The check's answer, waited for a little while it is under way: a declined sheet costs nothing.
+  // One still unanswered goes on, and its object's alarm waits for the answer before placing it.
+  const verdict = begun.checking ? await awaitVerdict(stub, deps) : begun.verdict;
+  if (verdict === "refuse") {
+    await drop(stub, claim);
+    return json(451, { ok: false, declined: true });
   }
 
   const now = (deps.now ?? Date.now)();
@@ -422,7 +445,7 @@ async function order(request, env, deps, provider) {
 }
 
 /** States in which the order is the relay's to place: an answer of 201 for any try of it. */
-const TAKEN = new Set(["queued", "charged", "placing", "placed", "accepted"]);
+const TAKEN = new Set(["queued", "charged", "held", "placing", "placed", "accepted"]);
 
 /** The order's name with the print service and the painter: what the app shows as its number. */
 function referenceOf(key) {
@@ -434,9 +457,9 @@ function takenAnswer(env, provider, reference, charge) {
 }
 
 /** Keeps a sheet under its order's key (`keep` of PrintSheet); says whether it did. */
-async function keep(stub, bytes) {
+async function keep(stub, bytes, origin, key) {
   try {
-    const answer = await stub.fetch("https://sheet/keep", { method: "POST", headers: { "x-days": String(SHEET_DAYS) }, body: bytes });
+    const answer = await stub.fetch("https://sheet/keep", { method: "POST", headers: { "x-days": String(SHEET_DAYS), "x-origin": origin, "x-key": key }, body: bytes });
     if (!answer.ok) throw new Error(`HTTP ${answer.status}`);
     return true;
   } catch (error) {
@@ -454,7 +477,7 @@ async function putSheet(request, env, key) {
   const text = await readBytesCapped(request, MAX_ORDER);
   if (text === null) return bare(413);
   if (text.byteLength < PDF.length || !PDF.every((byte, i) => text[i] === byte)) return bare(415);
-  return (await keep(sheetStub(env, key), text)) ? json(200, { ok: true }) : bare(502);
+  return (await keep(sheetStub(env, key), text, new URL(request.url).origin, key)) ? json(200, { ok: true }) : bare(502);
 }
 
 /**
@@ -536,11 +559,13 @@ const CHARGE_LOST_MS = 30 * 60_000;
 /** How long the alarm keeps at an order before it says so and stops. */
 const GIVE_UP_MS = 2 * 24 * 3600_000;
 const HOUR = 3600_000;
+/** How long a held order waits for Paul's look before it is refunded. */
+const HOLD_MS = 24 * HOUR;
 const ACCEPTED = new Set(["submitted", "in_production", "partially_shipped", "shipped", "completed", "paused"]);
 /** A payment intent's statuses that took no money and never will. */
 const UNTAKEN = new Set(["requires_payment_method", "canceled"]);
 
-const ACTIVE = new Set(["charging", "queued", "charged", "placing", "placed"]);
+const ACTIVE = new Set(["charging", "queued", "charged", "held", "placing", "placed"]);
 
 /**
  * One step of an order the relay has taken, by where it stands; answers how long until the next
@@ -581,6 +606,38 @@ export async function advance(env, deps, storage, standing) {
     await storage.put({ state: "new", claimedAt: 0 });
     await storage.delete?.("job");
     return null;
+  }
+
+  if (state === "held") {
+    // A decision taken here is recorded first, so a later one on the review page is refused.
+    const deadline = (standing.heldAt ?? now) + HOLD_MS;
+    if (!standing.review && now >= deadline) await storage.put({ review: "expired" });
+    if (standing.review === "release") {
+      await storage.put({ state: charge ? "charged" : "queued", released: true });
+      return 0;
+    }
+    if (standing.review === "refuse") {
+      return await refuse(env, deps, storage, job, { ...facts, check: standing.verdict?.reason }, "Paul refused the sheet the check held.");
+    }
+    if (now < deadline) return deadline - now;
+    return await refuse(env, deps, storage, job, { ...facts, check: standing.verdict?.reason }, "The check held the sheet and nobody decided within a day.");
+  }
+
+  if ((state === "queued" || state === "charged") && !standing.released) {
+    // The check first: an order is never placed while it is under way, or against its answer.
+    if (standing.check === "due") return 30_000;
+    const verdict = standing.verdict;
+    if (verdict?.verdict === "refuse") {
+      return await refuse(env, deps, storage, job, { ...facts, check: verdict.reason },
+        "The check refused the sheet after the order was taken.");
+    }
+    if (verdict?.verdict === "hold") {
+      const reviewToken = standing.reviewToken ?? randomHex();
+      await storage.put({ state: "held", heldAt: now, reviewToken });
+      await alert(env, deps, storage, "held", "a sheet waits for your look", { ...facts, state: "held", check: verdict.reason },
+        `The check wasn't sure this sheet can be printed. Look at it and decide: ${job.origin}${REVIEW}${key}/${reviewToken} (the painter has ${charge ? "paid" : "not paid; a sandbox order"}). Undecided, it is refunded a day from now.`);
+      return HOLD_MS;
+    }
   }
 
   if (state === "queued" || state === "charged" || state === "placing") {
@@ -879,6 +936,184 @@ async function stripe(env, deps, path, idempotencyKey, fields) {
   return answer;
 }
 
+// MARK: The check
+
+const CHECK_API = "https://api.anthropic.com/v1/messages";
+const CHECK_MODEL = "claude-opus-5-5";
+/** Checks a day, at most, unless CHECK_DAILY_LIMIT says otherwise: one costs a few cents. */
+const CHECK_DAILY_LIMIT = 40;
+const CHECK_TRIES = 3;
+/** How long an order waits for a check still under way before it is charged all the same. */
+const VERDICT_WAIT_MS = 10_000;
+/** The PrintSheet that counts the day's checks (never a key: those are hex). */
+const CHECK_BUDGET = "check-budget";
+
+const CHECK_PROMPT = `You check sheets before a small print shop prints them. A customer of a paint-by-numbers app \
+ordered this sheet: a line drawing with numbered areas, traced on their phone from a picture they \
+chose. You see only the sheet. The shop is liable for what it prints, so it won't print a sheet \
+that blatantly copies someone else's protected work or is unlawful. Almost every sheet is fine: \
+people print their own photos (family, pets, places, food, flowers) and old artworks in the public \
+domain (anything painted before about 1930), and those must pass.
+
+Answer "refuse" only when it is blatant:
+- a recognizable copyrighted character or franchise (cartoon, comic, film, game or anime \
+characters), or a brand's logo or trademark as the subject;
+- a recognizable artwork, illustration or photograph by someone else that is still in copyright \
+(a famous modern painting, poster, album or book cover);
+- sexual content, anything sexual involving a minor, or content that is clearly illegal or hateful \
+(extremist symbols used approvingly).
+Answer "hold" when it could be one of those but you can't be sure; a person will look.
+Answer "pass" for everything else. Don't try to identify who a person in the picture is: a \
+portrait is a pass unless it is plainly one of the cases above. Ordinary nudity in fine art is a \
+pass. Text or a small logo incidental to a photo (a shirt, a street sign) is a pass.
+
+Give the reason in one short sentence for the shop's owner.`;
+
+const VERDICT_SCHEMA = {
+  type: "object",
+  properties: {
+    verdict: { type: "string", enum: ["pass", "hold", "refuse"] },
+    reason: { type: "string" },
+  },
+  required: ["verdict", "reason"],
+  additionalProperties: false,
+};
+
+/**
+ * Claude's look at a kept sheet, by its URL (Anthropic fetches it, as Prodigi does): {verdict:
+ * "pass" | "hold" | "refuse", reason}, with `again` when no answer came and a later try may get
+ * one. A day over CHECK_DAILY_LIMIT, a refusal to answer, or an answer that isn't one holds it.
+ */
+export async function checkSheet(env, deps, sheetUrl) {
+  if (!(await spendCheck(env))) return { verdict: "hold", reason: "Over today's limit of checks: not checked." };
+  let response, text;
+  try {
+    response = await (deps.fetch ?? fetch)(CHECK_API, {
+      method: "POST",
+      headers: { "x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2026-10-21", "content-type": "application/json" },
+      body: JSON.stringify({
+        model: env.CHECK_MODEL || CHECK_MODEL,
+        max_tokens: 4096,
+        system: CHECK_PROMPT,
+        output_config: { effort: "low", format: { type: "json_schema", schema: VERDICT_SCHEMA } },
+        messages: [{
+          role: "user",
+          content: [
+            { type: "document", source: { type: "url", url: sheetUrl } },
+            { type: "text", text: "The sheet to print. Your verdict?" },
+          ],
+        }],
+      }),
+    });
+    text = await response.text();
+  } catch (error) {
+    log("The check got no answer", error);
+    return { verdict: "hold", reason: "The check got no answer.", again: true };
+  }
+  if (!response.ok) {
+    // Its error type alone, never the body's echo of the request.
+    let type = "";
+    try {
+      type = String(JSON.parse(text)?.error?.type ?? "").slice(0, 60);
+    } catch {}
+    log(`The check failed: HTTP ${response.status} ${type}`);
+    const again = response.status === 429 || response.status >= 500;
+    return { verdict: "hold", reason: `The check failed (HTTP ${response.status} ${type}).`, again };
+  }
+  try {
+    const message = JSON.parse(text);
+    if (message.stop_reason === "refusal") return { verdict: "hold", reason: "The checker declined to look at this sheet." };
+    if (message.stop_reason === "max_tokens") return { verdict: "hold", reason: "The check ran out of room to answer.", again: true };
+    const answer = JSON.parse(message.content.find((block) => block.type === "text").text);
+    if (!["pass", "hold", "refuse"].includes(answer.verdict) || typeof answer.reason !== "string") throw new Error("no verdict");
+    // The reason goes into an issue: no Markdown, mentions or links of the model's own.
+    return { verdict: answer.verdict, reason: answer.reason.replace(/[`@<>\[\]()*_#|\\]/g, " ").slice(0, 300) };
+  } catch (error) {
+    log("The check's answer wasn't one", error);
+    return { verdict: "hold", reason: "The check's answer wasn't readable." };
+  }
+}
+
+/** Counts one check against today's limit; says whether it is within it. */
+async function spendCheck(env) {
+  const limit = Number(env.CHECK_DAILY_LIMIT) > 0 ? Number(env.CHECK_DAILY_LIMIT) : CHECK_DAILY_LIMIT;
+  try {
+    const answer = await sheetStub(env, CHECK_BUDGET).fetch("https://sheet/spend", { method: "POST", headers: { "x-limit": String(limit) } });
+    if (!answer.ok) throw new Error(`HTTP ${answer.status}`);
+    const counted = await answer.json();
+    if (!counted.ok) log(`Over today's ${limit} checks: the sheet is held`);
+    return counted.ok === true;
+  } catch (error) {
+    log("Counting the check failed", error);
+    return false;
+  }
+}
+
+/** The check's verdict once it is in, asked every second for VERDICT_WAIT_MS; undefined if not. */
+async function awaitVerdict(stub, deps) {
+  const now = deps.now ?? Date.now;
+  const sleep = deps.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+  const until = now() + VERDICT_WAIT_MS;
+  for (;;) {
+    try {
+      const answer = await stub.fetch("https://sheet/status");
+      if (answer.ok) {
+        const status = await answer.json();
+        if (!status.checking) return status.verdict;
+      }
+    } catch (error) {
+      log("Reading the check's verdict failed", error);
+      return undefined;
+    }
+    if (now() >= until) return undefined;
+    await sleep(1000);
+  }
+}
+
+/** The review page of a held order (GET) and Paul's decision on it (POST, a form). */
+async function review(request, env, rest) {
+  const match = /^([0-9a-f]{32})\/([0-9a-f]{32})$/.exec(rest);
+  if (!match || !env.PRINT_SHEETS) return bare(404);
+  const [, key, token] = match;
+  const stub = sheetStub(env, key);
+  if (request.method === "POST") {
+    let decision = null;
+    try {
+      decision = (await request.formData()).get("decision");
+    } catch {}
+    const answer = await stub.fetch("https://sheet/review", { method: "POST", headers: { "x-review": token, "x-decision": String(decision) } });
+    if (answer.status === 404) return bare(404);
+    const done = answer.ok ? (decision === "release" ? "It goes to the printer now." : "It is refunded now.")
+      : answer.status === 400 ? "Choose Print it or Refund it." : "It was decided already.";
+    return page(`<p>${done}</p>`);
+  }
+  if (request.method !== "GET") return bare(405, { allow: "GET, POST" });
+  const answer = await stub.fetch("https://sheet/held", { headers: { "x-review": token } });
+  if (!answer.ok) return bare(404);
+  const held = await answer.json();
+  const sheetUrl = `${SHEETS}${key}/${held.token}.pdf`;
+  const decided = held.state !== "held" || held.review;
+  return page(`<h1>Order ${escapeHTML(held.reference ?? "")}</h1>
+<p>The check held this sheet: ${escapeHTML(held.reason ?? "no reason given")}</p>
+<p><a href="${sheetUrl}">Look at the sheet</a></p>
+${decided ? `<p>Decided: ${escapeHTML(held.review ?? held.state)}.</p>` : `<form method="post"><button name="decision" value="release">Print it</button> <button name="decision" value="refuse">Refund it</button></form>`}`);
+}
+
+function page(body) {
+  return new Response(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta name="robots" content="noindex"><title>One Big Sheet</title><body style="font: 17px system-ui; margin: 2em auto; max-width: 32em; padding: 0 1em">${body}</body>`, {
+    status: 200, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "referrer-policy": "no-referrer" },
+  });
+}
+
+function escapeHTML(text) {
+  return String(text).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+}
+
+async function digestOf(bytes) {
+  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+  return Array.from(digest, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 // MARK: Sheets
 
 async function sheet(rest, env) {
@@ -904,7 +1139,9 @@ function sheetStub(env, id) {
  * settled, deletes it all SHEET_DAYS after the sheet was kept.
  *   States: "new" (kept, not ordered), "charging", "charged" or "queued" (unpaid, the sandbox's),
  *   "placing", "placed" (the service has it, not yet seen accepted), "accepted", "refused"
- *   (refunded), "stuck" (given up on, an issue filed).
+ *   (refunded), "stuck" (given up on, an issue filed), "held" (the check wasn't sure: Paul's to
+ *   decide on the review page, refunded after HOLD_MS). With the check, also `check` ("due",
+ *   "done"), `verdict` ({verdict, reason}) and the review's token and decision.
  *   POST https://sheet/keep   the PDF as the body; x-days. Keeps it, or replaces it while the order
  *                             is "new" and no try holds it; after that the order's sheet stays.
  *   POST https://sheet/begin  {state, token, charge?, order?, claim?}, or 404 with no sheet. The
@@ -913,7 +1150,10 @@ function sheetStub(env, id) {
  *   POST https://sheet/mark   x-claim; {state, charge?, order?, job?, alarmIn?}
  *   POST https://sheet/drop   x-claim; the order back to "new", free (it surely failed)
  *   GET  https://sheet/read   x-token; the PDF, or 404
- *   GET  https://sheet/status {state, order?, charge?}, or 404
+ *   GET  https://sheet/status {state, order?, charge?, refunded, alerted, checking, verdict?}, or 404
+ *   GET  https://sheet/held   x-review; what the review page shows
+ *   POST https://sheet/review x-review, x-decision (release | refuse); once, while held
+ *   POST https://sheet/spend  x-limit; only the object CHECK_BUDGET: counts a check, today's
  */
 export class PrintSheet {
   constructor(state, env, deps = {}) {
@@ -946,13 +1186,25 @@ export class PrintSheet {
       // The token last: a sheet with a token is whole.
       const expires = this.now() + days * 24 * HOUR;
       await this.storage.put({ token: kept.get("token") ?? randomHex(), state: "new", claimedAt: 0, expires });
-      await this.storage.setAlarm(expires);
+      // A new sheet is checked at once (the alarm), unless these very bytes have their answer.
+      const digest = await digestOf(bytes);
+      const origin = request.headers.get("x-origin");
+      const key = request.headers.get("x-key");
+      if (this.env.ANTHROPIC_API_KEY && origin && key && digest !== (await this.storage.get("digest"))) {
+        await this.storage.put({ check: "due", checkTries: 0, digest, origin, key, sheetVersion: ((await this.storage.get("sheetVersion")) ?? 0) + 1 });
+        await this.storage.delete?.("verdict");
+        await this.storage.setAlarm(this.now());
+      } else {
+        // The same bytes: their answer stands, or their check, still due, goes on.
+        await this.storage.setAlarm((await this.storage.get("check")) === "due" ? this.now() : expires);
+      }
       return json(201, { kept: true });
     }
     if (pathname === "/begin" && request.method === "POST") {
-      const kept = await this.storage.get(["token", "state", "charge", "order", "claimedAt", "refunded"]);
+      const kept = await this.storage.get(["token", "state", "charge", "order", "claimedAt", "refunded", "check", "verdict"]);
       if (!kept.get("token")) return bare(404);
-      const answer = { token: kept.get("token"), state: kept.get("state"), charge: kept.get("charge"), order: kept.get("order"), refunded: kept.get("refunded") === true };
+      const answer = { token: kept.get("token"), state: kept.get("state"), charge: kept.get("charge"), order: kept.get("order"), refunded: kept.get("refunded") === true,
+        checking: kept.get("check") === "due", verdict: kept.get("verdict")?.verdict };
       if (kept.get("state") === "new" && this.now() - (kept.get("claimedAt") ?? 0) > CLAIM_MS) {
         answer.claim = randomHex();
         await this.storage.put({ claim: answer.claim, claimedAt: this.now() });
@@ -994,14 +1246,68 @@ export class PrintSheet {
       const kept = await this.storage.get(["state", "order", "charge", "refunded", "alerted-stuck", "alerted-refused", "alerted-unsure"]);
       if (!kept.get("state")) return bare(404);
       const alerted = ["stuck", "refused", "unsure"].some((kind) => kept.get(`alerted-${kind}`) === true);
-      return json(200, { state: kept.get("state"), order: kept.get("order"), charge: kept.get("charge"), refunded: kept.get("refunded") === true, alerted });
+      const check = await this.storage.get(["check", "verdict"]);
+      return json(200, { state: kept.get("state"), order: kept.get("order"), charge: kept.get("charge"), refunded: kept.get("refunded") === true, alerted,
+        checking: check.get("check") === "due", verdict: check.get("verdict")?.verdict });
+    }
+    if (pathname === "/held" && request.method === "GET") {
+      const kept = await this.storage.get(["reviewToken", "state", "job", "verdict", "token", "review"]);
+      if (!kept.get("reviewToken") || kept.get("reviewToken") !== request.headers.get("x-review")) return bare(404);
+      return json(200, { state: kept.get("state"), reference: kept.get("job")?.reference, reason: kept.get("verdict")?.reason, token: kept.get("token"), review: kept.get("review") });
+    }
+    if (pathname === "/review" && request.method === "POST") {
+      const decision = request.headers.get("x-decision");
+      const kept = await this.storage.get(["reviewToken", "state"]);
+      if (!kept.get("reviewToken") || kept.get("reviewToken") !== request.headers.get("x-review")) return bare(404);
+      if (decision !== "release" && decision !== "refuse") return bare(400);
+      if (kept.get("state") !== "held" || (await this.storage.get("review"))) return bare(409);
+      await this.storage.put({ review: decision });
+      await this.storage.setAlarm(this.now());
+      return json(200, { ok: true });
+    }
+    if (pathname === "/spend" && request.method === "POST") {
+      // Only the object named CHECK_BUDGET: today's checks, counted against the day's limit.
+      const limit = Number(request.headers.get("x-limit"));
+      const day = new Date(this.now()).toISOString().slice(0, 10);
+      const spent = (await this.storage.get(`spent-${day}`)) ?? 0;
+      if (!(spent < limit)) return json(200, { ok: false, spent });
+      const last = await this.storage.get("lastDay");
+      if (last && last !== day) await this.storage.delete?.(`spent-${last}`);
+      await this.storage.put({ [`spent-${day}`]: spent + 1, lastDay: day });
+      return json(200, { ok: true, spent: spent + 1 });
     }
     return bare(404);
   }
 
+  /**
+   * The check of the kept sheet (`checkSheet`); its answer stored unless the sheet was replaced
+   * meanwhile. Answers how long until it is tried again (no answer, three times), or null.
+   */
+  async runCheck() {
+    const kept = await this.storage.get(["token", "origin", "key", "sheetVersion", "checkTries"]);
+    const version = kept.get("sheetVersion");
+    const result = await checkSheet(this.env, this.deps, `${kept.get("origin")}${SHEETS}${kept.get("key")}/${kept.get("token")}.pdf`);
+    // A sheet sent again while this one was looked at is checked anew, at once.
+    if ((await this.storage.get("sheetVersion")) !== version) return 0;
+    const tries = (kept.get("checkTries") ?? 0) + 1;
+    if (result.again && tries < CHECK_TRIES) {
+      await this.storage.put({ checkTries: tries });
+      return 30_000;
+    }
+    await this.storage.put({ check: "done", verdict: { verdict: result.verdict, reason: result.reason } });
+    return null;
+  }
+
   /** Works the order a step on while one is under way; otherwise deletes it all once it is due. */
   async alarm() {
-    const names = ["state", "job", "charge", "order", "token", "expires"];
+    if ((await this.storage.get("check")) === "due") {
+      const wait = await this.runCheck();
+      if (wait !== null) {
+        await this.storage.setAlarm(this.now() + wait);
+        return;
+      }
+    }
+    const names = ["state", "job", "charge", "order", "token", "expires", "check", "verdict", "review", "reviewToken", "heldAt", "released"];
     const kept = await this.storage.get(names);
     const standing = Object.fromEntries(names.map((name) => [name, kept.get(name)]));
     if (standing.job && ACTIVE.has(standing.state)) {
@@ -1019,6 +1325,11 @@ export class PrintSheet {
       }
     }
     const expires = (await this.storage.get("expires")) ?? 0;
+    // A check still due keeps the alarm near, whatever else ran.
+    if ((await this.storage.get("check")) === "due") {
+      await this.storage.setAlarm(this.now() + 30_000);
+      return;
+    }
     if (this.now() >= expires) {
       await this.storage.deleteAll();
       return;

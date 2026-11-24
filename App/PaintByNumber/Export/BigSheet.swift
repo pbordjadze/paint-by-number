@@ -139,7 +139,8 @@ nonisolated struct BigSheetService: Sendable {
     nonisolated enum ServiceError: Error, Equatable {
         /// The relay answered with this status instead of 2xx: 402 a payment declined or missing,
         /// 409 a price that moved since it was shown, 410 an order the print service refused (its
-        /// payment refunded), 412 no sheet kept under the key.
+        /// payment refunded), 412 no sheet kept under the key, 451 a sheet the relay's check won't
+        /// print (nothing charged).
         case refused(Int)
         /// The order is under way already, or the relay couldn't tell whether it was placed: it
         /// may arrive, and trying again won't order it twice.
@@ -551,6 +552,7 @@ struct BigSheetView: View {
     @State private var placed: String?
     @State private var orderFailed = false
     @State private var orderPending = false
+    @State private var orderDeclined = false
     @State private var paymentFailed = false
     /// Apple Pay's sheet couldn't show (a build without the entitlement, SideStore's): test orders.
     @State private var applePayMissing = false
@@ -596,7 +598,9 @@ struct BigSheetView: View {
         .alert("Couldn’t Place the Order", isPresented: $orderFailed) {
             Button("OK", role: .cancel) {}
         } message: {
-            if orderPending {
+            if orderDeclined {
+                Text("We can’t print this picture. Nothing was charged.")
+            } else if orderPending {
                 Text("This order may already be on its way. Check your email before ordering again.")
             } else {
                 Text("Check your connection and try again.")
@@ -658,6 +662,7 @@ struct BigSheetView: View {
                     Text(String(localized: "bigSheet.testPrice", defaultValue: "Test price: the print costs \(cost), and \(cut) is yours.",
                                 comment: "One Big Sheet, under the price while orders are only tests: what the print service charges and what the developer keeps; the arguments are amounts of money"))
                 }
+                Text("Made to order and shipped within a week. Print only pictures that are yours to print.")
                 Text("Only this sheet and the address go to the printer, never your photo.")
             }
         }
@@ -839,7 +844,7 @@ struct BigSheetView: View {
                 }
                 Text("Test Order Placed")
                     .font(.display(.title2, weight: .semibold))
-                Text(String(localized: "bigSheet.placed", defaultValue: "Order \(order). A test order prints nothing; a real one would arrive in about a week.",
+                Text(String(localized: "bigSheet.placed", defaultValue: "Order \(order). A test order prints nothing; a real one would ship within a week.",
                             comment: "One Big Sheet once a test order is placed; the argument is the print service's order number"))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)
@@ -947,6 +952,7 @@ struct BigSheetView: View {
     /// order it twice.
     private func settle(_ error: Error) {
         orderPending = error as? BigSheetService.ServiceError == .pending
+        orderDeclined = error as? BigSheetService.ServiceError == .refused(451)
         if case .refused = error as? BigSheetService.ServiceError { orderKey = BigSheetService.newKey() }
     }
 

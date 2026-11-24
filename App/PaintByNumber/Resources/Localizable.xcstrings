@@ -64490,67 +64490,67 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bestellung %@. Eine Testbestellung druckt nichts; eine echte käme in etwa einer Woche an."
+            "value" : "Bestellung %@. Eine Testbestellung druckt nichts; eine echte würde innerhalb einer Woche verschickt werden."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Order %@. A test order prints nothing; a real one would arrive in about a week."
+            "value" : "Order %@. A test order prints nothing; a real one would ship within a week."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pedido %@. Un pedido de prueba no imprime nada; uno real llegaría en una semana, más o menos."
+            "value" : "Pedido %@. Un pedido de prueba no imprime nada; uno real se enviaría en menos de una semana."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Commande %@. Une commande test n’imprime rien ; une vraie arriverait en une semaine environ."
+            "value" : "Commande %@. Une commande test n’imprime rien ; une vraie serait expédiée sous une semaine."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ordine %@. Un ordine di prova non stampa nulla; uno vero arriverebbe in circa una settimana."
+            "value" : "Ordine %@. Un ordine di prova non stampa nulla; uno vero verrebbe spedito entro una settimana."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "注文番号 %@。テスト注文では何も印刷されません。本当の注文なら1週間ほどで届きます。"
+            "value" : "注文番号 %@。テスト注文では何も印刷されません。本当の注文なら1週間以内に発送されます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "주문 번호 %@. 테스트 주문은 아무것도 인쇄하지 않아요. 실제 주문이라면 일주일쯤 뒤에 도착해요."
+            "value" : "주문 번호 %@. 테스트 주문은 아무것도 인쇄하지 않아요. 실제 주문이라면 일주일 안에 발송돼요."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bestelling %@. Een testbestelling print niets; een echte zou in ongeveer een week aankomen."
+            "value" : "Bestelling %@. Een testbestelling print niets; een echte zou binnen een week worden verzonden."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pedido %@. Um pedido de teste não imprime nada; um de verdade chegaria em cerca de uma semana."
+            "value" : "Pedido %@. Um pedido de teste não imprime nada; um de verdade seria enviado em até uma semana."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "订单 %@。测试订单不会印刷任何东西；真正的订单大约一周后送达。"
+            "value" : "订单 %@。测试订单不会印刷任何东西；真正的订单会在一周内发货。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "訂單 %@。測試訂單不會印出任何東西；真正的訂單大約一週後送達。"
+            "value" : "訂單 %@。測試訂單不會印出任何東西；真正的訂單會在一週內出貨。"
           }
         }
       }
@@ -65031,6 +65031,138 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "請在%@前下單，聖誕節前送達"
+          }
+        }
+      }
+    },
+    "Made to order and shipped within a week. Print only pictures that are yours to print." : {
+      "comment" : "One Big Sheet's order screen, under the price: how soon it ships, and that the painter prints only pictures they have the right to",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf Bestellung gefertigt und innerhalb einer Woche verschickt. Drucke nur Bilder, die du drucken darfst."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hecho por encargo y enviado en menos de una semana. Imprime solo imágenes que tengas derecho a imprimir."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fabriqué à la commande et expédié sous une semaine. N’imprimez que des images que vous avez le droit d’imprimer."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Realizzato su ordinazione e spedito entro una settimana. Stampa solo immagini che hai il diritto di stampare."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ご注文ごとに制作し、1週間以内に発送します。印刷してよい画像だけを印刷してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "주문받아 제작하고 일주일 안에 발송해요. 인쇄할 권리가 있는 그림만 인쇄해 주세요."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Op bestelling gemaakt en binnen een week verzonden. Print alleen afbeeldingen die je mag printen."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feito sob encomenda e enviado em até uma semana. Imprima só imagens que você tem o direito de imprimir."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按单制作，一周内发货。请只印刷你有权印刷的图片。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按訂單製作，一週內出貨。請只印出你有權印出的圖片。"
+          }
+        }
+      }
+    },
+    "We can’t print this picture. Nothing was charged." : {
+      "comment" : "One Big Sheet: the alert's message when the relay's check won't print the sheet (a picture that isn't the painter's to print); nothing was charged",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Bild können wir nicht drucken. Dir wurde nichts berechnet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No podemos imprimir esta imagen. No se te ha cobrado nada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nous ne pouvons pas imprimer cette image. Rien ne vous a été facturé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non possiamo stampare questa immagine. Non ti è stato addebitato nulla."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この絵は印刷できません。料金は請求されていません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 그림은 인쇄할 수 없어요. 결제된 금액은 없어요."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We kunnen deze afbeelding niet afdrukken. Er is niets afgeschreven."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não podemos imprimir esta imagem. Nada foi cobrado."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我们无法打印这张图片。没有扣除任何费用。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我們無法列印這張圖片。沒有收取任何費用。"
           }
         }
       }
