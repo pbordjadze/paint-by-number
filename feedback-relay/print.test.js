@@ -83,7 +83,7 @@ function quoteRequest(body, headers = {}) {
   });
 }
 
-const ORDER = { key: ID, product: "paper-18x24", recipient: RECIPIENT };
+const ORDER = { key: ID, product: "canvas-16x24", recipient: RECIPIENT };
 
 /** An order as the app sends it: the order a file part, `order.json` (or a plain field, `plain`). */
 async function orderRequest({ sheet = PDF, order = ORDER, plain = false } = {}) {
@@ -107,22 +107,22 @@ async function orderRequest({ sheet = PDF, order = ORDER, plain = false } = {}) 
 
 test("a quote is Prodigi's cost with the markup, rounded up, and says the cut in the sandbox", async () => {
   const { calls, fetcher } = prodigi({ "/quotes/order": QUOTE });
-  const answer = await handlePrint(quoteRequest({ product: "paper-18x24", country: "US" }), env(), { fetch: fetcher });
+  const answer = await handlePrint(quoteRequest({ product: "canvas-16x24", country: "US" }), env(), { fetch: fetcher });
   assert.equal(answer.status, 200);
   assert.deepEqual(await answer.json(), {
-    product: "paper-18x24", currency: "USD", price: "33.00", sandbox: { cost: "23.29", cut: "9.71" },
+    product: "canvas-16x24", currency: "USD", price: "33.00", sandbox: { cost: "23.29", cut: "9.71" },
   });
   assert.equal(calls.length, 1);
   assert.equal(calls[0].url, `${SANDBOX}/quotes/order`);
   assert.equal(calls[0].init.headers["x-api-key"], `sandbox_${KEY}`);
-  assert.deepEqual(calls[0].body.items[0].catalogueVariantId, PRODUCTS["paper-18x24"]);
+  assert.deepEqual(calls[0].body.items[0].catalogueVariantId, PRODUCTS["canvas-16x24"]);
   assert.equal(calls[0].body.shippingAddress.countryCode, "US");
   assert.equal(calls[0].body.shippingMethod, "standard");
 });
 
 test("a quote for an unknown product or a malformed country is refused before Prodigi", async () => {
   const { calls, fetcher } = prodigi({ "/quotes/order": QUOTE });
-  for (const body of [{ product: "mug", country: "US" }, { product: "paper-18x24", country: "usa" }, { product: "paper-18x24" }, "not json"]) {
+  for (const body of [{ product: "mug", country: "US" }, { product: "canvas-16x24", country: "usa" }, { product: "canvas-16x24" }, "not json"]) {
     const answer = await handlePrint(quoteRequest(body), env(), { fetch: fetcher });
     assert.equal(answer.status, 400, JSON.stringify(body));
   }
@@ -130,17 +130,17 @@ test("a quote for an unknown product or a malformed country is refused before Pr
 });
 
 test("a quote that isn't JSON, or too large, is refused", async () => {
-  const wrongType = await handlePrint(quoteRequest({ product: "paper-18x24", country: "US" }, { "content-type": "text/plain" }), env());
+  const wrongType = await handlePrint(quoteRequest({ product: "canvas-16x24", country: "US" }, { "content-type": "text/plain" }), env());
   assert.equal(wrongType.status, 415);
-  const big = await handlePrint(quoteRequest({ product: "paper-18x24", country: "US", pad: "x".repeat(2000) }), env());
+  const big = await handlePrint(quoteRequest({ product: "canvas-16x24", country: "US", pad: "x".repeat(2000) }), env());
   assert.equal(big.status, 413);
 });
 
 test("Prodigi refusing, or answering without a total, is a 502", async () => {
   const refused = prodigi({ "/quotes/order": () => new Response("{}", { status: 400 }) });
-  assert.equal((await handlePrint(quoteRequest({ product: "paper-18x24", country: "US" }), env(), { fetch: refused.fetcher })).status, 502);
+  assert.equal((await handlePrint(quoteRequest({ product: "canvas-16x24", country: "US" }), env(), { fetch: refused.fetcher })).status, 502);
   const empty = prodigi({ "/quotes/order": { data: {} } });
-  assert.equal((await handlePrint(quoteRequest({ product: "paper-18x24", country: "US" }), env(), { fetch: empty.fetcher })).status, 502);
+  assert.equal((await handlePrint(quoteRequest({ product: "canvas-16x24", country: "US" }), env(), { fetch: empty.fetcher })).status, 502);
 });
 
 test("the price rounds up to a whole unit, and a bad markup falls back to 40%", () => {
@@ -156,7 +156,7 @@ test("the price rounds up to a whole unit, and a bad markup falls back to 40%", 
 test("the relay never talks to Prodigi's live API: it would print at Paul's cost", async () => {
   const { calls, fetcher } = prodigi({ "/quotes/order": QUOTE, "/orders": PLACED });
   for (const live of [env({ PRODIGI_API: "https://api.prodigi.com/v4.0" }), env({ PRODIGI_API_KEY: "live_REAL" })]) {
-    assert.equal((await handlePrint(quoteRequest({ product: "paper-18x24", country: "US" }), live, { fetch: fetcher })).status, 503);
+    assert.equal((await handlePrint(quoteRequest({ product: "canvas-16x24", country: "US" }), live, { fetch: fetcher })).status, 503);
     assert.equal((await handlePrint(await orderRequest(), live, { fetch: fetcher })).status, 503);
   }
   assert.equal(calls.length, 0);
@@ -164,20 +164,20 @@ test("the relay never talks to Prodigi's live API: it would print at Paul's cost
 
 test("a sandbox key already prefixed is sent as it is", async () => {
   const { calls, fetcher } = prodigi({ "/quotes/order": QUOTE });
-  await handlePrint(quoteRequest({ product: "paper-18x24", country: "US" }), env({ PRODIGI_API_KEY: "sandbox_abc" }), { fetch: fetcher });
+  await handlePrint(quoteRequest({ product: "canvas-16x24", country: "US" }), env({ PRODIGI_API_KEY: "sandbox_abc" }), { fetch: fetcher });
   assert.equal(calls[0].init.headers["x-api-key"], "sandbox_abc");
 });
 
 test("without its key or storage the relay says it is misconfigured", async () => {
   for (const missing of ["PRODIGI_API_KEY", "PRODIGI_API", "PRINT_SHEETS"]) {
-    const answer = await handlePrint(quoteRequest({ product: "paper-18x24", country: "US" }), env({ [missing]: undefined }));
+    const answer = await handlePrint(quoteRequest({ product: "canvas-16x24", country: "US" }), env({ [missing]: undefined }));
     assert.equal(answer.status, 500, missing);
   }
 });
 
 test("a flood is braked", async () => {
   const limiter = { limit: async () => ({ success: false }) };
-  const answer = await handlePrint(quoteRequest({ product: "paper-18x24", country: "US" }), env({ PRINT_LIMITER: limiter }));
+  const answer = await handlePrint(quoteRequest({ product: "canvas-16x24", country: "US" }), env({ PRINT_LIMITER: limiter }));
   assert.equal(answer.status, 429);
 });
 
@@ -192,7 +192,7 @@ test("an order keeps the sheet for the printer, places the order with its URL, a
 
   const sent = calls[0].body;
   assert.equal(calls[0].url, `${SANDBOX}/orders`);
-  assert.equal(sent.items[0].sku, "GLOBAL-FAP-18x24");
+  assert.equal(sent.items[0].sku, "GLOBAL-CAN-ROL-SC-16X24");
   assert.equal(sent.items[0].quantity, 1);
   assert.equal(sent.submit, true);
   const url = sent.items[0].assets[0].url;

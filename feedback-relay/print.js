@@ -91,19 +91,14 @@ const COUNTRY = /^[A-Z]{2}$/;
  */
 export const prodigi = {
   name: "Prodigi",
-  // Enhanced Matte Art Paper, 200 gsm, which takes markers, gouache and a light coat of acrylic.
-  // A code here is checked against Prodigi's product lookup before it is offered
-  // (GLOBAL-FAP-18x24 is named in Prodigi's FAQ).
+  // Rolled canvas, 400 gsm cotton, for acrylic, and cold press watercolour paper, 315 gsm cotton
+  // rag, for watercolor (painting-company row 380), the app's `BigSheetProduct`. Each code was
+  // quoted by Prodigi's sandbox before it was offered here.
   products: {
-    "paper-18x24": "GLOBAL-FAP-18x24",
-    "paper-24x36": "GLOBAL-FAP-24x36",
-    // Rolled canvas, 400 gsm cotton, for acrylic (painting-company row 380): not yet in the app.
     "canvas-16x24": "GLOBAL-CAN-ROL-SC-16X24",
     "canvas-24x36": "GLOBAL-CAN-ROL-SC-24X36",
-    // Cold press watercolour paper, 315 gsm cotton rag, for watercolor.
     "watercolor-18x24": "ART-FAP-CPWP-18X24",
     "watercolor-24x36": "ART-FAP-CPWP-24X36",
-    "watercolor-16x24": "ART-FAP-CPWP-16X24",
   },
 
   configured: (env) => Boolean(env.PRODIGI_API_KEY && env.PRODIGI_API),

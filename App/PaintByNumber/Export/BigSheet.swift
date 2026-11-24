@@ -8,8 +8,8 @@ import SwiftUI
 import UIKit
 
 // One Big Sheet (painting-company row 380; SideStore and Debug builds): Print's preview offers the
-// template printed whole on one poster-sized sheet of matte art paper by a print service, Prodigi,
-// and mailed to the painter. The relay (`feedback-relay/print.js`, its header the contract) prices
+// template printed whole on one poster-sized sheet of canvas or watercolor paper by a print
+// service, Prodigi, and mailed to the painter. The relay (`feedback-relay/print.js`, its header the contract) prices
 // the sheet and places the order; for now it talks to Prodigi's sandbox alone, which prints and
 // charges nothing, so every order here is a test order and the screen says so.
 //
@@ -18,19 +18,41 @@ import UIKit
 // with an Apple Pay payment where the build carries Apple Pay (`BigSheetApplePay`; the
 // nightly's). Elsewhere the screen places a test order, unpaid, to a test address.
 
-/// What One Big Sheet prints on: the sizes Prodigi's Enhanced Matte Art Paper comes in that make
-/// a sheet worth sending for, by the id the relay knows them by (`PRODUCTS` in print.js).
+/// What One Big Sheet prints on: rolled cotton canvas for acrylic, the default, and cold press
+/// watercolor paper, each in the sizes Prodigi prints it in that make a sheet worth sending for,
+/// by the id the relay knows them by (`products` in print.js).
 nonisolated enum BigSheetProduct: String, CaseIterable, Identifiable, Sendable {
-    case paper18x24 = "paper-18x24"
-    case paper24x36 = "paper-24x36"
+    case canvas16x24 = "canvas-16x24"
+    case canvas24x36 = "canvas-24x36"
+    case watercolor18x24 = "watercolor-18x24"
+    case watercolor24x36 = "watercolor-24x36"
+
+    /// What the sheet is, for the paint it takes.
+    nonisolated enum Surface: String, CaseIterable, Identifiable, Sendable {
+        case canvas
+        case watercolorPaper
+
+        var id: String { rawValue }
+
+        /// Its sizes, smallest first.
+        var products: [BigSheetProduct] { BigSheetProduct.allCases.filter { $0.surface == self } }
+    }
 
     var id: String { rawValue }
+
+    var surface: Surface {
+        switch self {
+        case .canvas16x24, .canvas24x36: .canvas
+        case .watercolor18x24, .watercolor24x36: .watercolorPaper
+        }
+    }
 
     /// Portrait size in inches.
     var inches: CGSize {
         switch self {
-        case .paper18x24: CGSize(width: 18, height: 24)
-        case .paper24x36: CGSize(width: 24, height: 36)
+        case .canvas16x24: CGSize(width: 16, height: 24)
+        case .canvas24x36, .watercolor24x36: CGSize(width: 24, height: 36)
+        case .watercolor18x24: CGSize(width: 18, height: 24)
         }
     }
 
@@ -199,9 +221,12 @@ nonisolated enum BigSheetServiceStub {
             name: failing ? "stub-fail" : "stub",
             quote: { product, _ in
                 if failing { throw BigSheetService.ServiceError.refused(502) }
-                return product == .paper18x24
-                    ? BigSheetQuote(product: product.rawValue, currency: "USD", price: "33.00", sandbox: .init(cost: "23.29", cut: "9.71"))
-                    : BigSheetQuote(product: product.rawValue, currency: "USD", price: "49.00", sandbox: .init(cost: "34.80", cut: "14.20"))
+                switch product {
+                case .canvas16x24: return BigSheetQuote(product: product.rawValue, currency: "USD", price: "37.00", sandbox: .init(cost: "26.14", cut: "10.86"))
+                case .canvas24x36: return BigSheetQuote(product: product.rawValue, currency: "USD", price: "58.00", sandbox: .init(cost: "40.90", cut: "17.10"))
+                case .watercolor18x24: return BigSheetQuote(product: product.rawValue, currency: "USD", price: "58.00", sandbox: .init(cost: "41.42", cut: "16.58"))
+                case .watercolor24x36: return BigSheetQuote(product: product.rawValue, currency: "USD", price: "93.00", sandbox: .init(cost: "65.90", cut: "27.10"))
+                }
             },
             order: { _, _, _, _, _ in
                 if failing { throw BigSheetService.ServiceError.refused(502) }
@@ -378,7 +403,7 @@ struct BigSheetView: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var product: BigSheetProduct = .paper18x24
+    @State private var product: BigSheetProduct = .canvas16x24
     @State private var quote: BigSheetQuote?
     @State private var quoteFailed = false
     /// Priced for the painter's own country; Apple Pay's sheet prices it again for where it goes.
@@ -451,8 +476,17 @@ struct BigSheetView: View {
                 .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
         }
         Section {
+            Picker(selection: surface) {
+                ForEach(BigSheetProduct.Surface.allCases) { surface in
+                    surfaceName(surface).tag(surface)
+                }
+            } label: {
+                Text("Print On")
+            }
+            .pickerStyle(.menu)
+            .accessibilityIdentifier("big-sheet-surface")
             Picker(selection: $product) {
-                ForEach(BigSheetProduct.allCases) { product in
+                ForEach(product.surface.products) { product in
                     Text(sizeText(product)).tag(product)
                 }
             } label: {
@@ -468,7 +502,12 @@ struct BigSheetView: View {
             .accessibilityIdentifier("big-sheet-price")
         } footer: {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Matte art paper, heavy enough for markers, gouache and a light coat of acrylic.")
+                switch product.surface {
+                case .canvas:
+                    Text("Cotton canvas for acrylic paint. It comes rolled: lay it flat under something heavy for a day before painting.")
+                case .watercolorPaper:
+                    Text("Cotton watercolor paper with a soft texture. It comes rolled: lay it flat under something heavy for a day before painting.")
+                }
                 if printsSmallNumbers {
                     Text("Some numbers print small at this size: the larger sheet reads more easily.")
                 }
@@ -479,6 +518,23 @@ struct BigSheetView: View {
                 }
                 Text("Only this sheet and the address go to the printer, never your photo.")
             }
+        }
+    }
+
+    /// The surface picked; another surface starts on its smallest size.
+    private var surface: Binding<BigSheetProduct.Surface> {
+        Binding {
+            product.surface
+        } set: { surface in
+            if surface != product.surface, let first = surface.products.first { product = first }
+        }
+    }
+
+    @ViewBuilder
+    private func surfaceName(_ surface: BigSheetProduct.Surface) -> some View {
+        switch surface {
+        case .canvas: Text("Canvas")
+        case .watercolorPaper: Text("Watercolor Paper")
         }
     }
 

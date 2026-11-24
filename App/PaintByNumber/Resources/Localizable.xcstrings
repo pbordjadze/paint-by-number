@@ -463,6 +463,72 @@
         }
       }
     },
+    "Canvas" : {
+      "comment" : "One Big Sheet, the Print On menu: rolled cotton canvas, for acrylic paint",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leinwand"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lienzo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toile"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tela"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャンバス"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "캔버스"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Canvas"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tela"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画布"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "畫布"
+          }
+        }
+      }
+    },
     "Can’t Reach the Museum" : {
       "comment" : "The Museum's title when its catalog couldn't be downloaded",
       "extractionState" : "manual",
@@ -855,6 +921,138 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已選"
+          }
+        }
+      }
+    },
+    "Cotton canvas for acrylic paint. It comes rolled: lay it flat under something heavy for a day before painting." : {
+      "comment" : "One Big Sheet, under its size and price when canvas is picked: what it is and how it arrives",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baumwollleinwand für Acrylfarbe. Sie kommt gerollt: Leg sie vor dem Malen einen Tag lang unter etwas Schweres, damit sie flach wird."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lienzo de algodón para pintura acrílica. Llega enrollado: déjalo un día bajo algo pesado para que quede plano antes de pintar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toile de coton pour la peinture acrylique. Elle arrive roulée : laissez-la à plat un jour sous quelque chose de lourd avant de peindre."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tela di cotone per colori acrilici. Arriva arrotolata: lasciala un giorno sotto qualcosa di pesante perché si appiattisca prima di dipingere."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アクリル絵の具用のコットンキャンバス。丸めて届くので、描く前に重いものの下に1日置いて平らにしてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아크릴 물감용 면 캔버스예요. 말린 상태로 도착하니, 그리기 전에 무거운 물건 아래에 하루 동안 두어 평평하게 펴 주세요."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Katoenen canvas voor acrylverf. Het komt opgerold: leg het een dag onder iets zwaars zodat het plat wordt voordat je gaat schilderen."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tela de algodão para tinta acrílica. Chega enrolada: deixe-a um dia sob algo pesado para ficar plana antes de pintar."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "适合丙烯颜料的棉质画布。寄到时是卷起来的：上色前请在重物下压平一天。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "適合壓克力顏料的棉質畫布。寄到時是捲起來的：上色前請在重物下壓平一天。"
+          }
+        }
+      }
+    },
+    "Cotton watercolor paper with a soft texture. It comes rolled: lay it flat under something heavy for a day before painting." : {
+      "comment" : "One Big Sheet, under its size and price when watercolor paper is picked: what it is and how it arrives",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aquarellpapier aus Baumwolle mit sanfter Struktur. Es kommt gerollt: Leg es vor dem Malen einen Tag lang unter etwas Schweres, damit es flach wird."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Papel de acuarela de algodón con una textura suave. Llega enrollado: déjalo un día bajo algo pesado para que quede plano antes de pintar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Papier aquarelle en coton à la texture douce. Il arrive roulé : laissez-le à plat un jour sous quelque chose de lourd avant de peindre."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carta per acquerello in cotone dalla texture morbida. Arriva arrotolata: lasciala un giorno sotto qualcosa di pesante perché si appiattisca prima di dipingere."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "やわらかな風合いのコットン水彩紙。丸めて届くので、描く前に重いものの下に1日置いて平らにしてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "부드러운 질감의 면 수채화 용지예요. 말린 상태로 도착하니, 그리기 전에 무거운 물건 아래에 하루 동안 두어 평평하게 펴 주세요."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Katoenen aquarelpapier met een zachte structuur. Het komt opgerold: leg het een dag onder iets zwaars zodat het plat wordt voordat je gaat schilderen."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Papel de aquarela de algodão com textura suave. Chega enrolado: deixe-o um dia sob algo pesado para ficar plano antes de pintar."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "质地柔和的棉质水彩纸。寄到时是卷起来的：上色前请在重物下压平一天。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "質地柔和的棉質水彩紙。寄到時是捲起來的：上色前請在重物下壓平一天。"
           }
         }
       }
@@ -3255,6 +3453,72 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "印出來親手畫"
+          }
+        }
+      }
+    },
+    "Print On" : {
+      "comment" : "One Big Sheet: the menu that picks what the sheet is printed on (canvas or watercolor paper)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drucken auf"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imprimir en"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imprimer sur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stampa su"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "印刷する素材"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인쇄할 재료"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Printen op"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imprimir em"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打印材质"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "列印材質"
           }
         }
       }
@@ -5925,6 +6189,72 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "顏料和完成的畫"
+          }
+        }
+      }
+    },
+    "Watercolor Paper" : {
+      "comment" : "One Big Sheet, the Print On menu: cold press cotton watercolor paper",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aquarellpapier"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Papel de acuarela"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Papier aquarelle"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carta per acquerello"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "水彩紙"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "수채화 용지"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aquarelpapier"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Papel de aquarela"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "水彩纸"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "水彩紙"
           }
         }
       }
@@ -63411,72 +63741,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "價格"
-          }
-        }
-      }
-    },
-    "Matte art paper, heavy enough for markers, gouache and a light coat of acrylic." : {
-      "comment" : "One Big Sheet, under its size and price: what the sheet is printed on",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mattes Künstlerpapier, kräftig genug für Marker, Gouache und eine dünne Schicht Acryl."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Papel artístico mate, con gramaje suficiente para rotuladores, gouache y una capa ligera de acrílico."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Papier d’art mat, assez épais pour les feutres, la gouache et une fine couche d’acrylique."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Carta da disegno opaca, abbastanza pesante per pennarelli, gouache e una mano leggera di acrilico."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "マットなアート紙です。マーカーやガッシュ、薄く塗ったアクリル絵の具にも耐える厚さです。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "무광 아트지예요. 마커, 과슈, 아크릴 물감을 얇게 칠해도 될 만큼 두꺼워요."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mat kunstpapier, stevig genoeg voor markers, gouache en een dunne laag acryl."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Papel artístico fosco, encorpado o bastante para marcadores, guache e uma camada leve de acrílica."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "哑光美术纸，厚度足以承受马克笔、水粉和薄涂的丙烯颜料。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "霧面美術紙，厚度足以承受麥克筆、廣告顏料和薄塗的壓克力顏料。"
           }
         }
       }
