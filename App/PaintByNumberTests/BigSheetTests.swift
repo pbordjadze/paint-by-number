@@ -27,9 +27,9 @@ struct BigSheetTests {
         }
         let wide = Fixtures.stripes()
         let box = try #require(try document(
-            PDFExporter.sheet(for: wide, title: "Stripes", layout: PDFExporter.Layout(paper: .a4), size: BigSheetProduct.paper18x24.points)
+            PDFExporter.sheet(for: wide, title: "Stripes", layout: PDFExporter.Layout(paper: .a4), size: BigSheetProduct.canvas16x24.points)
         ).page(at: 1)).getBoxRect(.mediaBox)
-        #expect(box.size == CGSize(width: 24 * 72, height: 18 * 72))
+        #expect(box.size == CGSize(width: 24 * 72, height: 16 * 72))
     }
 
     /// The sheet's numbers print larger than on a page of the same layout, and a larger sheet
@@ -37,18 +37,26 @@ struct BigSheetTests {
     @Test func numbersGrowWithTheSheet() throws {
         let t = try Fixtures.sample(colors: 18)
         let layout = PDFExporter.Layout(paper: .letter)
-        let small = try #require(PDFExporter.smallestNumberOnSheet(t, layout: layout, size: BigSheetProduct.paper18x24.points))
-        let large = try #require(PDFExporter.smallestNumberOnSheet(t, layout: layout, size: BigSheetProduct.paper24x36.points))
+        let small = try #require(PDFExporter.smallestNumberOnSheet(t, layout: layout, size: BigSheetProduct.canvas16x24.points))
+        let large = try #require(PDFExporter.smallestNumberOnSheet(t, layout: layout, size: BigSheetProduct.canvas24x36.points))
         #expect(large > small)
         let onLetter = try #require(PDFExporter.smallestNumberSize(t, detail: false)) * PDFExporter.sheets(for: t, paper: .letter).scale
         #expect(small > onLetter)
         var coloringPage = layout
         coloringPage.numbers = false
-        #expect(PDFExporter.smallestNumberOnSheet(t, layout: coloringPage, size: BigSheetProduct.paper18x24.points) == nil)
-        #expect(!PDFExporter.sheetPrintsSmallNumbers(t, layout: coloringPage, size: BigSheetProduct.paper18x24.points))
+        #expect(PDFExporter.smallestNumberOnSheet(t, layout: coloringPage, size: BigSheetProduct.canvas16x24.points) == nil)
+        #expect(!PDFExporter.sheetPrintsSmallNumbers(t, layout: coloringPage, size: BigSheetProduct.canvas16x24.points))
         // The sample's numbers read on the larger sheet whatever they do on the smaller.
-        #expect(!PDFExporter.sheetPrintsSmallNumbers(t, layout: layout, size: BigSheetProduct.paper24x36.points)
-                || PDFExporter.sheetPrintsSmallNumbers(t, layout: layout, size: BigSheetProduct.paper18x24.points))
+        #expect(!PDFExporter.sheetPrintsSmallNumbers(t, layout: layout, size: BigSheetProduct.canvas24x36.points)
+                || PDFExporter.sheetPrintsSmallNumbers(t, layout: layout, size: BigSheetProduct.canvas16x24.points))
+    }
+
+    /// Canvas comes first, and every product is on one surface's list, smallest first.
+    @Test func eachSurfaceListsItsSizes() {
+        #expect(BigSheetProduct.Surface.allCases.first == .canvas)
+        #expect(BigSheetProduct.Surface.canvas.products == [.canvas16x24, .canvas24x36])
+        #expect(BigSheetProduct.Surface.watercolorPaper.products == [.watercolor18x24, .watercolor24x36])
+        #expect(BigSheetProduct.Surface.allCases.flatMap(\.products).count == BigSheetProduct.allCases.count)
     }
 
     /// The order is the PDF and the JSON print.js reads, each a part of its own.
@@ -57,13 +65,13 @@ struct BigSheetTests {
             name: "Ada", email: "ada@example.com", line1: "1 Lane", line2: "", city: "Brooklyn", state: "NY", zip: "11201", country: "US")
         let sheet = Data("%PDF-1.7 sheet".utf8)
         let key = BigSheetService.newKey()
-        let body = BigSheetService.orderBody(sheet: sheet, product: .paper24x36, recipient: recipient, key: key, boundary: "b")
+        let body = BigSheetService.orderBody(sheet: sheet, product: .canvas24x36, recipient: recipient, key: key, boundary: "b")
         let text = String(decoding: body, as: UTF8.self)
         #expect(text.contains("name=\"sheet\"; filename=\"sheet.pdf\"\r\nContent-Type: application/pdf\r\n\r\n%PDF-1.7 sheet\r\n"))
         #expect(text.contains("name=\"order\""))
         let json = try #require(text.components(separatedBy: "Content-Type: application/json\r\n\r\n").last?.components(separatedBy: "\r\n--b--").first)
         let order = try #require(JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: Any])
-        #expect(order["product"] as? String == "paper-24x36")
+        #expect(order["product"] as? String == "canvas-24x36")
         #expect(order["key"] as? String == key)
         let sent = try #require(order["recipient"] as? [String: String])
         #expect(sent["zip"] == "11201")
@@ -78,7 +86,7 @@ struct BigSheetTests {
         let payment = BigSheetPayment(
             price: "33.00", currency: "USD",
             token: .init(data: Data("{}".utf8).base64EncodedString(), network: "Visa", transactionId: "t1", instrument: "Visa 4242"))
-        let body = BigSheetService.orderBody(sheet: Data("%PDF-".utf8), product: .paper18x24, recipient: recipient, payment: payment, key: BigSheetService.newKey(), boundary: "b")
+        let body = BigSheetService.orderBody(sheet: Data("%PDF-".utf8), product: .canvas16x24, recipient: recipient, payment: payment, key: BigSheetService.newKey(), boundary: "b")
         let text = String(decoding: body, as: UTF8.self)
         let json = try #require(text.components(separatedBy: "Content-Type: application/json\r\n\r\n").last?.components(separatedBy: "\r\n--b--").first)
         let order = try #require(JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: Any])
@@ -100,7 +108,7 @@ struct BigSheetTests {
 
     /// Apple Pay's sheet shows the sheet and the total at the quote's price.
     @Test func applePaysLinesAreTheQuotesPrice() throws {
-        let quote = BigSheetQuote(product: "paper-18x24", currency: "USD", price: "33.00", sandbox: nil)
+        let quote = BigSheetQuote(product: "canvas-16x24", currency: "USD", price: "33.00", sandbox: nil)
         let items = try #require(BigSheetApplePay.summary(item: "One Big Sheet", quote: quote))
         #expect(items.count == 2)
         #expect(items.allSatisfy { $0.amount == NSDecimalNumber(string: "33.00") })
@@ -115,11 +123,11 @@ struct BigSheetTests {
 
     /// The relay's answers: a quote's money in its currency, an order's id.
     @Test func theRelaysAnswersAreRead() throws {
-        let quote = try JSONDecoder().decode(BigSheetQuote.self, from: Data(#"{"product":"paper-18x24","currency":"USD","price":"33.00","sandbox":{"cost":"23.29","cut":"9.71"}}"#.utf8))
+        let quote = try JSONDecoder().decode(BigSheetQuote.self, from: Data(#"{"product":"canvas-16x24","currency":"USD","price":"33.00","sandbox":{"cost":"23.29","cut":"9.71"}}"#.utf8))
         #expect(quote.price == "33.00")
         #expect(quote.sandbox == .init(cost: "23.29", cut: "9.71"))
         #expect(quote.money("33.00") == Decimal(33).formatted(.currency(code: "USD")))
-        let live = try JSONDecoder().decode(BigSheetQuote.self, from: Data(#"{"product":"paper-18x24","currency":"GBP","price":"28.00"}"#.utf8))
+        let live = try JSONDecoder().decode(BigSheetQuote.self, from: Data(#"{"product":"canvas-16x24","currency":"GBP","price":"28.00"}"#.utf8))
         #expect(live.sandbox == nil)
         #expect(try BigSheetService.placedOrder(Data(#"{"ok":true,"order":"ord_1","sandbox":true}"#.utf8)) == "ord_1")
         #expect(throws: BigSheetService.ServiceError.malformed) { try BigSheetService.placedOrder(Data("{}".utf8)) }

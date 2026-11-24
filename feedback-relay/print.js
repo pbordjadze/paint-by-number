@@ -34,8 +34,9 @@
 // multipart, or a sheet that is no PDF, 429 over the rate limit (PRINT_LIMITER), 500 misconfigured,
 // 502 Prodigi or Stripe refused, 503 live printing or charging, which this relay doesn't do (below).
 //
-// Only the sandbox. PRODIGI_API must be Prodigi's sandbox (https://api.sandbox.prodigi.com/v4.0),
-// which prints nothing and charges nothing, and STRIPE_SECRET_KEY, when set, Stripe's test mode
+// Only the sandbox. PRODIGI_API must be Prodigi's v5 API (https://api.prodigi.com/v5) and its key the
+// sandbox dashboard's (https://sandbox-beta-dashboard.pwinty.com), sent as `sandbox_<key>`, which
+// prints nothing and charges nothing, and STRIPE_SECRET_KEY, when set, Stripe's test mode
 // (sk_test_, or a restricted rk_test_ key with Tokens, PaymentIntents and Refunds write), so no
 // real card is charged for a print that never comes. Going live is Paul's word,
 // with both keys live and payment required (no order without STRIPE_SECRET_KEY).
@@ -43,10 +44,11 @@
 // Privacy: the photo never comes here, only the printed sheet (lines, numbers, the key) and the
 // address it goes to. The sheet lives in its own Durable Object (PrintSheet, SQLite-backed, named by
 // the order's random key) under a random token, and deletes itself SHEET_DAYS after it was kept, by an alarm;
-// the address goes to Prodigi and is kept nowhere here.
+// the address goes to Prodigi (and with a payment, the name, email and address to Stripe, for
+// its receipt and shipping record) and is kept nowhere here.
 //
 // The print service is one object (`prodigi` below; PRINT_PROVIDER names another), so it can be
-// replaced without touching the rest. Secrets PRODIGI_API_KEY (Prodigi's dashboard › Settings › API; the sandbox key) and, optional,
+// replaced without touching the rest. Secrets PRODIGI_API_KEY (Prodigi's sandbox dashboard › API; never a live_ key) and, optional,
 // STRIPE_SECRET_KEY (Stripe's dashboard › Developers › API keys; the test key). Variables
 // PRODIGI_API and MARKUP (wrangler.toml).
 
@@ -56,7 +58,9 @@ const PREFIX = "/v1/print/";
 const QUOTES = "/v1/print/quotes";
 const ORDERS = "/v1/print/orders";
 const SHEETS = "/v1/print/sheets/";
-const SANDBOX = "https://api.sandbox.prodigi.com/v4.0";
+// Prodigi's v5 API takes one URL for its sandbox and live; the key's prefix picks which, and
+// this relay only ever sends a sandbox one (`prodigiKey`).
+const SANDBOX = "https://api.prodigi.com/v5";
 const STRIPE = "https://api.stripe.com/v1";
 const MAX_QUOTE = 1024;
 // An Apple Pay token (a PKCS#7 signature with its certificates, base64) is several KB.
@@ -67,7 +71,7 @@ const CHUNK = 1024 * 1024;
 const SHEET_DAYS = 14;
 /** How long a try holds an order still "new" (pricing it) before another may take it on. */
 const CLAIM_MS = 120_000;
-const SHIPPING = "Standard";
+const SHIPPING = "standard";
 const PDF = [0x25, 0x50, 0x44, 0x46, 0x2d];
 const HEX = /^[0-9a-f]{32}$/;
 const COUNTRY = /^[A-Z]{2}$/;
@@ -87,28 +91,32 @@ const COUNTRY = /^[A-Z]{2}$/;
  */
 export const prodigi = {
   name: "Prodigi",
-  // Enhanced Matte Art Paper, 200 gsm, which takes markers, gouache and a light coat of acrylic.
-  // A code here is checked against Prodigi's product lookup before it is offered
-  // (GLOBAL-FAP-18x24 is named in Prodigi's FAQ).
+  // Rolled canvas, 400 gsm cotton, for acrylic, and cold press watercolour paper, 315 gsm cotton
+  // rag, for watercolor (painting-company row 380), the app's `BigSheetProduct`. Each code was
+  // quoted by Prodigi's sandbox before it was offered here.
   products: {
-    "paper-18x24": "GLOBAL-FAP-18x24",
-    "paper-24x36": "GLOBAL-FAP-24x36",
+    "canvas-16x24": "GLOBAL-CAN-ROL-SC-16X24",
+    "canvas-24x36": "GLOBAL-CAN-ROL-SC-24X36",
+    "watercolor-18x24": "ART-FAP-CPWP-18X24",
+    "watercolor-24x36": "ART-FAP-CPWP-24X36",
   },
 
   configured: (env) => Boolean(env.PRODIGI_API_KEY && env.PRODIGI_API),
 
-  isSandbox: (env) => env.PRODIGI_API === SANDBOX,
+  isSandbox: (env) => env.PRODIGI_API === SANDBOX && prodigiKey(env) !== null,
 
   async cost(env, deps, code, country) {
-    const answer = await prodigiCall(env, deps, "POST", "/quotes", {
+    // A quote wants a whole address: a stand-in street in the country, the order's price too.
+    // Prodigi's total carries tax, so a painter elsewhere in the country may pay the stand-in's
+    // sales tax, not their own (before live sales: Stripe Tax, painting-company row 380).
+    const answer = await prodigiCall(env, deps, "POST", "/quotes/order", {
       shippingMethod: SHIPPING,
-      destinationCountryCode: country,
-      items: [{ sku: code, copies: 1, attributes: {}, assets: [{ printArea: "default" }] }],
+      shippingAddress: { line1: "1 Main Street", townOrCity: "City", postalOrZipCode: POSTCODES[country] ?? "1000", countryCode: country },
+      items: [{ catalogueVariantId: code, quantity: 1 }],
     });
-    const chosen = (answer.quotes ?? []).find((q) => q.shipmentMethod === SHIPPING) ?? answer.quotes?.[0];
-    const total = chosen?.costSummary?.totalCost;
+    const total = answer?.data?.total;
     const cost = Number(total?.amount);
-    if (!chosen || !Number.isFinite(cost) || cost <= 0 || typeof total?.currency !== "string") {
+    if (!Number.isFinite(cost) || cost <= 0 || typeof total?.currency !== "string") {
       throw new Error("Prodigi's quote had no total");
     }
     return { cost, currency: total.currency };
@@ -117,9 +125,9 @@ export const prodigi = {
   async place(env, deps, { reference, key, code, recipient, sheetUrl }) {
     // An order made again under the same idempotency key is answered with the one already made.
     const placed = await prodigiCall(env, deps, "POST", "/orders", {
-      idempotencyKey: key,
       merchantReference: reference,
       shippingMethod: SHIPPING,
+      submit: true,
       recipient: {
         name: recipient.name,
         email: recipient.email,
@@ -135,12 +143,12 @@ export const prodigi = {
       items: [{
         merchantReference: "sheet",
         sku: code,
-        copies: 1,
+        quantity: 1,
         sizing: "fitPrintArea",
         assets: [{ printArea: "default", url: sheetUrl }],
       }],
-    });
-    const id = placed?.order?.id;
+    }, { "idempotency-key": key });
+    const id = placed?.data?.id;
     if (typeof id !== "string") throw Object.assign(new Error("Prodigi's answer had no order id"), { uncertain: true });
     return id;
   },
@@ -622,13 +630,13 @@ export class PrintSheet {
 // MARK: Prodigi's API
 
 /** One call of Prodigi's API; no answer, or a 5xx, is `uncertain` (it may have acted). */
-async function prodigiCall(env, deps, method, path, body) {
+async function prodigiCall(env, deps, method, path, body, headers = {}) {
   const fetcher = deps.fetch ?? fetch;
   let response, text;
   try {
     response = await fetcher(`${env.PRODIGI_API}${path}`, {
       method,
-      headers: { "x-api-key": env.PRODIGI_API_KEY, "content-type": "application/json" },
+      headers: { "x-api-key": prodigiKey(env), "content-type": "application/json", ...headers },
       body: JSON.stringify(body),
     });
     text = await response.text();
@@ -636,10 +644,10 @@ async function prodigiCall(env, deps, method, path, body) {
     throw Object.assign(new Error(`Prodigi ${method} ${path}: ${error?.message ?? error}`), { uncertain: true });
   }
   if (!response.ok) {
-    // Its outcome alone: the body may echo the address, which is kept nowhere here.
+    // Its error type alone: the body may echo the address, which is kept nowhere here.
     let outcome = "";
     try {
-      outcome = String(JSON.parse(text)?.outcome ?? "").slice(0, 60);
+      outcome = String(JSON.parse(text)?.type ?? "").slice(0, 60);
     } catch {}
     const error = new Error(`Prodigi ${method} ${path}: HTTP ${response.status} ${outcome}`);
     throw Object.assign(error, { uncertain: response.status >= 500 });
@@ -650,6 +658,23 @@ async function prodigiCall(env, deps, method, path, body) {
     throw new Error(`Prodigi ${method} ${path}: not JSON`);
   }
 }
+
+/**
+ * The key as Prodigi's v5 sandbox takes it: the sandbox dashboard's key, `sandbox_` before it (the
+ * secret may hold it with or without). Null for a live key, which this relay never sends.
+ */
+function prodigiKey(env) {
+  const key = String(env.PRODIGI_API_KEY ?? "").trim();
+  if (!key || key.startsWith("live_")) return null;
+  return key.startsWith("sandbox_") ? key : `sandbox_${key}`;
+}
+
+/** A postcode of each country the app sends to, for a quote's stand-in address. */
+const POSTCODES = {
+  US: "10001", CA: "M5V 2T6", GB: "SW1A 1AA", IE: "D02 X285", AU: "2000", NZ: "6011", DE: "10115", FR: "75001",
+  ES: "28001", IT: "00118", NL: "1012 JS", BE: "1000", AT: "1010", CH: "8001", SE: "111 52", NO: "0150", DK: "1050",
+  FI: "00100", PT: "1100-148", JP: "100-0001",
+};
 
 // MARK: Helpers
 

@@ -11,7 +11,7 @@ import { handle } from "./worker.js";
 
 globalThis.crypto ??= webcrypto;
 
-const SANDBOX = "https://api.sandbox.prodigi.com/v4.0";
+const SANDBOX = "https://api.prodigi.com/v5";
 const STRIPE = "https://api.stripe.com/v1";
 const KEY = "prodigi-sandbox-SECRET";
 const ID = "0123456789abcdef0123456789abcdef";
@@ -66,13 +66,9 @@ function prodigi(routes) {
 }
 
 const QUOTE = {
-  outcome: "Created",
-  quotes: [{
-    shipmentMethod: "Standard",
-    costSummary: { items: { amount: "14.00", currency: "USD" }, shipping: { amount: "9.29", currency: "USD" }, totalCost: { amount: "23.29", currency: "USD" } },
-  }],
+  data: { items: { amount: "14.00", currency: "USD" }, shipping: { amount: "9.29", currency: "USD" }, total: { amount: "23.29", currency: "USD" } },
 };
-const PLACED = { outcome: "Created", order: { id: "ord_123456", status: { stage: "InProgress" } } };
+const PLACED = { data: { id: "ord_123456", status: "pending_submission" } };
 
 function env(overrides = {}) {
   return { PRODIGI_API: SANDBOX, PRODIGI_API_KEY: KEY, MARKUP: "0.4", PRINT_SHEETS: sheetsNamespace(), ...overrides };
@@ -87,7 +83,7 @@ function quoteRequest(body, headers = {}) {
   });
 }
 
-const ORDER = { key: ID, product: "paper-18x24", recipient: RECIPIENT };
+const ORDER = { key: ID, product: "canvas-16x24", recipient: RECIPIENT };
 
 /** An order as the app sends it: the order a file part, `order.json` (or a plain field, `plain`). */
 async function orderRequest({ sheet = PDF, order = ORDER, plain = false } = {}) {
@@ -110,22 +106,23 @@ async function orderRequest({ sheet = PDF, order = ORDER, plain = false } = {}) 
 // MARK: Quotes
 
 test("a quote is Prodigi's cost with the markup, rounded up, and says the cut in the sandbox", async () => {
-  const { calls, fetcher } = prodigi({ "/quotes": QUOTE });
-  const answer = await handlePrint(quoteRequest({ product: "paper-18x24", country: "US" }), env(), { fetch: fetcher });
+  const { calls, fetcher } = prodigi({ "/quotes/order": QUOTE });
+  const answer = await handlePrint(quoteRequest({ product: "canvas-16x24", country: "US" }), env(), { fetch: fetcher });
   assert.equal(answer.status, 200);
   assert.deepEqual(await answer.json(), {
-    product: "paper-18x24", currency: "USD", price: "33.00", sandbox: { cost: "23.29", cut: "9.71" },
+    product: "canvas-16x24", currency: "USD", price: "33.00", sandbox: { cost: "23.29", cut: "9.71" },
   });
   assert.equal(calls.length, 1);
-  assert.equal(calls[0].url, `${SANDBOX}/quotes`);
-  assert.equal(calls[0].init.headers["x-api-key"], KEY);
-  assert.deepEqual(calls[0].body.items[0].sku, PRODUCTS["paper-18x24"]);
-  assert.equal(calls[0].body.destinationCountryCode, "US");
+  assert.equal(calls[0].url, `${SANDBOX}/quotes/order`);
+  assert.equal(calls[0].init.headers["x-api-key"], `sandbox_${KEY}`);
+  assert.deepEqual(calls[0].body.items[0].catalogueVariantId, PRODUCTS["canvas-16x24"]);
+  assert.equal(calls[0].body.shippingAddress.countryCode, "US");
+  assert.equal(calls[0].body.shippingMethod, "standard");
 });
 
 test("a quote for an unknown product or a malformed country is refused before Prodigi", async () => {
-  const { calls, fetcher } = prodigi({ "/quotes": QUOTE });
-  for (const body of [{ product: "mug", country: "US" }, { product: "paper-18x24", country: "usa" }, { product: "paper-18x24" }, "not json"]) {
+  const { calls, fetcher } = prodigi({ "/quotes/order": QUOTE });
+  for (const body of [{ product: "mug", country: "US" }, { product: "canvas-16x24", country: "usa" }, { product: "canvas-16x24" }, "not json"]) {
     const answer = await handlePrint(quoteRequest(body), env(), { fetch: fetcher });
     assert.equal(answer.status, 400, JSON.stringify(body));
   }
@@ -133,17 +130,17 @@ test("a quote for an unknown product or a malformed country is refused before Pr
 });
 
 test("a quote that isn't JSON, or too large, is refused", async () => {
-  const wrongType = await handlePrint(quoteRequest({ product: "paper-18x24", country: "US" }, { "content-type": "text/plain" }), env());
+  const wrongType = await handlePrint(quoteRequest({ product: "canvas-16x24", country: "US" }, { "content-type": "text/plain" }), env());
   assert.equal(wrongType.status, 415);
-  const big = await handlePrint(quoteRequest({ product: "paper-18x24", country: "US", pad: "x".repeat(2000) }), env());
+  const big = await handlePrint(quoteRequest({ product: "canvas-16x24", country: "US", pad: "x".repeat(2000) }), env());
   assert.equal(big.status, 413);
 });
 
 test("Prodigi refusing, or answering without a total, is a 502", async () => {
-  const refused = prodigi({ "/quotes": () => new Response("{}", { status: 400 }) });
-  assert.equal((await handlePrint(quoteRequest({ product: "paper-18x24", country: "US" }), env(), { fetch: refused.fetcher })).status, 502);
-  const empty = prodigi({ "/quotes": { outcome: "Created", quotes: [] } });
-  assert.equal((await handlePrint(quoteRequest({ product: "paper-18x24", country: "US" }), env(), { fetch: empty.fetcher })).status, 502);
+  const refused = prodigi({ "/quotes/order": () => new Response("{}", { status: 400 }) });
+  assert.equal((await handlePrint(quoteRequest({ product: "canvas-16x24", country: "US" }), env(), { fetch: refused.fetcher })).status, 502);
+  const empty = prodigi({ "/quotes/order": { data: {} } });
+  assert.equal((await handlePrint(quoteRequest({ product: "canvas-16x24", country: "US" }), env(), { fetch: empty.fetcher })).status, 502);
 });
 
 test("the price rounds up to a whole unit, and a bad markup falls back to 40%", () => {
@@ -157,23 +154,30 @@ test("the price rounds up to a whole unit, and a bad markup falls back to 40%", 
 // MARK: Only the sandbox
 
 test("the relay never talks to Prodigi's live API: it would print at Paul's cost", async () => {
-  const { calls, fetcher } = prodigi({ "/quotes": QUOTE, "/orders": PLACED });
-  const live = env({ PRODIGI_API: "https://api.prodigi.com/v4.0" });
-  assert.equal((await handlePrint(quoteRequest({ product: "paper-18x24", country: "US" }), live, { fetch: fetcher })).status, 503);
-  assert.equal((await handlePrint(await orderRequest(), live, { fetch: fetcher })).status, 503);
+  const { calls, fetcher } = prodigi({ "/quotes/order": QUOTE, "/orders": PLACED });
+  for (const live of [env({ PRODIGI_API: "https://api.prodigi.com/v4.0" }), env({ PRODIGI_API_KEY: "live_REAL" })]) {
+    assert.equal((await handlePrint(quoteRequest({ product: "canvas-16x24", country: "US" }), live, { fetch: fetcher })).status, 503);
+    assert.equal((await handlePrint(await orderRequest(), live, { fetch: fetcher })).status, 503);
+  }
   assert.equal(calls.length, 0);
+});
+
+test("a sandbox key already prefixed is sent as it is", async () => {
+  const { calls, fetcher } = prodigi({ "/quotes/order": QUOTE });
+  await handlePrint(quoteRequest({ product: "canvas-16x24", country: "US" }), env({ PRODIGI_API_KEY: "sandbox_abc" }), { fetch: fetcher });
+  assert.equal(calls[0].init.headers["x-api-key"], "sandbox_abc");
 });
 
 test("without its key or storage the relay says it is misconfigured", async () => {
   for (const missing of ["PRODIGI_API_KEY", "PRODIGI_API", "PRINT_SHEETS"]) {
-    const answer = await handlePrint(quoteRequest({ product: "paper-18x24", country: "US" }), env({ [missing]: undefined }));
+    const answer = await handlePrint(quoteRequest({ product: "canvas-16x24", country: "US" }), env({ [missing]: undefined }));
     assert.equal(answer.status, 500, missing);
   }
 });
 
 test("a flood is braked", async () => {
   const limiter = { limit: async () => ({ success: false }) };
-  const answer = await handlePrint(quoteRequest({ product: "paper-18x24", country: "US" }), env({ PRINT_LIMITER: limiter }));
+  const answer = await handlePrint(quoteRequest({ product: "canvas-16x24", country: "US" }), env({ PRINT_LIMITER: limiter }));
   assert.equal(answer.status, 429);
 });
 
@@ -188,13 +192,14 @@ test("an order keeps the sheet for the printer, places the order with its URL, a
 
   const sent = calls[0].body;
   assert.equal(calls[0].url, `${SANDBOX}/orders`);
-  assert.equal(sent.items[0].sku, "GLOBAL-FAP-18x24");
-  assert.equal(sent.items[0].copies, 1);
+  assert.equal(sent.items[0].sku, "GLOBAL-CAN-ROL-SC-16X24");
+  assert.equal(sent.items[0].quantity, 1);
+  assert.equal(sent.submit, true);
   const url = sent.items[0].assets[0].url;
   const token = e.PRINT_SHEETS.get(ID).storage.data.get("token");
   assert.match(token, /^[0-9a-f]{32}$/);
   assert.equal(url, `https://relay.example/v1/print/sheets/${ID}/${token}.pdf`);
-  assert.equal(sent.idempotencyKey, ID);
+  assert.equal(calls[0].init.headers["idempotency-key"], ID);
   assert.equal(e.PRINT_SHEETS.get(ID).storage.data.get("state"), "placed");
   assert.equal(sent.recipient.name, "Ada Painter");
   assert.equal(sent.recipient.address.postalOrZipCode, "11201");
@@ -240,7 +245,7 @@ test("a large sheet is kept in chunks and comes back whole", async () => {
 
 test("an order Prodigi refuses leaves no sheet behind", async () => {
   const e = env();
-    const { fetcher } = prodigi({ "/orders": () => new Response('{"outcome":"ValidationFailed"}', { status: 400 }) });
+    const { fetcher } = prodigi({ "/orders": () => new Response('{"type":"validation_error"}', { status: 400 }) });
   assert.equal((await handlePrint(await orderRequest(), e, { fetch: fetcher })).status, 502);
   assert.equal(e.PRINT_SHEETS.get(ID).storage.data.size, 0);
 });
@@ -292,13 +297,13 @@ const STRIPE_ENV = { STRIPE_SECRET_KEY: "sk_test_SECRET" };
 
 test("with Stripe, an order is charged the agreed price through Apple Pay before it is placed", async () => {
     const { calls, fetcher } = prodigi({
-    "/quotes": QUOTE, "/orders": PLACED,
+    "/quotes/order": QUOTE, "/orders": PLACED,
     "stripe:/tokens": { id: "tok_1" }, "stripe:/payment_intents": { id: "pi_1", status: "succeeded" },
   });
   const answer = await handlePrint(await orderRequest({ order: PAID_ORDER }), env(STRIPE_ENV), { fetch: fetcher });
   assert.equal(answer.status, 201);
   assert.deepEqual(await answer.json(), { ok: true, order: "ord_123456", sandbox: true, paid: true });
-  assert.deepEqual(calls.map((c) => c.url), [`${SANDBOX}/quotes`, `${STRIPE}/tokens`, `${STRIPE}/payment_intents`, `${SANDBOX}/orders`]);
+  assert.deepEqual(calls.map((c) => c.url), [`${SANDBOX}/quotes/order`, `${STRIPE}/tokens`, `${STRIPE}/payment_intents`, `${SANDBOX}/orders`]);
   assert.equal(calls[1].init.headers.authorization, "Bearer sk_test_SECRET");
   assert.equal(calls[1].body.pk_token, '{"version":"EC_v1","data":"…"}');
   assert.equal(calls[1].body.pk_token_payment_network, "Visa");
@@ -316,7 +321,7 @@ test("with Stripe, an order is charged the agreed price through Apple Pay before
 
 test("a restricted test key charges too", async () => {
   const { calls, fetcher } = prodigi({
-    "/quotes": QUOTE, "/orders": PLACED,
+    "/quotes/order": QUOTE, "/orders": PLACED,
     "stripe:/tokens": { id: "tok_1" }, "stripe:/payment_intents": { id: "pi_1", status: "succeeded" },
   });
   const answer = await handlePrint(await orderRequest({ order: PAID_ORDER }), env({ STRIPE_SECRET_KEY: "rk_test_SECRET" }), { fetch: fetcher });
@@ -325,7 +330,7 @@ test("a restricted test key charges too", async () => {
 });
 
 test("with Stripe, an order without a payment, or at a price that moved, is not placed", async () => {
-  const { calls, fetcher } = prodigi({ "/quotes": QUOTE, "/orders": PLACED });
+  const { calls, fetcher } = prodigi({ "/quotes/order": QUOTE, "/orders": PLACED });
   const unpaid = await handlePrint(await orderRequest(), env(STRIPE_ENV), { fetch: fetcher });
   assert.equal(unpaid.status, 402);
   const moved = await handlePrint(await orderRequest({ order: { ...PAID_ORDER, price: "30.00" } }), env(STRIPE_ENV), { fetch: fetcher });
@@ -335,7 +340,7 @@ test("with Stripe, an order without a payment, or at a price that moved, is not 
 
 test("a declined card is a 402 and places nothing", async () => {
   const { calls, fetcher } = prodigi({
-    "/quotes": QUOTE, "/orders": PLACED, "stripe:/tokens": { id: "tok_1" },
+    "/quotes/order": QUOTE, "/orders": PLACED, "stripe:/tokens": { id: "tok_1" },
     "stripe:/payment_intents": () => new Response('{"error":{"type":"card_error","code":"card_declined"}}', { status: 402 }),
   });
   const answer = await handlePrint(await orderRequest({ order: PAID_ORDER }), env(STRIPE_ENV), { fetch: fetcher });
@@ -345,7 +350,7 @@ test("a declined card is a 402 and places nothing", async () => {
 
 test("a paid order Prodigi refuses is refunded", async () => {
     const { calls, fetcher } = prodigi({
-    "/quotes": QUOTE, "/orders": () => new Response("{}", { status: 400 }),
+    "/quotes/order": QUOTE, "/orders": () => new Response("{}", { status: 400 }),
     "stripe:/tokens": { id: "tok_1" }, "stripe:/payment_intents": { id: "pi_1", status: "succeeded" }, "stripe:/refunds": { id: "re_1" },
   });
   const answer = await handlePrint(await orderRequest({ order: PAID_ORDER }), env(STRIPE_ENV), { fetch: fetcher });
@@ -356,7 +361,7 @@ test("a paid order Prodigi refuses is refunded", async () => {
 });
 
 test("a live Stripe key is never used against the sandbox printer", async () => {
-  const { calls, fetcher } = prodigi({ "/quotes": QUOTE, "/orders": PLACED });
+  const { calls, fetcher } = prodigi({ "/quotes/order": QUOTE, "/orders": PLACED });
   for (const live of ["sk_live_REAL", "rk_live_REAL"]) {
     const answer = await handlePrint(await orderRequest({ order: PAID_ORDER }), env({ STRIPE_SECRET_KEY: live }), { fetch: fetcher });
     assert.equal(answer.status, 503);
@@ -383,7 +388,7 @@ test("the order as a plain form field is read too", async () => {
 
 test("an Apple Pay token of several KB fits", async () => {
   const { fetcher } = prodigi({
-    "/quotes": QUOTE, "/orders": PLACED,
+    "/quotes/order": QUOTE, "/orders": PLACED,
     "stripe:/tokens": { id: "tok_1" }, "stripe:/payment_intents": { id: "pi_1", status: "succeeded" },
   });
   const payment = { ...PAYMENT, data: Buffer.from("x".repeat(6000)).toString("base64") };
@@ -393,7 +398,7 @@ test("an Apple Pay token of several KB fits", async () => {
 
 test("Stripe's calls carry the order's idempotency keys", async () => {
   const { calls, fetcher } = prodigi({
-    "/quotes": QUOTE, "/orders": PLACED,
+    "/quotes/order": QUOTE, "/orders": PLACED,
     "stripe:/tokens": { id: "tok_1" }, "stripe:/payment_intents": { id: "pi_1", status: "succeeded" },
   });
   await handlePrint(await orderRequest({ order: PAID_ORDER }), env(STRIPE_ENV), { fetch: fetcher });
@@ -404,7 +409,7 @@ test("Stripe's calls carry the order's idempotency keys", async () => {
 
 test("an order placed already is answered again, with nothing charged or placed twice", async () => {
   const { calls, fetcher } = prodigi({
-    "/quotes": QUOTE, "/orders": PLACED,
+    "/quotes/order": QUOTE, "/orders": PLACED,
     "stripe:/tokens": { id: "tok_1" }, "stripe:/payment_intents": { id: "pi_1", status: "succeeded" },
   });
   const e = env(STRIPE_ENV);
@@ -418,7 +423,7 @@ test("an order placed already is answered again, with nothing charged or placed 
 
 test("Prodigi failing in a way that may have placed it refunds nothing, keeps the sheet, and blocks a second try", async () => {
   const { calls, fetcher } = prodigi({
-    "/quotes": QUOTE, "/orders": () => new Response("{}", { status: 503 }),
+    "/quotes/order": QUOTE, "/orders": () => new Response("{}", { status: 503 }),
     "stripe:/tokens": { id: "tok_1" }, "stripe:/payment_intents": { id: "pi_1", status: "succeeded" },
   });
   const e = env(STRIPE_ENV);
@@ -438,7 +443,7 @@ test("Prodigi failing in a way that may have placed it refunds nothing, keeps th
 
 test("Stripe not answering leaves the order charging, never charged twice", async () => {
   const { calls, fetcher } = prodigi({
-    "/quotes": QUOTE, "/orders": PLACED, "stripe:/tokens": { id: "tok_1" },
+    "/quotes/order": QUOTE, "/orders": PLACED, "stripe:/tokens": { id: "tok_1" },
     "stripe:/payment_intents": () => { throw new TypeError("network connection lost"); },
   });
   const e = env(STRIPE_ENV);
@@ -460,7 +465,7 @@ test("an order that surely failed can be tried again under its key", async () =>
 });
 
 test("the sheet's store failing charges nothing", async () => {
-  const { calls, fetcher } = prodigi({ "/quotes": QUOTE, "/orders": PLACED });
+  const { calls, fetcher } = prodigi({ "/quotes/order": QUOTE, "/orders": PLACED });
   const e = env(STRIPE_ENV);
   e.PRINT_SHEETS = { idFromName: (n) => n, get: () => ({ fetch: async () => { throw new Error("overloaded"); } }) };
   assert.equal((await handlePrint(await orderRequest({ order: PAID_ORDER }), e, { fetch: fetcher })).status, 502);
@@ -471,7 +476,7 @@ test("a second try while the first is still pricing waits, and its failure can't
   let release;
   const held = new Promise((resolve) => { release = resolve; });
   const { calls, fetcher } = prodigi({
-    "/quotes": async () => { await held; return new Response(JSON.stringify(QUOTE), { status: 200 }); },
+    "/quotes/order": async () => { await held; return new Response(JSON.stringify(QUOTE), { status: 200 }); },
     "/orders": PLACED, "stripe:/tokens": { id: "tok_1" }, "stripe:/payment_intents": { id: "pi_1", status: "succeeded" },
   });
   const e = env(STRIPE_ENV);
