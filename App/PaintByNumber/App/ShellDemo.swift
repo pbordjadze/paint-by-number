@@ -482,7 +482,7 @@ enum ShellDemo: Equatable {
         case .galleryTimelapse, .galleryTimelapseLongText:
             library.seed([Library.SeedItem(sample: pictures[1], painted: 1, photoMaxPixelSize: 560)])
         case .gallerySend:
-            library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)])
+            library.seed([Library.SeedItem(sample: DemoMode.photos.first ?? pictures[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .create, .createNights, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
              .createLineArt, .createRefine, .createRefineColors, .createRefineColorsPicked, .createRefineCard, .createRefineLayers, .createRefineSelect, .createRefineGuide, .createRefineGuideWriting, .createSuggested, .createCustom,
              .createForming, .createFormingGraphite, .createFormingDrawing, .createFormingLines, .createFormingPage,
