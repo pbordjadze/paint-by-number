@@ -64490,7 +64490,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bestellung %@. Eine Testbestellung druckt nichts; eine echte würde innerhalb einer Woche verschickt."
+            "value" : "Bestellung %@. Eine Testbestellung druckt nichts; eine echte würde innerhalb einer Woche verschickt werden."
           }
         },
         "en" : {
@@ -65097,6 +65097,72 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "按訂單製作，一週內出貨。請只印出你有權印出的圖片。"
+          }
+        }
+      }
+    },
+    "We can’t print this picture. Nothing was charged." : {
+      "comment" : "One Big Sheet: the alert's message when the relay's check won't print the sheet (a picture that isn't the painter's to print); nothing was charged",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Bild können wir nicht drucken. Dir wurde nichts berechnet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No podemos imprimir esta imagen. No se te ha cobrado nada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nous ne pouvons pas imprimer cette image. Rien ne vous a été facturé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non possiamo stampare questa immagine. Non ti è stato addebitato nulla."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この絵は印刷できません。料金は請求されていません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 그림은 인쇄할 수 없어요. 결제된 금액은 없어요."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We kunnen deze afbeelding niet afdrukken. Er is niets afgeschreven."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não podemos imprimir esta imagem. Nada foi cobrado."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我们无法打印这张图片。没有扣除任何费用。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我們無法列印這張圖片。沒有收取任何費用。"
           }
         }
       }

@@ -86,8 +86,10 @@ function prodigi(routes) {
     const stripe = url.startsWith(STRIPE);
     calls.push({ url, init, body: init?.body ? (stripe ? Object.fromEntries(new URLSearchParams(init.body)) : JSON.parse(init.body)) : undefined });
     const github = url.startsWith("https://api.github.com");
+    const anthropic = url.startsWith("https://api.anthropic.com");
     const path = stripe ? `stripe:${url.slice(STRIPE.length).split("?")[0]}`
-      : github ? `github:${url.slice("https://api.github.com".length)}` : url.slice(SANDBOX.length);
+      : github ? `github:${url.slice("https://api.github.com".length)}`
+      : anthropic ? `anthropic:${url.slice("https://api.anthropic.com".length)}` : url.slice(SANDBOX.length);
     const answer = routes[path] ?? (github ? { number: 1 } : undefined);
     if (!answer) return new Response("not found", { status: 404 });
     return typeof answer === "function" ? answer() : new Response(JSON.stringify(answer), { status: 200 });
@@ -843,4 +845,186 @@ test("the daily check flags an order whose alarm died in hand, once it is past g
   assert.equal(await reconcilePrints(e, { fetch: young.fetcher, now: c.now }), 0);
   const old = prodigi({ "stripe:/payment_intents": at(50 * 3600), "stripe:/refunds": { data: [] } });
   assert.equal(await reconcilePrints(e, { fetch: old.fetcher, now: c.now }), 1);
+});
+
+// MARK: The check
+
+/** Claude's answer as the Messages API gives it, with this verdict. */
+function verdictOf(verdict, reason = "A family photo.") {
+  return { stop_reason: "end_turn", content: [{ type: "thinking", thinking: "" }, { type: "text", text: JSON.stringify({ verdict, reason }) }] };
+}
+
+const CHECK_ENV = { ...STRIPE_ENV, ANTHROPIC_API_KEY: "sk-ant-SECRET" };
+
+/** The sheet put up as the app does, before it is paid for. */
+async function putSheet(e, deps, body = PDF) {
+  const answer = await handlePrint(new Request(`https://relay.example/v1/print/sheets/${ID}`, {
+    method: "PUT", headers: { "content-type": "application/pdf", "content-length": String(body.byteLength) }, body,
+  }), e, deps);
+  assert.equal(answer.status, 200);
+}
+
+function paidOrder() {
+  const text = JSON.stringify(PAID_ORDER);
+  return new Request("https://relay.example/v1/print/orders", {
+    method: "POST", headers: { "content-type": "application/json", "content-length": String(text.length) }, body: text,
+  });
+}
+
+test("a kept sheet is checked at once, by its URL, and a pass is placed as before", async () => {
+  const { e, c, calls, deps } = world({ ...PAID, "anthropic:/v1/messages": verdictOf("pass") }, CHECK_ENV);
+  await putSheet(e, deps);
+  const object = e.PRINT_SHEETS.get(ID);
+  assert.equal(object.storage.data.get("check"), "due");
+  assert.equal(object.storage.alarm, c.t);
+  await object.alarm();
+  const asked = calls.find((call) => call.url === "https://api.anthropic.com/v1/messages");
+  assert.equal(asked.init.headers["x-api-key"], "sk-ant-SECRET");
+  assert.equal(asked.body.model, "claude-opus-5-5");
+  const token = object.storage.data.get("token");
+  assert.deepEqual(asked.body.messages[0].content[0], { type: "document", source: { type: "url", url: `https://relay.example/v1/print/sheets/${ID}/${token}.pdf` } });
+  assert.deepEqual(asked.body.output_config.format.schema.properties.verdict.enum, ["pass", "hold", "refuse"]);
+  assert.equal(object.storage.data.get("verdict").verdict, "pass");
+
+  // The same bytes again aren't checked again.
+  await putSheet(e, deps);
+  assert.equal(object.storage.data.get("check"), "done");
+
+  assert.equal((await handlePrint(paidOrder(), e, deps)).status, 201);
+  assert.equal(await settle(e, c), "accepted");
+  assert.equal(calls.filter((call) => call.url.startsWith("https://api.anthropic.com")).length, 1);
+});
+
+test("a sheet the check refuses is declined before any charge", async () => {
+  const { e, calls, deps } = world({ ...PAID, "anthropic:/v1/messages": verdictOf("refuse", "A cartoon mouse everyone knows.") }, CHECK_ENV);
+  await putSheet(e, deps);
+  await e.PRINT_SHEETS.get(ID).alarm();
+  const answer = await handlePrint(paidOrder(), e, deps);
+  assert.equal(answer.status, 451);
+  assert.deepEqual(await answer.json(), { ok: false, declined: true });
+  assert.equal(calls.some((call) => call.url.startsWith(STRIPE)), false);
+  assert.equal(e.PRINT_SHEETS.get(ID).storage.data.get("state"), "new");
+});
+
+test("an order that comes before the check's answer waits for it, and a refusal after the charge is refunded", async () => {
+  const { e, c, calls, deps } = world({ ...PAID, "anthropic:/v1/messages": verdictOf("refuse", "A famous poster.") }, CHECK_ENV);
+  await putSheet(e, deps);
+  // The check hasn't run: the order waits its while (the clock moves with each wait), then is charged.
+  let waits = 0;
+  deps.sleep = async (ms) => { waits++; c.t += ms; };
+  assert.equal((await handlePrint(paidOrder(), e, deps)).status, 201);
+  assert.equal(waits, 10);
+  const object = e.PRINT_SHEETS.get(ID);
+  await object.alarm();
+  assert.equal(object.storage.data.get("verdict").verdict, "refuse");
+  await object.alarm();
+  assert.equal(object.storage.data.get("state"), "refused");
+  assert.equal(object.storage.data.get("refunded"), true);
+  assert.equal(calls.some((call) => call.url === `${SANDBOX}/orders`), false);
+  const issue = calls.find((call) => call.url.startsWith("https://api.github.com"));
+  assert.match(issue.body.body, /A famous poster/);
+});
+
+test("a sheet the check holds waits for Paul's look: print it from the review page", async () => {
+  const { e, c, calls, deps } = world({ ...PAID, "anthropic:/v1/messages": verdictOf("hold", "Might be a film still.") }, CHECK_ENV);
+  await putSheet(e, deps);
+  const object = e.PRINT_SHEETS.get(ID);
+  await object.alarm();
+  assert.equal((await handlePrint(paidOrder(), e, deps)).status, 201);
+  c.t = object.storage.alarm;
+  await object.alarm();
+  assert.equal(object.storage.data.get("state"), "held");
+  assert.equal(calls.some((call) => call.url === `${SANDBOX}/orders`), false);
+  const issue = calls.find((call) => call.url.startsWith("https://api.github.com"));
+  const link = /https:\/\/relay\.example(\/v1\/print\/review\/[0-9a-f]+\/[0-9a-f]+)/.exec(issue.body.body);
+  assert.ok(link, issue.body.body);
+  assert.match(issue.body.body, /Might be a film still/);
+
+  // A later try of the order is answered as taken.
+  assert.equal((await handlePrint(paidOrder(), e, deps)).status, 201);
+  // A wrong token sees nothing; the page shows the reason and the two buttons.
+  assert.equal((await handle(new Request(`https://relay.example/v1/print/review/${ID}/${"0".repeat(32)}`), e)).status, 404);
+  const shown = await handle(new Request(`https://relay.example${link[1]}`), e);
+  assert.equal(shown.status, 200);
+  const html = await shown.text();
+  assert.match(html, /Might be a film still/);
+  assert.match(html, /value="release"/);
+  const decided = await handle(new Request(`https://relay.example${link[1]}`, { method: "POST", body: new URLSearchParams({ decision: "release" }) }), e);
+  assert.equal(decided.status, 200);
+  assert.equal(object.storage.alarm, c.t);
+  await object.alarm();
+  assert.equal(await settle(e, c), "accepted");
+  // Decided once: a second POST changes nothing.
+  assert.match(await (await handle(new Request(`https://relay.example${link[1]}`, { method: "POST", body: new URLSearchParams({ decision: "refuse" }) }), e)).text(), /decided already/);
+});
+
+test("a held sheet nobody decides on is refunded a day later", async () => {
+  const { e, c, deps } = world({ ...PAID, "anthropic:/v1/messages": verdictOf("hold", "Unsure.") }, CHECK_ENV);
+  await putSheet(e, deps);
+  const object = e.PRINT_SHEETS.get(ID);
+  await object.alarm();
+  await handlePrint(paidOrder(), e, deps);
+  c.t = object.storage.alarm;
+  await object.alarm();
+  assert.equal(object.storage.data.get("state"), "held");
+  assert.equal(object.storage.alarm, c.t + 24 * 3600_000);
+  c.t = object.storage.alarm;
+  await object.alarm();
+  assert.equal(object.storage.data.get("state"), "refused");
+  assert.equal(object.storage.data.get("refunded"), true);
+  assert.equal(object.storage.data.get("job").recipient, undefined);
+});
+
+test("the check is tried three times without an answer, then holds; over the day's limit it holds unasked", async () => {
+  {
+    const { e, c, calls, deps } = world({ ...PAID, "anthropic:/v1/messages": () => new Response('{"error":{"type":"overloaded_error"}}', { status: 529 }) }, CHECK_ENV);
+    await putSheet(e, deps);
+    const object = e.PRINT_SHEETS.get(ID);
+    for (let i = 0; i < 3; i++) {
+      c.t = object.storage.alarm;
+      await object.alarm();
+    }
+    assert.equal(calls.filter((call) => call.url.startsWith("https://api.anthropic.com")).length, 3);
+    assert.equal(object.storage.data.get("verdict").verdict, "hold");
+  }
+  {
+    const { e, calls, deps } = world({ ...PAID, "anthropic:/v1/messages": verdictOf("pass") }, { ...CHECK_ENV, CHECK_DAILY_LIMIT: "1" });
+    await putSheet(e, deps);
+    await e.PRINT_SHEETS.get(ID).alarm();
+    await putSheet(e, deps, new TextEncoder().encode("%PDF-1.7 another sheet"));
+    await e.PRINT_SHEETS.get(ID).alarm();
+    assert.equal(calls.filter((call) => call.url.startsWith("https://api.anthropic.com")).length, 1);
+    assert.equal(e.PRINT_SHEETS.get(ID).storage.data.get("verdict").verdict, "hold");
+  }
+});
+
+test("a refusal to look holds the sheet", async () => {
+  const { e, deps } = world({ ...PAID, "anthropic:/v1/messages": { stop_reason: "refusal", content: [] } }, CHECK_ENV);
+  await putSheet(e, deps);
+  await e.PRINT_SHEETS.get(ID).alarm();
+  assert.equal(e.PRINT_SHEETS.get(ID).storage.data.get("verdict").verdict, "hold");
+});
+
+test("a sheet replaced while its check runs is checked anew at once", async () => {
+  let replaced = false, e, deps;
+  const routes = {
+    ...PAID,
+    "anthropic:/v1/messages": async () => {
+      if (!replaced) {
+        replaced = true;
+        await putSheet(e, deps, new TextEncoder().encode("%PDF-1.7 the edited sheet"));
+      }
+      return new Response(JSON.stringify(verdictOf("pass")), { status: 200 });
+    },
+  };
+  ({ e, deps } = world(routes, CHECK_ENV));
+  const { c } = { c: { t: deps.now() } };
+  await putSheet(e, deps);
+  const object = e.PRINT_SHEETS.get(ID);
+  await object.alarm();
+  assert.equal(object.storage.data.get("check"), "due");
+  assert.ok(object.storage.alarm <= c.t);
+  await object.alarm();
+  assert.equal(object.storage.data.get("check"), "done");
+  assert.equal(object.storage.data.get("verdict").verdict, "pass");
 });

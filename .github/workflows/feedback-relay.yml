@@ -15,6 +15,9 @@ name: Feedback relay
 #                          Sheet's orders are paid for with Apple Pay; set, the Worker's secret too.
 #                          Set it only once the app has its Apple Pay merchant id
 #                          (BigSheetApplePay.merchant): with it, an order without a payment is refused
+#   ANTHROPIC_API_KEY      optional: a Claude API key (console.anthropic.com > API keys), with which
+#                          One Big Sheet checks each sheet before it is printed (print.js, checkSheet);
+#                          set, the Worker's secret too
 #
 # Live keys wait for Paul (painting-company row 380): while either key is live (a Stripe sk_live_ or
 # rk_live_ key, a Prodigi live_ key), the deploy runs in the environment print-live, which must
@@ -155,18 +158,19 @@ jobs:
           FEEDBACK_GITHUB_TOKEN: ${{ secrets.FEEDBACK_GITHUB_TOKEN }}
 
       - name: Print service keys
-        # One Big Sheet (print.js) answers 500 until the Worker has Prodigi's key, and takes no
-        # payment without Stripe's; nothing else needs either.
+        # One Big Sheet (print.js) answers 500 until the Worker has Prodigi's key, takes no
+        # payment without Stripe's, and checks no sheet without Anthropic's; nothing else needs them.
         shell: bash
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ steps.cloudflare.outputs.account_id }}
           PRODIGI_API_KEY: ${{ secrets.PRODIGI_API_KEY }}
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         working-directory: feedback-relay
         run: |
           set -euo pipefail
-          for name in PRODIGI_API_KEY STRIPE_SECRET_KEY; do
+          for name in PRODIGI_API_KEY STRIPE_SECRET_KEY ANTHROPIC_API_KEY; do
             if [[ -z ${!name} ]]; then
               echo "The secret $name is not set."
               continue
