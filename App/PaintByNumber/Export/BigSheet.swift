@@ -658,6 +658,7 @@ struct BigSheetView: View {
                     Text(String(localized: "bigSheet.testPrice", defaultValue: "Test price: the print costs \(cost), and \(cut) is yours.",
                                 comment: "One Big Sheet, under the price while orders are only tests: what the print service charges and what the developer keeps; the arguments are amounts of money"))
                 }
+                Text("Made to order and shipped within a week. Print only pictures that are yours to print.")
                 Text("Only this sheet and the address go to the printer, never your photo.")
             }
         }
@@ -839,7 +840,7 @@ struct BigSheetView: View {
                 }
                 Text("Test Order Placed")
                     .font(.display(.title2, weight: .semibold))
-                Text(String(localized: "bigSheet.placed", defaultValue: "Order \(order). A test order prints nothing; a real one would arrive in about a week.",
+                Text(String(localized: "bigSheet.placed", defaultValue: "Order \(order). A test order prints nothing; a real one would ship within a week.",
                             comment: "One Big Sheet once a test order is placed; the argument is the print service's order number"))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)
