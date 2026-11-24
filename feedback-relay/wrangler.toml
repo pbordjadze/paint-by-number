@@ -12,9 +12,10 @@ workers_dev = true
 FEEDBACK_REPO = "pbordjadze/paint-feedback"
 # Tonight's Picture's schedule, which says which ballots are open (votes.js).
 NIGHTS_URL = "https://raw.githubusercontent.com/pbordjadze/paint-by-number/nights/nights.json"
-# One Big Sheet's print service (print.js): Prodigi's sandbox, which prints and charges nothing. The
-# relay refuses any other: live printing waits for payments. Its key is the secret PRODIGI_API_KEY.
-PRODIGI_API = "https://api.sandbox.prodigi.com/v4.0"
+# One Big Sheet's print service (print.js): Prodigi's v5 API with a sandbox key (sent as
+# sandbox_<key>), which prints and charges nothing. The relay refuses a live key or another API:
+# live printing waits for payments. Its key is the secret PRODIGI_API_KEY.
+PRODIGI_API = "https://api.prodigi.com/v5"
 # What the painter pays over Prodigi's cost, shipping included: 0.4 is 40%.
 MARKUP = "0.4"
 

@@ -8,9 +8,10 @@ name: Feedback relay
 #                          Account Settings Read (the "Edit Cloudflare Workers" template has both)
 #   FEEDBACK_GITHUB_TOKEN  a fine-grained token with Contents and Issues read and write on the
 #                          private feedback repository only; it becomes the Worker's secret
-#   PRODIGI_API_KEY        optional: Prodigi's sandbox API key, for One Big Sheet (print.js);
+#   PRODIGI_API_KEY        optional: Prodigi's sandbox API key (its sandbox dashboard,
+#                          sandbox-beta-dashboard.pwinty.com), for One Big Sheet (print.js);
 #                          set, it becomes the Worker's secret too
-#   STRIPE_SECRET_KEY      optional: Stripe's test secret key (sk_test_), with which One Big
+#   STRIPE_SECRET_KEY      optional: Stripe's test key (sk_test_ or a restricted rk_test_), with which One Big
 #                          Sheet's orders are paid for with Apple Pay; set, the Worker's secret too.
 #                          Set it only once the app has its Apple Pay merchant id
 #                          (BigSheetApplePay.merchant): with it, an order without a payment is refused
