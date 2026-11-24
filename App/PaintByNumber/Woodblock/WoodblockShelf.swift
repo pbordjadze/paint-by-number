@@ -10,8 +10,10 @@ import os
 /// `ArtworkStore` of their own, `Application Support/Woodblock/Prints/<uuid>/`, each a painting's
 /// folder (`meta.json`, `template.pbnt`, `progress.bin`, `source.jpg`, `thumbnail.png`) with one
 /// file more, `woodblock.bench` (PaintCore's `WoodblockBench`, LZFSE: the block on the bench, how
-/// far it is worked and the sheet so far). The template is the print's own, as generated; its
-/// blocks (`WoodblockPlan`) are made from it each time it opens. `progress.bin` stays a fresh
+/// far it is worked and the sheet so far), and for a Portrait photo `depth.bin` (PaintCore's
+/// `PhotoDepth`, LZFSE: the camera's depth and sky, which names the sky the bokashi shades). The
+/// template is the print's own, as generated; its blocks (`WoodblockPlan`) are made from it and
+/// its depth each time it opens. `progress.bin` stays a fresh
 /// painting's, and the meta's painted count is the share of the blocks printed, so the folder
 /// reads as a painting to anything that lists one.
 @MainActor
@@ -49,6 +51,12 @@ final class WoodblockShelf {
     /// A bench is 8 bytes a cell of at most 1400 × 1400, compressed.
     nonisolated static let maximumBenchBytes = 24 * 1024 * 1024
 
+    nonisolated static let depthFile = "depth.bin"
+    /// The longest side a print keeps its depth at (a camera's is about 768): with its three
+    /// mattes, at most 4 bytes a pixel of it.
+    nonisolated static let depthSide = 1024
+    nonisolated static let maximumDepthBytes = 14 + 4 * depthSide * depthSide
+
     func load() async {
         let store = store
         let found = await Background.run { store.loadAll() }
@@ -76,13 +84,15 @@ final class WoodblockShelf {
     }
 
     /// Saves a new print, nothing carved, and lists it first.
-    func create(template: Template, settings: GenerationSettings, photo: RGBAImage, title: String, sampleName: String?) async throws -> Artwork {
+    func create(template: Template, settings: GenerationSettings, photo: RGBAImage, depth: PhotoDepth? = nil,
+                title: String, sampleName: String?) async throws -> Artwork {
         var artwork = Artwork(title: title, template: template, settings: settings, sampleName: sampleName)
         artwork.paintedCount = 0
         let store = store
         let saved = artwork
         try await Background.run {
-            let plan = WoodblockPlan(template: template)
+            let keptDepth = depth.map(Self.kept)
+            let plan = WoodblockPlan(template: template, depth: keptDepth)
             let bench = WoodblockBench(plan: plan)
             let source = PhotoLoader.cgImage(from: photo).flatMap {
                 ImageCodec.jpegData(ImageCodec.downscaled($0, maxPixelSize: ArtworkStore.sourceMaxPixelSize), quality: 0.88)
@@ -95,7 +105,12 @@ final class WoodblockShelf {
                 .flatMap(ImageCodec.pngData)
             try store.create(saved, template: template, progress: PaintProgress(regionCount: template.regions.count),
                              sourceJPEG: source, thumbnailPNG: thumbnail)
-            try Self.write(bench, to: store.directory(for: saved.id))
+            let dir = store.directory(for: saved.id)
+            if let keptDepth {
+                let data = try (Data(keptDepth.encoded()) as NSData).compressed(using: .lzfse) as Data
+                try data.write(to: dir.appending(path: Self.depthFile), options: .atomic)
+            }
+            try Self.write(bench, to: dir)
         }
         prints.insert(artwork, at: 0)
         return artwork
@@ -114,7 +129,7 @@ final class WoodblockShelf {
         let id = artwork.id
         return try await Background.run {
             let template = try store.readTemplate(id)
-            let plan = WoodblockPlan(template: template)
+            let plan = WoodblockPlan(template: template, depth: try Self.depth(at: store.directory(for: id)))
             let url = store.directory(for: id).appending(path: Self.benchFile)
             var bench = WoodblockBench(plan: plan)
             if FileManager.default.fileExists(atPath: url.path(percentEncoded: false)) {
@@ -132,6 +147,44 @@ final class WoodblockShelf {
                 }
             }
             return Opened(plan: plan, bench: bench)
+        }
+    }
+
+    /// A Portrait photo's depth at the size a print keeps it.
+    nonisolated private static func kept(_ depth: PhotoDepth) -> PhotoDepth {
+        let w = depth.nearness.width, h = depth.nearness.height
+        guard max(w, h) > depthSide else { return depth }
+        let scale = Double(depthSide) / Double(max(w, h))
+        return depth.laid(width: max(1, Int((Double(w) * scale).rounded())), height: max(1, Int((Double(h) * scale).rounded())))
+    }
+
+    /// A print's depth, read as hostile input: none kept is nil, and so is one damaged (logged;
+    /// the print's plan is then made without it, and a bench cut by the plan with it is refused
+    /// by its signature, never misread). A file there but unreadable now throws.
+    nonisolated private static func depth(at dir: URL) throws -> PhotoDepth? {
+        let url = dir.appending(path: depthFile)
+        guard FileManager.default.fileExists(atPath: url.path(percentEncoded: false)) else { return nil }
+        let data = try Data(contentsOf: url)
+        guard data.count <= maximumDepthBytes else {
+            Log.library.error("Depth of a print is too large: printed without it")
+            return nil
+        }
+        var raw = [UInt8](repeating: 0, count: maximumDepthBytes + 1)
+        let count = data.withUnsafeBytes { (source: UnsafeRawBufferPointer) -> Int in
+            guard let from = source.bindMemory(to: UInt8.self).baseAddress, !source.isEmpty else { return 0 }
+            return raw.withUnsafeMutableBufferPointer { into in
+                compression_decode_buffer(into.baseAddress!, into.count, from, source.count, nil, COMPRESSION_LZFSE)
+            }
+        }
+        guard count > 0, count <= maximumDepthBytes else {
+            Log.library.error("Unreadable depth of a print: printed without it")
+            return nil
+        }
+        do {
+            return try PhotoDepth(decoding: Array(raw.prefix(count)))
+        } catch {
+            Log.library.error("Unreadable depth of a print (\(String(describing: error), privacy: .public)): printed without it")
+            return nil
         }
     }
 

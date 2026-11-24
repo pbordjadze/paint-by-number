@@ -11,15 +11,18 @@ struct ActivityShareSheet: UIViewControllerRepresentable {
     /// iPad: hang the popover below the view it is presented from, clear of what the view shows,
     /// rather than centred over it.
     var below = false
+    /// The era's own actions beside the system's (a time-lapse's Save as Live Photo).
+    var activities: [UIActivity] = []
 
-    init(items: [URL], below: Bool = false, onFinish: @escaping (_ completed: Bool) -> Void) {
+    init(items: [URL], below: Bool = false, activities: [UIActivity] = [], onFinish: @escaping (_ completed: Bool) -> Void) {
         self.items = items
         self.below = below
+        self.activities = activities
         self.onFinish = onFinish
     }
 
-    init(item: URL?, onFinish: @escaping () -> Void) {
-        self.init(items: item.map { [$0] } ?? []) { _ in onFinish() }
+    init(item: URL?, activities: [UIActivity] = [], onFinish: @escaping () -> Void) {
+        self.init(items: item.map { [$0] } ?? [], activities: activities) { _ in onFinish() }
     }
 
     func makeUIViewController(context: Context) -> Controller { Controller() }
@@ -28,6 +31,7 @@ struct ActivityShareSheet: UIViewControllerRepresentable {
         controller.items = items
         controller.onFinish = onFinish
         controller.below = below
+        controller.activities = activities
         // Never inside SwiftUI's update pass: it can race the sheet's own presentation.
         Task { @MainActor [weak controller] in controller?.presentIfNeeded() }
     }
@@ -36,6 +40,7 @@ struct ActivityShareSheet: UIViewControllerRepresentable {
         var items: [URL] = []
         var onFinish: ((Bool) -> Void)?
         var below = false
+        var activities: [UIActivity] = []
         private var presentedItems: [URL] = []
 
         override func viewDidAppear(_ animated: Bool) {
@@ -46,7 +51,7 @@ struct ActivityShareSheet: UIViewControllerRepresentable {
         func presentIfNeeded() {
             guard !items.isEmpty, items != presentedItems, viewIfLoaded?.window != nil, presentedViewController == nil else { return }
             presentedItems = items
-            let activity = UIActivityViewController(activityItems: items, applicationActivities: nil)
+            let activity = UIActivityViewController(activityItems: items, applicationActivities: activities.isEmpty ? nil : activities)
             if let popover = activity.popoverPresentationController {
                 popover.sourceView = view
                 if below {

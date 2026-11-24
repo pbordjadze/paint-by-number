@@ -64,7 +64,7 @@ struct WoodblockEra: View {
     private func cut(_ picked: ModePicture) async {
         do {
             let (template, settings) = try await WoodblockShelf.template(of: picked.photo)
-            let artwork = try await shelf.create(template: template, settings: settings, photo: picked.photo,
+            let artwork = try await shelf.create(template: template, settings: settings, photo: picked.photo, depth: picked.depth,
                                                  title: picked.title ?? shelf.title(), sampleName: picked.sample?.id)
             path = [artwork.id]
         } catch {

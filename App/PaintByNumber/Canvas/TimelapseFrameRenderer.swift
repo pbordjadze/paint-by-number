@@ -102,16 +102,33 @@ nonisolated final class TimelapseFrameRenderer {
         }
     }
 
+    /// How long a replay runs and how smoothly: a time-lapse's, or a Live Photo's few seconds.
+    struct Pace: Sendable {
+        var framesPerSecond = 60
+        var paintingSeconds = 9.0
+        var introSeconds = 0.6
+        var outroSeconds = 1.8
+
+        static let timelapse = Pace()
+        /// A Live Photo's movie: about three seconds, as the camera's are, ending on the
+        /// finished painting (its key photo).
+        static let livePhoto = Pace(framesPerSecond: 30, paintingSeconds: 2.4, introSeconds: 0.15, outroSeconds: 0.45)
+    }
+
     /// Exports the replay of `progress` as a movie at `url`.
     @concurrent
     static func export(
         template: Template, progress: PaintProgress, to url: URL, longSide: Int = 1080,
+        pace: Pace = .timelapse,
         onProgress: (@Sendable (Double) -> Void)? = nil
     ) async throws {
         guard let renderer = TimelapseFrameRenderer(template: template, progress: progress) else { throw RenderError.unavailable }
         let size = CanvasSnapshot.fittedSize(for: template, longSide: longSide)
+        let options = TimelapseExporter.Options(
+            size: size, framesPerSecond: pace.framesPerSecond, paintingSeconds: pace.paintingSeconds,
+            introSeconds: pace.introSeconds, outroSeconds: pace.outroSeconds)
         try await TimelapseExporter.export(
-            strokeCount: renderer.strokeCount, options: TimelapseExporter.Options(size: size), to: url, progress: onProgress
+            strokeCount: renderer.strokeCount, options: options, to: url, progress: onProgress
         ) { index, strokes, fraction, buffer in
             try renderer.render(frame: index, strokes: strokes, fraction: fraction, into: buffer)
         }

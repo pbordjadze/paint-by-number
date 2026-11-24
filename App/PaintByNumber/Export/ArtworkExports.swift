@@ -1,5 +1,6 @@
 import Foundation
 import PaintCore
+import UIKit
 import UniformTypeIdentifiers
 
 /// Renders shareable files of an artwork (off the main actor).
@@ -158,15 +159,7 @@ nonisolated struct TimelapseRequest: Identifiable, Sendable {
     /// frame) the folder and the partial movie are removed.
     @concurrent
     func render(longSide: Int = 1080, onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> URL {
-        let template: Template, progress: PaintProgress
-        switch source {
-        case let .saved(store, artwork):
-            template = try store.readTemplate(artwork.id)
-            progress = try store.readProgress(artwork.id, regionCount: template.regions.count).progress
-        case let .live(liveTemplate, liveProgress):
-            template = liveTemplate
-            progress = liveProgress
-        }
+        let (template, progress) = try painting()
         let url = try ArtworkExporter.temporaryURL(name: ArtworkExporter.timelapseName(title: title), pathExtension: "mp4")
         do {
             try await TimelapseFrameRenderer.export(
@@ -176,5 +169,28 @@ nonisolated struct TimelapseRequest: Identifiable, Sendable {
             throw error
         }
         return url
+    }
+
+    /// The template and progress it replays (a saved artwork's read from its folder).
+    func painting() throws -> (Template, PaintProgress) {
+        switch source {
+        case let .saved(store, artwork):
+            let template = try store.readTemplate(artwork.id)
+            return (template, try store.readProgress(artwork.id, regionCount: template.regions.count).progress)
+        case let .live(template, progress):
+            return (template, progress)
+        }
+    }
+}
+
+extension TimelapseRequest {
+    /// The era's own actions in the time-lapse's share sheet: Save as Live Photo, in SideStore
+    /// and Debug builds.
+    @MainActor func shareActivities() -> [UIActivity] {
+        #if UNRELEASED
+        [LivePhotoActivity(request: self)]
+        #else
+        []
+        #endif
     }
 }

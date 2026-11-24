@@ -132,7 +132,7 @@ struct ModeShell<Gallery: View, Route: Hashable, Destination: View>: View {
                 .background(.regularMaterial, in: .rect(cornerRadius: 22))
             }
         }
-        .photosPicker(isPresented: $picking, selection: $picked, matching: .images)
+        .photosPicker(isPresented: $picking, selection: $picked, matching: .images, preferredItemEncoding: .current)
         .onChange(of: picked) { _, item in
             guard let item else { return }
             picked = nil
@@ -162,8 +162,10 @@ struct ModeShell<Gallery: View, Route: Hashable, Destination: View>: View {
         defer { isWorking = false }
         do {
             guard let data = try await item.loadTransferable(type: Data.self) else { return }
-            let photo = try await Background.run { try PhotoLoader.load(data: data, maxPixelSize: ArtworkStore.sourceMaxPixelSize) }
-            await make(ModePicture(photo: photo, sample: nil))
+            let (photo, depth) = try await Background.run {
+                (try PhotoLoader.load(data: data, maxPixelSize: ArtworkStore.sourceMaxPixelSize), PhotoDepthReader.read(data: data))
+            }
+            await make(ModePicture(photo: photo, sample: nil, depth: depth))
         } catch {
             Log.library.error("Couldn't load a photo for \(look.id, privacy: .public): \(String(describing: error), privacy: .public)")
         }
@@ -221,6 +223,10 @@ struct ModePicture {
 
     /// The name the picture gives a painting: the library picture's or the Museum work's.
     var title: String? { work ?? sample?.title }
+
+    /// What a Portrait photo knows of its scene (its depth, sky, hair and skin), nil for any
+    /// other picture: a mode that cuts by depth reads it, the rest ignore it.
+    var depth: PhotoDepth? = nil
 
     var cgImage: CGImage? { PhotoLoader.cgImage(from: photo) }
 }

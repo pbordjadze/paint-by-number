@@ -55,8 +55,12 @@ public struct WoodblockPlan: Sendable {
 
     public static let paper = SIMD3<Float>(0.95, 0.93, 0.875)
 
-    /// The plan for a print of `template` (in the print's own space, as generated).
-    public init(template generated: Template) {
+    /// The plan for a print of `template` (in the print's own space, as generated). A Portrait
+    /// photo's `depth` with a sky matte (PaintCore's `PhotoDepth`) names the sky the bokashi
+    /// shades, whatever its lightness: the paint holding most of the camera's sky, once the sky
+    /// covers `leastSky` of the picture. Without it the top of the picture is read as before, and
+    /// a plan without depth is the plan it always was (its `signature` too).
+    public init(template generated: Template, depth: PhotoDepth? = nil) {
         let printed = generated.flattenedToCells(minorShare: Self.minorShare, keepContrast: 0.3)
         // Paints light to dark; a paint as pale as the washi is the paper itself, left bare
         // (no block cuts it), and goes last, so the blocks are numbered from 1.
@@ -76,7 +80,10 @@ public struct WoodblockPlan: Sendable {
         for p in t.palette.indices where used[p] && !Self.isPaper(t.palette[p].oklab) {
             blocks.append(Block(kind: .color, paint: p, ink: Self.pigment(t.palette[p].oklab, space: t.colorSpace), opacity: 0.9))
         }
-        if let ground = Self.ground(of: t), t.palette[ground].oklab.x >= 0.6 {
+        if let sky = depth.flatMap({ Self.sky(of: printed, depth: $0) }),
+           let ground = order.firstIndex(of: sky), used[ground], !Self.isPaper(t.palette[ground].oklab) {
+            blocks.append(Block(kind: .bokashi, paint: ground, ink: Self.ai, opacity: 0.9))
+        } else if let ground = Self.ground(of: t), t.palette[ground].oklab.x >= 0.6 {
             blocks.append(Block(kind: .bokashi, paint: ground, ink: Self.ai, opacity: 0.9))
         }
         self.blocks = blocks
@@ -122,6 +129,34 @@ public struct WoodblockPlan: Sendable {
         }
         guard total > 0, let best = counts.indices.max(by: { counts[$0] < counts[$1] }),
               Float(counts[best]) >= 0.4 * Float(total) else { return nil }
+        return best
+    }
+
+    /// The least share of the picture the camera's sky must cover to have a bokashi of its own.
+    public static let leastSky: Float = 0.05
+
+    /// The paint (in `t`'s own palette) that holds most of the camera's sky, by area; nil without
+    /// a sky matte or with too little sky.
+    static func sky(of t: Template, depth: PhotoDepth) -> Int? {
+        let isSky = depth.skyRegions(of: t)
+        let map = t.regionMap
+        guard isSky.count == t.regions.count, map.count > 0 else { return nil }
+        var area = [Int](repeating: 0, count: t.regions.count)
+        for i in 0..<map.count {
+            let r = Int(map.storage[i])
+            if r < area.count { area[r] += 1 }
+        }
+        var byPaint = [Int](repeating: 0, count: t.palette.count)
+        var total = 0
+        for r in t.regions.indices where isSky[r] {
+            let p = Int(t.regions[r].colorIndex)
+            guard p < byPaint.count else { continue }
+            byPaint[p] += area[r]
+            total += area[r]
+        }
+        guard Float(total) >= leastSky * Float(map.count),
+              let best = byPaint.indices.max(by: { byPaint[$0] < byPaint[$1] || (byPaint[$0] == byPaint[$1] && $0 > $1) })
+        else { return nil }
         return best
     }
 

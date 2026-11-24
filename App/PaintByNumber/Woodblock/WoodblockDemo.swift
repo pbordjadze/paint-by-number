@@ -31,7 +31,7 @@ enum WoodblockDemo {
         do {
             let photo = try await Background.run { try PhotoLoader.load(url: url, maxPixelSize: ArtworkStore.sourceMaxPixelSize) }
             let (template, settings) = try await WoodblockShelf.template(of: photo)
-            let artwork = try await shelf.create(template: template, settings: settings, photo: photo, title: sample.title,
+            let artwork = try await shelf.create(template: template, settings: settings, photo: photo, depth: nil, title: sample.title,
                                                  sampleName: sample.id)
             if scenario == "woodblock-gallery" {
                 let opened = try await shelf.open(artwork)

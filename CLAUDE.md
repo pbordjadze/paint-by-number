@@ -93,6 +93,11 @@ before planning app work).
     block, as a signed distance, and the room the tool has), `WoodblockBench` (carving that
     never cuts what stays, ink, the baren, the peel, the print; `woodblock.bench`, read as
     hostile input) and `Template.mirrored`; `pbn woodblock` prints a template off the device.
+  - `Depth/`: `PhotoDepth`, what a Portrait photo keeps beside its picture (the camera's
+    nearness, its sky, hair and skin mattes; the app's `PhotoDepthReader` reads it, and a mode's
+    picker asks for the original file so it is there): laid on a canvas, cut into planes far to
+    near, each region's plane and whether it is sky; `depth.bin` (`PDEP`, read as hostile input,
+    `depth-v1.bin` frozen). Woodblock's bokashi shades the camera's sky (`WoodblockPlan(template:depth:)`).
   - `Watercolor/`: Watercolor (painting-company row 373): `WatercolorSheet` (a template as a
     sheet of paper, the watercolor key), `WatercolorSim` (water and pigment after Curtis et al.
     1997, deterministic on any core count, snapshots), `WatercolorLog` (the taps, read as
@@ -356,7 +361,8 @@ Saved paintings must open in every later build. The format history is documented
   (the optional `LINE` chunk of layered templates) / `template-v2-book.pbnt` (the chunk's trailing
   style byte, written only for coloring books) / `template-v2-detail.pbnt` (the optional `DETL`
   chunk of detail areas) / `template-v2-writing.pbnt` (the optional `WRIT` chunk of writing
-  strokes) must keep decoding (they are never regenerated). Add
+  strokes) must keep decoding (they are never regenerated), and so must `depth-v1.bin` (a
+  print's `PhotoDepth`). Add
   a fixture file and decode test for every new `formatVersion`, chunk or trailing field. A
   painting sent to someone else (`SharedPainting`, its own format and chunks, read as hostile
   input) follows the same rules: `shared-v1.moonlight`, `shared-v1-photo.moonlight` (the
