@@ -371,7 +371,7 @@ async function order(request, env, deps, provider) {
   }
   const reference = referenceOf(key);
   if (TAKEN.has(begun.state)) return takenAnswer(env, provider, reference, begun.charge);
-  if (begun.state === "refused") return json(410, { ok: false, refused: true, refunded: Boolean(begun.charge) });
+  if (begun.state === "refused") return json(410, { ok: false, refused: true, refunded: begun.refunded === true });
   // Only the try holding the order's claim goes on: another try of it under way at once waits.
   const claim = begun.claim;
   if (!claim) {
@@ -537,6 +537,12 @@ const CHARGE_LOST_MS = 30 * 60_000;
 const GIVE_UP_MS = 2 * 24 * 3600_000;
 const HOUR = 3600_000;
 const ACCEPTED = new Set(["submitted", "in_production", "partially_shipped", "shipped", "completed", "paused"]);
+/** An order's states the daily check leaves alone: accepted, alerted, or still in hand. */
+const SETTLED_OR_WATCHED = new Set(["accepted", "stuck", "refused", "charging", "queued", "charged", "placing", "placed"]);
+
+/** A payment intent's statuses that took no money and never will. */
+const UNTAKEN = new Set(["requires_payment_method", "canceled"]);
+
 const ACTIVE = new Set(["charging", "queued", "charged", "placing", "placed"]);
 
 /**
@@ -553,7 +559,7 @@ export async function advance(env, deps, storage, standing) {
   if (now - job.since > GIVE_UP_MS) {
     await alert(env, deps, storage, "stuck", `stopped trying an order still ${state}`, facts,
       "The relay tried this order for two days. Look it up in Prodigi's and Stripe's dashboards and place or refund it by hand.");
-    await storage.put({ state: "stuck" });
+    await storage.put({ state: "stuck", job: stripped(job) });
     return null;
   }
   if (!provider.isSandbox(env)) {
@@ -568,7 +574,9 @@ export async function advance(env, deps, storage, standing) {
       await storage.put({ state: "charged", charge: found.id });
       return 0;
     }
-    if (found || now - job.since < CHARGE_LOST_MS) return 5 * 60_000;
+    // Still settling at Stripe; a declined or cancelled one took nothing.
+    if (found && !UNTAKEN.has(found.status)) return 5 * 60_000;
+    if (!found && now - job.since < CHARGE_LOST_MS) return 5 * 60_000;
     // Nothing taken: the order is the painter's to try again.
     log(`Order ${key} was never charged: let go`);
     await storage.put({ state: "new", claimedAt: 0 });
@@ -585,8 +593,15 @@ export async function advance(env, deps, storage, standing) {
       return 20_000;
     } catch (error) {
       if (error?.uncertain) return retry(storage, job, `Placing order ${key}`, error);
+      if ((job.tries ?? 0) > 0) {
+        // An earlier try may have placed it: refunding could give back an order being printed.
+        await alert(env, deps, storage, "unsure", "an order may or may not be placed", facts,
+          `${provider.name} refused the order (${error.message}) after an earlier try went unanswered. Look it up in its dashboard by its reference: if it isn't there, refund the payment in Stripe.`);
+        await storage.put({ state: "stuck", job: stripped(job) });
+        return null;
+      }
       log(`${provider.name} refused order ${key}`, error);
-      return await refuse(env, deps, storage, facts, `${provider.name} refused the order when it was placed (${error.message}).`);
+      return await refuse(env, deps, storage, job, facts, `${provider.name} refused the order when it was placed (${error.message}).`);
     }
   }
 
@@ -601,12 +616,12 @@ export async function advance(env, deps, storage, standing) {
     }
     if (ACCEPTED.has(status.status)) {
       // Taken: the address leaves the relay.
-      await storage.put({ state: "accepted", job: { key, reference: job.reference, provider: job.provider, since: job.since } });
+      await storage.put({ state: "accepted", job: stripped(job) });
       return null;
     }
     const refused = status.status === "cancelled" || status.status === "failed" || (status.status === "draft" && status.issues.includes("fulfilment_issue"));
     if (refused) {
-      return await refuse(env, deps, storage, { ...facts, prodigiStatus: status.status, issues: status.issues.join(", ") },
+      return await refuse(env, deps, storage, job, { ...facts, prodigiStatus: status.status, issues: status.issues.join(", ") },
         `${provider.name} turned the order down after it was placed (${status.status}).`);
     }
     if (status.status === "on_hold") {
@@ -619,10 +634,15 @@ export async function advance(env, deps, storage, standing) {
   return null;
 }
 
+/** The job without the painter's name and address, which leave the relay once it is settled. */
+function stripped(job) {
+  return { key: job.key, reference: job.reference, provider: job.provider, since: job.since };
+}
+
 /** The order refused for good: the payment given back, and Paul told. */
-async function refuse(env, deps, storage, facts, what) {
+async function refuse(env, deps, storage, job, facts, what) {
   const refunded = await refund(env, deps, facts.charge, facts.key);
-  await storage.put({ state: "refused" });
+  await storage.put({ state: "refused", refunded: Boolean(facts.charge) && refunded, job: stripped(job) });
   await alert(env, deps, storage, "refused", refunded || !facts.charge ? "an order was refused" : "a refund failed", { ...facts, refunded: facts.charge ? String(refunded) : "nothing was charged" },
     `${what} ${facts.charge ? (refunded ? "The payment was refunded." : "Refunding the payment FAILED: refund it by hand in Stripe.") : ""}`);
   return null;
@@ -675,21 +695,29 @@ export async function fileIssue(env, deps, title, facts, what) {
 /**
  * Once a day (worker.js's `scheduled`): every payment for a sheet in the last three days, taken
  * and not refunded, should belong to an order the print service accepted. One that doesn't, an
- * hour on, is an issue for Paul.
+ * hour on, is an issue for Paul, unless its order is still being worked on (it alerts by itself
+ * should it stop) or already alerted (stuck, refused).
  */
 export async function reconcilePrints(env, deps = {}) {
   if (!env.STRIPE_SECRET_KEY || !env.PRINT_SHEETS) return 0;
   const now = (deps.now ?? Date.now)();
   const since = Math.floor((now - 3 * 24 * HOUR) / 1000);
-  let listed;
+  const intents = [];
   try {
-    listed = await stripeGet(env, deps, `/payment_intents?limit=100&created[gte]=${since}`);
+    let after = "";
+    for (let page = 0; page < 10; page++) {
+      const listed = await stripeGet(env, deps, `/payment_intents?limit=100&created[gte]=${since}${after}`);
+      const data = listed?.data ?? [];
+      intents.push(...data);
+      if (!listed?.has_more || data.length === 0) break;
+      after = `&starting_after=${encodeURIComponent(data[data.length - 1].id)}`;
+    }
   } catch (error) {
     log("Reconciling: listing payments failed", error);
-    return 0;
+    if (intents.length === 0) return 0;
   }
   let flagged = 0;
-  for (const intent of listed?.data ?? []) {
+  for (const intent of intents) {
     const key = intent?.metadata?.sheet;
     if (typeof key !== "string" || !HEX.test(key) || intent.status !== "succeeded") continue;
     if (now / 1000 - intent.created < 3600) continue;
@@ -698,7 +726,7 @@ export async function reconcilePrints(env, deps = {}) {
       const answer = await sheetStub(env, key).fetch("https://sheet/status");
       standing = answer.ok ? await answer.json() : null;
     } catch {}
-    if (standing?.state === "accepted") continue;
+    if (SETTLED_OR_WATCHED.has(standing?.state)) continue;
     // Refunded already (the restricted key reads refunds, not charges).
     try {
       const refunds = await stripeGet(env, deps, `/refunds?payment_intent=${encodeURIComponent(intent.id)}&limit=1`);
@@ -915,9 +943,9 @@ export class PrintSheet {
       return json(201, { kept: true });
     }
     if (pathname === "/begin" && request.method === "POST") {
-      const kept = await this.storage.get(["token", "state", "charge", "order", "claimedAt"]);
+      const kept = await this.storage.get(["token", "state", "charge", "order", "claimedAt", "refunded"]);
       if (!kept.get("token")) return bare(404);
-      const answer = { token: kept.get("token"), state: kept.get("state"), charge: kept.get("charge"), order: kept.get("order") };
+      const answer = { token: kept.get("token"), state: kept.get("state"), charge: kept.get("charge"), order: kept.get("order"), refunded: kept.get("refunded") === true };
       if (kept.get("state") === "new" && this.now() - (kept.get("claimedAt") ?? 0) > CLAIM_MS) {
         answer.claim = randomHex();
         await this.storage.put({ claim: answer.claim, claimedAt: this.now() });
@@ -1014,7 +1042,9 @@ async function prodigiCall(env, deps, method, path, body, headers = {}) {
       outcome = String(JSON.parse(text)?.type ?? "").slice(0, 60);
     } catch {}
     const error = new Error(`Prodigi ${method} ${path}: HTTP ${response.status} ${outcome}`);
-    throw Object.assign(error, { uncertain: response.status >= 500, status: response.status });
+    // Busy, a conflict, a timeout or our own key refused: tried again, never taken as a refusal.
+    const uncertain = response.status >= 500 || [401, 403, 408, 409, 429].includes(response.status);
+    throw Object.assign(error, { uncertain, status: response.status });
   }
   try {
     return JSON.parse(text);

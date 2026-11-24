@@ -727,3 +727,71 @@ test("an order is priced where the app was quoted, when that is in its country",
   await handlePrint(await orderRequest({ order: { ...PAID_ORDER, quotedAt: { ...quotedAt, country: "GB", zip: "SW1" } } }), other.e, other.deps);
   assert.equal(other.calls[0].body.shippingAddress.postalOrZipCode, "11201");
 });
+
+// MARK: The review's cases
+
+test("a charge that went unanswered and was declined lets the order go at once", async () => {
+  const { e, c, deps } = world({
+    ...PAID,
+    "stripe:/payment_intents": () => { throw new TypeError("network connection lost"); },
+    "stripe:/payment_intents/search": { data: [{ id: "pi_7", status: "requires_payment_method" }] },
+  }, STRIPE_ENV);
+  await handlePrint(await orderRequest({ order: PAID_ORDER }), e, deps);
+  const start = c.t;
+  assert.equal(await settle(e, c), "new");
+  assert.ok(c.t - start < 10 * 60_000);
+});
+
+test("Prodigi busy or in conflict when placing is tried again, never refunded", async () => {
+  for (const status of [401, 403, 408, 409, 429]) {
+    let busy = true;
+    const { e, c, calls, deps } = world({
+      ...PAID, "/orders": () => (busy ? (busy = false, new Response("{}", { status })) : new Response(JSON.stringify(PLACED), { status: 202 })),
+    }, STRIPE_ENV);
+    await handlePrint(await orderRequest({ order: PAID_ORDER }), e, deps);
+    assert.equal(await settle(e, c), "accepted", `HTTP ${status}`);
+    assert.ok(!calls.some((call) => call.url.endsWith("/refunds")), `HTTP ${status}`);
+  }
+});
+
+test("a refusal after an unanswered try refunds nothing, and asks Paul to look", async () => {
+  let first = true;
+  const { e, c, calls, deps } = world({
+    ...PAID, "/orders": () => (first ? (first = false, new Response("{}", { status: 502 })) : new Response("{}", { status: 400 })),
+  }, STRIPE_ENV);
+  await handlePrint(await orderRequest({ order: PAID_ORDER }), e, deps);
+  assert.equal(await settle(e, c), "stuck");
+  assert.ok(!calls.some((call) => call.url.endsWith("/refunds")));
+  assert.match(calls.find((call) => call.url.endsWith("/issues")).body.title, /may or may not/);
+  assert.equal(e.PRINT_SHEETS.get(ID).storage.data.get("job").recipient, undefined);
+});
+
+test("a refused or given-up order keeps no address", async () => {
+  for (const status of [400, 503]) {
+    const { e, c, deps } = world({ ...PAID, "/orders": () => new Response("{}", { status }) }, STRIPE_ENV);
+    await handlePrint(await orderRequest({ order: PAID_ORDER }), e, deps);
+    assert.equal(await settle(e, c, 80), status === 400 ? "refused" : "stuck");
+    const job = e.PRINT_SHEETS.get(ID).storage.data.get("job");
+    assert.equal(job.recipient, undefined);
+    assert.equal(job.reference, `sheet-${ID.slice(0, 12)}`);
+  }
+});
+
+test("the daily check leaves alone an order already alerted, and reads every page", async () => {
+  const { e, c, deps } = world({ ...PAID, "/orders": () => new Response("{}", { status: 503 }) }, STRIPE_ENV);
+  await handlePrint(await orderRequest({ order: PAID_ORDER }), e, deps);
+  assert.equal(await settle(e, c, 80), "stuck");
+  const day = Math.floor(c.t / 1000) - 7200;
+  const OTHER = "fedcba9876543210fedcba9876543210";
+  const pages = [
+    { has_more: true, data: [{ id: "pi_1", status: "succeeded", created: day, metadata: { sheet: ID } }] },
+    { has_more: false, data: [{ id: "pi_2", status: "succeeded", created: day, metadata: { sheet: OTHER } }] },
+  ];
+  const { calls: checked, fetcher } = prodigi({
+    "stripe:/payment_intents": () => new Response(JSON.stringify(pages.shift()), { status: 200 }),
+    "stripe:/refunds": { data: [] },
+  });
+  assert.equal(await reconcilePrints(e, { fetch: fetcher, now: c.now }), 1);
+  assert.match(checked.find((call) => call.url.endsWith("/issues")).body.body, /pi_2/);
+  assert.match(checked[1].url, /starting_after=pi_1/);
+});
