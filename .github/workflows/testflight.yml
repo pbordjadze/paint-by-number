@@ -182,13 +182,16 @@ jobs:
       - name: Entitlements
         # The archive is unsigned, and the export signs with what each bundle's own signature
         # asks for: the widgets and the stickers share the app's group (Outside.entitlements), and
-        # the app adds Paint Together's SharePlay (AppStore.entitlements). Extensions first.
+        # the app adds Paint Together's SharePlay (AppStore.entitlements), and the nightly Apple Pay
+        # for One Big Sheet (Nightly.entitlements). Extensions first.
         run: |
           APP="$ARCHIVE/Products/Applications/PaintByNumber.app"
           for appex in "$APP"/PlugIns/*.appex; do
             codesign --force --sign - --entitlements App/Config/Outside.entitlements "$appex"
           done
-          codesign --force --sign - --entitlements App/Config/AppStore.entitlements "$APP"
+          ENTITLEMENTS=App/Config/AppStore.entitlements
+          [ "$NIGHTLY" = true ] && ENTITLEMENTS=App/Config/Nightly.entitlements
+          codesign --force --sign - --entitlements "$ENTITLEMENTS" "$APP"
           codesign -d --entitlements - "$APP" 2>/dev/null | grep -q com.apple.developer.group-session
       - name: Identifiers
         # The bundle ids and capabilities the profiles are made from (ci/asc_identifiers.py).

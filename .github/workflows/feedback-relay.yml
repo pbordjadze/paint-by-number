@@ -8,6 +8,12 @@ name: Feedback relay
 #                          Account Settings Read (the "Edit Cloudflare Workers" template has both)
 #   FEEDBACK_GITHUB_TOKEN  a fine-grained token with Contents and Issues read and write on the
 #                          private feedback repository only; it becomes the Worker's secret
+#   PRODIGI_API_KEY        optional: Prodigi's sandbox API key, for One Big Sheet (print.js);
+#                          set, it becomes the Worker's secret too
+#   STRIPE_SECRET_KEY      optional: Stripe's test secret key (sk_test_), with which One Big
+#                          Sheet's orders are paid for with Apple Pay; set, the Worker's secret too.
+#                          Set it only once the app has its Apple Pay merchant id
+#                          (BigSheetApplePay.merchant): with it, an order without a payment is refused
 # This repository is public, so its logs are too: nothing below prints a secret, and the steps
 # that hold one run without `set -x`.
 #
@@ -38,7 +44,7 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Test
-        run: node --test feedback-relay/worker.test.js feedback-relay/votes.test.js
+        run: node --test feedback-relay/worker.test.js feedback-relay/votes.test.js feedback-relay/print.test.js
 
       - name: Cloudflare account and workers.dev subdomain
         id: cloudflare
@@ -102,6 +108,26 @@ jobs:
             FEEDBACK_GITHUB_TOKEN
         env:
           FEEDBACK_GITHUB_TOKEN: ${{ secrets.FEEDBACK_GITHUB_TOKEN }}
+
+      - name: Print service keys
+        # One Big Sheet (print.js) answers 500 until the Worker has Prodigi's key, and takes no
+        # payment without Stripe's; nothing else needs either.
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ steps.cloudflare.outputs.account_id }}
+          PRODIGI_API_KEY: ${{ secrets.PRODIGI_API_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+        working-directory: feedback-relay
+        run: |
+          set -euo pipefail
+          for name in PRODIGI_API_KEY STRIPE_SECRET_KEY; do
+            if [[ -z ${!name} ]]; then
+              echo "The secret $name is not set."
+              continue
+            fi
+            printf '%s' "${!name}" | npx --yes wrangler@4.145.0 secret put "$name"
+          done
 
       - name: Summary
         shell: bash

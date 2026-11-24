@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 // What the code both eras share (`App/Shared`, compiled into this module and into Paint by
 // Mosaic's) asks of the module it is in. These are Paint by Moonlight's answers; Paint by Mosaic's
@@ -53,3 +54,13 @@ nonisolated enum EraSeam {
     /// `feedback.md`'s title for a painting without one (English, like the rest of the report).
     static let feedbackUntitled = "Untitled painting"
 }
+
+#if !UNRELEASED
+/// Print's preview's One Big Sheet (painting-company row 380): SideStore and Debug builds alone
+/// (`BigSheet.swift`), so nothing in the release.
+struct BigSheetSection: View {
+    init(request: PrintPreviewRequest, layout: PDFExporter.Layout) {}
+
+    var body: some View { EmptyView() }
+}
+#endif

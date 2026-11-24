@@ -9,7 +9,9 @@ and stickers (`.widgets`, `.stickers`, from 1.3), each with App Groups. It regis
 bundle id and turns on a missing capability; a second run changes nothing. The API can't do the
 rest, which is done once in the developer website (Certificates, Identifiers & Profiles): the
 group `group.com.pbordjadze.paintbynumber` registered and chosen for all three identifiers, and
-the app's Group Activities (Paint Together's SharePlay) turned on. Uses ci/testflight_testers.py's client.
+the app's Group Activities (Paint Together's SharePlay) turned on, and its Apple Pay Payment
+Processing with the merchant id `merchant.com.paulbordjadze.paintbymoonlight` (the nightly's One
+Big Sheet, App/Config/Nightly.entitlements). Uses ci/testflight_testers.py's client.
 """
 
 import os
@@ -20,7 +22,7 @@ from testflight_testers import APIError, Client, private_key  # noqa: E402
 
 APP = "com.pbordjadze.paintbynumber"
 WANTED = {
-    APP: ("Paint by Moonlight", ["APP_GROUPS"]),
+    APP: ("Paint by Moonlight", ["APP_GROUPS", "APPLE_PAY"]),
     APP + ".widgets": ("Paint by Moonlight Widgets", ["APP_GROUPS"]),
     APP + ".stickers": ("Paint by Moonlight Stickers", ["APP_GROUPS"]),
 }
