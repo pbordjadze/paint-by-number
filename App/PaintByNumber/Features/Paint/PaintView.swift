@@ -228,11 +228,14 @@ struct PaintView: View {
             RenderContext.prewarm()
         }
         .onChange(of: undoManager) { _, manager in chrome.undoManager = manager }
-        .onChange(of: startHandoff?.isRunning == true) { _, running in
-            guard !running else { return }
-            chrome.observe(session)
-            // The cover is gone: the color to paint comes in (`PaintCanvas.watchesFirstFrame`).
-            controller.revealSelection()
+        .background {
+            StartHandoffWatch(handoff: startHandoff) { phase in
+                guard phase == .idle else { return }
+                // The cover is gone: the bench begins, and the color to paint comes in
+                // (`PaintCanvas.watchesFirstFrame`).
+                chrome.observe(session)
+                controller.revealSelection()
+            }
         }
         // Picking the next color follows the palette as it is laid out.
         .onChange(of: colorOrder, initial: true) { _, order in session.colorOrder = order }

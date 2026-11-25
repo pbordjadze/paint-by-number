@@ -122,7 +122,7 @@ struct CreateFlowView: View {
             // The painting has no status bar: the flow lets it go before its picture moves, so the
             // place it moves to is the one the painting will have.
             .statusBarHidden(hidesStatusBar)
-            .onChange(of: handoff?.phase) { finishIfReady() }
+            .background { StartHandoffWatch(handoff: handoff) { _ in finishIfReady() } }
     }
 
     private var flow: some View {
