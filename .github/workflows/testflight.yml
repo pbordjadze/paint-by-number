@@ -131,7 +131,8 @@ jobs:
         run: |
           # The newest `ipad-stutter` status (the API lists them newest first).
           gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/statuses" \
-            --jq '[.[] | select(.context == "ipad-stutter")][0] // empty | .state, .description, (.target_url // "")' > verdict.txt
+            --jq '[.[] | select(.context == "ipad-stutter")][0] // empty | .state, .description, (.target_url // "")' > verdict.txt \
+            || echo "::warning::couldn't read this commit's statuses"
           state=$(sed -n 1p verdict.txt); description=$(sed -n 2p verdict.txt); report=$(sed -n 3p verdict.txt)
           echo "stutter check of $GITHUB_SHA: ${state:-none}: $description ${report:+($report)}"
           case "$state" in

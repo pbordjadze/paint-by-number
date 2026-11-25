@@ -119,7 +119,7 @@ APP="$DD/Build/Products/ReleaseTests-iphoneos/PaintByNumber.app"
 
 # The iPad, one user at a time: our lock, and any other run that names it (the other threads' tours,
 # UI tests and installs).
-others() { pgrep -fl "$UDID" | grep -v -e "$$" -e stutter-gate | grep -v grep; }
+others() { pgrep -fl "$UDID" | grep -v -e "^$$ " -e stutter-gate; }
 waited=0
 until mkdir "$LOCK" 2>/dev/null; do
   holder=$(sed -n 's/.*pid \([0-9]*\).*/\1/p' "$LOCK/owner" 2>/dev/null)
@@ -147,6 +147,7 @@ echo "playing ${SCENARIOS[*]}, $RUNS runs each"
 grep -q "^install failed" "$OUT/tour.log" && trouble "installing on the iPad failed: $(tail -3 "$OUT/install.log" | tr '\n' ' ' | cut -c1-80)"
 
 python3 "$HERE/verdict.py" "$OUT" "$HERE/limits.json" --title "Stutter check of $SHORT ($(date '+%b %-d, %-I:%M %p %Z'))"; rc=$?
+[[ -f "$OUT/verdict.json" ]] || trouble "the verdict failed: $(tail -1 "$OUT/gate.log" | cut -c1-80)"
 state=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["state"])' "$OUT/verdict.json" 2>/dev/null || echo error)
 headline=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["headline"])' "$OUT/verdict.json" 2>/dev/null || echo "the verdict failed")
 status "$state" "$headline" "$(publish)"

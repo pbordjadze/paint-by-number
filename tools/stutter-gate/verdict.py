@@ -6,7 +6,7 @@
 Reads every <scenario>-<run>.tsv run.sh left, measures each segment limits.json names for that
 scenario (summary.py's segments; `run`, the whole log from a second after the first refresh the app
 answers to its end, for a demo that marks no segment of its own), and holds each number to its
-limit. A limit is over only when every run of the scenario is over it: one run spoiled by the Mac's
+limit. A limit is over only when every run of the scenario reached the segment and is over it: one run spoiled by the Mac's
 load or a notification is noise, a stutter in every run is the app's. A segment no run reached
 (the app never got there, or was gone) fails too. A scenario with no log at all is the check's own
 trouble (the iPad locked, the app not installed), not the app's: the verdict is then `error`.
@@ -114,7 +114,8 @@ def main():
                 values = [v for v in values if v is not None]
                 if not values:
                     continue
-                over = min(values) > limit
+                # A run that never reached the segment is named above, not counted as over.
+                over = len(values) == len(logs) and min(values) > limit
                 label, unit = METRICS.get(metric, (metric, ""))
                 rows.append((scenario, seg, label, "%s %s" % (fmt(limit), unit), [fmt(v) for v in values],
                              "OVER" if over else "ok"))

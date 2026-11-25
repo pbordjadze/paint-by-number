@@ -20,7 +20,7 @@ cat > "$PLIST" <<PLIST
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
   <key>Label</key><string>$LABEL</string>
-  <key>ProgramArguments</key><array><string>/bin/bash</string><string>-c</string><string>$RUN</string></array>
+  <key>ProgramArguments</key><array><string>/bin/bash</string><string>-c</string><string>${RUN//&/&amp;}</string></array>
   <key>StartCalendarInterval</key><array>
     <dict><key>Hour</key><integer>2</integer><key>Minute</key><integer>15</integer></dict>
     <dict><key>Hour</key><integer>5</integer><key>Minute</key><integer>15</integer></dict>
@@ -34,5 +34,6 @@ cat > "$PLIST" <<PLIST
   <key>StandardErrorPath</key><string>$ROOT/agent.log</string>
 </dict></plist>
 PLIST
+plutil -lint "$PLIST" > /dev/null
 launchctl bootstrap "gui/$(id -u)" "$PLIST"
 echo "installed $LABEL: $(launchctl print "gui/$(id -u)/$LABEL" | grep -m1 state)"
