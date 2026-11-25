@@ -1,0 +1,13 @@
+Retrying tests on failure. Running tests repeatedly up to 2 times.
+
+Writing result bundle at path:
+	/Users/runner/work/paint-by-number/paint-by-number/build/Tests.xcresult
+
+2026-11-25 06:30:08.208 xcodebuild[42095:111963] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-25 06:30:39.925 xcodebuild[42095:111963] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-25 06:30:40.061 xcodebuild[42095:111963] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-25 06:30:40.581 xcodebuild[42095:111963] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-25 06:30:40.955 xcodebuild[42095:111963] [MT] IDETestOperationsObserverDebug: 35.516 elapsed -- Testing started completed.
+2026-11-25 06:30:40.955 xcodebuild[42095:111963] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-25 06:30:40.955 xcodebuild[42095:111963] [MT] IDETestOperationsObserverDebug: 35.516 sec, +35.516 sec -- end
+Testing started
