@@ -3,7 +3,7 @@
 # it play, and keeps its -tourLog (painting-company row 292). A UI test's accessibility queries cost
 # the app frames of their own, so these are the numbers a change is judged by.
 #   tools/perf-tour/run.sh device|simulator <udid> <outdir> [-i <app>] [-b <bundle id>] [-n <runs>]
-#                          [-r <delay>,<seconds>] [-t <template>] [-k] [scenario...]
+#                          [-r <delay>,<seconds>] [-t <template>] [-k] [-s] [scenario...]
 # The app is a build with the demo scenarios in (Debug, or ReleaseTests), installed already or
 # given with -i, which installs it first: two builds are compared by running this for one, then the
 # other, turn about, in one sitting (a baseline from another hour is another device). On a device
@@ -31,15 +31,17 @@
 # for <seconds>: keep it short on a device (a recording takes about 70 MB of its storage a second
 # until it restarts). -t names the template (default: Animation Hitches, which carries a Time
 # Profiler). tools/perf-tour/stacks.py reads each trace into <scenario>-<run>.stacks.txt, and the
-# trace is then deleted unless -k keeps it. Recording costs the app time: judge frames by the
-# unrecorded runs.
+# trace is then deleted unless -k keeps it. -s has the app read its main thread's stack through each
+# hitch (`HitchStacks`, `-tourStacks YES`): tools/perf-tour/hitchstacks.py <segment> <logs> names
+# what ran in every hitch, with no Instruments; judge frame counts by runs without it. Recording
+# costs the app time: judge frames by the unrecorded runs.
 # Results: <outdir>/<scenario>-<run>.tsv (the log), .meta (the Mac's load, times), and summary.txt
 # (tools/perf-tour/summary.py on every log; hitchtable.py says which fill each hitch is at). A device's app is left open as its owner opens it, with no demo.
 set -uo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 KIND="$1"; UDID="$2"; OUT="$3"; shift 3
-BUNDLE=com.pbordjadze.paintbynumber; RUNS=3; RECORD=""; TEMPLATE="Animation Hitches"; KEEP=0; APP=""
-while getopts "i:b:n:r:t:k" flag; do
+BUNDLE=com.pbordjadze.paintbynumber; RUNS=3; RECORD=""; TEMPLATE="Animation Hitches"; KEEP=0; APP=""; STACKS=0
+while getopts "i:b:n:r:t:ks" flag; do
   case "$flag" in
     i) APP="$OPTARG" ;;
     b) BUNDLE="$OPTARG" ;;
@@ -47,6 +49,7 @@ while getopts "i:b:n:r:t:k" flag; do
     r) RECORD="$OPTARG" ;;
     t) TEMPLATE="$OPTARG" ;;
     k) KEEP=1 ;;
+    s) STACKS=1 ;;
     *) sed -n '2,20p' "$0"; exit 2 ;;
   esac
 done
@@ -70,6 +73,7 @@ plan() {
     *) echo "unknown scenario: $1"; exit 2 ;;
   esac
   ARGS+=(-sky "$SKY" -soundsEnabled YES -hapticsEnabled YES -tourLog YES)
+  if [[ $STACKS == 1 ]]; then ARGS+=(-tourStacks YES); fi
 }
 launch() {
   if [[ "$KIND" == device ]]; then

@@ -522,6 +522,9 @@ struct AppShellView: View {
 
     /// The flow has dissolved into the painting: the cover goes without a slide.
     private func endCreateFlow() {
+        #if DEBUG
+        TourLog.trace("mark", "cover going")
+        #endif
         let wasCovering = isCreating
         var transaction = Transaction()
         transaction.disablesAnimations = true

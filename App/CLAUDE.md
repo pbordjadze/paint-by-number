@@ -243,7 +243,9 @@ below name both alike.
   generations, a `hitch` line for each screen refresh the main thread came to late (its pulse),
   `mark` lines (the line-art maps' `maps begin`/`end`, the start of a painting's `start begin`,
   `handoff begin`, `handoff drew`, `start end`, a demo's own) and the device's state with the
-  memory footprint and its peak. `-demoStart YES` has a create scenario tap Start Painting by
+  memory footprint and its peak; with `-tourStacks YES` (`HitchStacks`, `run.sh -s`) a `stacks` line
+  after each hitch says what the main thread ran in it (`tools/perf-tour/hitchstacks.py`).
+  `-demoStart YES` has a create scenario tap Start Painting by
   itself, `-demoColdMaps YES` turns `LineArtMapsCache` off for a launch (the models and Vision run,
   as for a painter's own photo), `paint-zen-30` paints thirty Zen fills and `paint-colors-10` ten that each finish a color: with them
   `tools/perf-tour/run.sh` measures with no UI test, whose accessibility queries cost frames

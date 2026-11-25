@@ -279,6 +279,9 @@ struct CreateFlowView: View {
         do {
             let draft = try await model.makeDraft()
             let artwork = try await library.create(draft)
+            #if DEBUG
+            TourLog.trace("mark", "start saved")
+            #endif
             library.drafts.drop(photoID: model.photoID)
             PaintTips.pageMade()
             let show = Preferences().playsMakingOf ? model.makingOfSource(for: draft, artworkID: artwork.id) : nil
@@ -321,6 +324,9 @@ struct CreateFlowView: View {
             // The picture forming's lines are still being drawn, or burned in: the lift waits for
             // the rest (the painting was saved meanwhile), or for a tap that skips it.
             await previewPicture.formingDrawn()
+            #if DEBUG
+            TourLog.trace("mark", "handoff lift")
+            #endif
             if entry != nil || staying != nil {
                 withAnimation(.easeOut(duration: StartHandoffPlan.lift)) {
                     departure?.opacity = 1
@@ -332,6 +338,9 @@ struct CreateFlowView: View {
             try? await Task.sleep(for: .seconds(StartHandoffPlan.clear))
             await letStatusBarGo(in: window)
             guard !Task.isCancelled else { return }
+            #if DEBUG
+            TourLog.trace("mark", "status bar gone")
+            #endif
             let place = window.flatMap { pagePlace(of: template, in: $0) }
             expectedPage = place
             if let place { renderPage(of: template, size: place.size) }
@@ -360,6 +369,9 @@ struct CreateFlowView: View {
                 }
                 withAnimation(.easeOut(duration: StartHandoffPlan.glide)) { staying?.opacity = 0 }
             }
+            #if DEBUG
+            TourLog.trace("mark", "handoff glide")
+            #endif
             withAnimation(.smooth(duration: StartHandoffPlan.glide)) {
                 hasArrived = true
                 if entry != nil, let place {
@@ -488,6 +500,9 @@ struct CreateFlowView: View {
                 Log.create.error("Hand-off: the page couldn't be drawn; the picture will fade instead")
                 return
             }
+            #if DEBUG
+            TourLog.trace("mark", "handoff page drawn")
+            #endif
             page = image
             if makingOf == nil {
                 if departure?.numbers != nil {
@@ -555,6 +570,9 @@ struct CreateFlowView: View {
             case .moving(let target): target
             case .staying, .revealing, .fading: nil
             }
+            #if DEBUG
+            TourLog.trace("mark", "handoff reveal")
+            #endif
             withAnimation(.easeInOut(duration: StartHandoffPlan.reveal)) {
                 paperOpacity = 0
                 leaving = staysAsThePage ? .revealing(place) : .fading(place)

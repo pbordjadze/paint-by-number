@@ -16,7 +16,9 @@ import QuartzCore
 /// refresh late, with how long since the last one it met (`gap`) and how long a refresh is
 /// (`frame`), both in ms. And `mark` lines name the moments a measurement is cut by (the first
 /// refresh the app answers, `first refresh`; the line-art maps' `maps begin` and `end`; the start of
-/// a painting's `start begin`, `handoff begin`, `handoff drew` and `start end`; a demo's own).
+/// a painting's `start begin`, `handoff begin`, `handoff drew` and `start end`, and the hand-off's
+/// steps between; a demo's own). With `-tourStacks YES`, a `stacks` line follows each hitch: what the
+/// main thread ran in it (`HitchStacks`).
 nonisolated enum TourLog {
     static let isOn = UserDefaults.standard.bool(forKey: "tourLog")
 
@@ -42,6 +44,7 @@ nonisolated enum TourLog {
         trace("build", "uuid=%@\tunreleased=%@", executableUUID(), unreleased.description)
         // The app's launch is on the main thread.
         MainActor.assumeIsolated { TourPulse.shared.start() }
+        HitchStacks.start()
     }
 
     #if UNRELEASED
@@ -124,6 +127,7 @@ private final class TourPulse: NSObject {
         if last == 0 { TourLog.trace("mark", "first refresh") }
         if last > 0, link.timestamp - last > frame * 1.5 {
             TourLog.trace("hitch", "gap=%.1f\tframe=%.1f", (link.timestamp - last) * 1000, frame * 1000)
+            HitchStacks.hitch(from: last, to: link.timestamp, gap: (link.timestamp - last) * 1000)
         }
         last = link.timestamp
     }
