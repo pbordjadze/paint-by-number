@@ -12,7 +12,8 @@ import Synchronization
 /// and a `stacks` line follows the `hitch` line in the log: how many samples fell in the gap, and
 /// the frames most of them were in, counted three ways: the innermost of the app's own frames
 /// (what of ours was running), the outermost (what of ours started it: a task, a body, an
-/// action), and the innermost frame of all (where the time went, often SwiftUI's or UIKit's).
+/// action), the innermost frame of all (where the time went, often SwiftUI's or UIKit's), and
+/// the commonest chains of the innermost frames (who was waiting, and on what).
 /// Names are the symbol tables' (`dladdr`, Swift's mangled), named off the main thread;
 /// `tools/perf-tour/hitchstacks.py` lays them out against the segment's marks, demangled.
 ///
@@ -29,6 +30,11 @@ nonisolated enum HitchStacks {
     private static let maximumFrames = 1024
     /// How many of each count are written.
     private static let listed = 5
+    /// How many frames a chain holds, innermost first: enough to name who waits in a
+    /// `mach_msg` or `kevent` (the render server, a lock, a sync), where the innermost alone can't.
+    private static let chainFrames = 10
+    /// How many chains are written.
+    private static let chains = 3
 
     private nonisolated struct Request: Sendable {
         var from: CFTimeInterval
@@ -99,22 +105,24 @@ nonisolated enum HitchStacks {
             return named
         }
         var inner: [String: Int] = [:], outer: [String: Int] = [:], leaf: [String: Int] = [:]
+        var chain: [String: Int] = [:]
         for frames in samples {
             let named = frames.map(name)
             if let first = named.first { leaf[first.symbol, default: 0] += 1 }
+            chain[named.prefix(chainFrames).map(\.symbol).joined(separator: " < "), default: 0] += 1
             let ours = named.filter { $0.image == appImage }
             inner[ours.first?.symbol ?? "-", default: 0] += 1
             outer[ours.last?.symbol ?? "-", default: 0] += 1
         }
         TourLog.trace(
-            "stacks", "gap=%.1f\tsamples=%d\tinner=%@\touter=%@\tleaf=%@", request.gap, samples.count,
-            top(inner), top(outer), top(leaf))
+            "stacks", "gap=%.1f\tsamples=%ld\tinner=%@\touter=%@\tleaf=%@\tchain=%@", request.gap, samples.count,
+            top(inner), top(outer), top(leaf), top(chain, listing: chains))
     }
 
     /// The most frequent names, "count×name", most first, " | " between.
-    private static func top(_ counts: [String: Int]) -> String {
+    private static func top(_ counts: [String: Int], listing: Int = listed) -> String {
         counts.sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }
-            .prefix(listed)
+            .prefix(listing)
             .map { "\($0.value)×\($0.key)" }
             .joined(separator: " | ")
     }

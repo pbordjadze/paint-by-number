@@ -8,7 +8,8 @@ For every `hitch` line inside the segment (from `<segment> begin` to its end, or
 its offset in seconds after the begin mark, its gap, the last mark before it, and its `stacks` line:
 how many of the sampler's stack reads fell inside the gap, then the app's innermost frames (what of
 ours was running), its outermost (what of ours started the work) and the innermost frames of all,
-each "count x name", most first. Swift names are demangled with `swift demangle --simplified`
+each "count x name", most first, and the commonest chains of the innermost frames (who was
+waiting, and on what), one frame a line. Swift names are demangled with `swift demangle --simplified`
 (or `xcrun swift-demangle`) when either is on the PATH, and left mangled otherwise. `-` as an app
 frame means a read with none of ours on the stack (the system's own work: layout, rendering,
 an animation's commit).
@@ -16,6 +17,7 @@ an animation's commit).
 import shutil, subprocess, sys
 
 FIELDS = ("inner", "outer", "leaf")
+CHAIN = " < "
 
 
 def demangler():
@@ -66,6 +68,8 @@ def main(segment, paths):
         for _, s in stacks:
             for field in FIELDS:
                 names.update(n for _, n in counts(s.get(field, "")))
+            for _, chain in counts(s.get("chain", "")):
+                names.update(chain.split(CHAIN))
         runs.append((path, events, begin, end, stacks))
     named = demangle_all(names)
     for path, events, begin, end, stacks in runs:
@@ -93,6 +97,10 @@ def main(segment, paths):
             for field, title in zip(FIELDS, ("ours, innermost", "ours, outermost", "innermost")):
                 for count, name in counts(s.get(field, "")):
                     print(f"      {title:16} {count:>3}  {named.get(name, name)[:220]}")
+            for count, chain in counts(s.get("chain", "")):
+                print(f"      chain            {count:>3}")
+                for frame in chain.split(CHAIN):
+                    print(f"          {named.get(frame, frame)[:200]}")
 
 
 if __name__ == "__main__":
