@@ -8,8 +8,9 @@
 #  1. Skips a commit already judged (a success or failure `ipad-stutter` status on it) unless --force.
 #  2. Builds the commit as the nightly ships it (UNRELEASED, its files in) in ReleaseTests, optimized with
 #     the tour log, signed for the iPad. Xcode signs only in Paul's unlocked GUI session.
-#  3. Waits for the iPad up to 40 min: the lock ~/pbm-out/ipad.lock (a folder; its `owner` file says who,
-#     with a pid: a lock whose pid is gone is taken over), and no other process naming the iPad's UDID.
+#  3. Waits for the iPad up to 40 min, ahead of painting-company tools/devq.sh's queue: its lock
+#     ~/pbm-out/ipad.lock (the `owner` file says who, with a pid; a lock whose pid is gone is taken over),
+#     and no other process naming the iPad's UDID.
 #  4. tools/perf-tour/run.sh plays each scenario in limits.json <runs> times (default 2), unrecorded.
 #  5. verdict.py holds every number to limits.json and writes report.md.
 #  6. Sets the commit's `ipad-stutter` status (success, failure, or error when the check itself couldn't
@@ -51,6 +52,12 @@ OUT="$ROOT/runs/$(date -u +%Y%m%d-%H%M)-$SHORT"; mkdir -p "$OUT"
 exec > >(tee -a "$OUT/gate.log") 2>&1
 echo "stutter check of $SHA ($WANT) at $(date)"
 
+# A lock folder is abandoned when its owner's pid is gone; one with no owner file yet is being taken (mkdir,
+# then the file), abandoned only after a minute.
+abandoned() {
+  local p; p=$(sed -n 's/.*pid \([0-9]*\).*/\1/p' "$1/owner" 2>/dev/null)
+  if [[ -n "$p" ]]; then ! kill -0 "$p" 2>/dev/null; else (( $(date +%s) - $(stat -f %m "$1" 2>/dev/null || date +%s) > 60 )); fi
+}
 status() {  # <state> <description> [<url>]
   [[ $STATUS == 1 ]] || return 0
   gh api -X POST "repos/$REPO/statuses/$SHA" -f state="$1" -f context=ipad-stutter \
@@ -86,8 +93,7 @@ if [[ $FORCE == 0 && $STATUS == 1 ]]; then
 fi
 
 # One check at a time on this Mac (the build folder is shared).
-holder=$(sed -n 's/.*pid \([0-9]*\).*/\1/p' "$ROOT/gate.lock/owner" 2>/dev/null)
-[[ -n "$holder" ]] && ! kill -0 "$holder" 2>/dev/null && rm -rf "$ROOT/gate.lock"
+[[ -d "$ROOT/gate.lock" ]] && abandoned "$ROOT/gate.lock" && rm -rf "$ROOT/gate.lock"
 mkdir "$ROOT/gate.lock" 2>/dev/null || { echo "another stutter check is running: $(cat "$ROOT/gate.lock/owner" 2>/dev/null)"; rm -rf "$OUT"; exit 0; }
 echo "$SHORT, pid $$, since $(date)" > "$ROOT/gate.lock/owner"
 trap 'rm -rf "$ROOT/gate.lock"' EXIT
@@ -122,8 +128,7 @@ APP="$DD/Build/Products/ReleaseTests-iphoneos/PaintByNumber.app"
 others() { pgrep -fl "$UDID" | grep -v -e "^$$ " -e stutter-gate; }
 waited=0
 until mkdir "$LOCK" 2>/dev/null; do
-  holder=$(sed -n 's/.*pid \([0-9]*\).*/\1/p' "$LOCK/owner" 2>/dev/null)
-  if [[ -n "$holder" ]] && ! kill -0 "$holder" 2>/dev/null; then rm -rf "$LOCK"; continue; fi
+  if [[ -d "$LOCK" ]] && abandoned "$LOCK"; then rm -rf "$LOCK"; continue; fi
   if (( waited >= 2400 )); then trouble "the iPad stayed busy for 40 min ($(cat "$LOCK/owner" 2>/dev/null))"; fi
   sleep 30; waited=$((waited + 30))
 done
