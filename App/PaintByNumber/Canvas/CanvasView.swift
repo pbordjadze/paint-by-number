@@ -510,22 +510,21 @@ final class CanvasView: UIView, PaintingCanvas {
     private var opening: Task<Void, Never>?
 
     /// First responder so the window's undo manager serves three-finger undo and ⌘Z, once the
-    /// painting is on screen and has stopped moving: the first `becomeFirstResponder` of a launch
-    /// sets up the keyboard's machinery, which held the main thread a tenth of a second and more
-    /// as the painting opened (painting-company row 390). Under Start Painting's cover
-    /// (`watchesFirstFrame`) that waits for the cover's fade and the selection's after it.
+    /// painting has stopped moving: the first `becomeFirstResponder` of a launch sets up the
+    /// keyboard's machinery, which held the main thread a tenth of a second and more as the
+    /// painting opened (painting-company row 390). Under Start Painting's cover
+    /// (`watchesFirstFrame`) `revealSelection` asks again once the cover is gone; the long wait
+    /// here only covers a hand-off that never says so.
     private func focusOnceOpen() {
+        focus(after: watchesFirstFrame ? .seconds(4) : .milliseconds(500))
+    }
+
+    private func focus(after wait: Duration) {
         opening?.cancel()
         opening = Task { @MainActor [weak self] in
-            for _ in 0..<60 {
-                guard let self, !Task.isCancelled else { return }
-                if hasShownFirstFrame { break }
-                try? await Task.sleep(for: .milliseconds(50))
-            }
-            let settle: Duration = self?.watchesFirstFrame == true ? .milliseconds(1300) : .milliseconds(400)
-            try? await Task.sleep(for: settle)
+            try? await Task.sleep(for: wait)
             guard let self, !Task.isCancelled, wantsFocus, window != nil, !isFirstResponder else { return }
-            _ = becomeFirstResponder()
+            if presentsAbove || !becomeFirstResponder() { regainFocus() }
         }
     }
 
@@ -1130,6 +1129,7 @@ final class CanvasView: UIView, PaintingCanvas {
     /// painting was handed over to opened without it (`watchesFirstFrame`), looking as the create
     /// flow's last picture of it did (`HandoffPage`). Reduce Motion: the hatch at rest, fading in.
     func revealSelection() {
+        if watchesFirstFrame, opening != nil { focus(after: .seconds(Double(selectionFade.duration) + 0.2)) }
         guard selectionFade.to < 1 else { return }
         let t = now()
         selectionFade.retarget(to: 1, at: t)
