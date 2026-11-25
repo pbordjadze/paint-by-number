@@ -133,7 +133,7 @@ struct FormingTests {
         #expect(FormingPlan.liftWait(remaining: 0) == 0)
         #expect(FormingPlan.liftWait(remaining: -25) == 0)
         #expect(FormingPlan.liftWait(remaining: nil) == 0)
-        #expect(FormingPlan.liftWait(remaining: 1000) == FormingPlan.drawIn)
+        #expect(FormingPlan.liftWait(remaining: 1000) == max(FormingPlan.drawIn, FormingShow.longestTail))
         #expect(FormingPlan.dries == StartHandoffPlan.settle)
         #expect(FormingPlan.dries <= StartHandoffPlan.glide)
     }
