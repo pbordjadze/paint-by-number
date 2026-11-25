@@ -120,7 +120,8 @@ nonisolated enum MainThreadWatchdog {
 
     /// The suspended thread's pc, lr and the return addresses up its frame records, innermost
     /// first; only addresses inside its stack are read.
-    private static func sample(_ thread: thread_act_t, stack: ClosedRange<UInt>, into frames: UnsafeMutableBufferPointer<UInt>) -> Int {
+    /// Also `HitchStacks`' sampler.
+    static func sample(_ thread: thread_act_t, stack: ClosedRange<UInt>, into frames: UnsafeMutableBufferPointer<UInt>) -> Int {
         guard thread_suspend(thread) == KERN_SUCCESS else { return 0 }
         defer { thread_resume(thread) }
         var state = arm_thread_state64_t()

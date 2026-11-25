@@ -272,6 +272,9 @@ struct FinishWarmup: View {
                     try? await Task.sleep(for: .milliseconds(600))
                     // A painting closed before the bounce drew leaves it to the next.
                     if Task.isCancelled { Self.isDone = false }
+                    #if DEBUG
+                    TourLog.trace("mark", "finish warm gone")
+                    #endif
                     builds = false
                 }
         }
