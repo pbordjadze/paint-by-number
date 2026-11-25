@@ -857,10 +857,18 @@ struct ArtworkPaintingView: View {
         }
     }
 
+    /// How long the length chip's menu takes to close after a pick. A cut made ahead is in the
+    /// painting a few milliseconds after the pick, and the new screen built then (with the old
+    /// one's picture taken to hold over it, `holdOldScreen`) caught the menu halfway closed: its
+    /// glass froze in that picture as a blank blob over a canvas that stuttered (the nightly of
+    /// November 24, painting-company row 361). So the new cut waits for the menu to be gone.
+    static let lengthMenuCloses = Duration.milliseconds(450)
+
     /// Cuts the painting again at `length` (`Library.recut`) and opens the new cut in place.
     private func recut(to length: PaintingLength) {
         guard recutting == nil, changing == nil, regeneration == nil, let autosaver,
               isCustomCut || length.rawValue != artwork?.paintingLength else { return }
+        let picked = ContinuousClock.now
         autosaver.saveNow()
         recutFailed = false
         // A cut of the painter's own settings is no length's: a length picked is cut afresh.
@@ -894,6 +902,7 @@ struct ArtworkPaintingView: View {
                 if let made = library.artwork(with: artworkID)?.settings {
                     cuts[length] = Cut(template: document.template, settings: made)
                 }
+                try await Task.sleep(until: picked + Self.lengthMenuCloses, clock: .continuous)
                 _ = await RenderContext.ready()
                 await present(document, replacing: true)
                 Announcer.announce(LengthChip.summary(regionCount: document.template.regions.count))
