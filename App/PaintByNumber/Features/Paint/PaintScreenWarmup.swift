@@ -50,6 +50,9 @@ enum PaintScreenWarmup {
                   let window = scene.keyWindow
             else { return }
             isDone = true
+            // Made here rather than by the painting's screen (its sounds' and haptics' players ask
+            // the hardware what it has), which Start Painting builds as the picture glides.
+            _ = FeedbackEngine.shared
             #if DEBUG
             TourLog.trace("mark", "warm begin")
             #endif
