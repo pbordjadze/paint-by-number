@@ -49,11 +49,11 @@ TEAM = "Team"
 NIGHTLY_TRAIN = os.environ.get("NIGHTLY_VERSION") or "99.0"
 LINK_LIMIT = 100
 WHAT_TO_TEST = (
-    "Thank you for trying Paint by Moonlight 1.5 before anyone else.\n\n"
-    "This version is about speed: nothing should feel like loading. Please try:\n"
-    "- Picking Tonight's Picture or a photo: the short Making-of while it's made (a pencil sketch, lines burning in, numbers like stars). Tap to skip.\n"
-    "- Changing a new painting's Painting Length (the time chip under it): it should switch at once.\n"
-    "- Anything that still makes you wait: tell us where.\n\n"
+    "Thank you for trying Paint by Moonlight 1.6 before anyone else.\n\n"
+    "This version is fixes and polish. Please try:\n"
+    "- The short Making-of while a painting is made: it should feel softer (a slower pencil, a gentle fuse, a rest before the picture lifts). Tap to skip.\n"
+    "- Choosing a Painting Length (the time chip under a painting): the menu should open and close smoothly.\n"
+    "- Anything that stutters or makes you wait: tell us where.\n\n"
     "Unlimited Paintings is free in TestFlight; nothing is charged.\n\n"
     "Anything odd, confusing or lovely: Give Feedback, in a painting's More menu, lets you mark the spot."
 )
