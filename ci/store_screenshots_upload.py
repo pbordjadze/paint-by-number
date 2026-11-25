@@ -209,12 +209,13 @@ def refused_replacements(plans, replace):
     return sorted(kind for kind, state in plans.items() if state == "differs" and kind not in replace)
 
 
-def replace_set(client, localization_id, sets, kind, files):
+def replace_set(client, localization_id, sets, kind, files, parent="appStoreVersionLocalization"):
+    """`parent`: the relationship a new set hangs from, the version's localization or a custom
+    product page's (`appCustomProductPageLocalization`, ci/store_product_page.py)."""
     screenshot_set = sets.get(kind)
     if screenshot_set is None:
         body = {"data": {"type": "appScreenshotSets", "attributes": {"screenshotDisplayType": kind},
-                         "relationships": {"appStoreVersionLocalization": {
-                             "data": {"type": "appStoreVersionLocalizations", "id": localization_id}}}}}
+                         "relationships": {parent: {"data": {"type": parent + "s", "id": localization_id}}}}}
         screenshot_set = client.call("POST", "/appScreenshotSets", body)["data"]
     set_id = screenshot_set["id"]
     if kind in sets and unchanged(client, set_id, files):

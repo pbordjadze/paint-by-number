@@ -1,0 +1,77 @@
+name: Store product page
+
+# Makes an App Store custom product page and sends it for review, through the App Store Connect
+# API (ci/store_product_page.py, its docstring the manual), on request only. A page's slides show
+# the painter's own photos, which never go in this public repository: they are read, with its
+# page.json, from `product-pages/<page>/` on a branch of the private feedback repository (default
+# `store-slides`).
+# Actions › Store product page › Run workflow from `main` with the page's folder name: without
+# Apply it is a dry run (the page's state, the app's keywords, the slides), changing nothing; with
+# Apply it makes or updates the page; with Submit too it sends it for review.
+# Secrets: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8 and FEEDBACK_GITHUB_TOKEN, as the Store
+# screenshots workflow's. The logs are public: nothing prints a secret, an image or an upload URL.
+
+on:
+  workflow_dispatch:
+    inputs:
+      page:
+        description: 'The page folder under product-pages/ in the feedback repository (e.g. gift)'
+        required: true
+      apply:
+        description: 'Make or update the page (otherwise list only)'
+        type: boolean
+        default: false
+      submit:
+        description: 'With Apply, send it for review'
+        type: boolean
+        default: false
+      slides:
+        description: 'Branch of the private feedback repository holding product-pages/'
+        required: false
+        default: 'store-slides'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: store-product-page
+  cancel-in-progress: false
+
+jobs:
+  page:
+    name: Custom product page
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: From main only
+        if: inputs.apply && github.ref_name != 'main'
+        run: |
+          echo "::error::Apply runs from main only, and this run is on $GITHUB_REF_NAME: run it again from main, or without Apply for a dry run"
+          exit 1
+      - name: The page's name
+        env:
+          PAGE: ${{ inputs.page }}
+        run: |
+          [[ "$PAGE" =~ ^[a-z0-9-]+$ ]] || { echo "::error::page must be a folder name (a-z, 0-9, -)"; exit 1; }
+      - uses: actions/checkout@v5
+      - name: Slides from the feedback repository
+        uses: actions/checkout@v5
+        with:
+          repository: pbordjadze/paint-feedback
+          ref: ${{ inputs.slides }}
+          token: ${{ secrets.FEEDBACK_GITHUB_TOKEN }}
+          path: feedback
+          persist-credentials: false
+      - name: Python
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet cryptography
+      - name: Page
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          PAGE: ${{ inputs.page }}
+          APPLY: ${{ inputs.apply && '--apply' || '' }}
+          SUBMIT: ${{ inputs.apply && inputs.submit && '--submit' || '' }}
+        run: '"$RUNNER_TEMP/venv/bin/python" ci/store_product_page.py "feedback/product-pages/$PAGE" $APPLY $SUBMIT'

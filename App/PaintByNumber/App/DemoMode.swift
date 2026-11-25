@@ -59,7 +59,8 @@ enum DemoMode {
     static let startsWhenMade = UserDefaults.standard.bool(forKey: "demoStart")
 
     /// `-demoPhotos <dir>`: the scenarios that show a picture of their own (`paint-book-progress`,
-    /// `paint-book-zoomed`, the `create-refine` ones and `gallery`) show the photos in this folder
+    /// `paint-book-zoomed`, `paint-book-complete`, the `create-refine` ones, `gallery` and
+    /// `gallery-send`) show the photos in this folder
     /// instead, by name, through the real pipeline as coloring books, titled by their file names;
     /// `-demoPhoto <name>` keeps only the one of that name. For store screenshots of the painter's
     /// own pictures, which never go in the app or its repository.
