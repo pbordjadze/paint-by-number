@@ -37,7 +37,7 @@ nonisolated final class CaveSound: @unchecked Sendable {
     private let hapticsOn: Bool
 
     init(sounds: Bool, haptics: Bool) {
-        soundsOn = sounds
+        soundsOn = sounds && !SoundPlayer.mutesAll
         hapticsOn = haptics && CHHapticEngine.capabilitiesForHardware().supportsHaptics
     }
 

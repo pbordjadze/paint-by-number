@@ -3,7 +3,7 @@
 # it play, and keeps its -tourLog (painting-company row 292). A UI test's accessibility queries cost
 # the app frames of their own, so these are the numbers a change is judged by.
 #   tools/perf-tour/run.sh device|simulator <udid> <outdir> [-i <app>] [-b <bundle id>] [-n <runs>]
-#                          [-r <delay>,<seconds>] [-t <template>] [-k] [scenario...]
+#                          [-r <delay>,<seconds>] [-t <template>] [-k] [-m] [scenario...]
 # The app is a build with the demo scenarios in (Debug, or ReleaseTests), installed already or
 # given with -i, which installs it first: two builds are compared by running this for one, then the
 # other, turn about, in one sitting (a baseline from another hour is another device). On a device
@@ -21,10 +21,16 @@
 #   finish            the last fill, the flight to the whole painting and night falling (`paint-nightfall`)
 #   gallery-open      a painting opened from its gallery card (`gallery-open`): `open begin` to `open end`;
 #                     tools/perf-tour/waits.py gives the canvas's first frame after it
+#   watercolor-tour   Watercolor's picture painted on screen, a wash every 0.4 s (UNRELEASED builds); no
+#                     segment of its own: tools/stutter-gate/verdict.py judges the whole run
+#   era-passage-watercolor  the way to Watercolor from the gallery, played to its hold (UNRELEASED builds)
+# (the last three are not in the default list)
 # Launch arguments override the app's stored settings for that launch only; nothing stored is changed.
 # Every setting a scenario's work depends on is given: Music (Sun, and Moon for the finish, whose
 # night it is: left to Auto, the hour of the run would choose the sounds and the stars), Sounds and
-# Haptics on, Zen Mode, The Making-of.
+# Haptics on, Zen Mode, The Making-of. -m mutes it (Sounds off, and -muteAll for every sound the app has),
+# for a run nobody is listening to, such as the stutter check's at night: the iPad's volume can't be set
+# from the Mac.
 # A run whose log lacks its scenario's segment (the app never got there, or was gone) is named
 # under MISSING in summary.txt, and the script exits 1.
 # -r records each run with Instruments (xctrace, every process) from <delay> seconds after its launch,
@@ -38,8 +44,8 @@
 set -uo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 KIND="$1"; UDID="$2"; OUT="$3"; shift 3
-BUNDLE=com.pbordjadze.paintbynumber; RUNS=3; RECORD=""; TEMPLATE="Animation Hitches"; KEEP=0; APP=""
-while getopts "i:b:n:r:t:k" flag; do
+BUNDLE=com.pbordjadze.paintbynumber; RUNS=3; RECORD=""; TEMPLATE="Animation Hitches"; KEEP=0; APP=""; SOUNDS=YES
+while getopts "i:b:n:r:t:km" flag; do
   case "$flag" in
     i) APP="$OPTARG" ;;
     b) BUNDLE="$OPTARG" ;;
@@ -47,6 +53,7 @@ while getopts "i:b:n:r:t:k" flag; do
     r) RECORD="$OPTARG" ;;
     t) TEMPLATE="$OPTARG" ;;
     k) KEEP=1 ;;
+    m) SOUNDS=NO ;;
     *) sed -n '2,20p' "$0"; exit 2 ;;
   esac
 done
@@ -67,9 +74,12 @@ plan() {
     colors)          ARGS=(-demo paint-colors-10 -zenMode YES); PLAY=48; SEGMENT=colors ;;
     finish)          ARGS=(-demo paint-nightfall); PLAY=22; SEGMENT=finish; SKY=moon ;;
     gallery-open)    ARGS=(-demo gallery-open); PLAY=20; SEGMENT=open ;;
+    watercolor-tour) ARGS=(-demo watercolor-tour); PLAY=75; SEGMENT=launch ;;
+    era-passage-watercolor) ARGS=(-demo era-passage-watercolor); PLAY=15; SEGMENT=launch ;;
     *) echo "unknown scenario: $1"; exit 2 ;;
   esac
-  ARGS+=(-sky "$SKY" -soundsEnabled YES -hapticsEnabled YES -tourLog YES)
+  ARGS+=(-sky "$SKY" -soundsEnabled "$SOUNDS" -hapticsEnabled YES -tourLog YES)
+  if [[ $SOUNDS == NO ]]; then ARGS+=(-muteAll YES); fi
 }
 launch() {
   if [[ "$KIND" == device ]]; then
