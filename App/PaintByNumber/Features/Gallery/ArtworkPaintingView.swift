@@ -857,10 +857,19 @@ struct ArtworkPaintingView: View {
         }
     }
 
+    /// How long the length chip's menu takes to close after a pick. A cut made ahead is in the
+    /// painting a few milliseconds after the pick, and the new screen built then (with the old
+    /// one's picture taken to hold over it, `holdOldScreen`) caught the menu halfway closed: its
+    /// glass froze in that picture as a blank blob over a canvas that stuttered (the nightly of
+    /// November 24, painting-company row 361). So a cut made already waits for the menu to be
+    /// gone before it is saved and opened (saving it redraws the gallery and the chip too).
+    static let lengthMenuCloses = Duration.milliseconds(450)
+
     /// Cuts the painting again at `length` (`Library.recut`) and opens the new cut in place.
     private func recut(to length: PaintingLength) {
         guard recutting == nil, changing == nil, regeneration == nil, let autosaver,
               isCustomCut || length.rawValue != artwork?.paintingLength else { return }
+        let picked = ContinuousClock.now
         autosaver.saveNow()
         recutFailed = false
         // A cut of the painter's own settings is no length's: a length picked is cut afresh.
@@ -876,6 +885,7 @@ struct ArtworkPaintingView: View {
             do {
                 let document: PaintingDocument
                 if let kept {
+                    try await Task.sleep(until: picked + Self.lengthMenuCloses, clock: .continuous)
                     document = try await library.restoreCut(
                         artwork: artworkID, length: length, template: kept.template, settings: kept.settings)
                 } else {
@@ -885,6 +895,7 @@ struct ArtworkPaintingView: View {
                         } onCancel: {
                             precut.cancel()
                         }
+                        try await Task.sleep(until: picked + Self.lengthMenuCloses, clock: .continuous)
                         document = try await library.restoreCut(
                             artwork: artworkID, length: length, template: made.template, settings: made.settings)
                     } else {
