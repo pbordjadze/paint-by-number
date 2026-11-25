@@ -506,29 +506,6 @@ final class CanvasView: UIView, PaintingCanvas {
     /// Waiting for whatever took first responder (a menu, a sheet, an alert) to go.
     private var regaining: Task<Void, Never>?
 
-    /// Waiting for the painting to be on screen and still before taking first responder.
-    private var opening: Task<Void, Never>?
-
-    /// First responder so the window's undo manager serves three-finger undo and ⌘Z, once the
-    /// painting is on screen and has stopped moving: the first `becomeFirstResponder` of a launch
-    /// sets up the keyboard's machinery, which held the main thread a tenth of a second and more
-    /// as the painting opened (painting-company row 390). Under Start Painting's cover
-    /// (`watchesFirstFrame`) that waits for the cover's fade and the selection's after it.
-    private func focusOnceOpen() {
-        opening?.cancel()
-        opening = Task { @MainActor [weak self] in
-            for _ in 0..<60 {
-                guard let self, !Task.isCancelled else { return }
-                if hasShownFirstFrame { break }
-                try? await Task.sleep(for: .milliseconds(50))
-            }
-            let settle: Duration = self?.watchesFirstFrame == true ? .milliseconds(1300) : .milliseconds(400)
-            try? await Task.sleep(for: settle)
-            guard let self, !Task.isCancelled, wantsFocus, window != nil, !isFirstResponder else { return }
-            _ = becomeFirstResponder()
-        }
-    }
-
     func focus() {
         wantsFocus = true
         _ = becomeFirstResponder()
@@ -582,14 +559,13 @@ final class CanvasView: UIView, PaintingCanvas {
             setNeedsLayout()
             updateExtendedRange()
             requestRender()
-            if !isOutOfSight { focusOnceOpen() }
+            // First responder so the window's undo manager serves three-finger undo and ⌘Z.
+            if !isOutOfSight { Task { self.becomeFirstResponder() } }
             NotificationCenter.default.addObserver(
                 self, selector: #selector(keyboardWillShow(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
         } else {
             displayLink?.invalidate()
             displayLink = nil
-            opening?.cancel()
-            opening = nil
             NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
         }
     }

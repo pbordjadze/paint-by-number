@@ -18,9 +18,7 @@ import os
 /// painting screen starting it on the main thread stopped answering.
 nonisolated final class SoundPlayer: @unchecked Sendable {
     private let queue = DispatchQueue(label: "com.pbordjadze.paintbynumber.sounds", qos: .userInitiated)
-    /// Made on `queue` the first time a sound is set up: made with the player, on the main thread,
-    /// it held the painting screen's first build (painting-company row 390).
-    private lazy var engine = AVAudioEngine()
+    private let engine = AVAudioEngine()
     private let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
     private var voices: [AVAudioPlayerNode] = []
     private var nextVoice = 0
@@ -34,7 +32,7 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
     private var eraMade: [EraVoice: AVAudioPCMBuffer] = [:]
     /// The voice of the hidden modes' long sounds (a passage, an era's bell, a finish), so the
     /// short ones going round `voices` never cut one off.
-    private lazy var longVoice = AVAudioPlayerNode()
+    private let longVoice = AVAudioPlayerNode()
     #endif
     private var isBuilt = false
     private var isSetUp = false
@@ -363,7 +361,7 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
     /// interruptions round, painting-company row 263). The next sound starts it again.
     func rest() {
         queue.async { [self] in
-            if isBuilt, engine.isRunning { engine.pause() }
+            if engine.isRunning { engine.pause() }
         }
     }
 
@@ -376,7 +374,7 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
     private func restWhenQuiet() {
         lastSound = clock.now
         queue.asyncAfter(deadline: .now() + .milliseconds(8_500)) { [self] in
-            guard let lastSound, clock.now - lastSound >= Self.restAfter, isBuilt, engine.isRunning else { return }
+            guard let lastSound, clock.now - lastSound >= Self.restAfter, engine.isRunning else { return }
             engine.pause()
         }
     }
