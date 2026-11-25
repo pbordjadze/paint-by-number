@@ -143,7 +143,7 @@ fi
 
 SCENARIOS=($(python3 -c 'import json,sys; print(" ".join(k for k in json.load(open(sys.argv[1])) if not k.startswith("_")))' "$HERE/limits.json"))
 echo "playing ${SCENARIOS[*]}, $RUNS runs each"
-"$HERE/../perf-tour/run.sh" device "$UDID" "$OUT" -i "$APP" -n "$RUNS" -m "${SCENARIOS[@]}" > "$OUT/tour.log" 2>&1
+"$HERE/../perf-tour/run.sh" device "$UDID" "$OUT" -i "$APP" -n "$RUNS" "${SCENARIOS[@]}" > "$OUT/tour.log" 2>&1
 grep -q "^install failed" "$OUT/tour.log" && trouble "installing on the iPad failed: $(tail -3 "$OUT/install.log" | tr '\n' ' ' | cut -c1-80)"
 
 python3 "$HERE/verdict.py" "$OUT" "$HERE/limits.json" --title "Stutter check of $SHORT ($(date '+%b %-d, %-I:%M %p %Z'))"; rc=$?

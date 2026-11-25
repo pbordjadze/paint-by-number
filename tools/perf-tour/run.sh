@@ -3,7 +3,7 @@
 # it play, and keeps its -tourLog (painting-company row 292). A UI test's accessibility queries cost
 # the app frames of their own, so these are the numbers a change is judged by.
 #   tools/perf-tour/run.sh device|simulator <udid> <outdir> [-i <app>] [-b <bundle id>] [-n <runs>]
-#                          [-r <delay>,<seconds>] [-t <template>] [-k] [-m] [scenario...]
+#                          [-r <delay>,<seconds>] [-t <template>] [-k] [-a] [scenario...]
 # The app is a build with the demo scenarios in (Debug, or ReleaseTests), installed already or
 # given with -i, which installs it first: two builds are compared by running this for one, then the
 # other, turn about, in one sitting (a baseline from another hour is another device). On a device
@@ -28,9 +28,9 @@
 # Launch arguments override the app's stored settings for that launch only; nothing stored is changed.
 # Every setting a scenario's work depends on is given: Music (Sun, and Moon for the finish, whose
 # night it is: left to Auto, the hour of the run would choose the sounds and the stars), Sounds and
-# Haptics on, Zen Mode, The Making-of. -m mutes it (Sounds off, and -muteAll for every sound the app has),
-# for a run nobody is listening to, such as the stutter check's at night: the iPad's volume can't be set
-# from the Mac.
+# Haptics, Zen Mode, The Making-of. Every run is silent unless -a (aloud) asks for Sounds and Haptics on:
+# Sounds, Haptics off and -muteAll, for every sound the app has (the iPad's volume can't be set from the
+# Mac, and a run with Sounds off still made noise on it, Nov 24).
 # A run whose log lacks its scenario's segment (the app never got there, or was gone) is named
 # under MISSING in summary.txt, and the script exits 1.
 # -r records each run with Instruments (xctrace, every process) from <delay> seconds after its launch,
@@ -44,8 +44,8 @@
 set -uo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 KIND="$1"; UDID="$2"; OUT="$3"; shift 3
-BUNDLE=com.pbordjadze.paintbynumber; RUNS=3; RECORD=""; TEMPLATE="Animation Hitches"; KEEP=0; APP=""; SOUNDS=YES
-while getopts "i:b:n:r:t:km" flag; do
+BUNDLE=com.pbordjadze.paintbynumber; RUNS=3; RECORD=""; TEMPLATE="Animation Hitches"; KEEP=0; APP=""; SOUNDS=NO
+while getopts "i:b:n:r:t:ka" flag; do
   case "$flag" in
     i) APP="$OPTARG" ;;
     b) BUNDLE="$OPTARG" ;;
@@ -53,7 +53,7 @@ while getopts "i:b:n:r:t:km" flag; do
     r) RECORD="$OPTARG" ;;
     t) TEMPLATE="$OPTARG" ;;
     k) KEEP=1 ;;
-    m) SOUNDS=NO ;;
+    a) SOUNDS=YES ;;
     *) sed -n '2,20p' "$0"; exit 2 ;;
   esac
 done
@@ -78,7 +78,7 @@ plan() {
     era-passage-watercolor) ARGS=(-demo era-passage-watercolor); PLAY=15; SEGMENT=launch ;;
     *) echo "unknown scenario: $1"; exit 2 ;;
   esac
-  ARGS+=(-sky "$SKY" -soundsEnabled "$SOUNDS" -hapticsEnabled YES -tourLog YES)
+  ARGS+=(-sky "$SKY" -soundsEnabled "$SOUNDS" -hapticsEnabled "$SOUNDS" -tourLog YES)
   if [[ $SOUNDS == NO ]]; then ARGS+=(-muteAll YES); fi
 }
 launch() {
