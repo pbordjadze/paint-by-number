@@ -30,36 +30,38 @@ struct FormingShowTests {
         for making in [1.1, 2.5, 6.0] {
             let made = began + making
             #expect(FormingShow.fuseLit(madeAt: made, graphiteBegan: began) == made)
-            #expect(FormingShow.done(madeAt: made) == made + FormingPlan.drawIn)
+            #expect(FormingShow.done(madeAt: made) == made + FormingShow.fuse)
         }
         // No graphite (made before its drawing was): lit at once.
         #expect(FormingShow.fuseLit(madeAt: 3, graphiteBegan: nil) == 3)
     }
 
-    /// The show never keeps the painting longer than the plain forming did: its lines have
-    /// burned in `drawIn` after the template is made, however soon that was; a graphite that
-    /// showed for less than `graphiteAtLeast` takes that from the fuse, which burns faster.
-    @Test func itNeverOutlastsTheMakingByMoreThanTheDrawingIn() {
-        #expect(FormingShow.longestTail <= FormingPlan.drawIn + 1e-9)
+    /// The show keeps the painting at most `longestTail` past the making: its lines have burned
+    /// in `fuse` after the template is made, however soon that was, and rest after; a graphite
+    /// that showed for less than `graphiteAtLeast` takes that from the fuse, which burns faster.
+    @Test func itNeverOutlastsTheMakingByMoreThanItsTail() {
+        #expect(FormingShow.longestTail == FormingShow.fuse + FormingShow.rest)
+        // At most a glide and a half (0.75 s) past the plain drawing in: a calmer show, not a long wait.
+        #expect((FormingShow.longestTail - FormingPlan.drawIn) / StartHandoffPlan.glide <= 1.5 + 1e-9)
         let began = 10.0
         for making in [0, 0.05, 0.1, FormingShow.graphiteAtLeast, 1, 4] {
             let made = began + making
             let lit = FormingShow.fuseLit(madeAt: made, graphiteBegan: began)
             let done = FormingShow.done(madeAt: made)
-            #expect(done - made <= FormingPlan.drawIn + 1e-9)
+            #expect(done - made <= FormingShow.fuse + 1e-9)
             #expect(lit >= made && lit <= made + FormingShow.graphiteAtLeast + 1e-9)
             #expect(lit >= began + min(making, FormingShow.graphiteAtLeast) - 1e-9)
             // The fuse still burns long enough to follow.
-            #expect(done - lit >= FormingPlan.drawIn - FormingShow.graphiteAtLeast - 1e-9)
+            #expect(done - lit >= FormingShow.fuse - FormingShow.graphiteAtLeast - 1e-9)
         }
         // A graphite stamped after the making (a clock gone wrong) waits no longer either.
         #expect(FormingShow.fuseLit(madeAt: 10, graphiteBegan: 50) <= 10 + FormingShow.graphiteAtLeast + 1e-9)
         #expect(FormingShow.graphiteAtLeast <= 0.25 * FormingPlan.drawIn)
         // The numbers take no time of their own: the glide's settling.
         #expect(FormingShow.stars == StartHandoffPlan.settle)
-        // The lift waits for the show, and no longer than the drawing in.
+        // The lift waits for the show and its rest, and no longer.
         #expect(FormingPlan.liftWait(remaining: FormingShow.longestTail) == FormingShow.longestTail)
-        #expect(FormingPlan.liftWait(remaining: 30) == FormingPlan.drawIn)
+        #expect(FormingPlan.liftWait(remaining: 30) == FormingShow.longestTail)
     }
 
     /// Each beat runs from 0 to 1 and stays there, rising all the way.
@@ -128,7 +130,7 @@ struct FormingShowTests {
 
         let made = began.addingTimeInterval(0.05)
         let lit = began.addingTimeInterval(FormingShow.graphiteAtLeast)
-        let done = made.addingTimeInterval(FormingPlan.drawIn)
+        let done = made.addingTimeInterval(FormingShow.fuse)
         moments.fuseLit = lit
         moments.fuseDone = done
         #expect(moments.fuseProgress(at: lit.addingTimeInterval(-0.01)) == 0)
@@ -281,7 +283,8 @@ struct FormingShowTests {
     @Test func theNumbersComeOutLikeStars() {
         let template = Fixtures.mosaic
         let all = FormingShow.Stars(template)
-        #expect(all.labels.count == template.labels.count)
+        #expect(all.labels.count <= FormingShow.Stars.limit)
+        #expect(all.labels.count >= min(template.labels.count, FormingShow.Stars.limit / 2))
         let few = FormingShow.Stars(template, limit: 10)
         #expect(few.labels.count <= 10 && few.labels.count >= 5)
         for label in all.labels {

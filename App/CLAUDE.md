@@ -852,9 +852,10 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   light or dark paper). The race nears its end without reaching it while the template is
   made (`FormingShow.graphiteProgress`), never still once it has begun, and finishes under the fuse; then its lines burn in behind a gold front (`FormingShow.glow`, stroked once off
   the main actor, its glow in it; `FormingShow.Front`, a wavering blot drawn as one image scaled about
-  its centre, `FrontMasks`, which the numbers share) with the page's paper, done `drawIn` after the making as the plain forming's
-  lines are (a graphite shown less than `graphiteAtLeast`, 0.15 s, takes that from the fuse); and during
-  the glide the page's numbers come out behind the same front with a twinkle each (`FormingPageStars`,
+  its centre, `FrontMasks`, which the numbers share) with the page's paper, done `FormingShow.fuse` (1.1 s, eased) after the making, the drawing then
+  resting `rest` (0.3 s) before it lifts (a graphite shown less than `graphiteAtLeast`, 0.15 s, takes that from the fuse; the
+  pace, glow and stars softened after Paul found 1.5's "a little abrasive"); and during
+  the glide the page's numbers come out behind the same front, up to `Stars.limit` of them with a soft twinkle (`FormingPageStars`,
   in the hand-off's own `settle`). A single tap on the picture skips (`CompareView.tapped`, `FormingShow.skip`;
   a double tap still zooms): made, to the painting; not yet, to the plain forming. A failed making hides
   it; Reduce Motion and The Making-of on bring none of it (`hasLines`). `FormingTests`, `FormingShowTests`; the scenarios

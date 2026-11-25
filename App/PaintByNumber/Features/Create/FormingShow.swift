@@ -18,13 +18,13 @@ import SwiftUI
 ///    still, and finishes under the fuse: a faster device
 ///    sees less of it. No status shows over it until the making has taken `patience`.
 /// 2. **Fuse**: once the template is made, its own lines burn in over the same drawing like a fuse,
-///    a band of gold at the burning front, the paper drying to the page's behind it. It is done
-///    `FormingPlan.drawIn` after the template is made, as the plain forming's drawing in is: a
+///    a soft band of gold at the burning front, the paper drying to the page's behind it. It is
+///    done `fuse` after the template is made, and the drawing rests `rest` before it lifts: a
 ///    template made almost at once lets the graphite show `graphiteAtLeast` first, and its fuse
 ///    burns that much faster.
 /// 3. **Stars**: as the picture glides to the painting's place (the hand-off's own `settle`, no
-///    time of its own), the page's numbers come out behind the same front, each with a twinkle
-///    (`Stars`), and the picture is the page the canvas draws.
+///    time of its own), the page's numbers come out behind the same front, a few of them with a
+///    soft twinkle (`Stars`), and the picture is the page the canvas draws.
 ///
 /// A tap skips at any moment (`skip`): once the template is made, to the painting; before, to the
 /// plain picture forming, its lines drawn in as ever once made. Reduce Motion and The Making-of
@@ -46,18 +46,26 @@ nonisolated enum FormingShow {
 
     // MARK: Timing
 
-    /// How soon the graphite's race is half run (`graphiteProgress`): two thirds by the making of
-    /// a template on an iPad Air (1.1 s), slowed with the hand-off (`-handoffSlowdown`).
-    static var graphitePace: Double { 1.2 * StartHandoffPlan.glide }
+    /// How soon the graphite's race is half run (`graphiteProgress`): half by the making of a
+    /// template on an iPad Air (1.1 s), slowed with the hand-off (`-handoffSlowdown`). A pencil
+    /// drawing, not a race: twice 1.5's pace darted across the photo (Paul, November 24: "a
+    /// little abrasive").
+    static var graphitePace: Double { 2.2 * StartHandoffPlan.glide }
     /// How near its end the race comes while the template is still being made.
     static let graphiteNears = 0.97
     /// The least the graphite shows before the fuse is lit: a template made at once would show
     /// it for a flicker, which reads as a glitch rather than a drawing. Taken from the fuse,
     /// never added to the wait.
     static var graphiteAtLeast: Double { 0.3 * StartHandoffPlan.glide }
-    /// The most the show keeps the hand-off waiting once the template is made: the plain
-    /// forming's drawing in, and no more.
-    static var longestTail: Double { FormingPlan.drawIn }
+    /// How long the lines take to burn in once the template is made: about half as long again
+    /// as the plain forming's drawing in, so the gold travels rather than flashes.
+    static var fuse: Double { 2.2 * StartHandoffPlan.glide }
+    /// The finished drawing held still a moment before it lifts away: one move, then still,
+    /// then the next, rather than one move running into the next.
+    static var rest: Double { 0.6 * StartHandoffPlan.glide }
+    /// The most the show keeps the hand-off waiting once the template is made: the fuse and the
+    /// rest after it (0.7 s more than 1.5's show, which ended the moment the lines were in).
+    static var longestTail: Double { fuse + rest }
     /// How long the graphite stands for the forming's status (seconds): a making slower than
     /// this (an older device, a large photo) brings the status back, so the wait has a sign.
     static let patience = 4.0
@@ -70,26 +78,26 @@ nonisolated enum FormingShow {
         return max(made, min(began + graphiteAtLeast, made + graphiteAtLeast))
     }
 
-    /// When the lines have burned in and the hand-off may lift: `longestTail` after the making,
-    /// whenever the fuse was lit.
+    /// When the lines have burned in: `fuse` after the making, whenever the fuse was lit. The
+    /// hand-off lifts `rest` later.
     static func done(madeAt made: Double) -> Double {
-        made + longestTail
+        made + fuse
     }
 
     /// How far the graphite has raced, `elapsed` seconds after it began, while the template is
     /// being made: racing out, then ever slower toward `graphiteNears`, never still and never
-    /// done (a making of 4 s leaves it at 0.84, of 10 s at 0.92).
+    /// done (a making of 4 s leaves it at 0.76, of 10 s at 0.87).
     static func graphiteProgress(since elapsed: Double) -> Double {
         let t = max(elapsed, 0)
         return graphiteNears * t / (t + graphitePace)
     }
 
     /// How far a fuse burning for `length` seconds has burned `elapsed` seconds after it was
-    /// lit: catching, then steady.
+    /// lit: catching softly, steady, and settling softly (smootherstep: no jolt at either end).
     static func fuseProgress(since elapsed: Double, length: Double) -> Double {
         guard length > 0 else { return elapsed >= 0 ? 1 : 0 }
         let x = min(max(elapsed / length, 0), 1)
-        return x * x * (3 - 2 * x)
+        return x * x * x * (x * (6 * x - 15) + 10)
     }
 
     /// The numbers come out during the glide: the hand-off's own settling into the page.
@@ -214,7 +222,7 @@ nonisolated enum FormingShow {
     /// heavier by `weight`: the burning front's layer, stroked once off the main actor at one
     /// pixel a point (a glow needs no more), so a frame only moves its mask.
     @concurrent
-    static func glow(_ drawing: LineArtDrawing, size: CGSize, lineWidth: CGFloat, weight: CGFloat = 1.8) async -> CGImage? {
+    static func glow(_ drawing: LineArtDrawing, size: CGSize, lineWidth: CGFloat, weight: CGFloat = 1.3) async -> CGImage? {
         let scale = min(1, 1600 / max(size.width, size.height, 1))
         let w = Int((size.width * scale).rounded()), h = Int((size.height * scale).rounded())
         let units = drawing.size
@@ -230,7 +238,7 @@ nonisolated enum FormingShow {
         context.scaleBy(x: scale, y: -scale)
         context.translateBy(x: (size.width - units.width * s) / 2, y: (size.height - units.height * s) / 2)
         context.scaleBy(x: s, y: s)
-        context.setShadow(offset: .zero, blur: 6 * scale, color: gold)
+        context.setShadow(offset: .zero, blur: 10 * scale, color: gold)
         context.setStrokeColor(gold)
         context.setLineWidth(lineWidth * weight / s)
         context.setLineCap(.round)
@@ -249,9 +257,13 @@ nonisolated enum FormingShow {
         /// x, y and radius, over the template's width.
         let labels: [SIMD3<Float>]
 
-        static let limit = 240
-        /// How long each twinkles, as a share of the beat.
+        /// Few enough to read as stars coming out, not a burst of glitter.
+        static let limit = 60
+        /// How long each twinkles, as a share of the beat (the page's front runs `1 + life`
+        /// over the beat, so a longer life would sweep the page faster).
         static let life = 0.3
+        /// A twinkle's brightest: a glint, never a flash.
+        static let brightest = 0.75
 
         init(_ template: Template, limit: Int = Stars.limit) {
             let width = Float(max(template.width, 1))
@@ -304,8 +316,8 @@ nonisolated enum FormingShow {
             for star in arrivals {
                 let glow = twinkle(arrival: star.arrival, progress: progress)
                 guard glow > 0 else { continue }
-                context.opacity = glow
-                context.fill(sparkle(at: star.point, radius: star.radius * CGFloat(0.6 + 0.4 * glow)), with: .color(color))
+                context.opacity = glow * brightest
+                context.fill(sparkle(at: star.point, radius: star.radius * CGFloat(0.5 + 0.3 * glow)), with: .color(color))
             }
             context.opacity = 1
         }
@@ -844,10 +856,11 @@ struct FormingShowLayers: View {
                 if let gold, gold.key.lines == lines.id, fuse > 0, fuse < 1 {
                     // The burning front: the lines in gold along a narrow band behind it.
                     placed(gold.image)
+                        .opacity(0.8)
                         .mask(alignment: .topLeading) {
                             ZStack {
                                 FormingFrontMask(picture: picture, progress: fuse)
-                                FormingFrontMask(picture: picture, progress: fuse - 0.07)
+                                FormingFrontMask(picture: picture, progress: fuse - 0.1)
                                     .blendMode(.destinationOut)
                             }
                             .compositingGroup()
