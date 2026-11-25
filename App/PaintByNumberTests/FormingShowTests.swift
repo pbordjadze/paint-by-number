@@ -41,7 +41,7 @@ struct FormingShowTests {
     /// that showed for less than `graphiteAtLeast` takes that from the fuse, which burns faster.
     @Test func itNeverOutlastsTheMakingByMoreThanItsTail() {
         #expect(FormingShow.longestTail == FormingShow.fuse + FormingShow.rest)
-        // At most three glides (1.5 s) past the plain drawing in's: a calmer show, not a longer wait.
+        // At most a glide and a half (0.75 s) past the plain drawing in: a calmer show, not a long wait.
         #expect((FormingShow.longestTail - FormingPlan.drawIn) / StartHandoffPlan.glide <= 1.5 + 1e-9)
         let began = 10.0
         for making in [0, 0.05, 0.1, FormingShow.graphiteAtLeast, 1, 4] {
