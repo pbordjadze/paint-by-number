@@ -1,7 +1,6 @@
 import CoreGraphics
 import Foundation
 import Observation
-import SwiftUI
 
 /// The hand-off from Start Painting to the painting, so that the journey from the create flow's
 /// settings to the canvas is one picture moving once (`StartHandoffPlan`).
@@ -326,22 +325,5 @@ nonisolated struct PictureTravel: Equatable, Sendable {
     func applied(to rect: CGRect) -> CGRect {
         CGRect(
             x: rect.minX * scale + dx, y: rect.minY * scale + dy, width: rect.width * scale, height: rect.height * scale)
-    }
-}
-
-/// Calls `changed` with the hand-off's phase as it changes (and once as it appears, `initial`),
-/// reading it in a body of its own: a view that reads `StartHandoff` in its own body is drawn again
-/// at every step of the hand-off, and the shell, the create flow, the painting host and the
-/// painting screen are each a large body that steps the hand-off into a hitch of its own
-/// (painting-company row 390). Put it in a `.background`.
-struct StartHandoffWatch: View {
-    let handoff: StartHandoff?
-    var initial = false
-    let changed: (StartHandoffLogic.Phase?) -> Void
-
-    var body: some View {
-        Color.clear
-            .accessibilityHidden(true)
-            .onChange(of: handoff?.phase, initial: initial) { _, phase in changed(phase) }
     }
 }

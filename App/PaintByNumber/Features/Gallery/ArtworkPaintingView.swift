@@ -41,9 +41,6 @@ struct ArtworkPaintingView: View {
     /// The painting was opened under the cover: built then, it stays built once the hand-off is
     /// over (no longer awaiting) though the push may not have landed yet.
     @State private var builtUnderCover = false
-    /// `isUnderCover` as the body reads it: kept by a watcher (`StartHandoffWatch`), so that the
-    /// hand-off's other steps don't draw the painting screen again (painting-company row 390).
-    @State private var awaitsHandoff = false
     /// The safe area is as the painting has it, the status bar gone (or never in the way):
     /// `waitingPage` sees it, or `land` stops waiting for it (`statusBarWait`).
     @State private var statusBarGone = false
@@ -322,7 +319,7 @@ struct ArtworkPaintingView: View {
     /// What the canvas tells once its first frame is on screen, while the cover waits for it, and
     /// when a layout moves the template after that.
     private var canvasReport: ((CGRect) -> Void)? {
-        guard awaitsHandoff else { return nil }
+        guard isUnderCover else { return nil }
         return { rect in canvasDrew(rect) }
     }
 
@@ -458,12 +455,8 @@ struct ArtworkPaintingView: View {
             Text("This name shows when you share or print the painting.")
         }
         .task { await open() }
-        .background {
-            StartHandoffWatch(handoff: handoff, initial: true) { _ in
-                let under = isUnderCover
-                if under != awaitsHandoff { awaitsHandoff = under }
-                if under { builtUnderCover = true }
-            }
+        .onChange(of: isUnderCover, initial: true) { _, under in
+            if under { builtUnderCover = true }
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase != .active else {

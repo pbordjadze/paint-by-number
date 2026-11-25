@@ -95,7 +95,7 @@ struct AppShellView: View {
                 // While Start Painting hands over, under the create flow, the shelf moves nothing
                 // (`shelfIsOutOfSight`). For the shelf alone: set before `navigationDestination`, it
                 // doesn't reach the painting screen, whose own thumbnail fades as ever.
-                .modifier(ShelfSight(handoff: handoff))
+                .environment(\.shelfIsOutOfSight, handoff.shelfIsOutOfSight)
                 .background { NavigationBarShown() }
                 .navigationTitle("Paint by Moonlight")
                 // At accessibility sizes the count goes with the large title (`toolbar`).
@@ -155,10 +155,8 @@ struct AppShellView: View {
             // the painting opened beneath it.
             .presentationBackground(.clear)
         }
-        .background {
-            StartHandoffWatch(handoff: handoff) { phase in
-                if case .finished? = phase { endCreateFlow() }
-            }
+        .onChange(of: handoff.isFinished) { _, finished in
+            if finished { endCreateFlow() }
         }
         .sheet(isPresented: $isShowingSettings, onDismiss: presentIncomingImage) {
             SettingsView()
@@ -606,16 +604,5 @@ private struct NavigationBarShown: UIViewControllerRepresentable {
             Log.library.notice("The gallery's bar came back see-through (alpha \(bar.alpha, privacy: .public)): shown")
             bar.alpha = 1
         }
-    }
-}
-
-/// The shelf's `shelfIsOutOfSight`, read from the hand-off here rather than in the shell's body,
-/// which would otherwise be drawn again, with everything it holds, as Start Painting begins and
-/// as its cover goes (painting-company row 390).
-private struct ShelfSight: ViewModifier {
-    let handoff: StartHandoff
-
-    func body(content: Content) -> some View {
-        content.environment(\.shelfIsOutOfSight, handoff.shelfIsOutOfSight)
     }
 }

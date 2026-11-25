@@ -248,12 +248,6 @@ struct FinishWarmup: View {
     let share: CompletionShare
     @State private var builds = !FinishWarmup.isDone
     @State private var bounces = 0
-    @Environment(\.startHandoff) private var startHandoff
-
-    /// How long after Start Painting's cover has gone the bar is let go: the color to paint eases
-    /// in meanwhile (`revealSelection`), and letting go of the bar costs the main thread a frame or
-    /// three, which mid-dissolve showed as the cover catching (painting-company row 390).
-    nonisolated static let afterCover = Duration.milliseconds(1200)
 
     /// Once a launch: what it makes stays made.
     private static var isDone = false
@@ -276,14 +270,6 @@ struct FinishWarmup: View {
                     bounces += 1
                     // The bounce has drawn.
                     try? await Task.sleep(for: .milliseconds(600))
-                    // Not while Start Painting's cover dissolves into the painting: once it is gone
-                    // and still.
-                    if startHandoff?.isRunning == true {
-                        while startHandoff?.isRunning == true, !Task.isCancelled {
-                            try? await Task.sleep(for: .milliseconds(100))
-                        }
-                        try? await Task.sleep(for: Self.afterCover)
-                    }
                     // A painting closed before the bounce drew leaves it to the next.
                     if Task.isCancelled { Self.isDone = false }
                     #if DEBUG
