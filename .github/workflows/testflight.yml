@@ -27,8 +27,9 @@ name: TestFlight
 # "Upload" ticked does the same on request, and a push to a
 # `claude/testflight-dryrun*nightly*` branch is its dry run. Installing it replaces the App Store
 # or TestFlight copy on that device, with the same paintings.
-# Every upload, the nightly's too, first needs the iPad stutter check's pass on its commit (the
-# `bundled` job's last step; tools/stutter-gate/gate.sh runs on the Mac the iPad is wired to).
+# With the repository variable IPAD_STUTTER_GATE `on`, every upload, the nightly's too, first needs the
+# iPad stutter check's pass on its commit (the `bundled` job's last step; tools/stutter-gate/gate.sh runs
+# on the Mac the iPad is wired to).
 
 on:
   workflow_dispatch:
@@ -121,10 +122,11 @@ jobs:
         # The nightly and every upload wait for the stutter check (tools/stutter-gate/gate.sh, on the Mac
         # the iPad Air 5 is wired to, at 2:15 and 5:15 AM ET): this commit's `ipad-stutter` status must be
         # success. A stutter, or no verdict yet, holds the upload and fails this run, so the second
-        # nightly try checks again. Run workflow's "Skip the iPad stutter check", or the repository
-        # variable IPAD_STUTTER_GATE set to `off`, lets an upload go without it (painting-company row 392).
+        # nightly try checks again. Run workflow's "Skip the iPad stutter check" lets an upload go without
+        # it. Off until the repository variable IPAD_STUTTER_GATE is `on`: set it once the Mac's LaunchAgent
+        # (tools/stutter-gate/install.sh) runs and limits.json is set from the iPad (painting-company row 392).
         if: >-
-          steps.diff.outputs.run == 'true' && vars.IPAD_STUTTER_GATE != 'off' &&
+          steps.diff.outputs.run == 'true' && vars.IPAD_STUTTER_GATE == 'on' &&
           (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.upload && !inputs.skip_stutter_check))
         env:
           GH_TOKEN: ${{ github.token }}
