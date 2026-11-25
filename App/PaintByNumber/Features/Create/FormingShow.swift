@@ -57,8 +57,8 @@ nonisolated enum FormingShow {
     /// it for a flicker, which reads as a glitch rather than a drawing. Taken from the fuse,
     /// never added to the wait.
     static var graphiteAtLeast: Double { 0.3 * StartHandoffPlan.glide }
-    /// How long the lines take to burn in once the template is made: half as long again as the
-    /// plain forming's drawing in, so the gold travels rather than flashes.
+    /// How long the lines take to burn in once the template is made: about half as long again
+    /// as the plain forming's drawing in, so the gold travels rather than flashes.
     static var fuse: Double { 2.2 * StartHandoffPlan.glide }
     /// The finished drawing held still a moment before it lifts away: one move, then still,
     /// then the next, rather than one move running into the next.
@@ -259,8 +259,9 @@ nonisolated enum FormingShow {
 
         /// Few enough to read as stars coming out, not a burst of glitter.
         static let limit = 60
-        /// How long each twinkles, as a share of the beat.
-        static let life = 0.45
+        /// How long each twinkles, as a share of the beat (the page's front runs `1 + life`
+        /// over the beat, so a longer life would sweep the page faster).
+        static let life = 0.3
         /// A twinkle's brightest: a glint, never a flash.
         static let brightest = 0.75
 
