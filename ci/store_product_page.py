@@ -41,6 +41,8 @@ from store_screenshots_upload import SIZES, problems, replace_set, slides, wait_
 from testflight_testers import APIError, Client, find_app, private_key, summarize
 
 EDITABLE = ("PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW", "REJECTED")
+# A version in these states holds the page until App Review is done with it.
+REVIEWING = ("WAITING_FOR_REVIEW", "IN_REVIEW", "ACCEPTED")
 PROMO_LIMIT = 170
 
 
@@ -50,6 +52,7 @@ def read_page(folder):
     if not path.is_file():
         return None, {}, [f"{path} is missing"]
     page = json.loads(path.read_text())
+    page.setdefault("locale", "en-US")
     found = slides(folder)
     wrong = problems(found)
     wrong += [f"{kind} is not a screenshot display type" for kind in found if kind not in SIZES]
@@ -95,6 +98,8 @@ def editable(client, page_id):
     for version in found:
         if version["attributes"].get("state") in EDITABLE:
             return version
+    if busy := [v["attributes"]["state"] for v in found if v["attributes"].get("state") in REVIEWING]:
+        raise APIError(f"the page's version is {busy[0]}: it can't change until App Review is done")
     made = client.call("POST", "/appCustomProductPageVersions", {"data": {
         "type": "appCustomProductPageVersions",
         "relationships": {"appCustomProductPage": {"data": {"type": "appCustomProductPages", "id": page_id}}}}})["data"]
@@ -140,12 +145,21 @@ def submit(client, app_id, version_id):
     submission = client.call("POST", "/reviewSubmissions", {"data": {
         "type": "reviewSubmissions", "attributes": {"platform": "IOS"},
         "relationships": {"app": {"data": {"type": "apps", "id": app_id}}}}})["data"]
-    client.call("POST", "/reviewSubmissionItems", {"data": {
-        "type": "reviewSubmissionItems",
-        "relationships": {"reviewSubmission": {"data": {"type": "reviewSubmissions", "id": submission["id"]}},
-                          "appCustomProductPageVersion": {"data": {"type": "appCustomProductPageVersions", "id": version_id}}}}})
-    client.call("PATCH", f"/reviewSubmissions/{submission['id']}", {"data": {
-        "type": "reviewSubmissions", "id": submission["id"], "attributes": {"submitted": True}}})
+    try:
+        client.call("POST", "/reviewSubmissionItems", {"data": {
+            "type": "reviewSubmissionItems",
+            "relationships": {"reviewSubmission": {"data": {"type": "reviewSubmissions", "id": submission["id"]}},
+                              "appCustomProductPageVersion": {"data": {"type": "appCustomProductPageVersions", "id": version_id}}}}})
+        client.call("PATCH", f"/reviewSubmissions/{submission['id']}", {"data": {
+            "type": "reviewSubmissions", "id": submission["id"], "attributes": {"submitted": True}}})
+    except APIError:
+        # A draft left open would stop every later run at the check above.
+        try:
+            client.call("PATCH", f"/reviewSubmissions/{submission['id']}", {"data": {
+                "type": "reviewSubmissions", "id": submission["id"], "attributes": {"canceled": True}}})
+        except APIError as error:
+            print(f"Cancelling the draft submission failed too: {error}", flush=True)
+        raise
     print("Submitted for review.", flush=True)
 
 
@@ -166,8 +180,9 @@ def main():
         "filter[platform]": "IOS", "filter[locale]": locale, "limit": "200"})["data"])
     wanted = (page or {}).get("keywords") or []
     wrong += [f"keyword {k!r} is not one of the app's {locale} keywords" for k in wanted if k not in available]
-    existing = find_page(client, app["id"], page["name"]) if page else None
-    lines = [f"Page {page['name'] if page else '?'!r}: "
+    name = (page or {}).get("name")
+    existing = find_page(client, app["id"], name) if name else None
+    lines = [f"Page {name or '?'!r}: "
              + (f"exists ({', '.join(v['attributes'].get('state', '?') for v in versions(client, existing['id']))}), "
                 f"visible {existing['attributes'].get('visible')}" if existing else "not made yet") + ".",
              f"App keywords ({locale}): {', '.join(available) or 'none'}.",
@@ -184,8 +199,6 @@ def main():
         sys.exit(f"{len(wrong)} problems, nothing changed")
     made = existing or make_page(client, app["id"], page)
     version = editable(client, made["id"])
-    if version["attributes"].get("state") not in (None, *EDITABLE):
-        sys.exit(f"The page's version is {version['attributes']['state']}: it can't change until App Review is done")
     if (page.get("deepLink") or None) != (version["attributes"].get("deepLink") or None):
         client.call("PATCH", f"/appCustomProductPageVersions/{version['id']}", {"data": {
             "type": "appCustomProductPageVersions", "id": version["id"], "attributes": {"deepLink": page.get("deepLink")}}})
