@@ -209,6 +209,8 @@ before planning app work).
   and accessibility labels from `ci/store-listing.json` (`ci/store_listing.py`).
   `.github/workflows/store-release.yml` makes the version, sets its build and, on Paul's word,
   submits it for App Review (`ci/store_release.py`).
+  `.github/workflows/store-product-page.yml` makes a custom product page and, on Paul's word,
+  sends it for review (`ci/store_product_page.py`), from the same branch's `product-pages/<page>/`.
 - `feedback-relay/`: the Cloudflare Worker behind Give Feedback's Send (`worker.js`'s header is its
   contract and manual; `worker.test.js` runs with `node --test feedback-relay/worker.test.js`, in
   CI's `core` job too). It files each report in the developers' private GitHub repository. Its
