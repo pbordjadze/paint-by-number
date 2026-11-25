@@ -1,0 +1,11 @@
+{
+ "_about": "The stutter check's scenarios (tools/perf-tour/run.sh) and, for each, the segments it judges and their limits (verdict.py). PLACEHOLDERS, loose: to be set from main's runs on the iPad Air 5 before IPAD_STUTTER_GATE is turned on (see gate.sh's header).",
+ "launch": {"launch": {"seconds": 2.0}, "run": {"hitch_ms_per_s": 50, "worst_gap_ms": 500}},
+ "start": {"start": {"seconds": 5.0, "hitch_ms_per_s": 500, "worst_gap_ms": 1000}},
+ "zen-30": {"zen-30": {"hitch_ms_per_s": 100, "worst_gap_ms": 500, "missed_60hz_frames": 1000}},
+ "colors": {"colors": {"hitch_ms_per_s": 100, "worst_gap_ms": 500, "missed_60hz_frames": 1000}},
+ "finish": {"finish": {"hitch_ms_per_s": 100, "worst_gap_ms": 500, "missed_60hz_frames": 1000}},
+ "gallery-open": {"open": {"seconds": 3.0, "worst_gap_ms": 1000}, "run": {"hitch_ms_per_s": 100, "worst_gap_ms": 1000}},
+ "watercolor-tour": {"run": {"hitch_ms_per_s": 100, "worst_gap_ms": 500}},
+ "era-passage-watercolor": {"run": {"hitch_ms_per_s": 100, "worst_gap_ms": 500}}
+}

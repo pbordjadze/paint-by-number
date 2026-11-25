@@ -47,10 +47,19 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
     private static let roundVoices = 10
     private let playsAloud: Bool
 
+    #if DEBUG
+    /// `-muteAll YES` (Debug and ReleaseTests builds; painting-company row 391): no sound of the app's plays, whatever the
+    /// settings say, the cave's (`CaveSound`) too. For runs nobody listens to, like the stutter
+    /// check's on the iPad at night (tools/stutter-gate), whose volume the Mac can't set.
+    static let mutesAll = UserDefaults.standard.bool(forKey: "muteAll")
+    #else
+    static let mutesAll = false
+    #endif
+
     /// `playsAloud` false keeps the audio engine off: a test sees what would play (`played()`) and
     /// hears nothing.
     init(playsAloud: Bool = true) {
-        self.playsAloud = playsAloud
+        self.playsAloud = playsAloud && !Self.mutesAll
     }
 
     /// Sun: D major pentatonic over two octaves from D4, a tone above the C the app first played.

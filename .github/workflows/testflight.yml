@@ -27,6 +27,9 @@ name: TestFlight
 # "Upload" ticked does the same on request, and a push to a
 # `claude/testflight-dryrun*nightly*` branch is its dry run. Installing it replaces the App Store
 # or TestFlight copy on that device, with the same paintings.
+# With the repository variable IPAD_STUTTER_GATE `on`, every upload, the nightly's too, first needs the
+# iPad stutter check's pass on its commit (the `bundled` job's last step; tools/stutter-gate/gate.sh runs
+# on the Mac the iPad is wired to).
 
 on:
   workflow_dispatch:
@@ -46,6 +49,10 @@ on:
         description: 'The nightly: the SideStore build as version 99.0, for Team alone'
         type: boolean
         default: false
+      skip_stutter_check:
+        description: 'Upload without the iPad stutter check passing on this commit (tools/stutter-gate)'
+        type: boolean
+        default: false
   schedule:
     # GitHub starts scheduled runs late on busy hours, hours late or not at all (Nov 22: 8 h;
     # Nov 23: none by 13:00 UTC): an odd minute, and a second try that `bundled` skips when the
@@ -58,6 +65,7 @@ on:
 permissions:
   contents: read
   actions: read
+  statuses: read
 
 env:
   NIGHTLY: ${{ (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.nightly) || (github.event_name == 'push' && contains(github.ref_name, 'nightly'))) && 'true' || 'false' }}
@@ -110,6 +118,33 @@ jobs:
             .github/workflows/testflight.yml ':!*.xcstrings')
           echo "$changed"
           echo "run=$([ -n "$changed" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+      - name: Played on the iPad without stutter
+        # The nightly and every upload wait for the stutter check (tools/stutter-gate/gate.sh, on the Mac
+        # the iPad Air 5 is wired to, at 2:15 and 5:15 AM ET): this commit's `ipad-stutter` status must be
+        # success. A stutter, or no verdict yet, holds the upload and fails this run, so the second
+        # nightly try checks again. Run workflow's "Skip the iPad stutter check" lets an upload go without
+        # it. Off until the repository variable IPAD_STUTTER_GATE is `on`: set it once the Mac's LaunchAgent
+        # (tools/stutter-gate/install.sh) runs and limits.json is set from the iPad (painting-company row 392).
+        if: >-
+          steps.diff.outputs.run == 'true' && vars.IPAD_STUTTER_GATE == 'on' &&
+          (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.upload && !inputs.skip_stutter_check))
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The newest `ipad-stutter` status (the API lists them newest first).
+          gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/statuses" \
+            --jq '[.[] | select(.context == "ipad-stutter")][0] // empty | .state, .description, (.target_url // "")' > verdict.txt \
+            || echo "::warning::couldn't read this commit's statuses"
+          state=$(sed -n 1p verdict.txt); description=$(sed -n 2p verdict.txt); report=$(sed -n 3p verdict.txt)
+          echo "stutter check of $GITHUB_SHA: ${state:-none}: $description ${report:+($report)}"
+          case "$state" in
+            success) exit 0 ;;
+            failure) echo "::error::Held: $description. Report: ${report:-on the Mac, ~/pbm-out/stutter-gate/runs}" ;;
+            error) echo "::error::Held: $description. Fix that, then on the Mac run tools/stutter-gate/gate.sh $GITHUB_SHA. Report: ${report:-on the Mac}" ;;
+            pending) echo "::error::Held: the stutter check of this commit is still running on the Mac ($description)" ;;
+            *) echo "::error::Held: no stutter check of $GITHUB_SHA yet. On the Mac: tools/stutter-gate/gate.sh $GITHUB_SHA (or Run workflow with Skip the iPad stutter check)" ;;
+          esac
+          exit 1
 
   upload:
     name: Archive, sign and upload to TestFlight
