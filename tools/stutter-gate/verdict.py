@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The stutter check's verdict on one tools/perf-tour/run.sh outdir (painting-company row 391).
+"""The stutter check's verdict on one tools/perf-tour/run.sh outdir (painting-company row 392).
 
     verdict.py <outdir> <limits.json> [--title <text>]
 

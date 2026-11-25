@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The stutter check (painting-company row 391): main's build played on Paul's wired iPad Air 5, timed, and
+# The stutter check (painting-company row 392): main's build played on Paul's wired iPad Air 5, timed, and
 # judged before TestFlight may upload it. Polish rounds judged stills and the simulator; a menu caught
 # mid-close or dropped frames only show in motion, on the device.
 #   tools/stutter-gate/gate.sh [--force] [--no-status] [-n <runs>] [<commit or ref>]   (default: origin/main)

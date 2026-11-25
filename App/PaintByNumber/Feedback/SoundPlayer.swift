@@ -48,7 +48,7 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
     private let playsAloud: Bool
 
     #if DEBUG
-    /// `-muteAll YES` (Debug and ReleaseTests builds): no sound of the app's plays, whatever the
+    /// `-muteAll YES` (Debug and ReleaseTests builds; painting-company row 391): no sound of the app's plays, whatever the
     /// settings say, the cave's (`CaveSound`) too. For runs nobody listens to, like the stutter
     /// check's on the iPad at night (tools/stutter-gate), whose volume the Mac can't set.
     static let mutesAll = UserDefaults.standard.bool(forKey: "muteAll")

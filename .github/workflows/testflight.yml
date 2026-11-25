@@ -122,7 +122,7 @@ jobs:
         # the iPad Air 5 is wired to, at 2:15 and 5:15 AM ET): this commit's `ipad-stutter` status must be
         # success. A stutter, or no verdict yet, holds the upload and fails this run, so the second
         # nightly try checks again. Run workflow's "Skip the iPad stutter check", or the repository
-        # variable IPAD_STUTTER_GATE set to `off`, lets an upload go without it (painting-company row 391).
+        # variable IPAD_STUTTER_GATE set to `off`, lets an upload go without it (painting-company row 392).
         if: >-
           steps.diff.outputs.run == 'true' && vars.IPAD_STUTTER_GATE != 'off' &&
           (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.upload && !inputs.skip_stutter_check))
