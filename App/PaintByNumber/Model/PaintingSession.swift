@@ -14,6 +14,14 @@ protocol PaintingCanvas: AnyObject {
     func sessionDidChangeSelection(_ session: PaintingSession)
     /// The user asked to be shown where to paint next.
     func session(_ session: PaintingSession, focusOn region: Int)
+    /// Zen Mode flies on to `region`, moving as the day's `temperament` has it.
+    func session(_ session: PaintingSession, focusOn region: Int, temperament: ZenTemperament)
+}
+
+extension PaintingCanvas {
+    func session(_ session: PaintingSession, focusOn region: Int, temperament: ZenTemperament) {
+        self.session(session, focusOn: region)
+    }
 }
 
 enum PaintEvent: Equatable {
@@ -123,6 +131,10 @@ final class PaintingSession {
     /// Zen Mode: a moment after each fill the canvas flies to the nearest area left of the
     /// selected color, as the hint does (`zenPause`, `zenShinePause`).
     @ObservationIgnored var flowsToNextArea = false
+    /// Zen Mode moves by the day's temperament (`ZenTemperament.today`: its pause, flight,
+    /// framing and taste in areas, painting-company row 394) rather than the balanced middle
+    /// the release keeps.
+    @ObservationIgnored var zenHasMoods = false
     /// Reduce Motion: the canvas shines no finished color, so Zen Mode has none to wait out.
     @ObservationIgnored var reduceMotion = false
     /// The palette's order on screen (`PaletteOrder`), which picking the next color follows;
@@ -556,21 +568,29 @@ final class PaintingSession {
 
     /// Asks the canvas to reveal the unpainted region of the selected color nearest to
     /// `point` (or the largest one when no point is given).
-    func showHint(near point: SIMD2<Float>? = nil) {
+    func showHint(near point: SIMD2<Float>? = nil) { showHint(near: point, temperament: nil) }
+
+    /// The hint, or with a `temperament` Zen Mode's flight, which picks the area by its taste.
+    private func showHint(near point: SIMD2<Float>?, temperament: ZenTemperament?) {
         guard let color = selectedColor else { return }
         var best: Int?
         var bestScore = Float.infinity
         for (i, r) in template.regions.enumerated() where Int(r.colorIndex) == color && !progress.isPainted(i) {
             let score: Float
             if let point, let label = template.labels(ofRegion: i).first {
-                score = simd_distance_squared(label.position, point)
+                let d2 = simd_distance_squared(label.position, point)
+                score = temperament?.score(distanceSquared: d2, area: r.area) ?? d2
             } else {
                 score = -r.area
             }
             if score < bestScore { bestScore = score; best = i }
         }
         if let best {
-            canvas?.session(self, focusOn: best)
+            if let temperament {
+                canvas?.session(self, focusOn: best, temperament: temperament)
+            } else {
+                canvas?.session(self, focusOn: best)
+            }
             emit(.hintShown(region: best))
         }
     }
@@ -603,8 +623,9 @@ final class PaintingSession {
         return nil
     }
 
-    /// How long a fill shows before Zen Mode flies on.
-    static let zenPause: Duration = .milliseconds(350)
+    /// How long a fill shows before Zen Mode flies on (`ZenTemperament.balanced.pause`; a day's
+    /// own with `zenHasMoods`).
+    static let zenPause: Duration = .seconds(ZenTemperament.balanced.pause)
     /// How long a fill that finished a color shows instead: the canvas sweeps a shine over the
     /// color 0.35 s after it, for 1.1 s, and a flight leaving as it starts would hide it. Under
     /// Reduce Motion nothing shines, and `zenPause` holds.
@@ -614,11 +635,12 @@ final class PaintingSession {
     /// finished meanwhile.
     private func showNextArea(near point: SIMD2<Float>, finishedColor: Bool) {
         let painted = revision
-        let pause = finishedColor && !reduceMotion ? Self.zenShinePause : Self.zenPause
+        let temperament = zenHasMoods ? ZenTemperament.today() : .balanced
+        let pause = finishedColor && !reduceMotion ? Self.zenShinePause : .seconds(temperament.pause)
         Task {
             try? await Task.sleep(for: pause)
             guard revision == painted, !progress.isComplete else { return }
-            showHint(near: point)
+            showHint(near: point, temperament: temperament)
         }
     }
 

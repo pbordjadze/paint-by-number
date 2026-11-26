@@ -6,9 +6,6 @@ struct Toast<Trailing: View>: View {
     let systemImage: String
     /// The screen edge it slides in from.
     var edge: Edge = .bottom
-    /// Lines the message may take beside the icon (all of them at accessibility sizes); over 3,
-    /// the toast is a rounded card, as a capsule's ends would cut into the text.
-    var lineLimit = 3
     @ViewBuilder var trailing: Trailing
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -27,7 +24,7 @@ struct Toast<Trailing: View>: View {
                 .accessibilityHidden(true)
             // The action keeps its label however long the message is: the message gets what is left.
             Text(text)
-                .lineLimit(large ? nil : lineLimit)
+                .lineLimit(large ? nil : 3)
                 .fixedSize(horizontal: false, vertical: true)
                 .layoutPriority(-1)
             trailing
@@ -42,7 +39,7 @@ struct Toast<Trailing: View>: View {
         // turned pale grey and left the white text and the Undo faint (QA, November 7). Enough
         // paper to hold the text over a bright picture, little enough to stay glass.
         .glassEffect(.regular.tint(Theme.paper.opacity(0.7)),
-                     in: large || lineLimit > 3 ? AnyShape(.rect(cornerRadius: 28, style: .continuous)) : AnyShape(.capsule))
+                     in: large ? AnyShape(.rect(cornerRadius: 28, style: .continuous)) : AnyShape(.capsule))
         .transition(reduceMotion ? .opacity : .move(edge: edge).combined(with: .opacity))
         // A toast's action stays a button of its own: combined into the message, a tap on "Undo"
         // by Voice Control or a test landed on the message's middle and undid nothing (QA,
@@ -52,7 +49,7 @@ struct Toast<Trailing: View>: View {
 }
 
 extension Toast where Trailing == EmptyView {
-    init(text: String, systemImage: String, edge: Edge = .bottom, lineLimit: Int = 3) {
-        self.init(text: text, systemImage: systemImage, edge: edge, lineLimit: lineLimit) { EmptyView() }
+    init(text: String, systemImage: String, edge: Edge = .bottom) {
+        self.init(text: text, systemImage: systemImage, edge: edge) { EmptyView() }
     }
 }
