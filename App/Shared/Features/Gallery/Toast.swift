@@ -6,6 +6,8 @@ struct Toast<Trailing: View>: View {
     let systemImage: String
     /// The screen edge it slides in from.
     var edge: Edge = .bottom
+    /// Lines the message may take beside the icon (all of them at accessibility sizes).
+    var lineLimit = 3
     @ViewBuilder var trailing: Trailing
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -24,7 +26,7 @@ struct Toast<Trailing: View>: View {
                 .accessibilityHidden(true)
             // The action keeps its label however long the message is: the message gets what is left.
             Text(text)
-                .lineLimit(large ? nil : 3)
+                .lineLimit(large ? nil : lineLimit)
                 .fixedSize(horizontal: false, vertical: true)
                 .layoutPriority(-1)
             trailing
@@ -49,7 +51,7 @@ struct Toast<Trailing: View>: View {
 }
 
 extension Toast where Trailing == EmptyView {
-    init(text: String, systemImage: String, edge: Edge = .bottom) {
-        self.init(text: text, systemImage: systemImage, edge: edge) { EmptyView() }
+    init(text: String, systemImage: String, edge: Edge = .bottom, lineLimit: Int = 3) {
+        self.init(text: text, systemImage: systemImage, edge: edge, lineLimit: lineLimit) { EmptyView() }
     }
 }

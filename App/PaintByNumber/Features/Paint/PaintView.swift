@@ -242,6 +242,10 @@ struct PaintView: View {
             session.flowsToNextArea = zen
             if zen && !isWarmup { PaintTips.used(.benchZen) }
             if zen && !was { sayWhatZenDoes() }
+            #if UNRELEASED
+            // Opened with Zen Mode on: its line for the day, the first time today.
+            if zen && was && !isWarmup { sayZensDay() }
+            #endif
         }
         .onChange(of: reduceMotion, initial: true) { _, reduce in session.reduceMotion = reduce }
         // The picture the bar shares is the painting as it shows, with its lines or without.
@@ -443,7 +447,7 @@ struct PaintView: View {
             }
 
             if let zenNote {
-                Toast(text: zenNote, systemImage: "leaf", edge: .top)
+                Toast(text: zenNote, systemImage: "leaf", edge: .top, lineLimit: 5)
                     .padding(.top, Self.topGap + barHeight(layout.regularChrome) + 12)
                     .padding(.horizontal, 20)
                     .allowsHitTesting(false)
@@ -1051,12 +1055,34 @@ struct PaintView: View {
         let message = String(
             localized: "paint.zen.on", defaultValue: "Zen Mode is on: after each fill, the page glides to the next area of your color.",
             comment: "Painting screen: a toast for a few seconds after Zen Mode is turned on in the More menu, saying what it does to the view")
+        #if UNRELEASED
+        // Zen's line for the day under what it does (painting-company row 394).
+        ZenDayText.markShownToday()
+        showZenNote(message + "\n" + ZenDayText.today(), seconds: 7)
+        #else
+        showZenNote(message, seconds: 4)
+        #endif
+    }
+
+    #if UNRELEASED
+    /// Zen Mode's line for the day (`ZenDayText`), once a day, as a painting opens with Zen on.
+    private func sayZensDay() {
+        #if DEBUG
+        guard !DemoMode.isActive else { return }
+        #endif
+        guard !ZenDayText.wasShownToday else { return }
+        ZenDayText.markShownToday()
+        showZenNote(ZenDayText.today(), seconds: 6)
+    }
+    #endif
+
+    private func showZenNote(_ message: String, seconds: Double) {
         Announcer.announce(message)
         zenNoteShowing += 1
         let showing = zenNoteShowing
         Task {
             zenNote = message
-            try? await Task.sleep(for: .seconds(4))
+            try? await Task.sleep(for: .seconds(seconds))
             // Only this showing's: Zen turned off and on again meanwhile showed it anew.
             if zenNoteShowing == showing { zenNote = nil }
         }
