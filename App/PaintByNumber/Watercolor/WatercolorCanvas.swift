@@ -23,6 +23,8 @@ final class WatercolorCanvasView: UIView, UIScrollViewDelegate {
     var onTap: ((SIMD2<Float>, Float) -> Void)?
     /// A finger dragged over a canvas point (painting only the paint in hand), the same tolerance.
     var onDrag: ((SIMD2<Float>, Float) -> Void)?
+    /// A drag begins (true) or ends (false): one step of Undo.
+    var onStroke: ((Bool) -> Void)?
     /// A fingertip on screen, in points: how near a small area a tap still lays it.
     static let fingertip: CGFloat = 16
     /// Points at the bottom the paint box covers: the sheet fits above them.
@@ -282,6 +284,7 @@ final class WatercolorCanvasView: UIView, UIScrollViewDelegate {
         case .began:
             cancelFlight()
             lastDrag = p
+            onStroke?(true)
             onDrag?(SIMD2(Float(p.x), Float(p.y)), tolerance)
         case .changed:
             // Every few canvas units along the way: a quick stroke skips no area.
@@ -296,6 +299,7 @@ final class WatercolorCanvasView: UIView, UIScrollViewDelegate {
             lastDrag = p
         default:
             lastDrag = nil
+            onStroke?(false)
         }
         setRunning(true)
     }
@@ -411,6 +415,9 @@ struct WatercolorCanvas: UIViewRepresentable {
         let view = WatercolorCanvasView(renderer: renderer)
         view.onTap = onTap
         view.onDrag = onDrag
+        view.onStroke = { [painting = renderer.painting] began in
+            if began { painting.beginStroke() } else { painting.endStroke() }
+        }
         view.reduceMotion = reduceMotion
         view.bottomInset = bottomInset
         view.sign(signed, title: title, animated: false)

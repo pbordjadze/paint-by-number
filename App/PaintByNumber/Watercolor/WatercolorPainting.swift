@@ -45,14 +45,29 @@ final class WatercolorPainting {
     /// another paint was in hand).
     var shake: (color: Int, count: Int) = (0, 0)
     /// What Undo takes back: the sheet before each tap (newest last), with the log's length then.
-    @ObservationIgnored private var undoStack: [(sheet: WatercolorSim.Checkpoint, taps: Int, region: Int)] = []
+    @ObservationIgnored private var undoStack: [(sheet: WatercolorSim.Checkpoint, taps: Int, selected: Int?)] = []
+    /// Whether a drag is under way: its first area laid keeps the one checkpoint, so Undo takes
+    /// the whole stroke back, as the main canvas does.
+    @ObservationIgnored private var stroking = false
+    @ObservationIgnored private var strokeKept = false
     /// Whether there is a tap to take back.
     private(set) var canUndo = false
     /// Told when the sheet was put back (Undo): it is drawn again whole.
     @ObservationIgnored var onRestore: (() -> Void)?
-    /// Checkpoints kept: each is the whole sheet (about 48 bytes a cell, 20 MB at most), so the
-    /// last few taps, not the painting's history.
-    static let undoDepth = 6
+    /// Checkpoints kept: each is the whole sheet (about 48 bytes a cell, up to 31 MB on a square
+    /// sheet), so the last few taps or strokes, not the painting's history.
+    static let undoDepth = 4
+
+    /// A drag begins or ends: the areas it lays are one step of Undo.
+    func beginStroke() {
+        stroking = true
+        strokeKept = false
+    }
+
+    func endStroke() {
+        stroking = false
+        strokeKept = false
+    }
     /// Seconds of simulation owed to the wall clock, less than a step.
     @ObservationIgnored private var owed: Double = 0
     /// Each step's duration, for the frame report (`takeStepTimes`).
@@ -155,9 +170,12 @@ final class WatercolorPainting {
     /// Lays `region` from `canvas`: its paint, or water. Kept for Undo first.
     private func lay(region r: Int, at canvas: SIMD2<Float>, paint: Bool) {
         let wasLaid = sim.laid[r]
-        undoStack.append((sim.checkpoint(), log.taps.count, r))
-        if undoStack.count > Self.undoDepth { undoStack.removeFirst() }
-        canUndo = true
+        if !(stroking && strokeKept) {
+            undoStack.append((sim.checkpoint(), log.taps.count, selected))
+            if undoStack.count > Self.undoDepth { undoStack.removeFirst() }
+            strokeKept = stroking
+            canUndo = true
+        }
         log.taps.append(.init(step: sim.step, region: r, x: canvas.x, y: canvas.y, paint: paint))
         let start = CACurrentMediaTime()
         sim.tap(region: r, at: canvas, paint: paint)
@@ -179,7 +197,7 @@ final class WatercolorPainting {
     }
 
     /// Takes the last tap back: the sheet exactly as it was before it, water still moving where
-    /// it moved, and its paint in hand again.
+    /// it moved, and the paint that was in hand then.
     func undo() {
         guard let last = undoStack.popLast() else { return }
         canUndo = !undoStack.isEmpty
@@ -192,8 +210,7 @@ final class WatercolorPainting {
         self.remaining = remaining
         laidCount = sim.laidCount
         lastPaintedAt = -1
-        let color = Int(template.regions[last.region].colorIndex)
-        if color < remaining.count, remaining[color] > 0 { selected = color }
+        if let was = last.selected, was < remaining.count, remaining[was] > 0 { selected = was }
         unsavedTaps += 1
         pictureIsStale = true
         onRestore?()

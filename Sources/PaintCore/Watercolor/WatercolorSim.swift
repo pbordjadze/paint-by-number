@@ -711,6 +711,8 @@ public final class WatercolorSim {
         step = c.step
         wetBox = c.wetBox
         changedBox = Box(x0: 0, y0: 0, x1: sheet.width, y1: sheet.height)
+        // Every area, the ones too small for a cell of their own too (a tap names those directly).
+        changedRegions.formUnion(Int32(0)..<Int32(sheet.regionCount))
     }
 
     // MARK: Saving
