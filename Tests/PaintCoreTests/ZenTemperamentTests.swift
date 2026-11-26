@@ -61,6 +61,14 @@ struct ZenTemperamentTests {
         let lively = ZenTemperament.mood(-1, closeness: 0)
         #expect(lively.score(distanceSquared: across.d2, area: across.area, diagonal: diagonal)
                 < lively.score(distanceSquared: near.d2, area: near.area, diagonal: diagonal))
+        // Short of the liked distance too, and with taste still choosing the smaller of two.
+        let farish = (d2: Float(300 * 300), area: Float(10))
+        #expect(lively.score(distanceSquared: farish.d2, area: farish.area, diagonal: diagonal)
+                < lively.score(distanceSquared: near.d2, area: near.area, diagonal: diagonal))
+        #expect(lively.score(distanceSquared: farish.d2, area: 10, diagonal: diagonal)
+                < lively.score(distanceSquared: farish.d2, area: 1000, diagonal: diagonal))
+        // The balanced middle ignores area and diagonal alike.
+        #expect(b.score(distanceSquared: near.d2, area: 5000, diagonal: diagonal) == near.d2)
     }
 
     @Test func oddDatesNeverTrap() {

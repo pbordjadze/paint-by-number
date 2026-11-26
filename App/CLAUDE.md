@@ -403,7 +403,7 @@ below name both alike.
 - Zen Mode (More menu, `SettingsKey.zenMode`): `PaintingSession.flowsToNextArea` sends the
   canvas to the next area of the selected color `zenPause` after each fill or stroke, as the
   hint does, and `zenShinePause` after one that finished a color, whose shine shows first
-  (`zenPause` under Reduce Motion, `PaintingSession.reduceMotion`: nothing shines). A tap during
+  (the usual pause under Reduce Motion, `PaintingSession.reduceMotion`: nothing shines). A tap during
   any camera flight lands it and paints; only a tap on a fling just stops it. In SideStore and
   Debug builds (`#if UNRELEASED`, painting-company row 394) Zen has a daily temperament shown
   only in how it moves, never in words: each day leans calm (lingering, slow flights, broad

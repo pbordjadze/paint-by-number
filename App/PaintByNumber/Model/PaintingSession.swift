@@ -629,7 +629,7 @@ final class PaintingSession {
     static let zenPause: Duration = .milliseconds(350)
     /// How long a fill that finished a color shows instead: the canvas sweeps a shine over the
     /// color 0.35 s after it, for 1.1 s, and a flight leaving as it starts would hide it. Under
-    /// Reduce Motion nothing shines, and `zenPause` holds.
+    /// Reduce Motion nothing shines, and the usual pause holds (the day's, with `zenHasMoods`).
     static let zenShinePause: Duration = .milliseconds(1300)
 
     /// Zen Mode's flight: the hint near `point`, unless something was painted, undone or
