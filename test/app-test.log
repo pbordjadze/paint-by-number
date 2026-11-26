@@ -1,0 +1,19 @@
+Retrying tests on failure. Running tests repeatedly up to 2 times.
+
+Writing result bundle at path:
+	/Users/runner/work/paint-by-number/paint-by-number/build/Tests.xcresult
+
+2026-11-26 20:21:04.435 xcodebuild[42602:109402] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-26 20:21:25.491 xcodebuild[42602:109402] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-26 20:21:25.493 xcodebuild[42602:109402] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-26 20:21:26.127 xcodebuild[42602:109402] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-26 20:22:19.462 xcodebuild[42602:109402] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-26 20:22:19.467 xcodebuild[42602:109402] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-26 20:22:19.497 xcodebuild[42602:109402] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-26 20:22:19.674 xcodebuild[42602:109402] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-26 20:22:19.674 xcodebuild[42602:109402] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-26 20:22:19.676 xcodebuild[42602:109402] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-26 20:22:21.826 xcodebuild[42602:109402] [MT] IDETestOperationsObserverDebug: 83.175 elapsed -- Testing started completed.
+2026-11-26 20:22:21.826 xcodebuild[42602:109402] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-26 20:22:21.826 xcodebuild[42602:109402] [MT] IDETestOperationsObserverDebug: 83.176 sec, +83.175 sec -- end
+Testing started
