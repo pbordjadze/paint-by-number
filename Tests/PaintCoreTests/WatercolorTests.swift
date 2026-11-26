@@ -192,6 +192,19 @@ import Testing
         #expect(Self.digest(painted(undoing: true)) == Self.digest(painted(undoing: false)))
     }
 
+    /// Undo's cost on the main thread: one checkpoint a tap, of a full-size sheet (printed for
+    /// the frame budget; the bound only catches a copy gone quadratic).
+    @Test func aCheckpointOfAFullSheetIsQuick() {
+        let t = try! TemplateGenerator().generate(from: TestScenes.scene(width: 800, height: 600), cancel: .none).template
+        let sim = WatercolorSim(sheet: WatercolorSheet(template: t, seed: 1))
+        var kept: [WatercolorSim.Checkpoint] = []
+        let start = Date()
+        for _ in 0..<5 { kept.append(sim.checkpoint()) }
+        let each = Date().timeIntervalSince(start) / 5
+        print("watercolor checkpoint: \(String(format: "%.1f", each * 1000)) ms for \(sim.sheet.width) x \(sim.sheet.height) cells")
+        #expect(kept.count == 5 && each < 0.25)
+    }
+
     @Test func aLogReplaysToTheSamePainting() throws {
         let t = Self.template
         let regions = t.regions.indices.sorted { t.regions[$0].area > t.regions[$1].area }.prefix(6)
