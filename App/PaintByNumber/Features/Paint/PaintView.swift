@@ -233,6 +233,9 @@ struct PaintView: View {
             chrome.observe(session)
             // The cover is gone: the color to paint comes in (`PaintCanvas.watchesFirstFrame`).
             controller.revealSelection()
+            #if UNRELEASED
+            if zenMode { sayZensDay() }
+            #endif
         }
         // Picking the next color follows the palette as it is laid out.
         .onChange(of: colorOrder, initial: true) { _, order in session.colorOrder = order }
@@ -244,7 +247,7 @@ struct PaintView: View {
             if zen && !was { sayWhatZenDoes() }
             #if UNRELEASED
             // Opened with Zen Mode on: its line for the day, the first time today.
-            if zen && was && !isWarmup { sayZensDay() }
+            if zen && was { sayZensDay() }
             #endif
         }
         .onChange(of: reduceMotion, initial: true) { _, reduce in session.reduceMotion = reduce }
@@ -447,7 +450,7 @@ struct PaintView: View {
             }
 
             if let zenNote {
-                Toast(text: zenNote, systemImage: "leaf", edge: .top, lineLimit: 5)
+                Toast(text: zenNote, systemImage: "leaf", edge: .top, lineLimit: 8)
                     .padding(.top, Self.topGap + barHeight(layout.regularChrome) + 12)
                     .padding(.horizontal, 20)
                     .allowsHitTesting(false)
@@ -1065,11 +1068,14 @@ struct PaintView: View {
     }
 
     #if UNRELEASED
-    /// Zen Mode's line for the day (`ZenDayText`), once a day, as a painting opens with Zen on.
+    /// Zen Mode's line for the day (`ZenDayText`), once a day, as a painting of the gallery's
+    /// opens with Zen on: not Refine's Try Painting (`asksForRating`), nor under the create flow's
+    /// cover, where it would go unseen (the hand-off's end asks again).
     private func sayZensDay() {
         #if DEBUG
         guard !DemoMode.isActive else { return }
         #endif
+        guard !isWarmup, asksForRating, startHandoff?.isRunning != true else { return }
         guard !ZenDayText.wasShownToday else { return }
         ZenDayText.markShownToday()
         showZenNote(ZenDayText.today(), seconds: 6)

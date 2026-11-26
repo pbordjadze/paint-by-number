@@ -43,7 +43,7 @@ struct ZenDayTextTests {
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         let today = Date.now
-        let tomorrow = today.addingTimeInterval(86_400)
+        let tomorrow = try #require(Calendar.current.date(byAdding: .day, value: 1, to: today))
         #expect(!ZenDayText.wasShown(today: today, in: defaults))
         ZenDayText.markShown(today: today, in: defaults)
         #expect(ZenDayText.wasShown(today: today, in: defaults))
