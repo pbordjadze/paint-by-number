@@ -1497,9 +1497,15 @@ where every tap is real water. PaintCore's `Watercolor/` simulates the sheet (`W
 the template at 800 cells on its long side, the paper, the watercolor key `density(of:area:)`,
 wash groups; `WatercolorSim`: water, suspended and deposited pigment and granulation stepped at
 1/60 s over the wet box only, each area's wash solved toward its paint so every result is
-beautiful; `WatercolorLog`, the taps, read as hostile input). A tap of the paint in hand floods its
-area from where it lands; any other tap is water, a laid area tapped again blooms: no tap is
-wrong. `Watercolor/` here: `WatercolorEra` (in the shared frame: its gallery, and a picked picture
+beautiful; `WatercolorLog`, the taps, read as hostile input). It plays as the main painting
+screen does (row 373, Paul, November 26): a tap of the paint in hand floods its area from where it
+lands (or the nearest small one within a fingertip, `WatercolorCanvasView.fingertip`); a tap on
+another paint's area lays nothing and shakes its pan; a laid area tapped again blooms; its areas not
+yet laid carry a pencil hatch (`sheet.z` of the shader's uniforms); one finger dragged lays the
+paint in hand's areas it crosses, two move the sheet; Hint flies to the largest area left, Zen Mode
+(More, the main switch) to the nearest after each wash (`WatercolorCanvasView.fly(to:)`); Undo puts
+the sheet back exactly as before the last tap, wet water and all (`WatercolorSim.Checkpoint`, the
+last `WatercolorPainting.undoDepth` kept in memory, the log cut back with it). `Watercolor/` here: `WatercolorEra` (in the shared frame: its gallery, and a picked picture
 made a painting with its Making Of), `WatercolorShelf` (an `ArtworkStore` at
 `Application Support/Watercolor/Paintings/`, each painting's folder plus `watercolor.json`, the
 tap log, and `watercolor.sheet`, the sim's LZFSE snapshot, so a painting opens without replaying),

@@ -4,12 +4,17 @@ import Foundation
 import Observation
 import PaintCore
 import QuartzCore
+import simd
 import os
 
 /// A watercolor painting open on screen (painting-company row 373): its template, the water and
 /// pigment moving over it (PaintCore's `WatercolorSim`), the tap log that is the painting's record,
-/// and the paint in hand. A tap on an area of the paint in hand lays its wash from where the finger
-/// touched; a tap anywhere else is water alone, a bloom: no tap is wrong. Time runs in the
+/// and the paint in hand. It plays as the main painting screen does (painting-company row 373, Paul,
+/// November 26: "some of the UX features the main one has"): a tap on an area of the paint in hand,
+/// or near a small one, lays its wash from where the finger touched; a tap on another paint's area
+/// lays nothing and shakes that paint's pan (`shake`); a laid area tapped again blooms. A finger
+/// dragged lays every area of the paint in hand it crosses; Undo takes the last tap back exactly
+/// (`WatercolorSim.Checkpoint`); Hint and Zen Mode find the next area (`nextArea`). Time runs in the
 /// simulation's fixed steps, as many as the display's frames need (`advance`), so the painting is
 /// the same whatever the frame rate.
 @MainActor
@@ -36,6 +41,33 @@ final class WatercolorPainting {
     @ObservationIgnored var settlesAtOnce = false
     /// Told of every tap, after it is in the log.
     @ObservationIgnored var onTap: (() -> Void)?
+    /// The paint whose pan shakes, and a count that moves each time (a tap on its area while
+    /// another paint was in hand).
+    var shake: (color: Int, count: Int) = (0, 0)
+    /// What Undo takes back: the sheet before each tap (newest last), with the log's length then.
+    @ObservationIgnored private var undoStack: [(sheet: WatercolorSim.Checkpoint, taps: Int, selected: Int?)] = []
+    /// Whether a drag is under way: its first area laid keeps the one checkpoint, so Undo takes
+    /// the whole stroke back, as the main canvas does.
+    @ObservationIgnored private var stroking = false
+    @ObservationIgnored private var strokeKept = false
+    /// Whether there is a tap to take back.
+    private(set) var canUndo = false
+    /// Told when the sheet was put back (Undo): it is drawn again whole.
+    @ObservationIgnored var onRestore: (() -> Void)?
+    /// Checkpoints kept: each is the whole sheet (about 48 bytes a cell, up to 31 MB on a square
+    /// sheet), so the last few taps or strokes, not the painting's history.
+    static let undoDepth = 4
+
+    /// A drag begins or ends: the areas it lays are one step of Undo.
+    func beginStroke() {
+        stroking = true
+        strokeKept = false
+    }
+
+    func endStroke() {
+        stroking = false
+        strokeKept = false
+    }
     /// Seconds of simulation owed to the wall clock, less than a step.
     @ObservationIgnored private var owed: Double = 0
     /// Each step's duration, for the frame report (`takeStepTimes`).
@@ -73,12 +105,77 @@ final class WatercolorPainting {
     /// The region under `canvas` (canvas units), nil off the sheet.
     func region(at canvas: SIMD2<Float>) -> Int? { template.region(at: canvas) }
 
-    /// A tap at `canvas`: the paint in hand where it is that area's paint, water elsewhere.
+    /// What a tap did.
+    enum TapResult: Equatable {
+        /// The paint in hand laid on this area.
+        case painted(Int)
+        /// Water on an area already laid: a bloom.
+        case bloomed(Int)
+        /// An area of another paint, not yet laid: nothing laid, that paint's pan shaken.
+        case otherPaint(Int)
+    }
+
+    /// A tap at `canvas`, `tolerance` canvas units wide (a fingertip at the zoom): the paint in
+    /// hand on its area or, within the tolerance, the nearest area of it not yet laid; water on a
+    /// laid area (a bloom); on another paint's area, nothing but its pan shaken. `blooms` false
+    /// (a drag) lays only the paint in hand.
     @discardableResult
-    func tap(at canvas: SIMD2<Float>) -> Int? {
-        guard let r = region(at: canvas) else { return nil }
-        let paint = selected == Int(template.regions[r].colorIndex)
+    func tap(at canvas: SIMD2<Float>, tolerance: Float = 0, blooms: Bool = true) -> TapResult? {
+        guard let hit = region(at: canvas) else { return nil }
+        var r = hit
+        if !isPaintable(r), tolerance > 0, let near = nearestPaintable(to: canvas, radius: tolerance) { r = near }
+        let color = Int(template.regions[r].colorIndex)
+        if isPaintable(r) {
+            lay(region: r, at: canvas, paint: true)
+            return .painted(r)
+        }
+        if sim.laid[r] {
+            guard blooms else { return nil }
+            lay(region: r, at: canvas, paint: false)
+            return .bloomed(r)
+        }
+        guard blooms else { return nil }
+        shake = (color, shake.count + 1)
+        return .otherPaint(color)
+    }
+
+    /// Whether `r` takes the paint in hand: its paint, not yet laid.
+    private func isPaintable(_ r: Int) -> Bool {
+        !sim.laid[r] && selected == Int(template.regions[r].colorIndex)
+    }
+
+    /// The paintable area nearest `point` within `radius` (canvas units), by the region map.
+    private func nearestPaintable(to point: SIMD2<Float>, radius: Float) -> Int? {
+        let map = template.regionMap
+        let r = Int(radius.rounded(.up))
+        let cx = Int(point.x.rounded(.down)), cy = Int(point.y.rounded(.down))
+        var best: Int?
+        var bestD = Float.infinity
+        // Every other pixel: a fingertip's disc, so a few hundred reads.
+        for y in stride(from: max(cy - r, 0), through: min(cy + r, map.height - 1), by: 2) {
+            for x in stride(from: max(cx - r, 0), through: min(cx + r, map.width - 1), by: 2) {
+                let dx = Float(x) + 0.5 - point.x, dy = Float(y) + 0.5 - point.y
+                let d = dx * dx + dy * dy
+                guard d <= radius * radius, d < bestD else { continue }
+                let here = Int(map[x, y])
+                if here < template.regions.count, isPaintable(here) {
+                    bestD = d
+                    best = here
+                }
+            }
+        }
+        return best
+    }
+
+    /// Lays `region` from `canvas`: its paint, or water. Kept for Undo first.
+    private func lay(region r: Int, at canvas: SIMD2<Float>, paint: Bool) {
         let wasLaid = sim.laid[r]
+        if !(stroking && strokeKept) {
+            undoStack.append((sim.checkpoint(), log.taps.count, selected))
+            if undoStack.count > Self.undoDepth { undoStack.removeFirst() }
+            strokeKept = stroking
+            canUndo = true
+        }
         log.taps.append(.init(step: sim.step, region: r, x: canvas.x, y: canvas.y, paint: paint))
         let start = CACurrentMediaTime()
         sim.tap(region: r, at: canvas, paint: paint)
@@ -97,7 +194,26 @@ final class WatercolorPainting {
         }
         EraSounds.shared.watercolor(.init(paint: paint, wasLaid: wasLaid, finishes: isComplete))
         onTap?()
-        return r
+    }
+
+    /// Takes the last tap back: the sheet exactly as it was before it, water still moving where
+    /// it moved, and the paint that was in hand then.
+    func undo() {
+        guard let last = undoStack.popLast() else { return }
+        canUndo = !undoStack.isEmpty
+        sim.restore(last.sheet)
+        log.taps.removeLast(max(0, log.taps.count - last.taps))
+        var remaining = Array(repeating: 0, count: template.palette.count)
+        for (r, region) in template.regions.enumerated() where !sim.laid[r] && Int(region.colorIndex) < remaining.count {
+            remaining[Int(region.colorIndex)] += 1
+        }
+        self.remaining = remaining
+        laidCount = sim.laidCount
+        lastPaintedAt = -1
+        if let was = last.selected, was < remaining.count, remaining[was] > 0 { selected = was }
+        unsavedTaps += 1
+        pictureIsStale = true
+        onRestore?()
     }
 
     /// The next paint with areas left after `color`, coming round.
@@ -111,14 +227,28 @@ final class WatercolorPainting {
         return nil
     }
 
-    /// An area of the paint in hand not yet painted, by its largest label: VoiceOver's way to paint.
-    func nextArea() -> SIMD2<Float>? {
+    /// An area of the paint in hand not yet painted, by its largest label: VoiceOver's way to
+    /// paint, and where Hint and Zen Mode fly. Its number's place and the area's bounds.
+    func nextArea() -> SIMD2<Float>? { nextAreaFrame()?.point }
+
+    /// The next area to paint and its bounds (canvas units), the nearest to `near` when given (Zen
+    /// Mode goes on from where the painter is), the largest otherwise.
+    func nextAreaFrame(near: SIMD2<Float>? = nil) -> (point: SIMD2<Float>, bounds: CGRect)? {
         guard let selected else { return nil }
         let candidates = template.labels.filter { label in
             let r = Int(label.region)
-            return !sim.laid[r] && Int(template.regions[r].colorIndex) == selected
+            return r < template.regions.count && !sim.laid[r] && Int(template.regions[r].colorIndex) == selected
         }
-        return candidates.max { $0.radius < $1.radius }?.position
+        let pick: Label?
+        if let near {
+            pick = candidates.min { simd_distance_squared($0.position, near) < simd_distance_squared($1.position, near) }
+        } else {
+            pick = candidates.max { $0.radius < $1.radius }
+        }
+        guard let pick else { return nil }
+        let b = template.regions[Int(pick.region)].bounds
+        return (pick.position, CGRect(x: CGFloat(b.minX), y: CGFloat(b.minY),
+                                      width: CGFloat(b.maxX - b.minX), height: CGFloat(b.maxY - b.minY)))
     }
 
     /// Whether the simulation's clock must run: water moving, or a number fading (half a second

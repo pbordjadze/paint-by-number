@@ -22,7 +22,8 @@ struct WatercolorUniforms {
     float4 paper;         // the paper's color
     float4 background;    // around the sheet
     float4 numberInk;
-    float4 sheet;         // the sheet's paper past the canvas: x its side and top margin, y its bottom one (canvas units)
+    float4 sheet;         // the sheet's paper past the canvas: x its side and top margin, y its bottom one (canvas units);
+                          // z the paint in hand + 1 (0: none), whose areas not yet laid are hatched, w the hatch's strength
 };
 
 // Mirrored by `WatercolorRegion`: per area, the target solve's gain (w: when it was painted,
@@ -90,7 +91,7 @@ static float4 watercolor_surround(float2 canvas, constant WatercolorUniforms &u,
     float2 uv = canvas / u.canvasSize;
     float sx = float(paper.sample(tiled, uv + float2(u.paperTexel.x, 0)).r - paper.sample(tiled, uv - float2(u.paperTexel.x, 0)).r);
     float sy = float(paper.sample(tiled, uv + float2(0, u.paperTexel.y)).r - paper.sample(tiled, uv - float2(0, u.paperTexel.y)).r);
-    float3 sheet = u.paper.rgb * clamp(1 + 0.45 * (sx + sy), 0.85, 1.1);
+    float3 sheet = u.paper.rgb * clamp(1 + 0.25 * (sx + sy), 0.85, 1.1);
     sheet *= 0.94 + 0.06 * smoothstep(0.0, 0.003 * L, -edge);
     return float4(mix(desk, sheet, cover), 1);
 }
@@ -107,6 +108,7 @@ fragment float4 watercolor_fragment(
     WatercolorOut in [[stage_in]],
     constant WatercolorUniforms &u [[buffer(0)]],
     const device WatercolorRegion *regions [[buffer(1)]],
+    const device uint *paints [[buffer(2)]],
     texture2d<half> density [[texture(0)]],
     texture2d<half> granulation [[texture(1)]],
     texture2d<uint, access::read> labels [[texture(2)]],
@@ -175,14 +177,16 @@ fragment float4 watercolor_fragment(
     d = d * (1 - 0.6 * glaze) + r.aim.rgb * glaze;
     float g = float(granulation.sample(smooth, uv).r);
     float p2 = float(paper.sample(smooth, uv).r);
-    d *= 1 + g * 0.6 * (0.5 - p2);
+    // Pigment settles in the paper's valleys: every paint a little (its texture is the
+    // pigment's, not a lit overlay), granulating ones more (`pbn`'s `WatercolorLook`).
+    d *= 1 + (0.3 + g * 0.7) * (0.5 - p2);
     float3 refl = u.paper.rgb * exp(-d);
 
     // Cold-press paper lit from the top left, quieter under paint.
     float sx = float(paper.sample(smooth, uv + float2(u.paperTexel.x, 0)).r - paper.sample(smooth, uv - float2(u.paperTexel.x, 0)).r);
     float sy = float(paper.sample(smooth, uv + float2(0, u.paperTexel.y)).r - paper.sample(smooth, uv - float2(0, u.paperTexel.y)).r);
     float under = clamp((d.r + d.g + d.b) / 3 / 1.2, 0.0, 1.0);
-    refl *= clamp(1 + 0.45 * (sx + sy) * (1 - 0.6 * under), 0.85, 1.1);
+    refl *= clamp(1 + 0.25 * (sx + sy) * (1 - 0.4 * under), 0.85, 1.1);
 
     // Wet paint: a little darker, with a glint where the water's surface tilts toward the light.
     float water = d4.a;
@@ -211,12 +215,21 @@ fragment float4 watercolor_fragment(
 
     // Graphite reads on bare paper and all but disappears under a wash.
     float ink = float(pencil.sample(smooth, uv).r) * 0.75 * (1 - 0.75 * clamp(under * 2.5, 0.0, 1.0));
-    ink *= 1 - u.film.x * step(r.gain.w, u.time);
+    // Half of it goes once its area is painted (the Making Of's film sets its own), so a
+    // finished sheet reads as a painting over a light drawing, not a coloring book.
+    ink *= 1 - (u.film.y > 0 ? u.film.x : 0.5) * step(r.gain.w, u.time);
     refl *= 1 - ink * (1 - float3(0.30, 0.30, 0.33));
 
     // A number fades once its area is painted.
     float fade = clamp(1 - (u.time - r.gain.w) / 0.35, 0.0, 1.0);
     float n = float(numbers.sample(smooth, uv).r) * fade;
     refl = mix(refl, u.numberInk.rgb, n * 0.9);
+    // The paint in hand's areas not yet laid: a fine pencil hatch, as the main canvas hatches
+    // the selected color's areas, steady on screen at any zoom.
+    if (u.sheet.z > 0.5 && r.gain.w > u.time && float(paints[region]) + 1 == u.sheet.z) {
+        float h = fract((in.position.x + in.position.y) / 12.0);
+        float stroke = smoothstep(0.0, 0.1, h) * (1 - smoothstep(0.18, 0.28, h));
+        refl *= 1 - stroke * 0.22 * u.sheet.w * float3(1.0, 1.0, 0.9);
+    }
     return float4(refl, 1);
 }

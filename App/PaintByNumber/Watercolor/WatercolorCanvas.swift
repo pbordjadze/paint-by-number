@@ -7,7 +7,9 @@ import UIKit
 
 /// The sheet on screen: an `MTKView` drawn by `WatercolorRenderer`, under an invisible scroll view
 /// that gives the system's pan, pinch and deceleration (the main canvas's way, `CanvasView`). A
-/// tap lays a wash where it lands; the view draws every frame only while the sheet is wet. The
+/// tap lays a wash where it lands, a finger dragged lays the areas it crosses, and two fingers move
+/// and zoom, as on the main canvas; Hint and Zen Mode fly the sheet to an area (`fly(to:)`). The
+/// view draws every frame only while the sheet is wet. The
 /// sheet is the canvas and its paper margins, fitted above `bottomInset` (the paint box lying over
 /// the desk); finished, it is signed in pencil in its bottom margin (`signed`).
 final class WatercolorCanvasView: UIView, UIScrollViewDelegate {
@@ -17,7 +19,14 @@ final class WatercolorCanvasView: UIView, UIScrollViewDelegate {
     private let page = UIView()
     private let signature = UIView()
     private var fittedSize: CGSize = .zero
-    var onTap: ((SIMD2<Float>) -> Void)?
+    /// A tap at a canvas point, with the tolerance a fingertip has at the zoom (canvas units).
+    var onTap: ((SIMD2<Float>, Float) -> Void)?
+    /// A finger dragged over a canvas point (painting only the paint in hand), the same tolerance.
+    var onDrag: ((SIMD2<Float>, Float) -> Void)?
+    /// A drag begins (true) or ends (false): one step of Undo.
+    var onStroke: ((Bool) -> Void)?
+    /// A fingertip on screen, in points: how near a small area a tap still lays it.
+    static let fingertip: CGFloat = 16
     /// Points at the bottom the paint box covers: the sheet fits above them.
     var bottomInset: CGFloat = 0 {
         didSet {
@@ -61,6 +70,11 @@ final class WatercolorCanvasView: UIView, UIScrollViewDelegate {
         addSubview(scroll)
         let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
         scroll.addGestureRecognizer(tap)
+        // One finger paints, two move the sheet: the main canvas's way.
+        scroll.panGestureRecognizer.minimumNumberOfTouches = 2
+        let drag = UIPanGestureRecognizer(target: self, action: #selector(dragged(_:)))
+        drag.maximumNumberOfTouches = 1
+        scroll.addGestureRecognizer(drag)
         EraSounds.shared.sheetOpened()
         renderer.onActivity = { [weak self] active in
             self?.setRunning(active)
@@ -69,6 +83,12 @@ final class WatercolorCanvasView: UIView, UIScrollViewDelegate {
         }
         // A wash laid any other way (VoiceOver's action, a demo) wakes the sheet too.
         renderer.painting.onTap = { [weak self] in self?.setRunning(true) }
+        // Undo puts the sheet back: drawn again whole, and running if it was wet then.
+        renderer.painting.onRestore = { [weak self] in
+            guard let self else { return }
+            self.setRunning(true)
+            self.metal.setNeedsDisplay()
+        }
         isAccessibilityElement = false
         // A sheet opened with washes still wet goes on drying at once, not at the first tap.
         setRunning(renderer.needsFrames)
@@ -148,9 +168,15 @@ final class WatercolorCanvasView: UIView, UIScrollViewDelegate {
         scroll.minimumZoomScale = min(scroll.minimumZoomScale, scroll.zoomScale)
     }
 
-    func scrollViewWillBeginZooming(_ scrollView: UIScrollView, with view: UIView?) { cancelSettling() }
+    func scrollViewWillBeginZooming(_ scrollView: UIScrollView, with view: UIView?) {
+        cancelSettling()
+        cancelFlight()
+    }
 
-    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) { cancelSettling() }
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        cancelSettling()
+        cancelFlight()
+    }
 
     func scrollViewDidEndZooming(_ scrollView: UIScrollView, with view: UIView?, atScale scale: CGFloat) {
         sharpenSignature()
@@ -239,10 +265,113 @@ final class WatercolorCanvasView: UIView, UIScrollViewDelegate {
         metal.setNeedsDisplay()
     }
 
+    /// A fingertip's reach in canvas units at the zoom.
+    private var tolerance: Float { Float(Self.fingertip / max(scroll.zoomScale, 0.01)) }
+
     @objc private func tapped(_ recognizer: UITapGestureRecognizer) {
+        cancelFlight()
         let p = recognizer.location(in: page)
-        onTap?(SIMD2(Float(p.x), Float(p.y)))
+        onTap?(SIMD2(Float(p.x), Float(p.y)), tolerance)
         setRunning(true)
+    }
+
+    /// The last point a drag reached, so the areas between two touches are laid too.
+    private var lastDrag: CGPoint?
+
+    @objc private func dragged(_ recognizer: UIPanGestureRecognizer) {
+        let p = recognizer.location(in: page)
+        switch recognizer.state {
+        case .began:
+            cancelFlight()
+            lastDrag = p
+            onStroke?(true)
+            onDrag?(SIMD2(Float(p.x), Float(p.y)), tolerance)
+        case .changed:
+            // Every few canvas units along the way: a quick stroke skips no area.
+            let from = lastDrag ?? p
+            let length = hypot(p.x - from.x, p.y - from.y)
+            let step = max(2, 4 / scroll.zoomScale)
+            let n = max(1, Int((length / step).rounded(.up)))
+            for k in 1...n {
+                let t = CGFloat(k) / CGFloat(n)
+                onDrag?(SIMD2(Float(from.x + (p.x - from.x) * t), Float(from.y + (p.y - from.y) * t)), 0)
+            }
+            lastDrag = p
+        default:
+            lastDrag = nil
+            onStroke?(false)
+        }
+        setRunning(true)
+    }
+
+    /// Draws the sheet again while it is still (the paint in hand changed: its hatch moves).
+    func redraw() { metal.setNeedsDisplay() }
+
+    // MARK: Flying (Hint, Zen Mode)
+
+    private var flight: (link: CADisplayLink, from: (zoom: CGFloat, center: CGPoint), to: (zoom: CGFloat, center: CGPoint),
+                         start: CFTimeInterval, duration: Double)?
+
+    /// Flies the sheet to show `area` (canvas units) at a zoom that makes a small one easy to
+    /// tap, never further out than the fit (the main canvas's hint: `CanvasView`'s flights).
+    /// Reduce Motion cuts there.
+    func fly(to area: CGRect) {
+        cancelSettling()
+        cancelFlight()
+        let visibleHeight = max(bounds.height - bottomInset, 1)
+        // The area about a third of the view's short side, within the zoom's range.
+        let side = max(area.width, area.height, 24)
+        let wanted = min(bounds.width, visibleHeight) / 3 / side
+        let zoom = min(max(wanted, scroll.minimumZoomScale, scroll.zoomScale * 0.75), scroll.maximumZoomScale)
+        let target = (zoom: max(zoom, scroll.minimumZoomScale), center: CGPoint(x: area.midX, y: area.midY))
+        let from = (zoom: scroll.zoomScale, center: visibleCenter)
+        if reduceMotion {
+            apply(zoom: target.zoom, center: target.center)
+            return
+        }
+        let distance = hypot(target.center.x - from.center.x, target.center.y - from.center.y) * scroll.zoomScale
+        let duration = min(0.9, 0.35 + Double(distance) / 2400)
+        let link = CADisplayLink(target: self, selector: #selector(flightStep(_:)))
+        flight = (link, from, target, CACurrentMediaTime(), duration)
+        link.add(to: .main, forMode: .common)
+    }
+
+    /// The canvas point at the middle of the room above the paint box.
+    private var visibleCenter: CGPoint {
+        let zoom = scroll.zoomScale
+        let visible = CGPoint(x: bounds.width / 2, y: (bounds.height - bottomInset) / 2)
+        return CGPoint(x: (scroll.contentOffset.x + visible.x) / zoom, y: (scroll.contentOffset.y + visible.y) / zoom)
+    }
+
+    /// Zoom and offset that put canvas point `center` at the middle of the room above the box.
+    private func apply(zoom: CGFloat, center c: CGPoint) {
+        scroll.zoomScale = zoom
+        center()
+        let visible = CGPoint(x: bounds.width / 2, y: (bounds.height - bottomInset) / 2)
+        let inset = scroll.contentInset
+        let size = scroll.contentSize
+        var offset = CGPoint(x: c.x * zoom - visible.x, y: c.y * zoom - visible.y)
+        offset.x = min(max(offset.x, -inset.left), max(size.width + inset.right - bounds.width, -inset.left))
+        offset.y = min(max(offset.y, -inset.top), max(size.height + inset.bottom - bounds.height, -inset.top))
+        scroll.contentOffset = offset
+        updateView()
+    }
+
+    @objc private func flightStep(_ link: CADisplayLink) {
+        guard let f = flight else { return link.invalidate() }
+        let t = min(1, (CACurrentMediaTime() - f.start) / f.duration)
+        let e = t < 0.5 ? 4 * t * t * t : 1 - pow(-2 * t + 2, 3) / 2
+        // Zoom eased in log space, the center along a straight line: no swing past the target.
+        let zoom = exp(log(f.from.zoom) + (log(f.to.zoom) - log(f.from.zoom)) * e)
+        let c = CGPoint(x: f.from.center.x + (f.to.center.x - f.from.center.x) * e,
+                        y: f.from.center.y + (f.to.center.y - f.from.center.y) * e)
+        apply(zoom: zoom, center: c)
+        if t >= 1 { cancelFlight() }
+    }
+
+    private func cancelFlight() {
+        flight?.link.invalidate()
+        flight = nil
     }
 
     /// Draws every frame while the sheet needs it, and only when asked otherwise.
@@ -267,22 +396,50 @@ struct WatercolorCanvas: UIViewRepresentable {
     var signed = false
     var title = ""
     var reduceMotion = false
-    let onTap: (SIMD2<Float>) -> Void
+    /// An area to fly to (Hint, Zen Mode), and a count that moves each time it is asked.
+    var flyTo: (area: CGRect, count: Int)?
+    let onTap: (SIMD2<Float>, Float) -> Void
+    let onDrag: (SIMD2<Float>, Float) -> Void
+
+    /// The paint in hand: its areas are hatched, so a change draws the sheet again.
+    var selected: Int?
+
+    final class Coordinator {
+        var flights = 0
+        var selected: Int?
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeUIView(context: Context) -> WatercolorCanvasView {
         let view = WatercolorCanvasView(renderer: renderer)
         view.onTap = onTap
+        view.onDrag = onDrag
+        view.onStroke = { [painting = renderer.painting] began in
+            if began { painting.beginStroke() } else { painting.endStroke() }
+        }
         view.reduceMotion = reduceMotion
         view.bottomInset = bottomInset
         view.sign(signed, title: title, animated: false)
+        context.coordinator.flights = flyTo?.count ?? 0
+        context.coordinator.selected = selected
         return view
     }
 
     func updateUIView(_ view: WatercolorCanvasView, context: Context) {
         view.onTap = onTap
+        view.onDrag = onDrag
         view.reduceMotion = reduceMotion
         view.bottomInset = bottomInset
         view.sign(signed, title: title, animated: true)
+        if selected != context.coordinator.selected {
+            context.coordinator.selected = selected
+            view.redraw()
+        }
+        if let flyTo, flyTo.count != context.coordinator.flights {
+            context.coordinator.flights = flyTo.count
+            view.fly(to: flyTo.area)
+        }
     }
 }
 #endif
