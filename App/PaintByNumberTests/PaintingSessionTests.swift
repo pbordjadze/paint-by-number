@@ -474,6 +474,27 @@ struct PaintingSessionTests {
         #expect(session.colorOf(next) == 4 && !session.isPainted(next))
     }
 
+    /// Zen Mode's flights move as the release's did, the balanced middle, unless the session
+    /// has moods (SideStore and Debug builds): then by the day's temperament, and the hint
+    /// button's flight never.
+    @Test(arguments: [false, true])
+    func zenModeFliesByTheDaysTemperament(moods: Bool) async throws {
+        let session = PaintingSession(template: template)
+        session.autoAdvance = false
+        let canvas = RecordingCanvas()
+        session.canvas = canvas
+        session.flowsToNextArea = true
+        session.zenHasMoods = moods
+        session.select(color: 4)
+        let areas = regions(ofColor: 4)
+        try #require(areas.count >= 2)
+        session.paint([areas[0]], from: .zero, animated: false)
+        try await waitUntil(timeout: .seconds(5)) { !canvas.temperaments.isEmpty }
+        #expect(canvas.temperaments == [moods ? ZenTemperament.today() : .balanced])
+        session.showHint()
+        #expect(canvas.focused.count == 2 && canvas.temperaments.count == 1)
+    }
+
     @Test func withoutZenModeAFillStaysPut() async throws {
         let session = PaintingSession(template: template)
         let canvas = RecordingCanvas()
@@ -1120,4 +1141,11 @@ final class RecordingCanvas: PaintingCanvas {
     func sessionDidChangeSelection(_ session: PaintingSession) {}
 
     func session(_ session: PaintingSession, focusOn region: Int) { focused.append(region) }
+
+    var temperaments: [ZenTemperament] = []
+
+    func session(_ session: PaintingSession, focusOn region: Int, temperament: ZenTemperament) {
+        temperaments.append(temperament)
+        focused.append(region)
+    }
 }

@@ -849,20 +849,20 @@ final class CanvasView: UIView, PaintingCanvas {
 
     /// Reveals a region: zoom until its number reads comfortably (without overflowing the
     /// view), centre it, then pulse it.
-    func reveal(region: Int) {
+    func reveal(region: Int, flight: Double = 0.55, closeness: Double = 0.45) {
         let r = template.regions[region]
         let center = anchors[region]
         let labelSize = CGFloat(max(scene?.labelSizes[region] ?? 8, 0.5))
         let extent = CGFloat(max(r.bounds.width, r.bounds.height, 1))
         let avail = bounds.inset(by: chromeInsets)
         let legible = 17 / labelSize
-        let roomy = 0.45 * min(avail.width, avail.height) / extent
+        let roomy = CGFloat(closeness) * min(avail.width, avail.height) / extent
         // Always fly in a little so the eye follows to the spot, but never past a view-filling region.
         let z = clampZoom(max(scrollView.zoomScale, min(roomy, max(legible, fitZoom * 2))))
-        animateCamera(zoom: z, offset: offset(centering: center, zoom: z), duration: 0.55)
+        animateCamera(zoom: z, offset: offset(centering: center, zoom: z), duration: flight)
         pulseRegion = region
         // Pulse as the flight lands; under Reduce Motion the camera is already there.
-        pulseStart = now() + (reduceMotion ? 0 : 0.4)
+        pulseStart = now() + (reduceMotion ? 0 : Float(flight - 0.15))
         activeUntil = max(activeUntil, pulseStart + 2.1)
     }
 
@@ -1624,11 +1624,15 @@ final class CanvasView: UIView, PaintingCanvas {
     }
 
     func session(_ session: PaintingSession, focusOn region: Int) {
+        self.session(session, focusOn: region, temperament: .balanced)
+    }
+
+    func session(_ session: PaintingSession, focusOn region: Int, temperament: ZenTemperament) {
         // Zen Mode's flight comes a moment after the fill: the painter may have taken the camera since.
         guard !scrollView.isTracking, !scrollView.isDragging, !scrollView.isDecelerating, !scrollView.isZooming else { return }
         // VoiceOver (and Switch Control) follow the hint to the revealed area.
         pendingFocus = .region(region)
-        reveal(region: region)
+        reveal(region: region, flight: temperament.flight, closeness: temperament.closeness)
     }
 
     /// Paint spreads from the touch; when the touch is outside the region (tolerance, drag

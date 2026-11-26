@@ -240,6 +240,10 @@ struct PaintView: View {
         .onChange(of: autoAdvance, initial: true) { _, advance in session.autoAdvance = advance }
         .onChange(of: zenMode, initial: true) { was, zen in
             session.flowsToNextArea = zen
+            #if UNRELEASED
+            // Zen Mode's personality is only in how it moves: the day's temperament.
+            session.zenHasMoods = true
+            #endif
             if zen && !isWarmup { PaintTips.used(.benchZen) }
             if zen && !was { sayWhatZenDoes() }
         }

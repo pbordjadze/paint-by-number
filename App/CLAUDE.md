@@ -404,7 +404,13 @@ below name both alike.
   canvas to the next area of the selected color `zenPause` after each fill or stroke, as the
   hint does, and `zenShinePause` after one that finished a color, whose shine shows first
   (`zenPause` under Reduce Motion, `PaintingSession.reduceMotion`: nothing shines). A tap during
-  any camera flight lands it and paints; only a tap on a fling just stops it.
+  any camera flight lands it and paints; only a tap on a fling just stops it. In SideStore and
+  Debug builds (`#if UNRELEASED`, painting-company row 394) Zen has a daily temperament shown
+  only in how it moves, never in words: its days sway around the release's motion
+  (PaintCore's `ZenTemperament`, from the date: the pause before it flies, the flight's length,
+  how close it frames the next area and which area it likes; `PaintingSession.zenHasMoods`,
+  `ZenTemperament.today`, Debug's `-zenDate YYYY-MM-DD` pins a day). The hint button's flight
+  keeps the balanced middle.
 - Drag painting scans the capsule the brush sweeps (`PaintingSession.drag`, radius capped at
   `PaintingSession.maxBrushRadius`); a stroke keeps the color it began with, though finishing
   it moves the selection on.
