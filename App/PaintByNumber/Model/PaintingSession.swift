@@ -575,11 +575,12 @@ final class PaintingSession {
         guard let color = selectedColor else { return }
         var best: Int?
         var bestScore = Float.infinity
+        let diagonal = Float(hypot(Double(template.width), Double(template.height)))
         for (i, r) in template.regions.enumerated() where Int(r.colorIndex) == color && !progress.isPainted(i) {
             let score: Float
             if let point, let label = template.labels(ofRegion: i).first {
                 let d2 = simd_distance_squared(label.position, point)
-                score = temperament?.score(distanceSquared: d2, area: r.area) ?? d2
+                score = temperament?.score(distanceSquared: d2, area: r.area, diagonal: diagonal) ?? d2
             } else {
                 score = -r.area
             }
