@@ -170,6 +170,28 @@ import Testing
         #expect(Self.digest(sim).allSatisfy { $0 == .zero })
     }
 
+    @Test func undoPutsTheSheetBackExactly() {
+        let t = Self.template
+        let order = t.regions.indices.sorted { t.regions[$0].area > t.regions[$1].area }
+        let a = order[0], b = order[1]
+        func painted(undoing: Bool) -> WatercolorSim {
+            let sim = WatercolorSim(sheet: WatercolorSheet(template: t, seed: 3))
+            sim.tap(region: a, at: Self.center(of: a, in: t), paint: true)
+            for _ in 0..<10 { sim.advance() }
+            // Taken while the first wash is still wet: undoing the second leaves it to dry on.
+            let before = sim.checkpoint()
+            if undoing {
+                sim.tap(region: b, at: Self.center(of: b, in: t), paint: true)
+                for _ in 0..<20 { sim.advance() }
+                sim.restore(before)
+                #expect(!sim.laid[b] && sim.laidCount == 1)
+            }
+            sim.finish()
+            return sim
+        }
+        #expect(Self.digest(painted(undoing: true)) == Self.digest(painted(undoing: false)))
+    }
+
     @Test func aLogReplaysToTheSamePainting() throws {
         let t = Self.template
         let regions = t.regions.indices.sorted { t.regions[$0].area > t.regions[$1].area }.prefix(6)

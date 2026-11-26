@@ -22,7 +22,8 @@ struct WatercolorUniforms {
     float4 paper;         // the paper's color
     float4 background;    // around the sheet
     float4 numberInk;
-    float4 sheet;         // the sheet's paper past the canvas: x its side and top margin, y its bottom one (canvas units)
+    float4 sheet;         // the sheet's paper past the canvas: x its side and top margin, y its bottom one (canvas units);
+                          // z the paint in hand + 1 (0: none), whose areas not yet laid are hatched, w the hatch's strength
 };
 
 // Mirrored by `WatercolorRegion`: per area, the target solve's gain (w: when it was painted,
@@ -107,6 +108,7 @@ fragment float4 watercolor_fragment(
     WatercolorOut in [[stage_in]],
     constant WatercolorUniforms &u [[buffer(0)]],
     const device WatercolorRegion *regions [[buffer(1)]],
+    const device uint *paints [[buffer(2)]],
     texture2d<half> density [[texture(0)]],
     texture2d<half> granulation [[texture(1)]],
     texture2d<uint, access::read> labels [[texture(2)]],
@@ -218,5 +220,12 @@ fragment float4 watercolor_fragment(
     float fade = clamp(1 - (u.time - r.gain.w) / 0.35, 0.0, 1.0);
     float n = float(numbers.sample(smooth, uv).r) * fade;
     refl = mix(refl, u.numberInk.rgb, n * 0.9);
+    // The paint in hand's areas not yet laid: a fine pencil hatch, as the main canvas hatches
+    // the selected color's areas, steady on screen at any zoom.
+    if (u.sheet.z > 0.5 && r.gain.w > u.time && float(paints[region]) + 1 == u.sheet.z) {
+        float h = fract((in.position.x + in.position.y) / 12.0);
+        float stroke = smoothstep(0.0, 0.1, h) * (1 - smoothstep(0.18, 0.28, h));
+        refl *= 1 - stroke * 0.22 * u.sheet.w * float3(1.0, 1.0, 0.9);
+    }
     return float4(refl, 1);
 }

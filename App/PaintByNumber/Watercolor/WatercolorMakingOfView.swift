@@ -406,6 +406,8 @@ final class WatercolorFilmRenderer: NSObject, MTKViewDelegate {
         encoder.setRenderPipelineState(pipeline)
         encoder.setFragmentBytes(&uniforms, length: MemoryLayout<WatercolorUniforms>.stride, index: 0)
         encoder.setFragmentBuffer(regions, offset: 0, index: 1)
+        // The painting's hatch reads its paints here; the film hatches nothing (sheet.z is 0).
+        encoder.setFragmentBuffer(regions, offset: 0, index: 2)
         encoder.setFragmentTexture(density, index: 0)
         encoder.setFragmentTexture(granulation, index: 1)
         encoder.setFragmentTexture(labels, index: 2)

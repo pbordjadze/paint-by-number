@@ -51,17 +51,21 @@ struct WatercolorPaintScreen: View {
     }
 }
 
-/// The sheet and the paints: a tap lays a wash of the paint in hand where it lands, or water. The
-/// paint box lies on the desk below the sheet; finished, it is put away and the sheet, signed,
-/// settles into the room it leaves.
+/// The sheet and the paints: a tap lays a wash of the paint in hand on its area, as the main
+/// painting screen fills one, with its Undo, Hint and Zen Mode (More). The paint box lies on the
+/// desk below the sheet; finished, it is put away and the sheet, signed, settles into the room it
+/// leaves.
 struct WatercolorPaintView: View {
     let shelf: WatercolorShelf
     let painting: WatercolorPainting
     let renderer: WatercolorRenderer
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(SettingsKey.zenMode) private var zenMode = SettingsDefault.zenMode
     @State private var taps = 0
     @State private var boxHeight: CGFloat = 0
+    @State private var flyTo: (area: CGRect, count: Int)?
+    @State private var zenFlight: Task<Void, Never>?
 
     var body: some View {
         GeometryReader { proxy in
@@ -70,14 +74,20 @@ struct WatercolorPaintView: View {
                                  bottomInset: proxy.safeAreaInsets.bottom + (painting.isComplete ? 0 : boxHeight + 10),
                                  signed: painting.isComplete,
                                  title: shelf.painting(painting.id)?.title ?? "",
-                                 reduceMotion: reduceMotion) { point in
-                    if painting.tap(at: point) != nil { taps += 1 }
-                }
+                                 reduceMotion: reduceMotion,
+                                 flyTo: flyTo,
+                                 onTap: { point, tolerance in
+                                     handle(painting.tap(at: point, tolerance: tolerance), at: point)
+                                 },
+                                 onDrag: { point, tolerance in
+                                     if case .painted = painting.tap(at: point, tolerance: tolerance, blooms: false) { taps += 1 }
+                                 },
+                                 selected: painting.selected)
                 .accessibilityElement()
                 .accessibilityLabel(Text("Watercolor sheet"))
                 .accessibilityValue(Text(progress))
                 .accessibilityAction(named: Text("Lay the Next Wash")) {
-                    if let point = painting.nextArea(), painting.tap(at: point) != nil { taps += 1 }
+                    if let point = painting.nextArea() { handle(painting.tap(at: point), at: point) }
                 }
                 .accessibilityIdentifier("watercolor-sheet")
                 .ignoresSafeArea(edges: [.horizontal, .bottom])
@@ -90,8 +100,36 @@ struct WatercolorPaintView: View {
                 }
             }
         }
+        .toolbar {
+            if !painting.isComplete {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Undo", systemImage: "arrow.uturn.backward") {
+                        zenFlight?.cancel()
+                        painting.undo()
+                    }
+                    .disabled(!painting.canUndo)
+                    .keyboardShortcut("z", modifiers: .command)
+                    .accessibilityIdentifier("watercolor-undo")
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Hint", systemImage: "lightbulb", action: hint)
+                        .disabled(painting.selected == nil)
+                        .keyboardShortcut("h", modifiers: [])
+                        .accessibilityIdentifier("watercolor-hint")
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        Toggle(isOn: $zenMode) { SwiftUI.Label("Zen Mode", systemImage: "leaf") }
+                    } label: {
+                        SwiftUI.Label("More", systemImage: "ellipsis")
+                    }
+                    .accessibilityIdentifier("watercolor-more")
+                }
+            }
+        }
         .animation(reduceMotion ? nil : .smooth(duration: 0.5), value: painting.isComplete)
         .sensoryFeedback(.impact(flexibility: .soft, intensity: 0.5), trigger: taps)
+        .sensoryFeedback(.selection, trigger: painting.shake.count)
         .onAppear { painting.settlesAtOnce = reduceMotion }
         .onChange(of: reduceMotion) { _, reduce in painting.settlesAtOnce = reduce }
         .onChange(of: taps) { _, _ in
@@ -107,7 +145,40 @@ struct WatercolorPaintView: View {
             default: break
             }
         }
-        .onDisappear { save(withPicture: true) }
+        .onDisappear {
+            zenFlight?.cancel()
+            save(withPicture: true)
+        }
+    }
+
+    /// What a tap did, felt and followed: a wash laid is felt and, in Zen Mode, the sheet goes on
+    /// to the nearest area of the paint in hand once the wash has spread a moment (longer after
+    /// one that finished its paint, as the main canvas's `zenShinePause`).
+    private func handle(_ result: WatercolorPainting.TapResult?, at point: SIMD2<Float>) {
+        guard let result else { return }
+        zenFlight?.cancel()
+        switch result {
+        case .painted(let r):
+            taps += 1
+            guard zenMode, !painting.isComplete else { return }
+            let finishedPaint = painting.selected != Int(painting.template.regions[r].colorIndex)
+            zenFlight = Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(finishedPaint ? 1100 : 450))
+                guard !Task.isCancelled, let next = painting.nextAreaFrame(near: point) else { return }
+                flyTo = (next.bounds, (flyTo?.count ?? 0) + 1)
+            }
+        case .bloomed:
+            taps += 1
+        case .otherPaint:
+            break
+        }
+    }
+
+    /// Flies to the largest area of the paint in hand not yet laid (the main canvas's Hint).
+    private func hint() {
+        zenFlight?.cancel()
+        guard let next = painting.nextAreaFrame() else { return }
+        flyTo = (next.bounds, (flyTo?.count ?? 0) + 1)
     }
 
     private var progress: String {
@@ -133,6 +204,7 @@ struct WatercolorPaintView: View {
 /// in a row when they fit, scrolling sideways otherwise.
 struct WatercolorPaintBox: View {
     let painting: WatercolorPainting
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
@@ -143,6 +215,10 @@ struct WatercolorPaintBox: View {
                     .onChange(of: painting.selected) { _, selected in
                         guard let selected else { return }
                         withAnimation { reader.scrollTo(selected, anchor: .center) }
+                    }
+                    .onChange(of: painting.shake.count) { _, _ in
+                        // The pan shaken brought into view, as the main palette shows its swatch.
+                        withAnimation { reader.scrollTo(painting.shake.color, anchor: .center) }
                     }
                     .onAppear {
                         if let selected = painting.selected { reader.scrollTo(selected, anchor: .center) }
@@ -187,6 +263,9 @@ struct WatercolorPaintBox: View {
             VStack(spacing: 5) {
                 WatercolorPan(color: color, done: done)
                     .frame(width: 40, height: 46)
+                    .modifier(PanShake(shakes: CGFloat(painting.shake.count),
+                                       amplitude: painting.shake.color == i && !reduceMotion ? 6 : 0))
+                    .animation(.linear(duration: 0.4), value: painting.shake.count)
                     .shadow(color: .black.opacity(selected ? 0.3 : 0.14), radius: selected ? 6 : 1, y: selected ? 7 : 1)
                     .offset(y: selected ? -7 : 0)
                 Group {
@@ -210,6 +289,21 @@ struct WatercolorPaintBox: View {
             Text(verbatim: "\(i + 1)")
         }
         .accessibilityIdentifier("watercolor-paint-\(i + 1)")
+    }
+}
+
+/// A pan shaken side to side, once for each step of `shakes`: its area was tapped while another
+/// paint was in hand (the main palette's shake).
+private struct PanShake: GeometryEffect {
+    var shakes: CGFloat
+    var amplitude: CGFloat
+    var animatableData: CGFloat {
+        get { shakes }
+        set { shakes = newValue }
+    }
+
+    func effectValue(size: CGSize) -> ProjectionTransform {
+        ProjectionTransform(CGAffineTransform(translationX: amplitude * sin(shakes * .pi * 4), y: 0))
     }
 }
 
