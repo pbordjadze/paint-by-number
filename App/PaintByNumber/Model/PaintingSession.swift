@@ -625,7 +625,7 @@ final class PaintingSession {
 
     /// How long a fill shows before Zen Mode flies on (`ZenTemperament.balanced.pause`; a day's
     /// own with `zenHasMoods`).
-    static let zenPause: Duration = .seconds(ZenTemperament.balanced.pause)
+    static let zenPause: Duration = .milliseconds(350)
     /// How long a fill that finished a color shows instead: the canvas sweeps a shine over the
     /// color 0.35 s after it, for 1.1 s, and a flight leaving as it starts would hide it. Under
     /// Reduce Motion nothing shines, and `zenPause` holds.

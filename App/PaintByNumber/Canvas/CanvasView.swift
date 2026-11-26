@@ -862,7 +862,7 @@ final class CanvasView: UIView, PaintingCanvas {
         animateCamera(zoom: z, offset: offset(centering: center, zoom: z), duration: flight)
         pulseRegion = region
         // Pulse as the flight lands; under Reduce Motion the camera is already there.
-        pulseStart = now() + (reduceMotion ? 0 : flight - 0.15)
+        pulseStart = now() + (reduceMotion ? 0 : Float(flight - 0.15))
         activeUntil = max(activeUntil, pulseStart + 2.1)
     }
 

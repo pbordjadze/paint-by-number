@@ -1,8 +1,7 @@
 import Foundation
 
-/// Zen Mode's little personality (painting-company row 394), shown only in how it moves: no
-/// words anywhere. Zen Mode was merged on October 5, 2026, which makes it a Libra, the sign of
-/// the scales: its days sway around a balanced middle, the release's own motion, and never far.
+/// Zen Mode's daily temperament (painting-company row 394), shown only in how it moves, never in
+/// words: its days sway around a balanced middle, the release's own motion, and never far.
 ///
 /// `temperament(year:month:day:)` is a pure function of the calendar date (no network, no stored
 /// state, the same all day on every device), so each day Zen has its own mood, and a new one at
@@ -13,7 +12,7 @@ import Foundation
 /// - **taste**: which area it picks, the nearest by default, a day that likes broad strokes
 ///   leaning toward larger ones a little farther off, a fussy one toward small ones.
 /// Every value stays in a narrow band around the release's (`balanced`), slower more than
-/// faster, so no day feels hurried. Zen's birthday is its slowest, roomiest, broadest day.
+/// faster, so no day feels hurried. October 5 is its slowest, roomiest, broadest day.
 public struct ZenTemperament: Equatable, Sendable {
     /// Seconds a fill shows before Zen Mode flies on (a fill that finished a color waits for its
     /// shine instead, whatever the day).
@@ -33,7 +32,7 @@ public struct ZenTemperament: Equatable, Sendable {
         self.taste = taste
     }
 
-    /// The release's motion, Libra's middle: what Zen Mode did before it had a personality.
+    /// The release's motion: what Zen Mode did before it had a temperament.
     public static let balanced = ZenTemperament(pause: 0.35, flight: 0.55, closeness: 0.45, taste: 0)
 
     /// The bands each day's values keep to.
@@ -42,12 +41,12 @@ public struct ZenTemperament: Equatable, Sendable {
     public static let closenesses = 0.40...0.50
     public static let tastes = -0.10...0.20
 
-    /// Zen Mode's birthday (month, day).
-    public static let birthday = (month: 10, day: 5)
+    /// The day with the slowest temperament (month, day).
+    public static let slowestDay = (month: 10, day: 5)
 
     /// The temperament of a calendar date (Gregorian, the painter's own time zone).
     public static func of(year: Int, month: Int, day: Int) -> ZenTemperament {
-        if month == birthday.month && day == birthday.day {
+        if month == slowestDay.month && day == slowestDay.day {
             return swayed(pace: 1, closeness: -1, taste: 1)
         }
         let n = dayOfYear(year: year, month: month, day: day)

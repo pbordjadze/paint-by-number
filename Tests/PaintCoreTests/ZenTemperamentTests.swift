@@ -34,12 +34,12 @@ struct ZenTemperamentTests {
         }
     }
 
-    @Test func theSameDateIsTheSameMoodAndTheBirthdayIsTheSlowest() {
+    @Test func theSameDateIsTheSameMoodAndOctober5IsTheSlowest() {
         #expect(ZenTemperament.of(year: 2026, month: 11, day: 26) == ZenTemperament.of(year: 2026, month: 11, day: 26))
         #expect(ZenTemperament.of(year: 2026, month: 11, day: 26) != ZenTemperament.of(year: 2027, month: 11, day: 26))
-        let birthday = ZenTemperament.of(year: 2031, month: 10, day: 5)
-        #expect(birthday.pause == ZenTemperament.pauses.upperBound && birthday.flight == ZenTemperament.flights.upperBound)
-        #expect(birthday.taste == ZenTemperament.tastes.upperBound)
+        let slowest = ZenTemperament.of(year: 2031, month: 10, day: 5)
+        #expect(slowest.pause == ZenTemperament.pauses.upperBound && slowest.flight == ZenTemperament.flights.upperBound)
+        #expect(slowest.taste == ZenTemperament.tastes.upperBound)
     }
 
     @Test func tasteChoosesAmongAreas() {
