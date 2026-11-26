@@ -236,12 +236,12 @@ func watercolorRaster(_ sim: WatercolorSim, template t: Template, fine: [Float]?
             // so their tint shows through and the two never stack to black).
             d = d * (1 - 0.6 * glazes[r]) + target.aim * glazes[r]
             let p2 = fine[y * W2 + x]
-            d *= 1 + gr * 0.6 * (0.5 - p2)
+            d *= 1 + (WatercolorLook.tooth + gr * WatercolorLook.granulation) * (0.5 - p2)
             var refl = WatercolorSheet.paperColor * SIMD3(exp(-d.x), exp(-d.y), exp(-d.z))
             let sx = fine[y * W2 + min(x + 1, W2 - 1)] - fine[y * W2 + max(x - 1, 0)]
             let sy = fine[min(y + 1, H2 - 1) * W2 + x] - fine[max(y - 1, 0) * W2 + x]
             let under = min(max((d.x + d.y + d.z) / 3 / 1.2, 0), 1)
-            refl *= min(max(1 + 0.45 * (sx + sy) * (1 - 0.6 * under), 0.85), 1.1)
+            refl *= min(max(1 + WatercolorLook.relief * (sx + sy) * (1 - WatercolorLook.reliefUnderPaint * under), 0.85), 1.1)
             if let front {
                 func water(_ gx: Float, _ gy: Float) -> Float {
                     let x0 = Int(gx.rounded(.down)), y0 = Int(gy.rounded(.down))
@@ -268,7 +268,8 @@ func watercolorRaster(_ sim: WatercolorSim, template t: Template, fine: [Float]?
             let here = t.region(at: canvas), right = t.region(at: canvas + SIMD2(1, 0)), down = t.region(at: canvas + SIMD2(0, 1))
             if here != right || here != down {
                 let painted: Float = sim.paintedAt[r] <= sim.time ? 1 : 0
-                let ink = 0.55 * (1 - 0.75 * min(under * 2.5, 1)) * (1 - pencilFade * painted)
+                let fade = front == nil ? WatercolorLook.pencilUnderPaint : pencilFade
+                let ink = 0.55 * (1 - 0.75 * min(under * 2.5, 1)) * (1 - fade * painted)
                 refl = refl * (1 - ink * (1 - graphite))
             }
             let p3 = refl
@@ -279,4 +280,16 @@ func watercolorRaster(_ sim: WatercolorSim, template t: Template, fine: [Float]?
         }
     }
     return image
+}
+
+/// The look's constants the shader (Watercolor.metal) shares, named once here for the raster.
+enum WatercolorLook {
+    /// Pigment settling in the paper's valleys, every paint (granulating paints add theirs).
+    static let tooth: Float = 0.3
+    static let granulation: Float = 0.7
+    /// The paper's lit relief on bare paper, and how much of it a wash quiets.
+    static let relief: Float = 0.25
+    static let reliefUnderPaint: Float = 0.4
+    /// How much of the pencil goes once its area is painted (the painting screen's).
+    static let pencilUnderPaint: Float = 0.5
 }
