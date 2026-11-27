@@ -244,20 +244,111 @@ nonisolated struct ArtworkStore: Sendable {
     }
 
     /// ✎ Change's refinements its tools left without Done or Cancel (iOS ended the app), or nil.
-    /// An unreadable or damaged file is none: the painting's own refinements open instead.
+    /// A `change.json` that can't be read gives the newest of the vault's saves that can, made
+    /// since edits were last let go (the same edits a second or so earlier); none of either, the
+    /// painting's own refinements open.
     func readChange(_ id: UUID) -> TemplateRefinements? {
         guard let data = try? Data(contentsOf: url(.change, of: id)) else { return nil }
-        return try? JSONDecoder().decode(TemplateRefinements.self, from: data)
+        if let refinements = try? JSONDecoder().decode(TemplateRefinements.self, from: data) { return refinements }
+        // Only this ✎ Change's saves: those older than the last edits let go were made on
+        // another template, or were let go themselves.
+        let lastLetGo = vaulted(id, kind: Vault.letGo).last.map(Vault.stamp(of:)) ?? ""
+        for save in vaulted(id, kind: Vault.save).reversed() where Vault.stamp(of: save) > lastLetGo {
+            if let data = try? Data(contentsOf: save),
+               let refinements = try? JSONDecoder().decode(TemplateRefinements.self, from: data) {
+                Breadcrumbs.trace("change \(id.uuidString) unreadable, from the vault's \(save.lastPathComponent)")
+                return refinements
+            }
+        }
+        return nil
     }
 
-    /// Keeps ✎ Change's refinements as they stand; nil removes them.
+    /// Keeps ✎ Change's refinements as they stand, with a copy among the vault's last saves; nil
+    /// lets them go into the vault, never deleting them.
     func writeChange(_ refinements: TemplateRefinements?, of id: UUID) throws {
         guard exists(id) else { return }
         guard let refinements else {
-            try? fm.removeItem(at: url(.change, of: id))
+            do {
+                try setAsideChange(of: id)
+            } catch {
+                // Kept where it was rather than lost: the next ✎ Change opens on it again.
+                Breadcrumbs.trace("change \(id.uuidString) set aside failed: \(error)")
+            }
             return
         }
-        try JSONEncoder().encode(refinements).write(to: url(.change, of: id), options: .atomic)
+        let data = try JSONEncoder().encode(refinements)
+        try data.write(to: url(.change, of: id), options: .atomic)
+        let vault = directory(for: id).appending(path: Vault.folder, directoryHint: .isDirectory)
+        do {
+            try fm.createDirectory(at: vault, withIntermediateDirectories: true)
+            try data.write(to: vault.appending(path: Vault.name(Vault.save, in: vault)), options: .atomic)
+            prune(vault, kind: Vault.save)
+        } catch {
+            Breadcrumbs.trace("vault save failed \(id.uuidString): \(error)")
+        }
+    }
+
+    /// The vault (`<id>/vault/`): copies of ✎ Change's edits, so no save, mistaken Cancel, failed
+    /// reopen or remade painting loses them for good. `save-…` are its last saves, newest last;
+    /// `letgo-…` the edits as they stood when Cancel, Done or a new template let them go. Only
+    /// the newest of each are kept; the painting's remakes carry the folder over.
+    nonisolated enum Vault {
+        static let folder = "vault"
+        static let save = "save"
+        static let letGo = "letgo"
+        static let keeps = [save: 8, letGo: 12]
+
+        /// A name sorting after every file in `vault`, of either kind: the time in milliseconds
+        /// since 1970, zero-padded, or a millisecond past the newest there when the clock is
+        /// behind it (set back), so the newest is always the last written.
+        static func name(_ kind: String, in vault: URL) -> String {
+            let names = (try? FileManager.default.contentsOfDirectory(atPath: vault.path)) ?? []
+            let newest = names.compactMap { name -> Int64? in
+                guard name.hasSuffix(".json"), let dash = name.lastIndex(of: "-") else { return nil }
+                return Int64(name[name.index(after: dash)...].dropLast(5))
+            }.max() ?? 0
+            let ms = max(Int64(Date.now.timeIntervalSince1970 * 1000), newest + 1)
+            return kind + "-" + String(format: "%015lld", ms) + ".json"
+        }
+
+        /// The time a vault file's name holds, which orders saves and let-go edits together.
+        static func stamp(of file: URL) -> String {
+            String(file.lastPathComponent.split(separator: "-").last ?? "")
+        }
+    }
+
+    /// The vault's files of one kind, oldest first (their names sort by time).
+    func vaulted(_ id: UUID, kind: String) -> [URL] {
+        vaulted(in: directory(for: id).appending(path: Vault.folder, directoryHint: .isDirectory), kind: kind)
+    }
+
+    private func vaulted(in vault: URL, kind: String) -> [URL] {
+        ((try? fm.contentsOfDirectory(at: vault, includingPropertiesForKeys: nil)) ?? [])
+            .filter { $0.lastPathComponent.hasPrefix(kind + "-") && $0.pathExtension == "json" }
+            .sorted { $0.lastPathComponent < $1.lastPathComponent }
+    }
+
+    private func prune(_ vault: URL, kind: String) {
+        let files = vaulted(in: vault, kind: kind)
+        for old in files.dropLast(Vault.keeps[kind] ?? 8) { try? fm.removeItem(at: old) }
+    }
+
+    /// Moves the painting's `change.json`, if any, into its vault as edits let go, or copies it
+    /// into the vault of `staging`, the painting's folder being remade, which a failed copy
+    /// stops: the folder stays as it was rather than lose them.
+    private func setAsideChange(of id: UUID, copyingInto staging: URL? = nil) throws {
+        let change = url(.change, of: id)
+        guard fm.fileExists(atPath: change.path) else { return }
+        let vault = (staging ?? directory(for: id)).appending(path: Vault.folder, directoryHint: .isDirectory)
+        try fm.createDirectory(at: vault, withIntermediateDirectories: true)
+        let name = Vault.name(Vault.letGo, in: vault)
+        if staging == nil {
+            try fm.moveItem(at: change, to: vault.appending(path: name))
+        } else {
+            try fm.copyItem(at: change, to: vault.appending(path: name))
+        }
+        prune(vault, kind: Vault.letGo)
+        Breadcrumbs.trace("change \(id.uuidString) set aside in the vault as \(name)")
     }
 
     // MARK: Lifecycle
@@ -301,13 +392,15 @@ nonisolated struct ArtworkStore: Sendable {
         try? fm.removeItem(at: staging)
         try fm.createDirectory(at: staging, withIntermediateDirectories: true)
         do {
-            // ✎ Change's unsaved edits were made on the template being replaced: they go with it.
+            // ✎ Change's unsaved edits were made on the template being replaced: they go with it…
             var rewritten = Set([File.meta, .template, .progress, .thumbnail, .change].map(\.rawValue))
             if refinements != nil { rewritten.insert(File.refinements.rawValue) }
             for item in try fm.contentsOfDirectory(at: directory(for: id), includingPropertiesForKeys: nil)
             where !rewritten.contains(item.lastPathComponent) {
                 try fm.copyItem(at: item, to: staging.appending(path: item.lastPathComponent))
             }
+            // …into the vault, which the loop carried over, never lost.
+            try setAsideChange(of: id, copyingInto: staging)
             try writeTemplate(template, in: staging)
             try progress.encoded().write(to: staging.appending(path: File.progress.rawValue), options: .atomic)
             let thumbnail = staging.appending(path: File.thumbnail.rawValue)

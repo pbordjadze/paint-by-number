@@ -435,6 +435,7 @@ struct ArtworkPaintingView: View {
                 // load's own pin or rebase, not as read from disk (the fresh reader's review).
                 presentedChange?.opened = refinements
             } onEdit: { refinements in
+                Breadcrumbs.trace("change edit \(artworkID.uuidString), edits: \(refinements.edits.count)")
                 keepChange(refinements, after: Self.changeKeepDelay)
             }
         }
@@ -745,8 +746,8 @@ struct ArtworkPaintingView: View {
         guard let opened = ended.opened, !model.refiningCancelled, ended.restored || model.refinements != opened else {
             model.cancelAll()
             // Nothing left unsaved: Cancel lets go of edits brought back too, and so does a load of
-            // them that failed (else every ✎ Change would fail on them). Cancel while Preparing
-            // leaves them for the next time.
+            // them that failed (else every ✎ Change would fail on them), into the painting's vault
+            // (`ArtworkStore.Vault`), never deleted. Cancel while Preparing leaves them for the next time.
             var failed = false
             if case .failed = model.phase { failed = true }
             Breadcrumbs.trace("change closed \(artworkID.uuidString) without keeping, failed to open: \(failed)")
@@ -756,6 +757,7 @@ struct ArtworkPaintingView: View {
         // On disk until the painting takes them (`adopt` removes them), so a Done that fails, or
         // iOS ending the app meanwhile, loses none.
         library.keepChange(model.refinements, for: artworkID)
+        Breadcrumbs.trace("change done tapped \(artworkID.uuidString), \(model.refinements.edits.count) edits")
         changing = Task {
             defer { changing = nil }
             do {
