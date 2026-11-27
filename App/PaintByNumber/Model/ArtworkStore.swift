@@ -16,6 +16,8 @@ import os
 ///                   thumbnail.png  the current state of the painting
 ///                   refinements.json  `TemplateRefinements`, only for a painting refined before
 ///                                  painting, read again to regenerate it
+///                   change.json    ✎ Change's refinements not yet kept by Done, so iOS ending the
+///                                  app loses no edit (`Library.keepChange`)
 ///     <root>/.staging/  new artworks are assembled here and moved into place atomically
 ///     <root>/.trash/    deleted artworks wait here while the deletion can still be undone
 nonisolated struct ArtworkStore: Sendable {
@@ -33,6 +35,8 @@ nonisolated struct ArtworkStore: Sendable {
         case thumbnail = "thumbnail.png"
         /// Written only for a refined painting.
         case refinements = "refinements.json"
+        /// ✎ Change's unfinished edits, there only while its tools have edits Done hasn't kept.
+        case change = "change.json"
     }
 
     static let sourceMaxPixelSize = 2048
@@ -239,6 +243,23 @@ nonisolated struct ArtworkStore: Sendable {
         return (try? JSONDecoder().decode(TemplateRefinements.self, from: data)) ?? TemplateRefinements()
     }
 
+    /// ✎ Change's refinements its tools left without Done or Cancel (iOS ended the app), or nil.
+    /// An unreadable or damaged file is none: the painting's own refinements open instead.
+    func readChange(_ id: UUID) -> TemplateRefinements? {
+        guard let data = try? Data(contentsOf: url(.change, of: id)) else { return nil }
+        return try? JSONDecoder().decode(TemplateRefinements.self, from: data)
+    }
+
+    /// Keeps ✎ Change's refinements as they stand; nil removes them.
+    func writeChange(_ refinements: TemplateRefinements?, of id: UUID) throws {
+        guard exists(id) else { return }
+        guard let refinements else {
+            try? fm.removeItem(at: url(.change, of: id))
+            return
+        }
+        try JSONEncoder().encode(refinements).write(to: url(.change, of: id), options: .atomic)
+    }
+
     // MARK: Lifecycle
 
     /// Writes a complete artwork into staging, then moves it into place, so a crash never
@@ -280,7 +301,8 @@ nonisolated struct ArtworkStore: Sendable {
         try? fm.removeItem(at: staging)
         try fm.createDirectory(at: staging, withIntermediateDirectories: true)
         do {
-            var rewritten = Set([File.meta, .template, .progress, .thumbnail].map(\.rawValue))
+            // ✎ Change's unsaved edits were made on the template being replaced: they go with it.
+            var rewritten = Set([File.meta, .template, .progress, .thumbnail, .change].map(\.rawValue))
             if refinements != nil { rewritten.insert(File.refinements.rawValue) }
             for item in try fm.contentsOfDirectory(at: directory(for: id), includingPropertiesForKeys: nil)
             where !rewritten.contains(item.lastPathComponent) {

@@ -578,6 +578,9 @@ quiet; a screen entering in front calls off the covered screen's moment and tip)
   recognition was tried and dropped, unproven on finger writing over a painting), and lists what
   goes along; the painter's own photo only when they switch Original Photo on (a library picture
   is named instead).
+- The bundle carries the app's diary (`Breadcrumbs`, `Application Support/breadcrumbs.log`, its
+  newest 64 KB: launches, the scene's comings and goings, saves that failed, drafts and ✎ Change's
+  edits kept, brought back or let go; ids and counts only), so work a tester lost can be traced.
 - Send writes the bundle (`FeedbackPackage`; its contents are `FeedbackReport`'s doc comment: the
   painting-with-marks PNG, the zip and `feedback.md` beside it) and `FeedbackUploader` posts the
   three to the relay (`feedback-relay/`, root `CLAUDE.md` › Map; `FeedbackUploader.endpoint` is the
@@ -811,7 +814,10 @@ a length already cut while the painting is open is made again as it was, `cuts`)
   `load(artwork:photo:template:refinements:)`: no suggestion, the painting's line art, an
   unedited template kept as the trail so nothing is made again); Done saves the template and
   refinements into the painting with its painted areas carried over (`Library.adopt`,
-  `PaintProgress.remapped`), Cancel changes nothing. Cut for 1.1, on purpose: the iPad drawer
+  `PaintProgress.remapped`), Cancel changes nothing. Edits not yet kept wait on disk
+  (`change.json`, `Library.keepChange`: a second after the last, and at once as the app leaves
+  the foreground) until Done or Cancel, so iOS ending the app loses none: the next ✎ Change
+  opens on them (a tester lost a refine in progress, November 26). Cut for 1.1, on purpose: the iPad drawer
   with the palette staying (the tools are full screen), one undo across paint and edits, the
   preview's sliders on this path, and a refined painting's kept base (its first ✎ makes the
   base again). Demos opening on a preview, drafts and drawings resumed keep the preview.

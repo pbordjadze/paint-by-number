@@ -19,7 +19,7 @@ That feedback is the only data the app collects. It is not linked to you (there 
 link it to), it is not used for tracking, and it is used only to fix problems in the app. The
 app's privacy manifest declares no tracking and this collected data, for the app's own functions:
 your notes (customer support), the app version, device model and system version with the
-painting's settings (other diagnostic data), and your painting with your marks, plus your
+painting's settings and the app's log of saves (other diagnostic data), and your painting with your marks, plus your
 original photo only if you switch it on (photos).
 
 ## Your photos and paintings
@@ -60,7 +60,9 @@ goes only where you send it; it doesn't pass through us.
 
 **Give Feedback** puts together a report that you can read before sending. It contains your
 painting with the marks you drew on it and a close-up of each, your notes, the painting's
-settings and progress, and the app version, device model and system version. Your original photo
+settings and progress, the app version, device model and system version, and the app's own log
+of when it saved your work (when it opened and closed, which paintings and drafts it saved, and
+any save that failed; no titles or anything you wrote). Your original photo
 is included only if you switch it on (a painting made from one of the app's own pictures names
 the picture instead).
 

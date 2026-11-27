@@ -27,6 +27,9 @@ final class CreateModel {
     /// received painting is its sender's (`Artwork.nicknameSeed`), at the version it records.
     /// Nil in a create flow, whose painting is `paintingID`'s.
     private(set) var changedPaintNames: SharedPainting.Nicknames?
+    /// ✎ Change opened on edits an earlier one left unsaved (`Library.keepChange`): they are in
+    /// no history, so Refine's Cancel asks before discarding them.
+    @ObservationIgnored var opensOnUnsavedEdits = false
     /// What Try Painting names the paints by: as the painting will name them.
     var paintNames: SharedPainting.Nicknames {
         changedPaintNames

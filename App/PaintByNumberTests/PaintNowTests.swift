@@ -105,6 +105,33 @@ struct PaintNowTests {
         }
     }
 
+    /// ✎ Change's edits not yet kept by Done stay on disk, so iOS ending the app loses none: the
+    /// next ✎ Change opens on them, and a new template for the painting lets them go.
+    @Test func changeKeepsUnsavedEdits() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft(photo: try photo()))
+        #expect(try await library.changeInputs(for: artwork.id).unsaved == nil)
+
+        var edited = TemplateRefinements()
+        edited.start = .blank
+        library.keepChange(edited, for: artwork.id)
+        await library.flush()
+        #expect(try await library.changeInputs(for: artwork.id).unsaved == edited)
+
+        library.keepChange(nil, for: artwork.id)
+        await library.flush()
+        #expect(try await library.changeInputs(for: artwork.id).unsaved == nil)
+
+        library.keepChange(edited, for: artwork.id)
+        await library.flush()
+        _ = try await library.regenerate(artwork: artwork.id, settings: GenerationSettings(colorCount: 6, detail: 0).normalized)
+        #expect(!FileManager.default.fileExists(atPath: library.store.url(.change, of: artwork.id).path))
+        // Each kept on the diary a tester's feedback carries (`Breadcrumbs`).
+        let diary = String(decoding: try #require(Breadcrumbs.read()), as: UTF8.self)
+        #expect(diary.contains("change kept \(artwork.id.uuidString), edits: 0"))
+        #expect(diary.contains("change kept \(artwork.id.uuidString), edits: -1"))
+    }
+
     /// An unedited painting opens in the drawing tools as it stands: its template is the base,
     /// nothing made again.
     @Test func changeOpensOnTheTemplateAsItStands() async throws {

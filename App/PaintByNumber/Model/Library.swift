@@ -703,12 +703,15 @@ final class Library {
 
     /// What the painting's ✎ Change opens on (`CreateModel.load(artwork:…)`): the photo it was
     /// made from as stored (`source.jpg`, else its library picture's file) and its refinements,
-    /// read off the main actor. Throws `ArtworkFactory.FactoryError.sourceUnavailable` without a photo.
-    func changeInputs(for id: UUID) async throws -> (photo: Data, refinements: TemplateRefinements) {
+    /// read off the main actor, and the edits an earlier ✎ Change left unsaved (`keepChange`), if
+    /// any. Throws `ArtworkFactory.FactoryError.sourceUnavailable` without a photo.
+    func changeInputs(for id: UUID) async throws -> (
+        photo: Data, refinements: TemplateRefinements, unsaved: TemplateRefinements?
+    ) {
         guard let artwork = artwork(with: id) else { throw ArtworkStore.StoreError.notFound }
         _ = await writes[id]?.value
         let store = self.store
-        return try await Background.run { () throws -> (photo: Data, refinements: TemplateRefinements) in
+        return try await Background.run { () throws -> (photo: Data, refinements: TemplateRefinements, unsaved: TemplateRefinements?) in
             let photo: Data
             if store.hasSource(id) {
                 photo = try Data(contentsOf: store.url(.source, of: id))
@@ -720,8 +723,17 @@ final class Library {
             let refinements = try store.readRefinements(id)
             // Edits a newer app made may not all have been read: Done would write them away.
             guard refinements.editorVersion <= TemplateEditor.version else { throw OpenError.needsNewerApp }
-            return (photo, refinements)
+            let unsaved = store.readChange(id).flatMap { $0.editorVersion <= TemplateEditor.version ? $0 : nil }
+            return (photo, refinements, unsaved)
         }
+    }
+
+    /// Keeps ✎ Change's edits not yet kept by Done (nil: none), in the painting's queue of writes,
+    /// so iOS ending the app while the drawing tools are open loses nothing: the next ✎ Change
+    /// opens on them (`changeInputs`). Done (`adopt`) and every other new template remove them.
+    func keepChange(_ refinements: TemplateRefinements?, for id: UUID) {
+        Breadcrumbs.trace("change kept \(id.uuidString), edits: \(refinements?.edits.count ?? -1) (-1: let go)")
+        _ = enqueue(id) { store in try store.writeChange(refinements, of: id) }
     }
 
     /// Takes the painting's ✎ Change (painting-company row 239): `draft`, the drawing tools'
@@ -969,6 +981,7 @@ final class Library {
                 return true
             } catch {
                 Log.library.error("Write failed for \(id.uuidString, privacy: .public): \(String(describing: error), privacy: .public)")
+                Breadcrumbs.trace("write failed \(id.uuidString): \(error)")
                 recordWrite(id, saves, error: error)
                 return false
             }

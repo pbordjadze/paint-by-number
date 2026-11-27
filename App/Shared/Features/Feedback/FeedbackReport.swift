@@ -18,6 +18,7 @@ import PaintCore
 ///   written on the painting reads there).
 /// - `template.pbnt`: the template (`pbn check` and
 ///   `pbn names --seed <nicknameSeed> --vocabulary <nicknameVersion>` read it; absent version = 1).
+/// - `breadcrumbs.log`: the app's diary of saves and leavings (`Breadcrumbs`), when it has one.
 /// - `photo.jpg`: the painter's photo, only when they chose to include it. A library picture is
 ///   named instead (`painting.sample`, `App/PaintByNumber/Resources/Samples/<sample>.jpg`).
 ///
@@ -116,6 +117,7 @@ nonisolated struct FeedbackReport: Codable, Sendable {
         static let view = "view.png"
         static let template = "template.pbnt"
         static let photo = "photo.jpg"
+        static let breadcrumbs = "breadcrumbs.log"
         static func mark(_ number: Int) -> String { "mark-\(number).png" }
     }
 }
