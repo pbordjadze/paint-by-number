@@ -19,7 +19,7 @@ That feedback is the only data the app collects. It is not linked to you (there 
 link it to), it is not used for tracking, and it is used only to fix problems in the app. The
 app's privacy manifest declares no tracking and this collected data, for the app's own functions:
 your notes (customer support), the app version, device model and system version with the
-painting's settings (other diagnostic data), and your painting with your marks, plus your
+painting's settings and the app's log of saves (other diagnostic data), and your painting with your marks, plus your
 original photo only if you switch it on (photos).
 
 ## Your photos and paintings
