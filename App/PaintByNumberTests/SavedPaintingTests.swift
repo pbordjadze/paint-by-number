@@ -17,7 +17,7 @@ struct SavedPaintingTests {
     private func library() throws -> Library {
         let folder = root.appending(path: Self.id.uuidString, directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        for (file, ext) in [("meta", "json"), ("template", "pbnt"), ("progress", "bin"), ("refinements", "json"), ("source", "jpg")] {
+        for (file, ext) in [("meta", "json"), ("template", "pbnt"), ("progress", "bin"), ("refinements", "json"), ("source", "jpg"), ("thumbnail", "png")] {
             let fixture = try #require(
                 Bundle(for: Marker.self).url(forResource: "Saved15-\(file)", withExtension: ext),
                 "Saved15-\(file).\(ext) isn't in the test bundle")

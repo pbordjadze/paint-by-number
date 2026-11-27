@@ -16,20 +16,24 @@ App/Shared/Model/PaintProgress.swift App/PaintByNumber/Generation/TemplateRefine
                     the paint in hand (1.2's trailing field)
   refinements.json  `TemplateRefinements`, one drawn line, editor version 7
   source.jpg        the photo (copied)
+  thumbnail.png     pbn's areas.ppm, 256 px (Pillow), standing in for the gallery's picture
 
   tools/swift.sh build --product pbn
   .build/debug/pbn generate Tests/Corpus/<photo>.ppm <out> --auto --paint-mix beauty
   tools/fixtures/saved_painting.py <out> <photo.jpg> App/PaintByNumberTests
+(the committed files: hibiscus at 384×256 with its maps from tools/baseline/lines/, --length relaxed)
 """
 import json
 import shutil
 import struct
 import sys
 import uuid
+
+from PIL import Image
 from pathlib import Path
 
 ID = "5A1E0015-0000-4000-8000-0000000000B5"
-CREATED = 785_000_000.0  # 2025-11-15, seconds since 2001
+CREATED = 817_250_400.0  # November 24, 2026, 5 PM ET (1.5's day), seconds since 2001
 PAINTED = [0, 2, 3, 5, 8, 13]
 
 
@@ -48,7 +52,8 @@ def progress(regions: int) -> bytes:
 def main() -> None:
     out, photo, dest = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])
     stats = json.loads((out / "stats.json").read_text())
-    settings = stats["auto"]["settings"]
+    # Auto's choice, with the mix pbn laid on it (`--paint-mix beauty`), as a new painting records.
+    settings = dict(stats["auto"]["settings"], paintMix="beauty")
     regions = stats["regions"]
     assert max(PAINTED) < regions
     meta = {
@@ -86,6 +91,9 @@ def main() -> None:
     for name, data in files.items():
         (dest / f"Saved15-{name}").write_bytes(data)
     shutil.copy(photo, dest / "Saved15-source.jpg")
+    thumbnail = Image.open(out / "areas.ppm")
+    thumbnail.thumbnail((256, 256))
+    thumbnail.save(dest / "Saved15-thumbnail.png")
 
 
 if __name__ == "__main__":

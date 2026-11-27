@@ -244,12 +244,16 @@ nonisolated struct ArtworkStore: Sendable {
     }
 
     /// ✎ Change's refinements its tools left without Done or Cancel (iOS ended the app), or nil.
-    /// A `change.json` that can't be read gives the newest of the vault's saves that can (the
-    /// same edits a second or so earlier); none of either, the painting's own refinements open.
+    /// A `change.json` that can't be read gives the newest of the vault's saves that can, made
+    /// since edits were last let go (the same edits a second or so earlier); none of either, the
+    /// painting's own refinements open.
     func readChange(_ id: UUID) -> TemplateRefinements? {
         guard let data = try? Data(contentsOf: url(.change, of: id)) else { return nil }
         if let refinements = try? JSONDecoder().decode(TemplateRefinements.self, from: data) { return refinements }
-        for save in vaulted(id, kind: Vault.save).reversed() {
+        // Only this ✎ Change's saves: those older than the last edits let go were made on
+        // another template, or were let go themselves.
+        let lastLetGo = vaulted(id, kind: Vault.letGo).last.map(Vault.stamp(of:)) ?? ""
+        for save in vaulted(id, kind: Vault.save).reversed() where Vault.stamp(of: save) > lastLetGo {
             if let data = try? Data(contentsOf: save),
                let refinements = try? JSONDecoder().decode(TemplateRefinements.self, from: data) {
                 Breadcrumbs.trace("change \(id.uuidString) unreadable, from the vault's \(save.lastPathComponent)")
@@ -294,19 +298,26 @@ nonisolated struct ArtworkStore: Sendable {
         static let letGo = "letgo"
         static let keeps = [save: 8, letGo: 12]
 
-        /// A name no file in `vault` has, sorting by time as text: milliseconds since 1970,
-        /// zero-padded, a millisecond on where two would meet.
+        /// A name sorting after every file in `vault`, of either kind: the time in milliseconds
+        /// since 1970, zero-padded, or a millisecond past the newest there when the clock is
+        /// behind it (set back), so the newest is always the last written.
         static func name(_ kind: String, in vault: URL) -> String {
-            var ms = Int64(Date.now.timeIntervalSince1970 * 1000)
-            while true {
-                let name = kind + "-" + String(format: "%015lld", ms) + ".json"
-                if !FileManager.default.fileExists(atPath: vault.appending(path: name).path) { return name }
-                ms += 1
-            }
+            let names = (try? FileManager.default.contentsOfDirectory(atPath: vault.path)) ?? []
+            let newest = names.compactMap { name -> Int64? in
+                guard name.hasSuffix(".json"), let dash = name.lastIndex(of: "-") else { return nil }
+                return Int64(name[name.index(after: dash)...].dropLast(5))
+            }.max() ?? 0
+            let ms = max(Int64(Date.now.timeIntervalSince1970 * 1000), newest + 1)
+            return kind + "-" + String(format: "%015lld", ms) + ".json"
+        }
+
+        /// The time a vault file's name holds, which orders saves and let-go edits together.
+        static func stamp(of file: URL) -> String {
+            String(file.lastPathComponent.split(separator: "-").last ?? "")
         }
     }
 
-    /// The vault's files of one kind, oldest first.
+    /// The vault's files of one kind, oldest first (their names sort by time).
     func vaulted(_ id: UUID, kind: String) -> [URL] {
         vaulted(in: directory(for: id).appending(path: Vault.folder, directoryHint: .isDirectory), kind: kind)
     }

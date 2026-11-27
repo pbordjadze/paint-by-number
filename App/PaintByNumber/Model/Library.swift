@@ -724,6 +724,9 @@ final class Library {
             // Edits a newer app made may not all have been read: Done would write them away.
             guard refinements.editorVersion <= TemplateEditor.version else { throw OpenError.needsNewerApp }
             let unsaved = store.readChange(id).flatMap { $0.editorVersion <= TemplateEditor.version ? $0 : nil }
+            Breadcrumbs.trace(
+                "change vault \(id.uuidString): saves \(store.vaulted(id, kind: ArtworkStore.Vault.save).map(\.lastPathComponent)), "
+                    + "let go \(store.vaulted(id, kind: ArtworkStore.Vault.letGo).map(\.lastPathComponent))")
             return (photo, refinements, unsaved)
         }
     }

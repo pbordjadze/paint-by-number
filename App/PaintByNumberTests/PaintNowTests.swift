@@ -152,13 +152,28 @@ struct PaintNowTests {
         await library.flush()
         #expect(try await library.changeInputs(for: artwork.id).unsaved == nil)
         #expect(store.vaulted(artwork.id, kind: ArtworkStore.Vault.letGo).count == 1)
+        // Saves from before edits were let go are never brought back.
+        try Data("{".utf8).write(to: store.url(.change, of: artwork.id))
+        #expect(try await library.changeInputs(for: artwork.id).unsaved == nil)
+        library.keepChange(nil, for: artwork.id)
+        await library.flush()
+
+        // A clock set back still writes after the newest, never pruned at once.
+        let vault = store.directory(for: artwork.id).appending(path: ArtworkStore.Vault.folder)
+        try Data("{}".utf8).write(to: vault.appending(path: "save-500000000000000.json"))
+        var later = edited
+        later.start = .generated
+        library.keepChange(later, for: artwork.id)
+        await library.flush()
+        let newest = try #require(store.vaulted(artwork.id, kind: ArtworkStore.Vault.save).last)
+        #expect(try JSONDecoder().decode(TemplateRefinements.self, from: Data(contentsOf: newest)) == later)
 
         library.keepChange(edited, for: artwork.id)
         await library.flush()
         _ = try await library.regenerate(artwork: artwork.id, settings: GenerationSettings(colorCount: 6, detail: 0).normalized)
         #expect(!FileManager.default.fileExists(atPath: store.url(.change, of: artwork.id).path))
         let letGo = store.vaulted(artwork.id, kind: ArtworkStore.Vault.letGo)
-        #expect(letGo.count == 2)
+        #expect(letGo.count == 3)
         let kept = try JSONDecoder().decode(TemplateRefinements.self, from: Data(contentsOf: try #require(letGo.last)))
         #expect(kept == edited)
         #expect(store.vaulted(artwork.id, kind: ArtworkStore.Vault.save).count == ArtworkStore.Vault.keeps[ArtworkStore.Vault.save])
