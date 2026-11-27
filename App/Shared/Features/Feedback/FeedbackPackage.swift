@@ -165,6 +165,7 @@ nonisolated enum FeedbackPackage {
         try markdown.write(to: reportFile)
         try capture.template.encoded().write(to: folder.appending(path: FeedbackReport.File.template))
         if let photo = contents.photo { try photo.write(to: folder.appending(path: FeedbackReport.File.photo)) }
+        if let diary = Breadcrumbs.read() { try diary.write(to: folder.appending(path: FeedbackReport.File.breadcrumbs)) }
     }
 
     /// `painting` on the backdrop the canvas showed around the sheet, with `ink` over it.

@@ -85,6 +85,8 @@ struct ArtworkPaintingView: View {
     /// The change the cover was opened for, read once it has gone: the cover's item is already
     /// nil when its `onDismiss` runs (the Mac's QA, November 9: Done kept nothing).
     @State private var presentedChange: PaintingChange?
+    /// ✎ Change's edits waiting to be written (`keepChange`).
+    @State private var changeKeeping: Task<Void, Never>?
     /// ✎ Change was tapped before Unlimited Paintings, which the drawing tools come with, was bought.
     @State private var offersChangeUnlock = false
     @Environment(UnlimitedPaintings.self) private var paintings
@@ -432,6 +434,8 @@ struct ArtworkPaintingView: View {
                 // What Done is compared with: the refinements as the tools opened, after the
                 // load's own pin or rebase, not as read from disk (the fresh reader's review).
                 presentedChange?.opened = refinements
+            } onEdit: { refinements in
+                keepChange(refinements, after: Self.changeKeepDelay)
             }
         }
         .modifier(RefineUnlockOffer(isPresented: $offersChangeUnlock) { openChange() })
@@ -462,6 +466,10 @@ struct ArtworkPaintingView: View {
             guard phase != .active else {
                 absorbWidgetAreas()
                 return
+            }
+            // ✎ Change's edits on disk before the hold below waits for the writes.
+            if let refinements = presentedChange?.model.refinements, presentedChange?.opened != nil {
+                keepChange(refinements, after: nil)
             }
             FeedbackEngine.shared.rest()
             autosaver?.saveNow(refreshThumbnail: true)
@@ -708,8 +716,11 @@ struct ArtworkPaintingView: View {
                 let inputs = try await library.changeInputs(for: id)
                 try Task.checkCancellation()
                 let model = CreateModel(previewStyle: .painting)
-                model.load(artwork: artwork, photo: inputs.photo, template: template, refinements: inputs.refinements)
-                let opened = PaintingChange(model: model)
+                // Edits a ✎ Change left unsaved (iOS ended the app) come back where they were.
+                model.load(artwork: artwork, photo: inputs.photo, template: template, refinements: inputs.unsaved ?? inputs.refinements)
+                model.opensOnUnsavedEdits = inputs.unsaved != nil
+                Breadcrumbs.trace("change opened \(id.uuidString), unsaved edits back: \(inputs.unsaved?.edits.count ?? 0)")
+                let opened = PaintingChange(model: model, restored: inputs.unsaved != nil)
                 presentedChange = opened
                 change = opened
             } catch is CancellationError {
@@ -726,17 +737,31 @@ struct ArtworkPaintingView: View {
         guard let ended = presentedChange else { return }
         presentedChange = nil
         change = nil
+        changeKeeping?.cancel()
+        changeKeeping = nil
         let model = ended.model
-        // Closed before the tools opened (Cancel while Preparing) is a cancel too.
-        guard let opened = ended.opened, !model.refiningCancelled, model.refinements != opened else {
+        // Closed before the tools opened (Cancel while Preparing) is a cancel too. Edits brought
+        // back from an earlier ✎ Change are a change, though the tools opened on them.
+        guard let opened = ended.opened, !model.refiningCancelled, ended.restored || model.refinements != opened else {
             model.cancelAll()
+            // Nothing left unsaved: Cancel lets go of edits brought back too, and so does a load of
+            // them that failed (else every ✎ Change would fail on them). Cancel while Preparing
+            // leaves them for the next time.
+            var failed = false
+            if case .failed = model.phase { failed = true }
+            Breadcrumbs.trace("change closed \(artworkID.uuidString) without keeping, failed to open: \(failed)")
+            if ended.opened != nil || model.refiningCancelled || failed { library.keepChange(nil, for: artworkID) }
             return
         }
+        // On disk until the painting takes them (`adopt` removes them), so a Done that fails, or
+        // iOS ending the app meanwhile, loses none.
+        library.keepChange(model.refinements, for: artworkID)
         changing = Task {
             defer { changing = nil }
             do {
                 let draft = try await model.makeDraft()
                 let document = try await library.adopt(draft, into: artworkID)
+                Breadcrumbs.trace("change done \(artworkID.uuidString), \(draft.refinements.edits.count) edits")
                 // The cuts kept were of the painting before the change.
                 cuts = [:]
                 precuts.forget()
@@ -745,9 +770,33 @@ struct ArtworkPaintingView: View {
             } catch is CancellationError {
             } catch {
                 Log.library.error("Keeping ✎ Change on \(artworkID.uuidString, privacy: .public) failed: \(String(describing: error), privacy: .public)")
+                Breadcrumbs.trace("change done failed \(artworkID.uuidString): \(error)")
                 showChangeFailed()
             }
             model.cancelAll()
+        }
+    }
+
+    /// How long ✎ Change's edits wait, the painter still drawing, before they are written.
+    private static let changeKeepDelay: Duration = .seconds(1)
+
+    /// Keeps the open ✎ Change's edits on disk (`Library.keepChange`) after `delay` without
+    /// another edit, or at once (nil: the app is leaving the foreground); none when they are back
+    /// where the tools opened.
+    private func keepChange(_ refinements: TemplateRefinements, after delay: Duration?) {
+        changeKeeping?.cancel()
+        changeKeeping = nil
+        guard let open = presentedChange, let opened = open.opened else { return }
+        let kept = open.restored || refinements != opened ? refinements : nil
+        let library = library, id = artworkID
+        guard let delay else {
+            library.keepChange(kept, for: id)
+            return
+        }
+        changeKeeping = Task {
+            try? await Task.sleep(for: delay)
+            guard !Task.isCancelled else { return }
+            library.keepChange(kept, for: id)
         }
     }
 
@@ -1042,5 +1091,7 @@ private extension OpenNotice {
 private struct PaintingChange: Identifiable {
     let id = UUID()
     let model: CreateModel
+    /// It opened on edits an earlier ✎ Change left unsaved (`Library.changeInputs`).
+    var restored = false
     var opened: TemplateRefinements?
 }

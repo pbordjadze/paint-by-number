@@ -434,9 +434,10 @@ struct RefineView: View {
     // MARK: Changes
 
     /// Cancel: at once with nothing to lose, else once the painter says to discard the changes
-    /// (an edit still on its way counts: it isn't in the history yet).
+    /// (an edit still on its way counts: it isn't in the history yet, nor do ✎ Change's edits
+    /// brought back after iOS ended the app).
     private func askToCancel() {
-        if model.canUndo || !refine.submitted.isEmpty { confirmsCancel = true } else { cancel() }
+        if model.canUndo || !refine.submitted.isEmpty || model.opensOnUnsavedEdits { confirmsCancel = true } else { cancel() }
     }
 
     private func cancel() {

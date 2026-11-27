@@ -15,6 +15,8 @@ struct PaintByNumberApp: App {
             KeyboardWatch.start()
         }
         #endif
+        let info = Bundle.main.infoDictionary
+        Breadcrumbs.trace("launch \(info?["CFBundleShortVersionString"] as? String ?? "?") (\(info?["CFBundleVersion"] as? String ?? "?"))")
         Preferences.removeRetiredSettings()
         EdgeDetector.ModelPool.emptiesWhenMemoryIsNeeded()
         PaintTips.configure()

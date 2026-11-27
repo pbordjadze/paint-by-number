@@ -188,6 +188,7 @@ struct AppShellView: View {
             if phase == .active { Task { await Nights.shared.refresh() } }
         }
         #endif
+        .onChange(of: scenePhase) { _, phase in Breadcrumbs.trace("scene \(phase)") }
         // Tonight's Picture made before it is picked, while no painting is open (`TonightAhead`).
         .modifier(TonightAhead.Preparing(isPainting: !path.isEmpty))
         // Someone started painting a picture together: it is added as a painting they sent and

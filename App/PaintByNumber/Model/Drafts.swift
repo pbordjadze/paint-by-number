@@ -103,8 +103,10 @@ final class Drafts {
                 keptOnDisk = try await Background.run { try store.write(draft, photo: reusesPhoto ? nil : photo, kept: kept) }
                 current = draft
                 saveFailed = nil
+                Breadcrumbs.trace("draft saved \(draft.photoID.uuidString), \(draft.refinements.edits.count) edits")
             } catch {
                 Log.create.error("Saving the draft failed: \(String(describing: error), privacy: .public)")
+                Breadcrumbs.trace("draft save failed \(draft.photoID.uuidString): \(error)")
                 // The write leaves the disk as it was (`DraftStore.write`). The draft waits for
                 // the next save, unless it was let go meanwhile or a newer one was handed over
                 // (waiting or already queued behind this write).
