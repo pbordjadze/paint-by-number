@@ -575,11 +575,12 @@ final class PaintingSession {
         guard let color = selectedColor else { return }
         var best: Int?
         var bestScore = Float.infinity
+        let diagonal = Float(hypot(Double(template.width), Double(template.height)))
         for (i, r) in template.regions.enumerated() where Int(r.colorIndex) == color && !progress.isPainted(i) {
             let score: Float
             if let point, let label = template.labels(ofRegion: i).first {
                 let d2 = simd_distance_squared(label.position, point)
-                score = temperament?.score(distanceSquared: d2, area: r.area) ?? d2
+                score = temperament?.score(distanceSquared: d2, area: r.area, diagonal: diagonal) ?? d2
             } else {
                 score = -r.area
             }
@@ -628,7 +629,7 @@ final class PaintingSession {
     static let zenPause: Duration = .milliseconds(350)
     /// How long a fill that finished a color shows instead: the canvas sweeps a shine over the
     /// color 0.35 s after it, for 1.1 s, and a flight leaving as it starts would hide it. Under
-    /// Reduce Motion nothing shines, and `zenPause` holds.
+    /// Reduce Motion nothing shines, and the usual pause holds (the day's, with `zenHasMoods`).
     static let zenShinePause: Duration = .milliseconds(1300)
 
     /// Zen Mode's flight: the hint near `point`, unless something was painted, undone or

@@ -9,55 +9,73 @@ struct ZenTemperamentTests {
         return (1...12).flatMap { m in (1...lengths[m - 1]).map { (m, $0) } }
     }
 
+    private func close(_ a: Double, _ b: Double) -> Bool { abs(a - b) < 1e-9 }
+
     private func isInBands(_ t: ZenTemperament) -> Bool {
         ZenTemperament.pauses.contains(t.pause) && ZenTemperament.flights.contains(t.flight)
             && ZenTemperament.closenesses.contains(t.closeness) && ZenTemperament.tastes.contains(t.taste)
+            && (0...1).contains(t.wander)
     }
 
     @Test(arguments: [2026, 2027, 2028, 2100])
-    func everyDayStaysInItsBandsAndDaysDiffer(year: Int) {
+    func everyDayStaysInItsBandsAndDaysFeelDifferent(year: Int) {
         let days = everyDay(of: year).map { ZenTemperament.of(year: year, month: $0.month, day: $0.day) }
         #expect(days.allSatisfy(isInBands))
-        // Each day its own mood: neighbours never move alike.
         for (a, b) in zip(days, days.dropFirst()) { #expect(a != b) }
-        // The year sways both ways round the middle on every axis.
-        let b = ZenTemperament.balanced
-        #expect(days.contains { $0.pause > b.pause + 0.05 } && days.contains { $0.pause < b.pause - 0.02 })
-        #expect(days.contains { $0.taste > 0.1 } && days.contains { $0.taste < -0.05 })
-        #expect(days.contains { $0.closeness > 0.47 } && days.contains { $0.closeness < 0.43 })
+        // Most days lean clearly calm or lively, and the year has plenty of each.
+        let calm = days.filter { $0.flight > 0.8 }.count
+        let lively = days.filter { $0.wander > 0.5 }.count
+        #expect(calm > days.count / 5 && lively > days.count / 5)
+        #expect(days.filter { abs($0.flight - 0.55) < 0.05 && $0.wander < 0.1 }.count < days.count / 5)
     }
 
-    @Test func paceMovesPauseAndFlightTogether() {
-        for (m, d) in everyDay(of: 2027) {
-            let t = ZenTemperament.of(year: 2027, month: m, day: d)
-            #expect((t.pause - 0.35 >= 0) == (t.flight - 0.55 >= 0))
-        }
+    @Test func calmLingersAndLivelyWanders() {
+        let calm = ZenTemperament.mood(1, closeness: 0)
+        #expect(close(calm.pause, 0.90) && close(calm.flight, 1.10) && close(calm.taste, 0.45) && calm.wander == 0)
+        let lively = ZenTemperament.mood(-1, closeness: 0)
+        #expect(close(lively.pause, 0.25) && close(lively.flight, 0.45) && close(lively.taste, -0.20) && lively.wander == 1)
+        #expect(ZenTemperament.mood(0, closeness: 0) == .balanced)
     }
 
-    @Test func theSameDateIsTheSameMoodAndOctober5IsTheSlowest() {
+    @Test func theSameDateIsTheSameMoodAndOctober5IsTheCalmest() {
         #expect(ZenTemperament.of(year: 2026, month: 11, day: 26) == ZenTemperament.of(year: 2026, month: 11, day: 26))
         #expect(ZenTemperament.of(year: 2026, month: 11, day: 26) != ZenTemperament.of(year: 2027, month: 11, day: 26))
-        let slowest = ZenTemperament.of(year: 2031, month: 10, day: 5)
-        #expect(slowest.pause == ZenTemperament.pauses.upperBound && slowest.flight == ZenTemperament.flights.upperBound)
-        #expect(slowest.taste == ZenTemperament.tastes.upperBound)
+        let calmest = ZenTemperament.of(year: 2031, month: 10, day: 5)
+        #expect(close(calmest.pause, ZenTemperament.pauses.upperBound) && close(calmest.flight, ZenTemperament.flights.upperBound))
     }
 
-    @Test func tasteChoosesAmongAreas() {
-        let near = (distanceSquared: Float(100), area: Float(10))
-        let far = (distanceSquared: Float(140), area: Float(2000))
-        // The balanced middle takes the nearest; a broad day the larger area a little farther off.
-        let balanced = ZenTemperament.balanced
-        #expect(balanced.score(distanceSquared: near.0, area: near.1) < balanced.score(distanceSquared: far.0, area: far.1))
-        let broad = ZenTemperament.swayed(pace: 0, closeness: 0, taste: 1)
-        #expect(broad.score(distanceSquared: near.0, area: near.1) > broad.score(distanceSquared: far.0, area: far.1))
-        // Much farther stays farther.
-        #expect(broad.score(distanceSquared: 100, area: 10) < broad.score(distanceSquared: 1000, area: 2000))
+    @Test func tasteAndWanderChooseAmongAreas() {
+        let diagonal: Float = 1000
+        let near = (d2: Float(100 * 100), area: Float(10))
+        let farBig = (d2: Float(180 * 180), area: Float(5000))
+        let across = (d2: Float(350 * 350), area: Float(10))
+        let b = ZenTemperament.balanced
+        // The balanced middle takes the nearest.
+        #expect(b.score(distanceSquared: near.d2, area: near.area, diagonal: diagonal)
+                < b.score(distanceSquared: farBig.d2, area: farBig.area, diagonal: diagonal))
+        // A calm day the large area farther off.
+        let calm = ZenTemperament.mood(1, closeness: 0)
+        #expect(calm.score(distanceSquared: near.d2, area: near.area, diagonal: diagonal)
+                > calm.score(distanceSquared: farBig.d2, area: farBig.area, diagonal: diagonal))
+        // A lively day flies across the painting rather than next door.
+        let lively = ZenTemperament.mood(-1, closeness: 0)
+        #expect(lively.score(distanceSquared: across.d2, area: across.area, diagonal: diagonal)
+                < lively.score(distanceSquared: near.d2, area: near.area, diagonal: diagonal))
+        // Short of the liked distance too, and with taste still choosing the smaller of two.
+        let farish = (d2: Float(300 * 300), area: Float(10))
+        #expect(lively.score(distanceSquared: farish.d2, area: farish.area, diagonal: diagonal)
+                < lively.score(distanceSquared: near.d2, area: near.area, diagonal: diagonal))
+        #expect(lively.score(distanceSquared: farish.d2, area: 10, diagonal: diagonal)
+                < lively.score(distanceSquared: farish.d2, area: 1000, diagonal: diagonal))
+        // The balanced middle ignores area and diagonal alike.
+        #expect(b.score(distanceSquared: near.d2, area: 5000, diagonal: diagonal) == near.d2)
     }
 
     @Test func oddDatesNeverTrap() {
         for (y, m, d) in [(2026, 0, 0), (2026, 13, 40), (2027, 2, 29), (-5, 6, 1), (Int.max, 12, 31), (Int.min, 1, 1)] {
             #expect(isInBands(ZenTemperament.of(year: y, month: m, day: d)))
         }
-        #expect(ZenTemperament.balanced.score(distanceSquared: 9, area: 0) == 9)
+        #expect(ZenTemperament.balanced.score(distanceSquared: 9, area: 0, diagonal: 0) == 9)
+        #expect(ZenTemperament.mood(-1, closeness: 0).score(distanceSquared: 9, area: 0, diagonal: 0).isFinite)
     }
 }
