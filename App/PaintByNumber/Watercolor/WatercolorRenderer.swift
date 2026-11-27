@@ -114,6 +114,8 @@ final class WatercolorRenderer: NSObject, MTKViewDelegate {
     private let pencil: any MTLTexture
     private let numbers: any MTLTexture
     private let regions: any MTLBuffer
+    /// Each area's paint (palette index), for the hatch over the paint in hand's areas.
+    private let paints: any MTLBuffer
     /// One frame on the GPU at a time: its textures are written in place.
     private let inFlight = DispatchSemaphore(value: 1)
     private var lastFrame: CFTimeInterval?
@@ -165,7 +167,10 @@ final class WatercolorRenderer: NSObject, MTKViewDelegate {
               let pencil = texture(.r8Unorm, assets.rasterWidth, assets.rasterHeight, mipmapped: true),
               let numbers = texture(.r8Unorm, assets.rasterWidth, assets.rasterHeight, mipmapped: true),
               let regions = device.makeBuffer(length: max(1, t.regions.count) * MemoryLayout<WatercolorRegion>.stride,
-                                              options: .storageModeShared)
+                                              options: .storageModeShared),
+              let paints = device.makeBuffer(bytes: t.regions.map(\.colorIndex) + [0],
+                                             length: (t.regions.count + 1) * MemoryLayout<UInt32>.stride,
+                                             options: .storageModeShared)
         else { return nil }
         self.painting = painting
         self.device = device
@@ -178,6 +183,7 @@ final class WatercolorRenderer: NSObject, MTKViewDelegate {
         self.pencil = pencil
         self.numbers = numbers
         self.regions = regions
+        self.paints = paints
         super.init()
         t.regionMap.storage.withUnsafeBytes { bytes in
             labels.replace(region: MTLRegionMake2D(0, 0, t.regionMap.width, t.regionMap.height), mipmapLevel: 0,
@@ -266,13 +272,15 @@ final class WatercolorRenderer: NSObject, MTKViewDelegate {
             paperTexel: SIMD2(1 / Float(paper.width), 1 / Float(paper.height)),
             simTexel: SIMD2(1 / Float(sheet.width), 1 / Float(sheet.height)),
             paper: Self.paperColor, background: background, numberInk: Self.numberInk,
-            sheet: SIMD4(margins.side, margins.bottom, 0, 0))
+            // z: the paint in hand + 1 (0, none), whose areas not yet laid are hatched.
+            sheet: SIMD4(margins.side, margins.bottom, painting.isComplete ? 0 : Float((painting.selected ?? -1) + 1), 1))
         pass.colorAttachments[0].loadAction = .dontCare
         pass.colorAttachments[0].storeAction = .store
         guard let encoder = commands.makeRenderCommandEncoder(descriptor: pass) else { return }
         encoder.setRenderPipelineState(pipeline)
         encoder.setFragmentBytes(&uniforms, length: MemoryLayout<WatercolorUniforms>.stride, index: 0)
         encoder.setFragmentBuffer(regions, offset: 0, index: 1)
+        encoder.setFragmentBuffer(paints, offset: 0, index: 2)
         encoder.setFragmentTexture(density, index: 0)
         encoder.setFragmentTexture(granulation, index: 1)
         encoder.setFragmentTexture(labels, index: 2)

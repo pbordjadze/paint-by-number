@@ -92,7 +92,7 @@ public final class WatercolorSim {
         }
     }
 
-    private struct Flood {
+    fileprivate struct Flood: Sendable {
         var cells: [Int32] = []
         var arrival: [Float] = []
         var water: [Float] = []
@@ -669,6 +669,50 @@ public final class WatercolorSim {
             self.tap(region: tap.region, at: SIMD2(tap.x, tap.y), paint: tap.paint)
         }
         finish()
+    }
+
+    // MARK: Undo
+
+    /// The whole sheet as it stands, wet or not, kept in memory for Undo: `restore(_:)` puts it
+    /// back exactly, water still moving and washes still arriving where they were, so a wash
+    /// taken back leaves the ones before it to dry as they would have. About 48 bytes a cell.
+    public struct Checkpoint: Sendable {
+        fileprivate let W, G, E, L: [Float]
+        fileprivate let S, D: [SIMD4<Float>]
+        fileprivate let laid: [Bool]
+        fileprivate let laidDensity: [SIMD3<Float>]
+        fileprivate let paintedAt: [Float]
+        fileprivate let laidCount: Int
+        fileprivate let step: Int
+        fileprivate let wetBox: Box?
+        fileprivate let floods: [Flood]
+    }
+
+    public func checkpoint() -> Checkpoint {
+        func copy<T>(_ p: UnsafeMutablePointer<T>) -> [T] { Array(UnsafeBufferPointer(start: p, count: count)) }
+        return Checkpoint(W: copy(W), G: copy(G), E: copy(E), L: copy(L), S: copy(S), D: copy(D),
+                          laid: laid, laidDensity: laidDensity, paintedAt: paintedAt, laidCount: laidCount,
+                          step: step, wetBox: wetBox, floods: floods)
+    }
+
+    /// The sheet exactly as `checkpoint()` found it, its clock too, so a tap log cut back to the
+    /// checkpoint's taps replays to it (a checkpoint of another sheet changes nothing).
+    public func restore(_ c: Checkpoint) {
+        guard c.W.count == count, c.laid.count == laid.count else { return }
+        func put<T>(_ a: [T], _ p: UnsafeMutablePointer<T>) {
+            a.withUnsafeBufferPointer { p.update(from: $0.baseAddress!, count: count) }
+        }
+        put(c.W, W); put(c.G, G); put(c.E, E); put(c.L, L); put(c.S, S); put(c.D, D)
+        laid = c.laid
+        laidDensity = c.laidDensity
+        laidCount = c.laidCount
+        paintedAt = c.paintedAt
+        floods = c.floods
+        step = c.step
+        wetBox = c.wetBox
+        changedBox = Box(x0: 0, y0: 0, x1: sheet.width, y1: sheet.height)
+        // Every area, the ones too small for a cell of their own too (a tap names those directly).
+        changedRegions.formUnion(Int32(0)..<Int32(sheet.regionCount))
     }
 
     // MARK: Saving
