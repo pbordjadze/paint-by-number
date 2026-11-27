@@ -132,6 +132,40 @@ struct PaintNowTests {
         #expect(diary.contains("change kept \(artwork.id.uuidString), edits: -1"))
     }
 
+    /// ✎ Change's edits are never deleted: each save leaves a copy among the vault's last saves,
+    /// a half-written `change.json` opens on the newest of them, and Cancel and a remade painting
+    /// move the edits waiting into the vault, which the remake carries over.
+    @Test func changeVaultLosesNothing() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft(photo: try photo()))
+        let store = library.store
+        var edited = TemplateRefinements()
+        edited.start = .blank
+        for _ in 0..<10 { library.keepChange(edited, for: artwork.id) }
+        await library.flush()
+        #expect(store.vaulted(artwork.id, kind: ArtworkStore.Vault.save).count == ArtworkStore.Vault.keeps[ArtworkStore.Vault.save])
+
+        try Data("{\"edits\": [".utf8).write(to: store.url(.change, of: artwork.id))
+        #expect(try await library.changeInputs(for: artwork.id).unsaved == edited)
+
+        library.keepChange(nil, for: artwork.id)
+        await library.flush()
+        #expect(try await library.changeInputs(for: artwork.id).unsaved == nil)
+        #expect(store.vaulted(artwork.id, kind: ArtworkStore.Vault.letGo).count == 1)
+
+        library.keepChange(edited, for: artwork.id)
+        await library.flush()
+        _ = try await library.regenerate(artwork: artwork.id, settings: GenerationSettings(colorCount: 6, detail: 0).normalized)
+        #expect(!FileManager.default.fileExists(atPath: store.url(.change, of: artwork.id).path))
+        let letGo = store.vaulted(artwork.id, kind: ArtworkStore.Vault.letGo)
+        #expect(letGo.count == 2)
+        let kept = try JSONDecoder().decode(TemplateRefinements.self, from: Data(contentsOf: try #require(letGo.last)))
+        #expect(kept == edited)
+        #expect(store.vaulted(artwork.id, kind: ArtworkStore.Vault.save).count == ArtworkStore.Vault.keeps[ArtworkStore.Vault.save])
+        // The painting still opens as ever beside its vault.
+        _ = try await library.loadForPainting(artwork.id)
+    }
+
     /// An unedited painting opens in the drawing tools as it stands: its template is the base,
     /// nothing made again.
     @Test func changeOpensOnTheTemplateAsItStands() async throws {

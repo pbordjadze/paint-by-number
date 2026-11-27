@@ -9,8 +9,8 @@ import Foundation
 /// queue, so only the app traces; Paint by Mosaic only reads it (its feedback).
 nonisolated enum Breadcrumbs {
     static let file = URL.applicationSupportDirectory.appending(path: "breadcrumbs.log")
-    static let limit = 128 * 1024
-    static let keep = 64 * 1024
+    static let limit = 1024 * 1024
+    static let keep = 512 * 1024
     private static let queue = DispatchQueue(label: "breadcrumbs", qos: .utility)
 
     static func trace(_ event: String) {
