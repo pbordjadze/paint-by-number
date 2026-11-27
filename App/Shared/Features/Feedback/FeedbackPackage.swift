@@ -155,7 +155,10 @@ nonisolated enum FeedbackPackage {
             try save(shown(frame, ink: ink), as: FeedbackReport.File.mark(index + 1))
         }
         let regions = contents.marks.map { FeedbackMarks.regions(of: $0, strokes: contents.strokes, in: capture.template) }
-        let report = FeedbackReport(contents, regions: regions)
+        var report = FeedbackReport(contents, regions: regions)
+        // Read once, so the report lists the diary exactly when the bundle holds it.
+        let diary = Breadcrumbs.read()
+        if diary != nil { report.files.append(FeedbackReport.File.breadcrumbs) }
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
         encoder.dateEncodingStrategy = .iso8601
@@ -165,7 +168,7 @@ nonisolated enum FeedbackPackage {
         try markdown.write(to: reportFile)
         try capture.template.encoded().write(to: folder.appending(path: FeedbackReport.File.template))
         if let photo = contents.photo { try photo.write(to: folder.appending(path: FeedbackReport.File.photo)) }
-        if let diary = Breadcrumbs.read() { try diary.write(to: folder.appending(path: FeedbackReport.File.breadcrumbs)) }
+        if let diary { try diary.write(to: folder.appending(path: FeedbackReport.File.breadcrumbs)) }
     }
 
     /// `painting` on the backdrop the canvas showed around the sheet, with `ink` over it.

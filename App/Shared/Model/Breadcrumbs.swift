@@ -5,7 +5,8 @@ import Foundation
 /// disk so work a tester lost can be traced after iOS ended the app: Give Feedback's bundle
 /// carries it (`FeedbackReport.File.breadcrumbs`). Ids, counts and events only, never a title or
 /// anything the painter wrote. The file keeps about its newest `keep` bytes; writes run on a
-/// queue of their own, and one that fails is let go.
+/// queue of their own, and one that fails is let go. Each module compiling this file has its own
+/// queue, so only the app traces; Paint by Mosaic only reads it (its feedback).
 nonisolated enum Breadcrumbs {
     static let file = URL.applicationSupportDirectory.appending(path: "breadcrumbs.log")
     static let limit = 128 * 1024

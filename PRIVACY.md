@@ -60,7 +60,9 @@ goes only where you send it; it doesn't pass through us.
 
 **Give Feedback** puts together a report that you can read before sending. It contains your
 painting with the marks you drew on it and a close-up of each, your notes, the painting's
-settings and progress, and the app version, device model and system version. Your original photo
+settings and progress, the app version, device model and system version, and the app's own log
+of when it saved your work (when it opened and closed, which paintings and drafts it saved, and
+any save that failed; no titles or anything you wrote). Your original photo
 is included only if you switch it on (a painting made from one of the app's own pictures names
 the picture instead).
 

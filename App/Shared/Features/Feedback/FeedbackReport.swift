@@ -149,7 +149,6 @@ nonisolated extension FeedbackReport {
         var files = [File.markdown, File.json, File.marked, File.markup, File.view]
         files += marks.map(\.image)
         files.append(File.template)
-        if FileManager.default.fileExists(atPath: Breadcrumbs.file.path) { files.append(File.breadcrumbs) }
         if contents.photo != nil { files.append(File.photo) }
         self.init(
             format: Self.currentFormat, app: capture.app, device: capture.device, system: capture.system, date: capture.date,
