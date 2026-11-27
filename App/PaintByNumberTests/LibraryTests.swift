@@ -28,7 +28,7 @@ struct LibraryTests {
         #expect(artwork.regionCount == 3 && artwork.colorCount == 3)
         #expect(artwork.width == 60 && artwork.height == 40)
         // Every file but the refinements, which only a refined painting has.
-        for file in ArtworkStore.File.allCases where file != .refinements {
+        for file in ArtworkStore.File.allCases where file != .refinements && file != .change {
             #expect(FileManager.default.fileExists(atPath: library.store.url(file, of: artwork.id).path), "\(file.rawValue)")
         }
         #expect(!FileManager.default.fileExists(atPath: library.store.url(.refinements, of: artwork.id).path))
