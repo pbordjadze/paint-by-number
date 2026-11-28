@@ -590,6 +590,8 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     /// Undo or Redo, stepping while their fingers are held, and where the fingers came down.
     private var repeating: Task<Void, Never>?
     private var repeatStart: CGPoint?
+    /// Steps the hold under way has taken, for the diary.
+    private var repeatSteps = 0
     /// When a Pencil last came down on the picture or lifted from a stroke (`CACurrentMediaTime`).
     private var lastPencil: CFTimeInterval?
     /// When a pinch began, at what zoom, and the part of the picture then on screen (normalized).
@@ -897,8 +899,12 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     @objc private func handleFingers(_ recognizer: UITapGestureRecognizer) {
         guard recognizer.state == .ended else { return }
         switch recognizer.numberOfTouchesRequired {
-        case 2: onUndo?()
-        case 3: onRedo?()
+        case 2:
+            Breadcrumbs.trace("refine undo: two-finger tap")
+            onUndo?()
+        case 3:
+            Breadcrumbs.trace("refine redo: three-finger tap")
+            onRedo?()
         default: onFullScreen?()
         }
     }
@@ -911,11 +917,17 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         case .began:
             cancelDrawing()
             repeatStart = at
+            let points = (0..<recognizer.numberOfTouches).map { recognizer.location(ofTouch: $0, in: self) }
+            Breadcrumbs.trace(
+                "refine \(recognizer === redoHold ? "redo" : "undo") hold began: \(points.count) touches at "
+                    + points.map { "(\(Int($0.x)),\(Int($0.y)))" }.joined(separator: " ") + " in \(Int(bounds.width))x\(Int(bounds.height))")
+            repeatSteps = 0
             startRepeating(redo: recognizer === redoHold)
         case .changed:
             if scrollView.isZooming { stopRepeating() }
             if let start = repeatStart, hypot(at.x - start.x, at.y - start.y) > Self.repeatMovement { stopRepeating() }
         default:
+            Breadcrumbs.trace("refine hold ended (state \(recognizer.state.rawValue)) after \(repeatSteps) steps")
             stopRepeating()
         }
     }
@@ -931,6 +943,7 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
                 try? await Task.sleep(for: .seconds(interval))
                 guard !Task.isCancelled, let self else { return }
                 guard self.onRepeat?(redo) == true else { return }
+                self.repeatSteps += 1
                 interval = max(RefineSurfaceView.fastestRepeat, interval * 0.85)
             }
         }
