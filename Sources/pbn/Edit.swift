@@ -247,7 +247,7 @@ func runEdit(_ options: Options) throws {
             paintsMerged: result.outcome.paintsMerged, unexpectedChanges: unexpectedChanges(t, result.template, result.outcome),
             milliseconds: Double(took.components.seconds) * 1000 + Double(took.components.attoseconds) / 1e15)
         step.kind = edit.kind.rawValue
-        if case .draw(let points, let closed, _) = edit, result.outcome.changed {
+        if case .draw(let points, let closed, _, _) = edit, result.outcome.changed {
             let line = closed ? points + [points[0]] : points
             let d = Deviation.measure(line.map { SIMD2(($0.x * 256).rounded() / 256, ($0.y * 256).rounded() / 256) }, in: result.template)
             step.maxDeviation = d.middle

@@ -36,7 +36,9 @@ import Foundation
 ///   exactly as it was) also nudges the line, and only the line, where it crosses an
 ///   edge within `inkWidth` of a junction (an end of an edge): it passes through the junction, so
 ///   the corner it would have clipped is no sliver too thin for a number, and the shape beside it
-///   is cut cleanly. Then each piece it cut takes the photo's color there (`Paint`, read by
+///   is cut cleanly. A draw laid `asDrawn` (every line Refine draws from editor 8) is not nudged:
+///   a straight line stays straight, and a sliver it leaves beside a junction stays uncut, the
+///   line a stroke there. Then each piece it cut takes the photo's color there (`Paint`, read by
 ///   `painted(_:on:photo:)`): the paint nearest it within the book's own tolerance for one color
 ///   (`paintTolerance`), else a new paint of that color added last. Where that leaves one paint
 ///   on both sides of the line and the photo tells the sides apart, the side farther from it
@@ -138,14 +140,23 @@ public enum TemplateEditor {
     /// it takes the line nearest it, a little way off on a base made again (`reanchored`,
     /// `EditTrail.move(to:)`; painting-company row 322). A painting saved with an earlier
     /// editor whose rub was left out has it made when made again; a draft's kept trail keeps
-    /// what it laid until its list is laid again.
-    public static let version = 7
+    /// what it laid until its list is laid again. 8 (November 27, 2026): a draw may be laid
+    /// `asDrawn`, not nudged through the junctions it crosses beside, which every line Refine
+    /// draws now is, so a straight line has no jog where it passes a corner; a list saved before
+    /// has no such draw and lays as it did.
+    public static let version = 8
+    /// The first editor that lays a draw `asDrawn`: a list holding one is recorded with it at
+    /// least, so an older build says it needs an update rather than lay the line nudged.
+    public static let asDrawnVersion = 8
 
     public enum Edit: Sendable, Equatable {
         /// A polyline; `closed` joins the last point back to the first. `paints`, the photo's
         /// colors of the pieces it cuts, nil for a draw made before lines took them (no nudge, no
-        /// recoloring: such a draw is laid as it always was).
-        case draw(points: [SIMD2<Float>], closed: Bool = false, paints: [Paint]? = nil)
+        /// recoloring: such a draw is laid as it always was). `asDrawn`: a draw with paints is
+        /// not nudged through the junctions it crosses beside either (`EditWork.throughJunctions`),
+        /// so a straight line stays straight; every line Refine draws from editor 8 on. A draw
+        /// without it, saved before, is nudged as it always was.
+        case draw(points: [SIMD2<Float>], closed: Bool = false, paints: [Paint]? = nil, asDrawn: Bool = false)
         /// The Color Splitter's line: `points` divide the paint along an undrawn boundary, and the
         /// pieces take `paints`.
         case split(points: [SIMD2<Float>], closed: Bool = false, paints: [Paint] = [])
@@ -179,6 +190,12 @@ public enum TemplateEditor {
         /// The paint of color `from` made `to` (OKLab); with `family`, the paints of about its
         /// hue (or near it, for a gray) move along with it.
         case repaint(from: SIMD3<Float>, to: SIMD3<Float>, family: Bool)
+    }
+
+    /// Whether `edit` is a draw laid `asDrawn`.
+    public static func isAsDrawn(_ edit: Edit) -> Bool {
+        if case .draw(_, _, _, true) = edit { return true }
+        return false
     }
 
     /// The lines a reshape (`Edit.reshape`) may grab: Bend Line (an Ink tool) grabs only what is
@@ -390,9 +407,9 @@ public enum TemplateEditor {
         var work = try EditWork(template, snapRadius: snapRadius)
         work.roundedBows = rounded
         switch edit {
-        case .draw(let points, let closed, let paints):
+        case .draw(let points, let closed, let paints, let asDrawn):
             work.closedDraw = closed
-            try work.draw(points, closed: closed, nudging: paints != nil)
+            try work.draw(points, closed: closed, nudging: paints != nil && !asDrawn)
             if let paints { try work.paint(Array(paints.prefix(maximumPoints))) }
         case .split(let points, let closed, let paints):
             work.splitting = true
@@ -473,15 +490,15 @@ public enum TemplateEditor {
     }
 
     /// `edit` with the photo's colors of the pieces it cuts, when it is a draw without them: the
-    /// line laid on `template` as a draw with paints lays it (nudged), and each piece's color read
+    /// line laid on `template` as a draw with paints lays it (nudged unless `asDrawn`), and each piece's color read
     /// over its pixels (`LineEdit.photoColor(ofRegion:in:image:)`) at its number. Another edit, or
     /// one that changes nothing, comes back as a draw that lays the same way with no paints.
     public static func painted(_ edit: Edit, on template: Template, photo: RGBAImage) -> Edit {
         let bare: Edit, wrap: ([Paint]) -> Edit
         switch edit {
-        case .draw(let points, let closed, nil):
-            bare = .draw(points: points, closed: closed, paints: [])
-            wrap = { .draw(points: points, closed: closed, paints: $0) }
+        case .draw(let points, let closed, nil, let asDrawn):
+            bare = .draw(points: points, closed: closed, paints: [], asDrawn: asDrawn)
+            wrap = { .draw(points: points, closed: closed, paints: $0, asDrawn: asDrawn) }
         case .split(let points, let closed, let given) where given.isEmpty:
             bare = edit
             wrap = { .split(points: points, closed: closed, paints: $0) }

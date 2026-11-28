@@ -576,7 +576,7 @@ struct CreateModelTests {
         }
         #expect(!generated, "An edit generated the template again")
         let laid = TemplateEditor.painted(edit, on: before, photo: try #require(model.source?.image))
-        guard case .draw(_, _, .some(_)) = laid else { Issue.record("the line has no paints"); return }
+        guard case .draw(_, _, .some(_), _) = laid else { Issue.record("the line has no paints"); return }
         #expect(model.refinements.edits == [laid] && model.preview?.refinements == model.refinements)
         #expect(model.canUndo && !model.canRedo && model.note == nil)
 
@@ -620,7 +620,7 @@ struct CreateModelTests {
             points: [SIMD2(0.4 * w, 0.4 * h), SIMD2(0.6 * w, 0.4 * h), SIMD2(0.6 * w, 0.6 * h), SIMD2(0.4 * w, 0.6 * h)], closed: true)
         try await waitForEdits(model, model.edit(box))
         let laid = try #require(model.refinements.edits.first)
-        guard case .draw(_, true, let paints?) = laid else { Issue.record("the shape has no paints: \(laid)"); return }
+        guard case .draw(_, true, let paints?, _) = laid else { Issue.record("the shape has no paints: \(laid)"); return }
         #expect(!paints.isEmpty)
         #expect(laid == TemplateEditor.painted(box, on: before, photo: try #require(model.source?.image)))
         #expect(try TemplateEditor.apply(laid, to: before).template == model.preview?.template)

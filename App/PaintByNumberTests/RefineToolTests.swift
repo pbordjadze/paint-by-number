@@ -9,6 +9,23 @@ import UIKit
 /// Refine's tools: the Pencil's double tap, and what a tap of Fill does. Its geometry and
 /// gestures are PaintCore's (`RefineGeometryTests`, `RefineGesturesTests`).
 struct RefineToolTests {
+    /// Two or three fingers held keep undoing or redoing only as the fingertips of one hand:
+    /// never thumbs gripping the iPad's sides (a tester's session undone as she picked it up,
+    /// November 27), a touch beside a stroke or hold under way, or a palm by the Pencil.
+    @Test func onlyOneHandsFingersKeepUndoing() {
+        let two = [CGPoint(x: 400, y: 500), CGPoint(x: 460, y: 520)]
+        #expect(RefineFingerSteps.mayStep(fingers: two, drawing: false, sincePencil: nil))
+        #expect(RefineFingerSteps.mayStep(fingers: two + [CGPoint(x: 520, y: 480)], drawing: false, sincePencil: 30))
+        // Thumbs on the two sides of an iPad, upright and on its side.
+        #expect(!RefineFingerSteps.mayStep(fingers: [CGPoint(x: 30, y: 600), CGPoint(x: 790, y: 640)], drawing: false, sincePencil: nil))
+        #expect(!RefineFingerSteps.mayStep(fingers: [CGPoint(x: 40, y: 500), CGPoint(x: 1300, y: 520)], drawing: false, sincePencil: nil))
+        // A third finger far from the other two.
+        #expect(!RefineFingerSteps.mayStep(fingers: two + [CGPoint(x: 1000, y: 500)], drawing: false, sincePencil: nil))
+        #expect(!RefineFingerSteps.mayStep(fingers: two, drawing: true, sincePencil: nil))
+        #expect(!RefineFingerSteps.mayStep(fingers: two, drawing: false, sincePencil: 0.4))
+        #expect(!RefineFingerSteps.mayStep(fingers: [CGPoint(x: 400, y: 500)], drawing: false, sincePencil: nil))
+    }
+
     /// The Pencil's double tap switches between drawing (the Pen or Shapes) and the Eraser; the
     /// cell and paint tools and Text have no partner.
     @Test func thePencilSwitchesPenAndEraser() {

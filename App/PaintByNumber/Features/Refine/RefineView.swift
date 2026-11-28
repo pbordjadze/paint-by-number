@@ -371,7 +371,7 @@ struct RefineView: View {
         .accessibilityLabel(Text(Self.canvasLabel))
         .accessibilityValue(Self.changes(model.shownChangeCount))
         .accessibilityActions {
-            if model.canRedo { Button("Redo", action: refine.redo) }
+            if model.canRedo { Button("Redo", action: { Breadcrumbs.trace("refine redo: button"); refine.redo() }) }
             if !isPractice {
                 Button(action: refine.toggleFullScreen) { refine.fullScreen ? Text("Exit Full Screen") : Text("Full Screen") }
             }
@@ -427,8 +427,8 @@ struct RefineView: View {
 
     /// `edit`, a drawn line with no paints to give unless `colorsFromPhoto`.
     nonisolated static func inked(_ edit: TemplateEditor.Edit, colorsFromPhoto: Bool) -> TemplateEditor.Edit {
-        guard !colorsFromPhoto, case .draw(let points, let closed, nil) = edit else { return edit }
-        return .draw(points: points, closed: closed, paints: [])
+        guard !colorsFromPhoto, case .draw(let points, let closed, nil, let asDrawn) = edit else { return edit }
+        return .draw(points: points, closed: closed, paints: [], asDrawn: asDrawn)
     }
 
     // MARK: Changes
@@ -525,13 +525,13 @@ struct RefineView: View {
     }
 
     private var undoButton: some View {
-        Button("Undo", systemImage: "arrow.uturn.backward", action: refine.undo)
+        Button("Undo", systemImage: "arrow.uturn.backward", action: { Breadcrumbs.trace("refine undo: button"); refine.undo() })
             .disabled(!model.canUndo)
             .accessibilityIdentifier("refine-undo")
     }
 
     private var redoButton: some View {
-        Button("Redo", systemImage: "arrow.uturn.forward", action: refine.redo)
+        Button("Redo", systemImage: "arrow.uturn.forward", action: { Breadcrumbs.trace("refine redo: button"); refine.redo() })
             .disabled(!model.canRedo)
             .accessibilityIdentifier("refine-redo")
     }
@@ -952,8 +952,12 @@ extension RefineView {
         case .larger: resize(by: 2)
         case .fit: refine.fit()
         case .fullScreen: refine.toggleFullScreen()
-        case .undo: refine.undo()
-        case .redo: refine.redo()
+        case .undo:
+            Breadcrumbs.trace("refine undo: key")
+            refine.undo()
+        case .redo:
+            Breadcrumbs.trace("refine redo: key")
+            refine.redo()
         }
     }
 
@@ -1088,11 +1092,11 @@ extension RefineView {
         HStack(spacing: 10) {
             GlassEffectContainer(spacing: 8) {
                 HStack(spacing: 8) {
-                    Button("Undo", systemImage: "arrow.uturn.backward", action: refine.undo)
+                    Button("Undo", systemImage: "arrow.uturn.backward", action: { Breadcrumbs.trace("refine undo: button"); refine.undo() })
                         .disabled(!model.canUndo)
                         .keyboardShortcut("z")
                         .accessibilityIdentifier("refine-undo")
-                    Button("Redo", systemImage: "arrow.uturn.forward", action: refine.redo)
+                    Button("Redo", systemImage: "arrow.uturn.forward", action: { Breadcrumbs.trace("refine redo: button"); refine.redo() })
                         .disabled(!model.canRedo)
                         .keyboardShortcut("z", modifiers: [.command, .shift])
                         .accessibilityIdentifier("refine-redo")

@@ -1814,7 +1814,7 @@ final class CreateModel {
     /// The points of a drawn line or a cell edge, and whether it closes into a loop.
     nonisolated static func dividing(_ edit: TemplateEditor.Edit) -> (points: [SIMD2<Float>], closed: Bool)? {
         switch edit {
-        case .draw(let points, let closed, _), .cellEdge(let points, let closed): (points, closed)
+        case .draw(let points, let closed, _, _), .cellEdge(let points, let closed): (points, closed)
         default: nil
         }
     }

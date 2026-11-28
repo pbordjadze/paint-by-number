@@ -36,10 +36,12 @@ struct EditGoldenTests {
     /// none of its draws leaves a sliver (`BlankTemplateTests.aSliverBesideInkStaysWithIt`).
     /// 6's moves: its bend is Bend Line's, laid again as a drawn line (`EditReshapeTests`). 7's is
     /// 6's: its rub and Line Eraser tap find their lines where they were made
-    /// (`EditTrailTests.aRubLaidAgainFollowsItsLineALittleWayOff` pins the rest).
+    /// (`EditTrailTests.aRubLaidAgainFollowsItsLineALittleWayOff` pins the rest). 8's is 7's: no
+    /// draw of the fixture is `asDrawn`, so its draws with paints are nudged as they always were
+    /// (`EditPaintTests.aDrawAsDrawnStaysStraightBesideAJunction` pins the new flag).
     static let pins: [Int: UInt64] = [
         1: 0x609c_c372_67f9_af85, 2: 0x609c_c372_67f9_af85, 3: 0x609c_c372_67f9_af85, 4: 0x609c_c372_67f9_af85,
-        5: 0x609c_c372_67f9_af85, 6: 0xfc89_3354_b530_d48d, 7: 0xfc89_3354_b530_d48d,
+        5: 0x609c_c372_67f9_af85, 6: 0xfc89_3354_b530_d48d, 7: 0xfc89_3354_b530_d48d, 8: 0xfc89_3354_b530_d48d,
     ]
 
     /// The kinds of edit, one per case of `TemplateEditor.Edit`.

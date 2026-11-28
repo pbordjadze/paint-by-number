@@ -292,7 +292,7 @@ final class RefineModel {
         var lines: [TemplateRefinements.Line] = []
         for item in submitted {
             switch item.edit {
-            case .draw(let points, let closed, _):
+            case .draw(let points, let closed, _, _):
                 lines.append(.init(kind: .draw, radius: 0, points: (closed ? points + points.prefix(1) : points).map(normalized)))
             case .erase(let path, let radius):
                 lines.append(.init(kind: .erase, radius: radius / long, points: path.map(normalized)))
