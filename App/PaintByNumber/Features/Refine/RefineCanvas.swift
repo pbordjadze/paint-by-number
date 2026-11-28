@@ -590,7 +590,7 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     /// Undo or Redo, stepping while their fingers are held, and where the fingers came down.
     private var repeating: Task<Void, Never>?
     private var repeatStart: CGPoint?
-    /// When a Pencil last touched the picture (`CACurrentMediaTime`).
+    /// When a Pencil last came down on the picture or lifted from a stroke (`CACurrentMediaTime`).
     private var lastPencil: CFTimeInterval?
     /// When a pinch began, at what zoom, and the part of the picture then on screen (normalized).
     private var pinchStart: (time: TimeInterval, zoom: CGFloat, visible: CGRect)?
@@ -862,7 +862,10 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     }
 
     private func endStroke() {
-        if pencilStroke { holdPicture(false) }
+        if pencilStroke {
+            holdPicture(false)
+            lastPencil = CACurrentMediaTime()
+        }
         pencilStroke = false
         touchDown = nil
     }
@@ -1032,7 +1035,9 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         let points = (0..<recognizer.numberOfTouches).map { recognizer.location(ofTouch: $0, in: self) }
         return RefineFingerSteps.mayStep(
             fingers: points,
-            drawing: brush.state == .began || brush.state == .changed || press.state == .began || press.state == .changed,
+            // A finger's stroke gives way to two fingers (`cancelDrawing`); the Pencil's doesn't.
+            drawing: (pencilStroke && (brush.state == .began || brush.state == .changed))
+                || press.state == .began || press.state == .changed,
             sincePencil: lastPencil.map { CACurrentMediaTime() - $0 })
     }
 }
