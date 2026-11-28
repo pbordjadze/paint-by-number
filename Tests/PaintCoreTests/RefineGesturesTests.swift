@@ -133,7 +133,7 @@ struct RefineGesturesTests {
         let oval = try #require(RefineGestures.shape(.oval, from: Self.p(90, 12), to: Self.p(112, 28), on: Self.screen, snapping: nil))
         guard case .draw(let ring, true, nil, true) = oval else { Issue.record("\(oval)"); return }
         #expect(ring.count >= 16 && ring.first != ring.last)
-        #expect(RefineGestures.shape(.rectangle, from: Self.p(90, 12), to: Self.p(95, 30), on: Self.screen, snapping: nil) == nil)
+        #expect(RefineGestures.shape(.rectangle, from: Self.p(90, 12), to: Self.p(91, 30), on: Self.screen, snapping: nil) == nil)
 
         let ends = try #require(RefineGestures.curveEnds(from: Self.p(80, 20), to: Self.p(120, 20), on: Self.screen, snapping: Self.lines))
         let bent = try #require(RefineGestures.shape(.curve, from: Self.p(100, 10), to: Self.p(100, 10), curve: ends, on: Self.screen, snapping: nil))
@@ -145,6 +145,18 @@ struct RefineGesturesTests {
         #expect(straight.first == SIMD2(80, 20) && straight.last == SIMD2(120, 20) && straight.allSatisfy { $0.y == 20 })
     }
 
+    /// A closed shape may be far smaller than a line may be short (`smallestShape`): an oval two
+    /// canvas units across, the dot of an i, is drawn and laid, its ink staying though no number
+    /// fits inside; a line as short is none.
+    @Test func anOvalCanBeADot() throws {
+        let dot = try #require(RefineGestures.shape(.oval, from: Self.p(100, 20), to: Self.p(102, 22), on: Self.screen, snapping: nil))
+        guard case .draw(let ring, true, nil, true) = dot else { Issue.record("\(dot)"); return }
+        #expect(ring.count >= 16 && ring.allSatisfy { simdLength($0 - SIMD2(101, 21)) < 1.01 })
+        let laid = try TemplateEditor.apply(dot, to: Self.scene)
+        #expect(laid.outcome.declined == nil, "\(laid.outcome)")
+        #expect(RefineGestures.shape(.line, from: Self.p(100, 20), to: Self.p(102, 22), on: Self.screen, snapping: nil) == nil)
+    }
+
     /// A polygon and a star are drawn as closed lines across the drag's box; too small, none.
     @Test func polygonsAndStarsAreClosedLines() throws {
         for shape in [RefineShape.polygon, .star] {
@@ -154,7 +166,7 @@ struct RefineGesturesTests {
             #expect(abs(ring.map(\.x).min()! - 90) < 1e-3 && abs(ring.map(\.y).max()! - 28) < 1e-3)
             let laid = try TemplateEditor.apply(edit, to: Self.scene)
             #expect(laid.outcome.declined == nil && laid.outcome.regionsSplit == 1)
-            #expect(RefineGestures.shape(shape, from: Self.p(90, 12), to: Self.p(95, 30), on: Self.screen, snapping: nil) == nil)
+            #expect(RefineGestures.shape(shape, from: Self.p(90, 12), to: Self.p(91, 30), on: Self.screen, snapping: nil) == nil)
         }
     }
 

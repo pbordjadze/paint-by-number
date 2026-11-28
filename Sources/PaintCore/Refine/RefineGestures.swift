@@ -62,6 +62,11 @@ public struct RefineScreen: Sendable, Equatable {
         unitsPerPoint > 0 ? max(4, RefineGestures.shortestLine / unitsPerPoint) : 4
     }
 
+    /// The smallest closed shape on screen, in points (`RefineGestures.smallestShape`).
+    public var smallestShapeOnScreen: CGFloat {
+        unitsPerPoint > 0 ? max(4, RefineGestures.smallestShape / unitsPerPoint) : 4
+    }
+
     /// The eraser's reach, a fraction of the picture's long side: a thirtieth of the view's short
     /// side, between 10 and 20 points, so zoomed in it erases finer.
     public var eraserRadius: Float { eraserRadius(size: min(max(0.033 * min(view.width, view.height), 10), 20)) }
@@ -109,6 +114,12 @@ public enum RefineGestures {
     /// The shortest line the pen draws, in the template's canvas units: a touch shorter than a
     /// fingertip's slip is no line.
     public static let shortestLine: CGFloat = 8
+    /// The smallest a closed shape (a rectangle, an oval, a hexagon, a star) may be across, in
+    /// canvas units: far below `shortestLine`, so zoomed in an oval can be the dot of an i in the
+    /// photo's writing (a tester found the 8 units a line needs far too big for one, November 28).
+    /// A shape's drag is deliberate, never a fingertip's slip, and it still spans 4 points on
+    /// screen.
+    public static let smallestShape: CGFloat = 1.5
     /// How near a line, in points on screen, the Pen's and Shapes' ends move onto it (the
     /// Toolbox's Snap, `PenAssist`): a fingertip's slip, so a shape a finger closes closes. Until
     /// October 29 it was the ink's width, about 3 points: a careful finger lands 5 to 8 off, so a
@@ -244,7 +255,7 @@ public enum RefineGestures {
                 from: screen.onScreen(curve.from), to: screen.onScreen(curve.to), through: screen.onScreen(b), spacing: 2)
         }
         let p = screen.onScreen(a), q = screen.onScreen(b)
-        let shortest = screen.shortestOnScreen
+        let shortest = shape.isClosed ? screen.smallestShapeOnScreen : screen.shortestOnScreen
         switch shape {
         case .line, .curve:
             guard PenPath.distance(p, q) >= shortest else { return nil }
