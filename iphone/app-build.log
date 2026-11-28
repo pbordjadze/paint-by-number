@@ -1,0 +1,210 @@
+2026-11-28 11:26:07.902 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (at 1080p) (01E8CDC5-5D5B-4877-AC03-8F3E70B51FA2) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p: SimDeviceType : Apple TV 4K (3rd generation) (at 1080p) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb2557600>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:26:07.912 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (3E0EB87A-738B-4E40-95F0-910D629CAC8D) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K: SimDeviceType : Apple TV 4K (3rd generation) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb2557400>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:26:07.952 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (3E0EB87A-738B-4E40-95F0-910D629CAC8D) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K: SimDeviceType : Apple TV 4K (3rd generation) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb2557400>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:26:07.953 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (3E0EB87A-738B-4E40-95F0-910D629CAC8D) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K: SimDeviceType : Apple TV 4K (3rd generation) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb2557400>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:26:07.953 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (at 1080p) (01E8CDC5-5D5B-4877-AC03-8F3E70B51FA2) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p: SimDeviceType : Apple TV 4K (3rd generation) (at 1080p) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb2557600>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:26:07.953 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (at 1080p) (01E8CDC5-5D5B-4877-AC03-8F3E70B51FA2) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p: SimDeviceType : Apple TV 4K (3rd generation) (at 1080p) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb2557600>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:26:08.024 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (3E0EB87A-738B-4E40-95F0-910D629CAC8D) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K: SimDeviceType : Apple TV 4K (3rd generation) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb2557400>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:26:08.024 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (3E0EB87A-738B-4E40-95F0-910D629CAC8D) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K: SimDeviceType : Apple TV 4K (3rd generation) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb2557400>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:26:08.024 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (at 1080p) (01E8CDC5-5D5B-4877-AC03-8F3E70B51FA2) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p: SimDeviceType : Apple TV 4K (3rd generation) (at 1080p) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb2557600>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:26:08.026 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (at 1080p) (01E8CDC5-5D5B-4877-AC03-8F3E70B51FA2) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p: SimDeviceType : Apple TV 4K (3rd generation) (at 1080p) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb2557600>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:26:09.013 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (at 1080p) (01E8CDC5-5D5B-4877-AC03-8F3E70B51FA2) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p: SimDeviceType : Apple TV 4K (3rd generation) (at 1080p) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb2557600>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:26:09.014 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (3E0EB87A-738B-4E40-95F0-910D629CAC8D) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K: SimDeviceType : Apple TV 4K (3rd generation) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb2557400>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:26:09.035 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (3E0EB87A-738B-4E40-95F0-910D629CAC8D) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K: SimDeviceType : Apple TV 4K (3rd generation) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb2557400>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:26:09.035 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (3E0EB87A-738B-4E40-95F0-910D629CAC8D) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K: SimDeviceType : Apple TV 4K (3rd generation) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb2557400>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:26:09.038 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (at 1080p) (01E8CDC5-5D5B-4877-AC03-8F3E70B51FA2) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p: SimDeviceType : Apple TV 4K (3rd generation) (at 1080p) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb2557600>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:26:09.038 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (at 1080p) (01E8CDC5-5D5B-4877-AC03-8F3E70B51FA2) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p: SimDeviceType : Apple TV 4K (3rd generation) (at 1080p) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb2557600>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:26:09.145 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (3E0EB87A-738B-4E40-95F0-910D629CAC8D) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K: SimDeviceType : Apple TV 4K (3rd generation) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb2557400>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:26:09.146 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (3E0EB87A-738B-4E40-95F0-910D629CAC8D) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K: SimDeviceType : Apple TV 4K (3rd generation) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb2557400>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:26:09.146 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (at 1080p) (01E8CDC5-5D5B-4877-AC03-8F3E70B51FA2) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p: SimDeviceType : Apple TV 4K (3rd generation) (at 1080p) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb2557600>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:26:09.148 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (at 1080p) (01E8CDC5-5D5B-4877-AC03-8F3E70B51FA2) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p: SimDeviceType : Apple TV 4K (3rd generation) (at 1080p) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb2557600>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:40:15.766 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (at 1080p) (01E8CDC5-5D5B-4877-AC03-8F3E70B51FA2) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p: SimDeviceType : Apple TV 4K (3rd generation) (at 1080p) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb1e33000>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:40:15.768 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (3E0EB87A-738B-4E40-95F0-910D629CAC8D) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K: SimDeviceType : Apple TV 4K (3rd generation) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb1e32e00>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:40:15.833 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (3E0EB87A-738B-4E40-95F0-910D629CAC8D) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K: SimDeviceType : Apple TV 4K (3rd generation) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb1e32e00>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:40:15.833 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (3E0EB87A-738B-4E40-95F0-910D629CAC8D) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K: SimDeviceType : Apple TV 4K (3rd generation) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb1e32e00>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:40:15.833 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (at 1080p) (01E8CDC5-5D5B-4877-AC03-8F3E70B51FA2) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p: SimDeviceType : Apple TV 4K (3rd generation) (at 1080p) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb1e33000>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:40:15.833 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (at 1080p) (01E8CDC5-5D5B-4877-AC03-8F3E70B51FA2) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p: SimDeviceType : Apple TV 4K (3rd generation) (at 1080p) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb1e33000>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:40:15.944 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (3E0EB87A-738B-4E40-95F0-910D629CAC8D) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K: SimDeviceType : Apple TV 4K (3rd generation) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb1e32e00>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:40:15.945 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (3E0EB87A-738B-4E40-95F0-910D629CAC8D) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K: SimDeviceType : Apple TV 4K (3rd generation) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb1e32e00>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:40:15.945 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (at 1080p) (01E8CDC5-5D5B-4877-AC03-8F3E70B51FA2) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p: SimDeviceType : Apple TV 4K (3rd generation) (at 1080p) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb1e33000>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-11-28 11:40:15.948 xcodebuild[4838:17644] [MT] DVTAssertions: Warning in DVTiOSFrameworks/IDEiOSSupportCore/DVTiPhoneSimulator.m:661
+Details:  SimDevice native architecture is nil. Device: SimDevice : Apple TV 4K (3rd generation) (at 1080p) (01E8CDC5-5D5B-4877-AC03-8F3E70B51FA2) : state={ Shutdown } deviceType={ com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p: SimDeviceType : Apple TV 4K (3rd generation) (at 1080p) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p) } runtime={ com.apple.CoreSimulator.SimRuntime.tvOS-27-0: (null) }, supportedArches: (
+)
+Object:   <DVTiPhoneSimulator: 0x7bb1e33000>
+Method:   -nativeArchitecture
+Thread:   <_NSMainThread: 0x10325cd90>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
