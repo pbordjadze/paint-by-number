@@ -200,12 +200,20 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
     /// The pen, eraser and fill, made to the template itself, in the order they were (canvas
     /// units, the template's). An edit that did nothing on a template, or no longer fits a
     /// regenerated one, stays here and does nothing again (`EditTrail`).
-    var edits: [TemplateEditor.Edit] = []
+    var edits: [TemplateEditor.Edit] = [] {
+        // A line laid as drawn joining edits an earlier editor began: an editor before it would
+        // lay the line nudged, and its Done write it away so.
+        didSet {
+            if editorVersion < TemplateEditor.asDrawnVersion, edits.contains(where: TemplateEditor.isAsDrawn) {
+                editorVersion = TemplateEditor.asDrawnVersion
+            }
+        }
+    }
     /// The editor (`TemplateEditor.version`, which changes whenever what a list of edits makes
     /// does) of the build that began these edits: new refinements carry this build's, and
     /// refinements read from a file keep the file's (a newer app's too), as a draft does while it
-    /// goes on being refined here. A file with edits from before the editor kept a version reads
-    /// 0. It is about the edits alone: written only with some, and no input of the generator.
+    /// goes on being refined here, raised to `TemplateEditor.asDrawnVersion` once a line laid as
+    /// drawn joins them. A file with edits from before the editor kept a version reads 0. It is about the edits alone: written only with some, and no input of the generator.
     var editorVersion = TemplateEditor.version
 
     /// It has as many edits as are kept (`maximumEdits`): Refine lays no more, and says so.

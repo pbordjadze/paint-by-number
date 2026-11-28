@@ -185,7 +185,8 @@ extension TemplateEditor {
         func map(_ c: SIMD3<Float>) -> SIMD3<Float> { recolors.reduce(c) { recolor($0, by: $1) } }
         func map(_ paints: [Paint]) -> [Paint] { paints.map { Paint(at: $0.at, color: map($0.color)) } }
         switch edit {
-        case .draw(let points, let closed, let paints): return .draw(points: points, closed: closed, paints: paints.map(map))
+        case .draw(let points, let closed, let paints, let asDrawn):
+            return .draw(points: points, closed: closed, paints: paints.map(map), asDrawn: asDrawn)
         case .split(let points, let closed, let paints): return .split(points: points, closed: closed, paints: map(paints))
         case .fill(let point, let color): return .fill(at: point, color: map(color))
         default: return edit

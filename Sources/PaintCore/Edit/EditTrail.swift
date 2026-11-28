@@ -93,7 +93,8 @@ public struct EditTrail: Sendable {
         /// for a number, so none was cut off: the line is there, as a stroke
         /// (`TemplateEditor.Outcome.tooSmall`). A line that cut a shape off is not too small for
         /// the slivers it also closed where it crosses ink beside a junction: they are not shapes
-        /// the painter meant.
+        /// the painter meant; nor is a line laid `asDrawn` for the sliver it closed only where it
+        /// grazed a corner, which the junction nudge (a draw laid without it) would have spared.
         case made(tooSmall: Bool)
         /// It had nothing to change (an eraser over bare paper).
         case nothing
@@ -215,7 +216,15 @@ public struct EditTrail: Sendable {
             let (next, outcome) = try TemplateEditor.apply(TemplateEditor.recolored(edit, by: recolors), to: template)
             if let declined = outcome.declined { return (template, Laid(verdict: .declined(declined.reason), outcome: outcome)) }
             guard outcome.changed else { return (template, Laid(verdict: .nothing, outcome: outcome)) }
-            let tooSmall = !outcome.tooSmall.isEmpty && outcome.regionsSplit == 0
+            var tooSmall = !outcome.tooSmall.isEmpty && outcome.regionsSplit == 0
+            // A line laid as drawn that only grazed a corner closed a sliver there, which the
+            // nudge it no longer takes would have spared: no shape the painter meant.
+            if tooSmall, case .draw(let points, let closed, let paints?, true) = edit,
+               let (_, nudged) = try? TemplateEditor.apply(
+                   TemplateEditor.recolored(.draw(points: points, closed: closed, paints: paints), by: recolors), to: template),
+               nudged.declined == nil, nudged.tooSmall.isEmpty {
+                tooSmall = false
+            }
             return (next, Laid(verdict: .made(tooSmall: tooSmall), outcome: outcome))
         } catch {
             // A template without line art has nothing to edit.

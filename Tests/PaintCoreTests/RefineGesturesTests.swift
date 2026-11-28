@@ -43,7 +43,7 @@ struct RefineGesturesTests {
         // The horizon runs at y ≈ 72 left of the disc; a line from the sky down to 0.2 above it.
         let samples = (0...20).map { Self.p(20 + Float($0) * 0.1, 50 + Float($0) * 1.09) }
         let edit = try #require(RefineGestures.pen(RefineGestures.trace(samples, on: Self.screen), on: Self.screen, snapping: Self.lines))
-        guard case .draw(let points, false, nil) = edit else { Issue.record("\(edit)"); return }
+        guard case .draw(let points, false, nil, true) = edit else { Issue.record("\(edit)"); return }
         let end = try #require(points.last)
         #expect(abs(end.y - 72) < 1 && abs(points[0].y - 50) < 1e-3, "\(points)")
         #expect(RefineGestures.pen([Self.p(20, 50), Self.p(21, 51)], on: Self.screen, snapping: Self.lines) == nil)
@@ -59,7 +59,7 @@ struct RefineGesturesTests {
         func end(short points: Float) throws -> SIMD2<Float>? {
             let samples = (0...20).map { Self.p(50, 60 + Float($0) * (40 - points / 5) / 20) }
             let edit = try #require(RefineGestures.pen(RefineGestures.trace(samples, on: Self.screen), on: Self.screen, snapping: frame))
-            guard case .draw(let line, false, nil) = edit else { return nil }
+            guard case .draw(let line, false, nil, true) = edit else { return nil }
             return line.last
         }
         #expect(try end(short: 8).map { abs($0.y - 100) < 1e-3 } == true)
@@ -84,7 +84,7 @@ struct RefineGesturesTests {
             == RefineGestures.pen(samples, on: Self.screen, snapping: nil))
         func line(_ smoothing: CGFloat) throws -> [SIMD2<Float>] {
             let edit = try #require(RefineGestures.pen(samples, on: Self.screen, snapping: nil, smoothing: smoothing))
-            guard case .draw(let points, false, nil) = edit else { Issue.record("\(edit)"); return [] }
+            guard case .draw(let points, false, nil, true) = edit else { Issue.record("\(edit)"); return [] }
             return points
         }
         /// How far a line strays from y = 30 between its ends (the last string's catch-up left out).
@@ -107,7 +107,7 @@ struct RefineGesturesTests {
         let samples = RefineGestures.trace((0...20).map { Self.p(20 + Float($0) * 0.1, 50 + Float($0) * 1.09) }, on: Self.screen)
         let pen = try #require(RefineGestures.pen(samples, on: Self.screen, snapping: Self.lines))
         let split = try #require(RefineGestures.splitter(samples, on: Self.screen, snapping: Self.lines))
-        guard case .draw(let line, false, nil) = pen else { Issue.record("\(pen)"); return }
+        guard case .draw(let line, false, nil, true) = pen else { Issue.record("\(pen)"); return }
         #expect(split == .split(points: line))
         #expect(RefineGestures.splitter([Self.p(20, 50), Self.p(21, 51)], on: Self.screen, snapping: Self.lines) == nil)
     }
@@ -117,7 +117,7 @@ struct RefineGesturesTests {
         let samples = RefineGestures.trace((0...20).map { Self.p(20 + Float($0) * 0.1, 50 + Float($0) * 1.09) }, on: Self.screen)
         let pen = try #require(RefineGestures.pen(samples, on: Self.screen, snapping: Self.lines))
         let edge = try #require(RefineGestures.cellEdge(samples, on: Self.screen, snapping: Self.lines))
-        guard case .draw(let line, false, nil) = pen else { Issue.record("\(pen)"); return }
+        guard case .draw(let line, false, nil, true) = pen else { Issue.record("\(pen)"); return }
         #expect(edge == .cellEdge(points: line))
         #expect(RefineGestures.cellEdge([Self.p(20, 50), Self.p(21, 51)], on: Self.screen, snapping: Self.lines) == nil)
     }
@@ -126,20 +126,20 @@ struct RefineGesturesTests {
     /// its ends from one drag and its bend from the next; one too small to draw is none.
     @Test func shapesMakeTheirLines() throws {
         let rect = try #require(RefineGestures.shape(.rectangle, from: Self.p(90, 12), to: Self.p(112, 28), on: Self.screen, snapping: Self.lines))
-        guard case .draw(let corners, true, nil) = rect else { Issue.record("\(rect)"); return }
+        guard case .draw(let corners, true, nil, true) = rect else { Issue.record("\(rect)"); return }
         // Its four corners, with points along its longer sides (`longestSegment`).
         #expect(corners.count >= 4 && corners.contains { abs($0.x - 112) < 1e-3 && abs($0.y - 28) < 1e-3 })
         #expect(corners.allSatisfy { abs($0.x - 90) < 1e-3 || abs($0.x - 112) < 1e-3 || abs($0.y - 12) < 1e-3 || abs($0.y - 28) < 1e-3 })
         let oval = try #require(RefineGestures.shape(.oval, from: Self.p(90, 12), to: Self.p(112, 28), on: Self.screen, snapping: nil))
-        guard case .draw(let ring, true, nil) = oval else { Issue.record("\(oval)"); return }
+        guard case .draw(let ring, true, nil, true) = oval else { Issue.record("\(oval)"); return }
         #expect(ring.count >= 16 && ring.first != ring.last)
         #expect(RefineGestures.shape(.rectangle, from: Self.p(90, 12), to: Self.p(95, 30), on: Self.screen, snapping: nil) == nil)
 
         let ends = try #require(RefineGestures.curveEnds(from: Self.p(80, 20), to: Self.p(120, 20), on: Self.screen, snapping: Self.lines))
         let bent = try #require(RefineGestures.shape(.curve, from: Self.p(100, 10), to: Self.p(100, 10), curve: ends, on: Self.screen, snapping: nil))
-        guard case .draw(let curve, false, nil) = bent else { Issue.record("\(bent)"); return }
+        guard case .draw(let curve, false, nil, true) = bent else { Issue.record("\(bent)"); return }
         #expect(curve.contains { simdLength($0 - SIMD2(100, 10)) < 0.5 })
-        guard case .draw(let straight, false, nil)? = RefineGestures.straightCurve(from: ends.from, to: ends.to, on: Self.screen) else {
+        guard case .draw(let straight, false, nil, true)? = RefineGestures.straightCurve(from: ends.from, to: ends.to, on: Self.screen) else {
             Issue.record("no straight curve"); return
         }
         #expect(straight.first == SIMD2(80, 20) && straight.last == SIMD2(120, 20) && straight.allSatisfy { $0.y == 20 })
@@ -149,7 +149,7 @@ struct RefineGesturesTests {
     @Test func polygonsAndStarsAreClosedLines() throws {
         for shape in [RefineShape.polygon, .star] {
             let edit = try #require(RefineGestures.shape(shape, from: Self.p(90, 12), to: Self.p(112, 28), on: Self.screen, snapping: nil))
-            guard case .draw(let ring, true, nil) = edit else { Issue.record("\(edit)"); return }
+            guard case .draw(let ring, true, nil, true) = edit else { Issue.record("\(edit)"); return }
             #expect(ring.count == (shape == .polygon ? 6 : 10) && ring.first != ring.last)
             #expect(abs(ring.map(\.x).min()! - 90) < 1e-3 && abs(ring.map(\.y).max()! - 28) < 1e-3)
             let laid = try TemplateEditor.apply(edit, to: Self.scene)
@@ -255,7 +255,7 @@ struct RefineGesturesTests {
             drawing: RefineGestures.drawingLines(of: blank), canvas: Self.screen.canvas, pending: [(.erase(path: [SIMD2(0, 72)], radius: 5), nil)])
         let samples = (0...40).map { Self.p(1.5 + Float($0) * 189 / 40, 72) }
         let edit = try #require(RefineGestures.pen(RefineGestures.trace(samples, on: Self.screen), on: Self.screen, snapping: edges))
-        guard case .draw(let points, false, nil) = edit else { Issue.record("\(edit)"); return }
+        guard case .draw(let points, false, nil, true) = edit else { Issue.record("\(edit)"); return }
         #expect(points.first.map { abs($0.x) < 1e-3 } == true && points.last.map { abs($0.x - 192) < 1e-3 } == true, "\(points)")
         let laid = try TemplateEditor.apply(edit, to: blank)
         #expect(laid.outcome.regionsSplit == 1 && laid.template.regions.count == 2)
@@ -307,7 +307,7 @@ struct RefineGesturesTests {
         ]
         for (a, b) in lines {
             let edit = try #require(RefineGestures.drawEdit([a, b], on: screen))
-            guard case .draw(let points, false, nil) = edit else { Issue.record("\(edit)"); return }
+            guard case .draw(let points, false, nil, true) = edit else { Issue.record("\(edit)"); return }
             #expect(zip(points, points.dropFirst()).allSatisfy { (($1 - $0) * ($1 - $0)).sum().squareRoot() <= 16.001 })
             let laid = try TemplateEditor.apply(edit, to: t)
             #expect(laid.outcome.declined == nil, "\(String(describing: laid.outcome.declined))")

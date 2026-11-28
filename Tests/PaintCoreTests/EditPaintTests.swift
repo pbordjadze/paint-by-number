@@ -109,7 +109,7 @@ struct EditPaintTests {
         let photo = RGBAImage(width: t.width, height: t.height, pixels: pixels)
         let magenta = ColorScience.encodedToOKLab(SIMD3(230, 0, 200) / 255, space: .sRGB)
         let edit = TemplateEditor.painted(Self.draw(nil), on: t, photo: photo)
-        guard case .draw(let points, true, let paints?) = edit else { Issue.record("not a painted draw: \(edit)"); return }
+        guard case .draw(let points, true, let paints?, false) = edit else { Issue.record("not a painted draw: \(edit)"); return }
         #expect(points == Self.box && paints.count == 2)
         #expect(paints.contains { ColorScience.distance($0.color, magenta) < 0.02 })
         let (u, outcome) = try TemplateEditorTests.apply(edit, to: t)
@@ -161,6 +161,50 @@ struct EditPaintTests {
         #expect(plain.edges.count == t.edges.count + 1 && nudged.edges.count == t.edges.count)
         #expect(!plain.lineArt!.strokePoints.contains(j) && nudged.lineArt!.strokePoints.contains(j))
         #expect(nudged.validate(minLabelRadius: LabelSizing.minimumRadius).isValid)
+    }
+
+    /// The same line with paints, drawn `asDrawn` (as every line Refine draws now is), is laid as
+    /// drawn: straight, crossing the horizon where it crosses, no jog to the junction beside it. It
+    /// keeps the flag through the file, and a file without the key reads as a draw that nudges.
+    @Test func aDrawAsDrawnStaysStraightBesideAJunction() throws {
+        let t = Self.scene
+        let horizon = ends(of: 6, in: t)
+        let j = horizon[0].x > horizon[1].x ? horizon[0] : horizon[1]
+        let pts = Array(t.points(of: t.edges[6]))
+        let next = pts[0] == j ? pts[1] : pts[pts.count - 2]
+        let q = j + 1.5 * (next - j) / simdLength(next - j)
+        let line = [q - SIMD2(0, 12), q + SIMD2(0, 12)]
+        let (plain, _) = try TemplateEditorTests.apply(.draw(points: line), to: t)
+        let edit = TemplateEditor.Edit.draw(points: line, paints: [], asDrawn: true)
+        let (straight, outcome) = try TemplateEditorTests.apply(edit, to: t)
+        #expect(outcome.changed && outcome.joins == 0)
+        #expect(straight.edges.count == t.edges.count + 1 && !straight.lineArt!.strokePoints.contains(j))
+        #expect(straight.points == plain.points)
+        #expect(straight.validate(minLabelRadius: LabelSizing.minimumRadius).isValid)
+
+        // A line that clips the corner at the junction closes a sliver there, too small for a
+        // number: no shape the painter meant, so no note says it is too small (the nudge would
+        // have spared it).
+        let other = try #require(t.edges.indices.first { e in e != 6 && ends(of: e, in: t).contains(j) })
+        let along = Array(t.points(of: t.edges[other]))
+        func unit(_ v: SIMD2<Float>) -> SIMD2<Float> { v / simdLength(v) }
+        let d1 = unit(next - j), d2 = unit((along[0] == j ? along[1] : along[along.count - 2]) - j)
+        let p1 = j + 2 * d1, p2 = j + 2 * d2, d = unit(p2 - p1)
+        let clip = [p1 - 14 * d, p2 + 14 * d]
+        let grazing = TemplateEditor.Edit.draw(points: clip, paints: [], asDrawn: true)
+        let (_, clipped) = try TemplateEditorTests.apply(grazing, to: t)
+        #expect(!clipped.tooSmall.isEmpty && clipped.regionsSplit == 0, "the line closes only a sliver at the corner")
+        var trail = EditTrail(base: t)
+        #expect(trail.add(grazing) == .made(tooSmall: false))
+
+        let json = try JSONEncoder().encode(edit)
+        #expect(String(decoding: json, as: UTF8.self).contains(#""asDrawn":true"#))
+        #expect(try JSONDecoder().decode(TemplateEditor.Edit.self, from: json) == edit)
+        let nudging = TemplateEditor.Edit.draw(points: line, paints: [])
+        #expect(!String(decoding: try JSONEncoder().encode(nudging), as: UTF8.self).contains("asDrawn"))
+        let before = #"{"kind":"draw","points":[[1,2],[3,4]],"closed":false,"paints":[]}"#
+        #expect(try JSONDecoder().decode(TemplateEditor.Edit.self, from: Data(before.utf8)) == .draw(
+            points: [SIMD2(1, 2), SIMD2(3, 4)], paints: []))
     }
 
     private func ends(of e: Int, in t: Template) -> [SIMD2<Float>] {

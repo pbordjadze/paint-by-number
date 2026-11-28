@@ -427,8 +427,8 @@ struct RefineView: View {
 
     /// `edit`, a drawn line with no paints to give unless `colorsFromPhoto`.
     nonisolated static func inked(_ edit: TemplateEditor.Edit, colorsFromPhoto: Bool) -> TemplateEditor.Edit {
-        guard !colorsFromPhoto, case .draw(let points, let closed, nil) = edit else { return edit }
-        return .draw(points: points, closed: closed, paints: [])
+        guard !colorsFromPhoto, case .draw(let points, let closed, nil, let asDrawn) = edit else { return edit }
+        return .draw(points: points, closed: closed, paints: [], asDrawn: asDrawn)
     }
 
     // MARK: Changes

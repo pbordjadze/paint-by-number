@@ -20,8 +20,8 @@ extension TemplateEditor.Edit {
             given.map { TemplateEditor.Paint(at: p($0.at), color: $0.color) }
         }
         switch self {
-        case .draw(let points, let closed, let given):
-            return .draw(points: ps(points), closed: closed, paints: given.map(paints))
+        case .draw(let points, let closed, let given, let asDrawn):
+            return .draw(points: ps(points), closed: closed, paints: given.map(paints), asDrawn: asDrawn)
         case .split(let points, let closed, let given):
             return .split(points: ps(points), closed: closed, paints: paints(given))
         case .cellEdge(let points, let closed):
