@@ -223,7 +223,9 @@ func runRefine(_ options: Options) throws {
         case "pen":
             edit = RefineGestures.pen(
                 RefineGestures.trace(samples, on: screen), on: screen, snapping: lines, smoothing: smoothing(of: g, k))
-            if g.inked == true, case .draw(let points, let closed, nil)? = edit { edit = .draw(points: points, closed: closed, paints: []) }
+            if g.inked == true, case .draw(let points, let closed, nil, let asDrawn)? = edit {
+                edit = .draw(points: points, closed: closed, paints: [], asDrawn: asDrawn)
+            }
         case "splitter":
             edit = RefineGestures.splitter(RefineGestures.trace(samples, on: screen), on: screen, snapping: lines)
         case "cellEdge":
@@ -391,7 +393,7 @@ func runRefine(_ options: Options) throws {
         }
         var around = canvasMarks.flatMap(\.points)
         switch step.edit {
-        case .draw(let points, _, _)?, .split(let points, _, _)?, .cellEdge(let points, _)?: around += points
+        case .draw(let points, _, _, _)?, .split(let points, _, _)?, .cellEdge(let points, _)?: around += points
         case .erase(let path, _)?, .merge(let path)?, .brush(let path, _, _)?: around += path
         case .reshape(let from, let to, _, _)?, .moveLabel(let from, let to, _)?: around += [from, to]
         case .eraseLine(let at, _)?, .fill(let at, _)?, .paintArea(let at, _)?: around.append(at)

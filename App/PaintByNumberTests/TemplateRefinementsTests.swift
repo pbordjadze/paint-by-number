@@ -237,6 +237,25 @@ struct TemplateRefinementsTests {
         #expect(before.generatorInputs == TemplateRefinements() && kept.generatorInputs == before.generatorInputs)
     }
 
+    /// A line laid as drawn joining edits an older editor began raises their version to the first
+    /// editor that lays one so, and no further; a file keeps what it recorded, and the old edits
+    /// are untouched.
+    @Test func aLineAsDrawnRaisesAnOlderEditorsVersion() throws {
+        let old = #"{"edits":[{"kind":"draw","points":[[1,2],[3,4]],"paints":[]}],"editorVersion":7}"#
+        var refinements = try JSONDecoder().decode(TemplateRefinements.self, from: Data(old.utf8))
+        #expect(refinements.editorVersion == 7)
+        let first = try #require(refinements.edits.first)
+        #expect(!TemplateEditor.isAsDrawn(first))
+        refinements.edits.append(.draw(points: [SIMD2(5, 6), SIMD2(7, 8)], paints: [], asDrawn: true))
+        #expect(refinements.editorVersion == TemplateEditor.asDrawnVersion && refinements.edits.first == first)
+        let read = try JSONDecoder().decode(TemplateRefinements.self, from: JSONEncoder().encode(refinements))
+        #expect(read == refinements)
+        let newer = #"{"edits":[{"kind":"draw","points":[[1,2],[3,4]],"paints":[],"asDrawn":true}],"editorVersion":99}"#
+        var kept = try JSONDecoder().decode(TemplateRefinements.self, from: Data(newer.utf8))
+        kept.edits.append(.draw(points: [SIMD2(5, 6), SIMD2(7, 8)], paints: [], asDrawn: true))
+        #expect(kept.editorVersion == 99)
+    }
+
     /// A blank start is kept in the file and is a refinement and a generator input, though it
     /// counts no change; one that starts from the generator's template writes no `start`, so its
     /// file is what it was before starts; a file from before them, or with a start this app

@@ -76,7 +76,7 @@ struct BlankTemplateTests {
     @Test func aLineAlongTheColorChangeCutsTwoAreasInTheTwoColors() throws {
         let t = try Self.blank()
         let edit = TemplateEditor.painted(.draw(points: [SIMD2(80, -6), SIMD2(80, 126)]), on: t, photo: Self.photo())
-        guard case .draw(_, false, let paints?) = edit else { Issue.record("not a painted draw: \(edit)"); return }
+        guard case .draw(_, false, let paints?, false) = edit else { Issue.record("not a painted draw: \(edit)"); return }
         #expect(paints.count == 2)
         let (u, outcome) = try TemplateEditorTests.apply(edit, to: t)
         #expect(outcome.regionsSplit == 1 && outcome.joins == 2 && u.regions.count == 2)

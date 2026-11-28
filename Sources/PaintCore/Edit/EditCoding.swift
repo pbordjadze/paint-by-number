@@ -5,7 +5,7 @@ import Foundation
 /// canvas units, plus what the kind needs.
 ///
 ///     {"kind": "draw",      "points": [[x, y], ...], "closed": false,
-///                           "paints": [{"at": [x, y], "color": [L, a, b]}, ...]}
+///                           "paints": [{"at": [x, y], "color": [L, a, b]}, ...], "asDrawn": true}
 ///     {"kind": "split",     "points": [[x, y], ...], "closed": false, "paints": [...]}
 ///     {"kind": "cellEdge",  "points": [[x, y], ...], "closed": false}
 ///     {"kind": "merge",     "points": [[x, y], ...]}
@@ -27,7 +27,9 @@ import Foundation
 /// missing `paints` is a draw from before lines took the photo's colors (`TemplateEditor.Edit.draw`,
 /// nil): such a draw is written without the key, as it always was. A draw with a list writes it,
 /// empty too (`[]`), which reads back as a draw with no paints to give: it lays nudged, unlike one
-/// without the key.
+/// without the key. `asDrawn` is written only when true (every line Refine draws from editor 8):
+/// a missing one is false, a draw nudged through the junctions it crosses beside, as every draw
+/// with paints was before; an older reader skips it and lays the line nudged.
 /// An older reader skips `paints` and lays such a draw as before, in the paints it had. `look` and
 /// `repaint` (Refine's Looks and Edit Paint) have no points; an older reader leaves them, and a `paintArea`, out
 /// of the list, and the painting it saved keeps their colors. A look's name is a
@@ -77,7 +79,7 @@ extension TemplateEditor.Edit: Codable {
     public static let paletteKey = CodingUserInfoKey(rawValue: "PaintCore.TemplateEditor.Edit.palette")!
 
     private enum CodingKeys: String, CodingKey {
-        case kind, points, closed, radius, reach, color, paints, look, strength, lightness, from, family, target, paint
+        case kind, points, closed, radius, reach, color, paints, asDrawn, look, strength, lightness, from, family, target, paint
     }
     private enum PaintKeys: String, CodingKey { case at, color }
 
@@ -133,7 +135,9 @@ extension TemplateEditor.Edit: Codable {
         }
         switch kind {
         case .draw:
-            self = .draw(points: points, closed: try c.decodeIfPresent(Bool.self, forKey: .closed) ?? false, paints: try decodePaints())
+            self = .draw(
+                points: points, closed: try c.decodeIfPresent(Bool.self, forKey: .closed) ?? false, paints: try decodePaints(),
+                asDrawn: try c.decodeIfPresent(Bool.self, forKey: .asDrawn) ?? false)
         case .split:
             self = .split(
                 points: points, closed: try c.decodeIfPresent(Bool.self, forKey: .closed) ?? false, paints: try decodePaints() ?? [])
@@ -189,10 +193,11 @@ extension TemplateEditor.Edit: Codable {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(kind.rawValue, forKey: .kind)
         switch self {
-        case .draw(let points, let closed, let paints):
+        case .draw(let points, let closed, let paints, let asDrawn):
             try c.encode(points, forKey: .points)
             try c.encode(closed, forKey: .closed)
             if let paints { try encode(paints, in: &c) }
+            if asDrawn { try c.encode(true, forKey: .asDrawn) }
         case .split(let points, let closed, let paints):
             try c.encode(points, forKey: .points)
             try c.encode(closed, forKey: .closed)

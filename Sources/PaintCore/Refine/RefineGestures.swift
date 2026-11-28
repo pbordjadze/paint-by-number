@@ -162,14 +162,14 @@ public enum RefineGestures {
     /// The Color Splitter's stroke: the Pen's line (`pen`), as a split, which divides the paint and
     /// draws nothing.
     public static func splitter(_ points: [SIMD2<Float>], on screen: RefineScreen, snapping lines: SnapLines?) -> TemplateEditor.Edit? {
-        guard case .draw(let line, let closed, _)? = pen(points, on: screen, snapping: lines) else { return nil }
+        guard case .draw(let line, let closed, _, _)? = pen(points, on: screen, snapping: lines) else { return nil }
         return .split(points: line, closed: closed)
     }
 
     /// The Cell Edge's stroke: the Pen's line (`pen`), as a cell edge, which divides a cell and
     /// draws nothing, both pieces keeping its paint.
     public static func cellEdge(_ points: [SIMD2<Float>], on screen: RefineScreen, snapping lines: SnapLines?) -> TemplateEditor.Edit? {
-        guard case .draw(let line, let closed, _)? = pen(points, on: screen, snapping: lines) else { return nil }
+        guard case .draw(let line, let closed, _, _)? = pen(points, on: screen, snapping: lines) else { return nil }
         return .cellEdge(points: line, closed: closed)
     }
 
@@ -312,7 +312,7 @@ public enum RefineGestures {
         var lines = drawing
         for item in pending {
             switch item.edit {
-            case .draw(let points, let closed, _):
+            case .draw(let points, let closed, _, _):
                 lines.append((closed ? points + points.prefix(1) : points).map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) })
             case .erase(let path, let radius):
                 lines = SnapLines.erasing(lines, by: [(path.map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) }, CGFloat(radius))])
@@ -391,7 +391,7 @@ public enum RefineGestures {
             for k in 0..<pieces { dense.append(a + (b - a) * (Float(k) / Float(pieces))) }
         }
         if let last = canvas.last { dense.append(last) }
-        return .draw(points: closed ? Array(dense.dropLast()) : dense, closed: closed)
+        return .draw(points: closed ? Array(dense.dropLast()) : dense, closed: closed, asDrawn: true)
     }
 
     /// `points` thinned to within `tolerance` points on screen.
