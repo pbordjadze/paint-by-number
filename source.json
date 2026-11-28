@@ -1,0 +1,82 @@
+{
+  "name": "Paint by Moonlight (CI builds)",
+  "identifier": "com.pbordjadze.paintbynumber.source",
+  "subtitle": "Automatic builds",
+  "iconURL": "https://raw.githubusercontent.com/pbordjadze/paint-by-number/sidestore/icon.png",
+  "website": "https://github.com/pbordjadze/paint-by-number",
+  "tintColor": "#7B3F7E",
+  "apps": [
+    {
+      "name": "Paint by Moonlight",
+      "bundleIdentifier": "com.pbordjadze.paintbynumber",
+      "developerName": "pbordjadze",
+      "subtitle": "Turn any photo into a painting",
+      "localizedDescription": "Turn your photos into paint-by-numbers canvases, entirely on device, and paint them with a finger or Apple Pencil. Built for iPad, works on iPhone.",
+      "iconURL": "https://raw.githubusercontent.com/pbordjadze/paint-by-number/sidestore/icon.png",
+      "tintColor": "#7B3F7E",
+      "category": "entertainment",
+      "versions": [
+        {
+          "version": "1.0.1493",
+          "buildVersion": "1493",
+          "date": "2026-11-28T18:30:16Z",
+          "localizedDescription": "Refine: Shapes' closed figures may be as small as 1.5 canvas units, so an oval can be a dot",
+          "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-1493/PaintByNumber.ipa",
+          "size": 69494944,
+          "minOSVersion": "26.0"
+        },
+        {
+          "version": "1.0.1491",
+          "buildVersion": "1491",
+          "date": "2026-11-28T11:29:19Z",
+          "localizedDescription": "Merge remote-tracking branch 'origin/main' into claude/project-thread-hj19xi",
+          "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-1491/PaintByNumber.ipa",
+          "size": 69495344,
+          "minOSVersion": "26.0"
+        },
+        {
+          "version": "1.0.1489",
+          "buildVersion": "1489",
+          "date": "2026-11-28T07:18:55Z",
+          "localizedDescription": "Merge: Refine's held undo takes only one hand's fingertips; undo's triggers in the diary",
+          "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-1489/PaintByNumber.ipa",
+          "size": 69495072,
+          "minOSVersion": "26.0"
+        },
+        {
+          "version": "1.0.1487",
+          "buildVersion": "1487",
+          "date": "2026-11-28T04:43:54Z",
+          "localizedDescription": "Merge: Refine's lines stay as drawn, no jog where a line passes a corner",
+          "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-1487/PaintByNumber.ipa",
+          "size": 69489801,
+          "minOSVersion": "26.0"
+        },
+        {
+          "version": "1.0.1479",
+          "buildVersion": "1479",
+          "date": "2026-11-27T15:36:37Z",
+          "localizedDescription": "Merge: \u270e Change never deletes edits (a vault of saves); a 1.5 painting every build must open",
+          "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-1479/PaintByNumber.ipa",
+          "size": 69495345,
+          "minOSVersion": "26.0"
+        }
+      ],
+      "version": "1.0.1493",
+      "versionDate": "2026-11-28T18:30:16Z",
+      "versionDescription": "Refine: Shapes' closed figures may be as small as 1.5 canvas units, so an oval can be a dot",
+      "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-1493/PaintByNumber.ipa",
+      "size": 69494944,
+      "appPermissions": {
+        "entitlements": [
+          "com.apple.security.application-groups"
+        ],
+        "privacy": {
+          "NSCameraUsageDescription": "Paint by Moonlight uses the camera to take a photo you can turn into a paint-by-numbers picture. The photo stays on your device.",
+          "NSPhotoLibraryAddUsageDescription": "Paint by Moonlight saves a painting or its time-lapse to your photo library when you choose Save Image or Save Video as you share it."
+        }
+      }
+    }
+  ],
+  "news": []
+}
