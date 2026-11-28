@@ -590,6 +590,8 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     /// Undo or Redo, stepping while their fingers are held, and where the fingers came down.
     private var repeating: Task<Void, Never>?
     private var repeatStart: CGPoint?
+    /// When a Pencil last touched the picture (`CACurrentMediaTime`).
+    private var lastPencil: CFTimeInterval?
     /// When a pinch began, at what zoom, and the part of the picture then on screen (normalized).
     private var pinchStart: (time: TimeInterval, zoom: CGFloat, visible: CGRect)?
     /// The part of the picture on screen before a quick pinch fitted it, for a quick pinch out.
@@ -634,11 +636,15 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
 
         for (recognizer, touches) in [(undoTap, 2), (redoTap, 3), (fullScreenTap, 4)] {
             recognizer.numberOfTouchesRequired = touches
+            // Fingers' taps, never the Pencil's.
+            recognizer.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.direct.rawValue)]
             recognizer.addTarget(self, action: #selector(handleFingers(_:)))
             scrollView.addGestureRecognizer(recognizer)
         }
         for (recognizer, touches) in [(undoHold, 2), (redoHold, 3)] {
             recognizer.numberOfTouchesRequired = touches
+            // Fingers alone, never the Pencil: a Pencil held still with a palm beside it undid.
+            recognizer.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.direct.rawValue)]
             recognizer.minimumPressDuration = Self.repeatDelay
             recognizer.allowableMovement = Self.repeatMovement
             // Beside the scroll view's pan and pinch: fingers that move go on to move the picture.
@@ -1003,7 +1009,7 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         // Fingers held still step, not fingers zooming or moving the picture, nor a third finger
         // joining two that already step.
         if gestureRecognizer === undoHold || gestureRecognizer === redoHold {
-            return !scrollView.isZooming && !scrollView.isDragging && repeating == nil
+            return !scrollView.isZooming && !scrollView.isDragging && repeating == nil && fingersStep(gestureRecognizer)
         }
         return super.gestureRecognizerShouldBegin(gestureRecognizer)
     }
@@ -1015,6 +1021,39 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
            brush.allowedTouchTypes.contains(NSNumber(value: touch.type.rawValue)) {
             touchDown = touch.location(in: content)
             pencilStroke = touch.type == .pencil
+        }
+        if touch.type == .pencil { lastPencil = CACurrentMediaTime() }
+        return true
+    }
+
+    /// Whether the fingers of an undo or redo hold are a painter's deliberate gesture
+    /// (`RefineFingerSteps`), read from where they are now.
+    private func fingersStep(_ recognizer: UIGestureRecognizer) -> Bool {
+        let points = (0..<recognizer.numberOfTouches).map { recognizer.location(ofTouch: $0, in: self) }
+        return RefineFingerSteps.mayStep(
+            fingers: points,
+            drawing: brush.state == .began || brush.state == .changed || press.state == .began || press.state == .changed,
+            sincePencil: lastPencil.map { CACurrentMediaTime() - $0 })
+    }
+}
+
+/// When two or three fingers held on Refine's picture undo or redo again and again.
+/// A tester's whole session was undone, step after step, as she picked her iPad up (November 27):
+/// a hold counted any two touches held still, so two thumbs gripping its sides undid as long as
+/// they stayed. Now it takes fingertips of one hand, close together, and nothing the Pencil or a
+/// stroke under way is part of (a resting palm beside the Pencil).
+nonisolated enum RefineFingerSteps {
+    /// The farthest apart, in points, the fingertips of one hand lie held on the glass; thumbs
+    /// gripping an iPad's two sides are far wider apart.
+    static let widestHand: CGFloat = 200
+    /// How long after the Pencil was on the glass fingers don't step: a palm resting while it draws.
+    static let pencilQuiet: TimeInterval = 1.5
+
+    static func mayStep(fingers: [CGPoint], drawing: Bool, sincePencil: TimeInterval?) -> Bool {
+        guard !drawing, fingers.count >= 2 else { return false }
+        if let sincePencil, sincePencil < pencilQuiet { return false }
+        for (i, a) in fingers.enumerated() {
+            for b in fingers[(i + 1)...] where hypot(a.x - b.x, a.y - b.y) > widestHand { return false }
         }
         return true
     }
