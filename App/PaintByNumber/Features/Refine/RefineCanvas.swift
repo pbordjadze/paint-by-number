@@ -552,6 +552,10 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     static let maximumZoom: CGFloat = 12
     /// Room around the picture at zoom 1, so it reads as a card.
     static let margin: CGFloat = 12
+    /// How far a zoomed picture moves past each edge of the canvas, so what lies under Start
+    /// From, the tiny-numbers badge or a toast at the top (or anything at another edge) can be
+    /// brought out from under it (a tester couldn't reach a spot under them, November 27).
+    static let reach: CGFloat = 72
     /// How long a touch is held still before it is a hold, iOS's own half second, and how far it
     /// may wander meanwhile: little, so a slow, careful stroke still draws.
     static let pressDuration: TimeInterval = 0.5
@@ -750,10 +754,13 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         report()
     }
 
-    /// Insets that centre the picture while it is smaller than the frame.
+    /// Insets that centre the picture while it is smaller than the frame, and once zoomed in,
+    /// let it move `reach` past each edge: grown over the first half step of zoom, so nothing
+    /// jumps as a pinch crosses into it or out of it.
     private func centre() {
         let size = content.frame.size
-        let x = max(0, (bounds.width - size.width) / 2), y = max(0, (bounds.height - size.height) / 2)
+        let room = Self.reach * min(1, max(0, (scrollView.zoomScale - 1) / 0.5))
+        let x = max(room, (bounds.width - size.width) / 2), y = max(room, (bounds.height - size.height) / 2)
         scrollView.contentInset = UIEdgeInsets(top: y, left: x, bottom: y, right: x)
     }
 

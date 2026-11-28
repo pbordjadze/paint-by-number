@@ -180,6 +180,10 @@ final class CreateModel {
     private(set) var settledEdits = 0
     /// What Refine tells the painter: an edit that could not be made, edits that no longer fit.
     private(set) var note: RefineNote?
+    /// "Too small for a number" was said once already: a painter inking detail closes slivers
+    /// line after line, and the note every time read as nagging (a tester's first long refine,
+    /// November 27). The line stays either way; the note only explains it.
+    @ObservationIgnored private var toldTooSmall = false
     /// The last line that closed off an area of its own, for Refine's sparkles.
     private(set) var closedShape: ClosedShape?
 
@@ -1582,6 +1586,7 @@ final class CreateModel {
         history = RefineHistory()
         openingHistory = RefineHistory()
         historySteps = 0
+        toldTooSmall = false
         sentEdits = 0
         handledEdits = 0
         leftOutEdits = 0
@@ -1771,7 +1776,10 @@ final class CreateModel {
                         \(now.regions.count) and \(now.palette.count) after
                         """)
                 }
-                if tooSmall { say(.tooSmall) }
+                if tooSmall, !toldTooSmall {
+                    toldTooSmall = true
+                    say(.tooSmall)
+                }
                 if TemplateEditor.isRecolor(laid.edit), laid.trail.template.palette.count < current.template.palette.count {
                     say(.alike)
                 }
