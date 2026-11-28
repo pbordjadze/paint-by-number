@@ -115,6 +115,8 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case doublesBack
         /// A Line Eraser tap on no line.
         case tapLine
+        /// A Bucket tap or a Paint Brush stroke with no paint in hand: nothing to pour.
+        case pickPaint
         /// Colors that could not be changed (a look or a repaint the template couldn't take).
         case notRecolored
         /// Paints Colors made alike became one, sharing a number.
@@ -199,6 +201,9 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
         case .tapLine:
             String(localized: "refine.note.tapLine", defaultValue: "Tap a line to erase it.",
                    comment: "Refine screen toast: a Line Eraser tap landed on no line, so nothing was erased")
+        case .pickPaint:
+            String(localized: "refine.note.pickPaint", defaultValue: "Pick a paint first: tap a swatch, or touch and hold the picture.",
+                   comment: "Refine screen toast: the Bucket or the Paint Brush was used before any paint was picked, so nothing was painted; a swatch is a paint's circle in the palette, and touching and holding the picture picks up the color there")
         case .notRecolored:
             String(localized: "refine.note.notRecolored", defaultValue: "Those colors couldn’t be changed.",
                    comment: "Refine screen toast: a look or a new color the painter chose in Colors could not be laid on the painting; nothing changed")
@@ -226,7 +231,7 @@ nonisolated struct RefineNote: Equatable, Sendable, Identifiable {
     var systemImage: String {
         switch kind {
         case .tooSmall: "circle.dotted"
-        case .grabNumber, .grabLine, .grabEdge, .tapLine: "hand.point.up.left"
+        case .grabNumber, .grabLine, .grabEdge, .tapLine, .pickPaint: "hand.point.up.left"
         case .alike, .repainted: "swatchpalette"
         case .notDrawn, .doublesBack, .notErased, .notFilled, .notSplit, .notDivided, .notMerged, .oneArea, .notPainted, .notReshaped,
              .notMoved, .notRecolored, .left, .full:

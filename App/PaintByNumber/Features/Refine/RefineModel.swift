@@ -439,7 +439,11 @@ final class RefineModel {
                 : tool == .brush ? brushEdit(current)
                 : penEdit(current)
             endStroke()
-            if let edit { submit(edit) }
+            if let edit {
+                submit(edit)
+            } else if tool == .brush, currentPaint == nil {
+                model.tell(.pickPaint)
+            }
         case .cancelled:
             endStroke()
         }
@@ -699,7 +703,7 @@ final class RefineModel {
             break
         case .brush:
             // A dab, of the brush's own reach.
-            if let edit = brushEdit([point]) { submit(edit) }
+            if let edit = brushEdit([point]) { submit(edit) } else if currentPaint == nil { model.tell(.pickPaint) }
         case .shape:
             finishCurve()
         case .eraser:
@@ -1104,7 +1108,11 @@ final class RefineModel {
             selection = region != nil && region != selectedRegion ? at : nil
             barCard = nil
         case .bucket:
-            guard region != nil, let color = currentPaint else { return }
+            guard region != nil else { return }
+            guard let color = currentPaint else {
+                model.tell(.pickPaint)
+                return
+            }
             FeedbackEngine.shared.selectionChanged()
             submitted.append(Submitted(id: model.paintArea(at: at, color: color), edit: .paintArea(at: at, color: color)))
             if !isPractice { PaintTips.refineEdited() }

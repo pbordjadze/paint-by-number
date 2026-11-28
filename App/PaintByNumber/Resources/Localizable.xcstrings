@@ -15199,6 +15199,78 @@
         }
       }
     },
+    "refine.note.pickPaint" : {
+      "comment" : "Refine screen toast: the Bucket or the Paint Brush was used before any paint was picked, so nothing was painted; a swatch is a paint's circle in the palette, and touching and holding the picture picks up the color there",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle zuerst eine Farbe: Tippe auf ein Farbfeld oder berühre und halte das Bild."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick a paint first: tap a swatch, or touch and hold the picture."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige primero una pintura: toca una muestra o mantén el dedo sobre la imagen."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez d’abord une peinture : touchez une pastille, ou touchez et maintenez l’image."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli prima un colore: tocca un campione, o tocca e tieni premuto sull’immagine."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まず絵の具を選んでください。色見本をタップするか、絵を長押しします。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "먼저 물감을 고르세요. 견본을 탭하거나 그림을 길게 누르세요."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies eerst een verf: tik op een staal, of houd de afbeelding vast."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolha uma tinta primeiro: toque numa amostra, ou toque e mantenha na imagem."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先选一种颜料：轻点色块，或按住画面。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請先選一種顏料：點一下色塊，或按住畫面。"
+          }
+        }
+      }
+    },
     "refine.note.notMoved" : {
       "comment" : "Refine screen toast: a number dragged with Move Number had no room where it was dropped, or was dropped outside its area; nothing changed",
       "extractionState" : "manual",
